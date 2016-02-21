@@ -37,6 +37,7 @@ import org.eclipse.che.git.impl.nativegit.LocalGitUserResolver;
 import org.eclipse.che.git.impl.nativegit.NativeGitConnectionFactory;
 import org.eclipse.che.ide.ext.github.server.inject.GitHubModule;
 import org.eclipse.che.ide.ext.java.jdi.server.DebuggerService;
+import org.eclipse.che.ide.ext.openshift.server.inject.OpenshiftModule;
 import org.eclipse.che.ide.extension.maven.server.inject.MavenModule;
 import org.eclipse.che.inject.DynaModule;
 import org.eclipse.che.security.oauth.RemoteOAuthTokenProvider;
@@ -82,6 +83,7 @@ public class MachineModule extends AbstractModule {
         install(new VirtualFileSystemModule());
         install(new VirtualFileSystemFSModule());
         install(new MavenModule());
+        install(new OpenshiftModule());
         install(new ArchetypeGeneratorModule());
         install(new GitHubModule());
         install(new org.eclipse.che.swagger.deploy.DocsModule());

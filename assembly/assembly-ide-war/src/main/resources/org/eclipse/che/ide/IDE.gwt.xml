@@ -52,6 +52,9 @@
     <inherits name='org.eclipse.che.ide.ext.github.GitHub'/>
     <inherits name='org.eclipse.che.ide.editor.orion.OrionEditor'/>
     <inherits name="org.eclipse.che.ide.orion.OrionCompare"/>
+
+    <inherits name="org.eclipse.che.ide.ext.openshift.Openshift"/>
+
     <inherits name='org.eclipse.che.env.local.LocalEnvironment'/>
     <inherits name='org.eclipse.che.ide.ext.plugins.PluginsDevelopment'/>
 
