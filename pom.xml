@@ -37,6 +37,7 @@
     </scm>
     <properties>
         <che.lib.version>4.0.0-RC6-SNAPSHOT</che.lib.version>
+        <che.plugin.openshift.version>4.0.0-RC6-SNAPSHOT</che.plugin.openshift.version>
         <specification.version>1.0-beta2</specification.version>
     </properties>
     <dependencyManagement>
@@ -458,6 +459,26 @@
                 <groupId>org.eclipse.che.plugin</groupId>
                 <artifactId>che-plugin-machine-ssh-client</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.plugin</groupId>
+                <artifactId>che-plugin-openshift-ext-client</artifactId>
+                <version>${che.plugin.openshift.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.plugin</groupId>
+                <artifactId>che-plugin-openshift-ext-server</artifactId>
+                <version>${che.plugin.openshift.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.plugin</groupId>
+                <artifactId>che-plugin-openshift-ext-shared</artifactId>
+                <version>${che.plugin.openshift.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.plugin</groupId>
+                <artifactId>che-plugin-openshift-oauth2</artifactId>
+                <version>${che.plugin.openshift.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.plugin</groupId>
