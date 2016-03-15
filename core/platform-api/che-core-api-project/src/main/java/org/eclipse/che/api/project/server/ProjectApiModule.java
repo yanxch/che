@@ -18,6 +18,7 @@ import org.eclipse.che.api.project.server.handlers.ProjectHandler;
 import org.eclipse.che.api.project.server.importer.ProjectImporter;
 import org.eclipse.che.api.project.server.importer.ProjectImportersService;
 import org.eclipse.che.api.project.server.type.BaseProjectType;
+import org.eclipse.che.api.project.server.type.InitBaseProjectTypeHandler;
 import org.eclipse.che.api.project.server.type.ProjectTypeDef;
 
 /**
@@ -33,11 +34,11 @@ public class ProjectApiModule extends AbstractModule {
         Multibinder<ProjectImporter> projectImportersMultibinder = Multibinder.newSetBinder(binder(), ProjectImporter.class);
         projectImportersMultibinder.addBinding().to(ZipProjectImporter.class);
 
-        Multibinder<ProjectTypeDef> projectTypesMultibinder = Multibinder.newSetBinder(binder(), ProjectTypeDef.class);
-        projectTypesMultibinder.addBinding().to(BaseProjectType.class);
+        Multibinder.newSetBinder(binder(), ProjectTypeDef.class).addBinding().to(BaseProjectType.class);
 
         Multibinder<ProjectHandler> projectHandlersMultibinder = Multibinder.newSetBinder(binder(), ProjectHandler.class);
         projectHandlersMultibinder.addBinding().to(CreateBaseProjectTypeHandler.class);
+        projectHandlersMultibinder.addBinding().to(InitBaseProjectTypeHandler.class);
 
         bind(ProjectRegistry.class).asEagerSingleton();
         bind(ProjectService.class);

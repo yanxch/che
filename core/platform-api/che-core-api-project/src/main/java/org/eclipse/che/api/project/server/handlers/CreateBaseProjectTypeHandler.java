@@ -37,7 +37,9 @@ public class CreateBaseProjectTypeHandler implements CreateProjectHandler {
     private final String README_FILE_NAME = "README";
 
     @Override
-    public void onCreateProject(FolderEntry baseFolder, Map<String, AttributeValue> attributes, Map<String, String> options) throws ForbiddenException, ConflictException, ServerException {
+    public void onCreateProject(FolderEntry baseFolder,
+                                Map<String, AttributeValue> attributes,
+                                Map<String, String> options) throws ForbiddenException, ConflictException, ServerException {
         baseFolder.createFile(README_FILE_NAME, getReadmeContent());
     }
 
