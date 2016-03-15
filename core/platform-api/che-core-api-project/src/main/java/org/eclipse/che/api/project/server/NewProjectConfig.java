@@ -25,16 +25,17 @@ import java.util.Map;
  */
 public class NewProjectConfig implements ProjectConfig {
 
-    private final String path;
-    private final String type;
-    private final List<String> mixins;
-    private final String name;
-    private final String description;
+    private final String                    path;
+    private final String                    type;
+    private final List<String>              mixins;
+    private final String                    name;
+    private final String                    description;
     private final Map<String, List<String>> attributes;
-    private final SourceStorage origin;
+    private final SourceStorage             origin;
 
     /**
      * Full qualified constructor
+     *
      * @param path
      * @param type
      * @param mixins
@@ -43,35 +44,40 @@ public class NewProjectConfig implements ProjectConfig {
      * @param attributes
      * @param origin
      */
-     NewProjectConfig(String path, String type, List<String> mixins, String name, String description,
-                            Map<String, List<String>> attributes, SourceStorage origin) {
+    NewProjectConfig(String path,
+                     String type,
+                     List<String> mixins,
+                     String name,
+                     String description,
+                     Map<String, List<String>> attributes,
+                     SourceStorage origin) {
         this.path = path;
-        this.type = (type == null)? BaseProjectType.ID:type;
-        this.mixins = (mixins == null)?new ArrayList<>():mixins;
+        this.type = (type == null) ? BaseProjectType.ID : type;
+        this.mixins = (mixins == null) ? new ArrayList<>() : mixins;
         this.name = name;
         this.description = description;
-        this.attributes = (attributes == null)?new HashMap<>():attributes;
+        this.attributes = (attributes == null) ? new HashMap<>() : attributes;
         this.origin = origin;
     }
 
     /**
      * Constructor for project import
+     *
      * @param path
      * @param name
      * @param type
      * @param origin
      */
     public NewProjectConfig(String path, String name, String type, SourceStorage origin) {
-
         this(path, type, null, name, null, null, origin);
     }
 
     /**
      * Constructor for reinit
+     *
      * @param path
      */
     public NewProjectConfig(Path path) {
-
         this(path.toString(), null, null, path.getName(), null, null, null);
     }
 
@@ -104,7 +110,6 @@ public class NewProjectConfig implements ProjectConfig {
     public Map<String, List<String>> getAttributes() {
         return attributes;
     }
-
 
     @Override
     public SourceStorage getSource() {

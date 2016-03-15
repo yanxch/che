@@ -36,25 +36,24 @@ import static org.eclipse.che.dto.server.DtoFactory.newDto;
 @Path("project-importers/{wsId}")
 public class ProjectImportersService extends Service {
 
+    private final Map<String, String>     configuration;
     private final ProjectImporterRegistry importersRegistry;
-
-    private final Map<String, String> configuration;
 
     @Inject
     public ProjectImportersService(ProjectImporterRegistry importersRegistry,
                                    @Named("project.importer.default_importer_id") String defaultProjectImporter) {
-        this.importersRegistry = importersRegistry;
-
         this.configuration = new HashMap<>();
+        this.importersRegistry = importersRegistry;
         this.configuration.put("default-importer", defaultProjectImporter);
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public ProjectImporterData getImportersData() {
-        final List<ProjectImporterDescriptor> importers = importersRegistry.getImporters().stream()
-                                                                 .map(DtoConverter::toImporterDescriptor)
-                                                                 .collect(Collectors.toList());
+        final List<ProjectImporterDescriptor> importers = importersRegistry.getImporters()
+                                                                           .stream()
+                                                                           .map(DtoConverter::toImporterDescriptor)
+                                                                           .collect(Collectors.toList());
         return newDto(ProjectImporterData.class).withImporters(importers).withConfiguration(configuration);
     }
 }

@@ -25,10 +25,6 @@ import java.io.InputStream;
  */
 public class FileEntry extends VirtualFileEntry {
 
-//    public FileEntry(VirtualFile virtualFile, String project) {
-//        super(virtualFile, project);
-//    }
-
     public FileEntry(VirtualFile virtualFile, ProjectRegistry registry) throws ServerException {
         super(virtualFile, registry);
     }
@@ -60,7 +56,6 @@ public class FileEntry extends VirtualFileEntry {
             // A ForbiddenException might be thrown if backend VirtualFile isn't regular file but folder. This isn't expected here.
             throw new IllegalStateException(e.getMessage(), e);
         }
-
     }
 
     private InputStream getContentStream() throws ServerException {

@@ -25,34 +25,35 @@ import java.util.Map;
  */
 public abstract class ProjectTypeDef implements ProjectType {
 
-    protected final String                 id;
-    protected final boolean                persisted;
-    protected final boolean                mixable;
-    protected final boolean                primaryable;
-    protected final String                 displayName;
     protected final Map<String, Attribute> attributes;
     protected final List<String>           parents;
-    protected final List<String> ancestors = new ArrayList<>();
+    protected final List<String>           ancestors;
 
+    protected final String  id;
+    protected final String  displayName;
+    protected final boolean primaryable;
+    protected final boolean mixable;
+    protected final boolean persisted;
 
     protected ProjectTypeDef(String id, String displayName, boolean primaryable, boolean mixable, boolean persisted) {
+        ancestors = new ArrayList<>();
+        attributes = new HashMap<>();
+        parents = new ArrayList<>();
+
         this.id = id;
         this.displayName = displayName;
-        this.attributes = new HashMap<>();
-        this.parents = new ArrayList<>();
-        this.mixable = mixable;
         this.primaryable = primaryable;
+        this.mixable = mixable;
         this.persisted = persisted;
     }
-
 
     /**
      * @param id
      * @param displayName
      * @param primaryable
-     *         - whether the ProjectTypeDef can be used as Primary
+     *         whether the ProjectTypeDef can be used as Primary
      * @param mixable
-     *         - whether the projectType can be used as Mixin
+     *         whether the projectType can be used as Mixin
      */
     protected ProjectTypeDef(String id, String displayName, boolean primaryable, boolean mixable) {
         this(id, displayName, primaryable, mixable, true);
@@ -93,7 +94,6 @@ public abstract class ProjectTypeDef implements ProjectType {
         return primaryable;
     }
 
-
     /**
      * @return ids of ancestors
      */
@@ -108,7 +108,6 @@ public abstract class ProjectTypeDef implements ProjectType {
      * @return true if it is a subtype
      */
     public boolean isTypeOf(String typeId) {
-
         return this.id.equals(typeId) || ancestors.contains(typeId);
     }
 
@@ -144,7 +143,6 @@ public abstract class ProjectTypeDef implements ProjectType {
         attributes.put(attr.getName(), attr);
     }
 
-
     protected void addParent(String parentId) {
         for (String pid : parents) {
             if (pid.equals(parentId))
@@ -158,7 +156,6 @@ public abstract class ProjectTypeDef implements ProjectType {
     }
 
     public ProjectTypeResolution resolveSources(FolderEntry projectFolder) throws ValueStorageException {
-
         Map<String, Value> matchAttrs = new HashMap<>();
         for (Map.Entry<String, Attribute> entry : attributes.entrySet()) {
             Attribute attr = entry.getValue();
@@ -198,5 +195,4 @@ public abstract class ProjectTypeDef implements ProjectType {
             return match;
         }
     }
-
 }

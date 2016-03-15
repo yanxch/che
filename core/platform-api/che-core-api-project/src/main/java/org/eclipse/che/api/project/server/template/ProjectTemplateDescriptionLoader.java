@@ -17,6 +17,7 @@ import org.eclipse.che.dto.server.DtoFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
@@ -55,19 +56,16 @@ public class ProjectTemplateDescriptionLoader {
                                             ProjectTemplateRegistry templateRegistry) {
         this.templateDescriptionLocationDir = templateDescriptionLocationDir;
         this.templateRegistry = templateRegistry;
-
-        start();
     }
 
+    @PostConstruct
     public void start() {
         if (templateDescriptionLocationDir == null || !Files.exists(Paths.get(templateDescriptionLocationDir)) ||
             !Files.isDirectory(Paths.get(templateDescriptionLocationDir))) {
             LOG.error(getClass() +
                       " The configuration of project templates descriptors wasn't found or some problem with configuration was found.");
         } else {
-            Path dirPath = Paths.get(templateDescriptionLocationDir);
-
-            load(dirPath);
+            load(Paths.get(templateDescriptionLocationDir));
         }
     }
 

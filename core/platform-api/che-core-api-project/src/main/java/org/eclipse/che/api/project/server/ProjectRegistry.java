@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Stores internal representation of Projects registered in the Workspace Agent
+ * Stores internal representation of Projects registered in the Workspace Agent.
  *
  * @author gazarenkov
  */
@@ -76,10 +76,10 @@ public class ProjectRegistry {
 
         // take all the projects from ws's config
         for (ProjectConfig projectConfig : projectConfigs) {
-             String path = projectConfig.getPath();
-             VirtualFile vf = vfs.getRoot().getChild(Path.of(path));
-             FolderEntry projFolder = ((vf == null) ? null : new FolderEntry(vf, this));
-             putProject(projectConfig, projFolder, false, false);
+            final String path = projectConfig.getPath();
+            final VirtualFile vf = vfs.getRoot().getChild(Path.of(path));
+            final FolderEntry projFolder = ((vf == null) ? null : new FolderEntry(vf, this));
+            putProject(projectConfig, projFolder, false, false);
         }
 
         // unconfigured folders on root
@@ -91,7 +91,7 @@ public class ProjectRegistry {
 
         initialized = true;
 
-        for(RegisteredProject project : projects.values()) {
+        for (RegisteredProject project : projects.values()) {
             fireInitHandlers(project);
         }
     }
@@ -106,14 +106,15 @@ public class ProjectRegistry {
     /**
      * @return all the registered projects
      */
-    public List<RegisteredProject> getProjects()  {
+    public List<RegisteredProject> getProjects() {
         checkInitializationState();
 
         return new ArrayList<>(projects.values());
     }
 
     /**
-     * @param projectPath - project path
+     * @param projectPath
+     *         project path
      * @return project or null if not found
      */
     public RegisteredProject getProject(String projectPath) {
@@ -123,28 +124,33 @@ public class ProjectRegistry {
     }
 
     /**
-     * @param parentPath - parent path
+     * @param parentPath
+     *         parent path
      * @return child projects
      */
-    public List<String> getProjects(String parentPath)  {
+    public List<String> getProjects(String parentPath) {
         checkInitializationState();
 
         final Path root = Path.of(absolutizePath(parentPath));
 
-        return projects.keySet().stream().filter(key -> Path.of(key).isChild(root))
+        return projects.keySet()
+                       .stream()
+                       .filter(key -> Path.of(key).isChild(root))
                        .collect(Collectors.toList());
     }
 
     /**
-     * @param path - path of child project
+     * @param path
+     *         - path of child project
      * @return the project owned this path.
      */
-    public RegisteredProject getParentProject(String path)  {
+    public RegisteredProject getParentProject(String path) {
         checkInitializationState();
 
         // return this if a project
-        if(getProject(path) != null)
+        if (getProject(path) != null) {
             return getProject(path);
+        }
 
         // otherwise try to find matched parent
         Path test;
@@ -155,27 +161,32 @@ public class ProjectRegistry {
 
             path = test.toString();
         }
-        return null;
 
+        return null;
     }
 
     /**
-     * Creates RegisteredProject and caches it
-     * @param config - project config
-     * @param folder - base folder of project
-     * @param updated - whether this configuration was updated
-     * @param detected - whether this is automatically detected or explicitly defined project
+     * Creates RegisteredProject and caches it.
+     *
+     * @param config
+     *         project config
+     * @param folder
+     *         base folder of project
+     * @param updated
+     *         whether this configuration was updated
+     * @param detected
+     *         whether this is automatically detected or explicitly defined project
      * @return project
      * @throws ServerException
      * @throws ConflictException
      * @throws NotFoundException
      */
     RegisteredProject putProject(ProjectConfig config,
-                                        FolderEntry folder,
-                                        boolean updated,
-                                        boolean detected) throws ServerException,
-                                                                 ConflictException,
-                                                                 NotFoundException {
+                                 FolderEntry folder,
+                                 boolean updated,
+                                 boolean detected) throws ServerException,
+                                                          ConflictException,
+                                                          NotFoundException {
         final RegisteredProject project = new RegisteredProject(folder, config, updated, detected, this.projectTypeRegistry);
         projects.put(project.getPath(), project);
 
@@ -188,9 +199,10 @@ public class ProjectRegistry {
     }
 
     /**
-     * removes all projects on and under the incoming path
+     * Removes all projects on and under the incoming path.
      *
-     * @param path - from where to remove
+     * @param path
+     *         from where to remove
      */
     void removeProjects(String path) throws ServerException {
         projects.remove(path);
@@ -223,57 +235,61 @@ public class ProjectRegistry {
      * - extension code knows that particular folder inside should (or may) be treated
      * as sub-project of same as "parent" project type
      *
-     * @param projectPath - absolute project path
-     * @param type - type to be updated or added
-     * @param asMixin - whether the type supposed to be mixin (true) or primary (false)
-     * @return - refreshed project
+     * @param projectPath
+     *         absolute project path
+     * @param type
+     *         type to be updated or added
+     * @param asMixin
+     *         whether the type supposed to be mixin (true) or primary (false)
+     * @return refreshed project
      * @throws ConflictException
      * @throws NotFoundException
      * @throws ServerException
      */
-    public RegisteredProject setProjectType(String projectPath, String type,
+    public RegisteredProject setProjectType(String projectPath,
+                                            String type,
                                             boolean asMixin) throws ConflictException,
                                                                     NotFoundException,
                                                                     ServerException {
-
-        RegisteredProject project = getProject(projectPath);
-        NewProjectConfig conf;
+        final RegisteredProject project = getProject(projectPath);
+        final NewProjectConfig conf;
         List<String> newMixins = new ArrayList<>();
         String newType;
 
-        if(project == null) {
-            if(asMixin) {
-                throw new ConflictException("Can not assing as mixin type '" + type +
+        if (project == null) {
+            if (asMixin) {
+                throw new ConflictException("Can not assign as mixin type '" + type +
                                             "' since the " + projectPath + " is not a project.");
-
             } else {
                 newType = type;
             }
 
-            String path = absolutizePath(projectPath);
-            String name = Path.of(projectPath).getName();
-            conf = new NewProjectConfig(absolutizePath(projectPath), newType, newMixins,
-                                        name, name, null, null);
+            final String path = absolutizePath(projectPath);
+            final String name = Path.of(projectPath).getName();
+            conf = new NewProjectConfig(absolutizePath(projectPath), newType, newMixins, name, name, null, null);
 
             return putProject(conf, root.getChildFolder(path), true, true);
-
         } else {
             newMixins = project.getMixins();
             newType = project.getType();
-            if(asMixin) {
-                if(!newMixins.contains(type))
+            if (asMixin) {
+                if (!newMixins.contains(type)) {
                     newMixins.add(type);
+                }
             } else {
                 newType = type;
             }
 
-            conf = new NewProjectConfig(project.getPath(), newType, newMixins,
-                                        project.getName(), project.getDescription(),
-                                        project.getAttributes(), project.getSource());
+            conf = new NewProjectConfig(project.getPath(),
+                                        newType,
+                                        newMixins,
+                                        project.getName(),
+                                        project.getDescription(),
+                                        project.getAttributes(),
+                                        project.getSource());
+
             return putProject(conf, project.getBaseFolder(), true, project.isDetected());
-
         }
-
     }
 
     /**
@@ -283,12 +299,14 @@ public class ProjectRegistry {
      * - if the project was NOT detected BASE Project Type will be set as primary
      * - if the project was detected it will be converted back to the folder
      * For example:
-     * - extension code knows that removeing some file inside project's file system
+     * - extension code knows that removing some file inside project's file system
      * will (or may) cause removing particular project type
      *
-     * @param projectPath - project path
-     * @param type - project type
-     * @return - refreshed project or null if such a project not found or was removed
+     * @param projectPath
+     *         project path
+     * @param type
+     *         project type
+     * @return refreshed project or null if such a project not found or was removed
      * @throws ConflictException
      * @throws ForbiddenException
      * @throws NotFoundException
@@ -298,19 +316,19 @@ public class ProjectRegistry {
                                                                                        ForbiddenException,
                                                                                        NotFoundException,
                                                                                        ServerException {
+        final RegisteredProject project = getProject(projectPath);
 
-        RegisteredProject project = getProject(projectPath);
-
-        if(project == null)
+        if (project == null) {
             return null;
+        }
 
         List<String> newMixins = project.getMixins();
         String newType = project.getType();
 
-        if(newMixins.contains(type))
+        if (newMixins.contains(type)) {
             newMixins.remove(type);
-        else if(newType.equals(type)) {
-            if(project.isDetected()) {
+        } else if (newType.equals(type)) {
+            if (project.isDetected()) {
                 projects.remove(project.getPath());
                 return null;
             }
@@ -318,16 +336,20 @@ public class ProjectRegistry {
             newType = BaseProjectType.ID;
         }
 
-        final NewProjectConfig conf = new NewProjectConfig(project.getPath(), newType, newMixins,
-                                                           project.getName(), project.getDescription(),
-                                                           project.getAttributes(), project.getSource());
+        final NewProjectConfig conf = new NewProjectConfig(project.getPath(),
+                                                           newType,
+                                                           newMixins,
+                                                           project.getName(),
+                                                           project.getDescription(),
+                                                           project.getAttributes(),
+                                                           project.getSource());
 
         return putProject(conf, project.getBaseFolder(), true, project.isDetected());
-
     }
 
     /**
-     * @param path - a path
+     * @param path
+     *         a path
      * @return absolute (with lead slash) path
      */
     static String absolutizePath(String path) {
@@ -335,40 +357,43 @@ public class ProjectRegistry {
     }
 
     /**
-     * Fires init handlers for all the project types of incoming project
-     * @param project - the project
+     * Fires init handlers for all the project types of incoming project.
+     *
+     * @param project
+     *         the project
      * @throws ForbiddenException
      * @throws ConflictException
      * @throws NotFoundException
      * @throws ServerException
      */
-    void fireInitHandlers(RegisteredProject project)
-            throws ForbiddenException, ConflictException, NotFoundException, ServerException {
-
+    void fireInitHandlers(RegisteredProject project) throws ForbiddenException,
+                                                            ConflictException,
+                                                            NotFoundException,
+                                                            ServerException {
         // primary type
         //ProjectTypeDef pt = project.getProjectType();
         //pt.getAncestors();
         fireInit(project, project.getType());
 
         // mixins
-        for(String mixin : project.getMixins()) {
+        for (String mixin : project.getMixins()) {
             fireInit(project, mixin);
         }
     }
 
-    void fireInit(RegisteredProject project, String type)
-            throws ForbiddenException, ConflictException, NotFoundException, ServerException {
+    void fireInit(RegisteredProject project, String type) throws ForbiddenException,
+                                                                 ConflictException,
+                                                                 NotFoundException,
+                                                                 ServerException {
         ProjectInitHandler projectInitHandler = handlers.getProjectInitHandler(type);
         if (projectInitHandler != null) {
             projectInitHandler.onProjectInitialized(this, project.getBaseFolder());
         }
     }
 
-
     private void checkInitializationState() {
         if (!initialized) {
             throw new IllegalStateException("Projects are not initialized yet");
         }
     }
-
 }

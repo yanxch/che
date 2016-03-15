@@ -31,33 +31,35 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Internal Project implementation
- * It is supposed that it is object always consistent
+ * Internal Project implementation.
+ * It is supposed that it is object always consistent.
  *
  * @author gazarenkov
  */
 public class RegisteredProject implements ProjectConfig {
 
-    private final List<Problem> problems = new ArrayList<>();
+    private final List<Problem>      problems;
+    private final Map<String, Value> attributes;
+
     private final FolderEntry   folder;
     private final ProjectConfig config;
+    private       boolean       updated;
+    private       boolean       detected;
     private final ProjectTypes  types;
-    private final Map<String, Value> attributes = new HashMap<>();
-    private       boolean             updated;
-    private       boolean             detected;
 
     /**
-     * Either root folder or config can be null, in this case Project is configured with problem
+     * Either root folder or config can be null, in this case Project is configured with problem.
      *
      * @param folder
-     *         - root local folder or null
+     *         root local folder or null
      * @param config
-     *         - project configuration in workspace
+     *         project configuration in workspace
      * @param updated
-     *         - if this object was updated, i.e. no more synchronized with workspace master
+     *         if this object was updated, i.e. no more synchronized with workspace master
      * @param detected
-     *         - if this project was detected, initialized when "parent" project initialized
-     * @param projectTypeRegistry - project type registry
+     *         if this project was detected, initialized when "parent" project initialized
+     * @param projectTypeRegistry
+     *         project type registry
      */
     RegisteredProject(FolderEntry folder,
                       ProjectConfig config,
@@ -67,16 +69,21 @@ public class RegisteredProject implements ProjectConfig {
                                                                       ProjectTypeConstraintException,
                                                                       ServerException,
                                                                       ValueStorageException {
+        problems = new ArrayList<>();
+        attributes = new HashMap<>();
+
         this.folder = folder;
         this.config = (config == null) ? new NewProjectConfig(folder.getPath()) : config;
         this.updated = updated;
         this.detected = detected;
 
-        if (folder == null || folder.isFile())
+        if (folder == null || folder.isFile()) {
             problems.add(new Problem(10, "No project folder on file system " + this.config.getPath()));
+        }
 
-        if (config == null)
+        if (config == null) {
             problems.add(new Problem(11, "No project configured in workspace " + this.config.getPath()));
+        }
 
         // 1. init project types
         this.types = new ProjectTypes(this.config.getPath(), this.config.getType(), this.config.getMixins(), projectTypeRegistry);
@@ -86,59 +93,50 @@ public class RegisteredProject implements ProjectConfig {
 
         // 3. initialize attributes
         initAttributes();
-
-
     }
 
     /**
-     * inits project attributes
+     * Initialize project attributes.
+     *
      * @throws ValueStorageException
      * @throws ProjectTypeConstraintException
      * @throws ServerException
      * @throws NotFoundException
      */
-    private void initAttributes()
-            throws ValueStorageException, ProjectTypeConstraintException, ServerException, NotFoundException {
-
+    private void initAttributes() throws ValueStorageException, ProjectTypeConstraintException, ServerException, NotFoundException {
         // we take only defined attributes, others ignored
         for (Map.Entry<String, Attribute> entry : types.getAttributeDefs().entrySet()) {
-
-            Attribute definition = entry.getValue();
-            String name = entry.getKey();
+            final Attribute definition = entry.getValue();
+            final String name = entry.getKey();
             AttributeValue value = new AttributeValue(config.getAttributes().get(name));
 
             if (!definition.isVariable()) {
                 // constant, value always assumed as stated in definition
-                this.attributes.put(name, definition.getValue());
-
+                attributes.put(name, definition.getValue());
             } else {
                 // variable
                 final Variable variable = (Variable)definition;
                 final ValueProviderFactory valueProviderFactory = variable.getValueProviderFactory();
 
                 if (valueProviderFactory != null) {
-
                     // read-only.
-                    if(folder != null)
+                    if (folder != null) {
                         value = new AttributeValue(valueProviderFactory.newInstance(folder).getValues(name));
-                    else
+                    } else {
                         continue;
-
+                    }
                 }
 
                 if (value.isEmpty() && variable.isRequired()) {
                     throw new ProjectTypeConstraintException("Value for required attribute is not initialized " + variable.getId());
                 }
 
-                if(!value.isEmpty())
+                if (!value.isEmpty()) {
                     this.attributes.put(name, value);
-
+                }
             }
-
         }
-
     }
-
 
     /**
      * @return primary project type
@@ -167,7 +165,6 @@ public class RegisteredProject implements ProjectConfig {
     public Map<String, Value> getAttributeEntries() {
         return attributes;
     }
-
 
     /**
      * @return whether this project is synchronized with Workspace storage
@@ -209,14 +206,13 @@ public class RegisteredProject implements ProjectConfig {
     /**
      * @return non provided attributes, those attributes can be persisted to Workspace storage
      */
-    public Map<String, List <String>> getPersistableAttributes() {
-        Map<String, List <String>> attrs = new HashMap<>();
-        for(HashMap.Entry<String, Value> entry : getAttributeEntries().entrySet()) {
-
+    public Map<String, List<String>> getPersistableAttributes() {
+        Map<String, List<String>> attrs = new HashMap<>();
+        for (HashMap.Entry<String, Value> entry : getAttributeEntries().entrySet()) {
             Attribute def = types.getAttributeDefs().get(entry.getKey());
             // not provided, not constants
-            if(def != null &&
-               ((def.isVariable() && ((Variable) def).getValueProviderFactory() == null)))
+            if (def != null &&
+                ((def.isVariable() && ((Variable)def).getValueProviderFactory() == null)))
                 attrs.put(entry.getKey(), entry.getValue().getList());
         }
         return attrs;
@@ -253,25 +249,21 @@ public class RegisteredProject implements ProjectConfig {
 
     @Override
     public List<String> getMixins() {
-        return types.getMixins().values().stream().filter(ProjectTypeDef::isPersisted).map(ProjectTypeDef::getId)
+        return types.getMixins().values()
+                    .stream()
+                    .filter(ProjectTypeDef::isPersisted)
+                    .map(ProjectTypeDef::getId)
                     .collect(Collectors.toList());
-
     }
 
     @Override
     public Map<String, List<String>> getAttributes() {
-
         Map<String, List<String>> attrs = new HashMap<>();
-        for(Map.Entry<String, Value> entry : getAttributeEntries().entrySet())
-             attrs.put(entry.getKey(), entry.getValue().getList());
-
-        //return getPersistableAttributes();
+        for (Map.Entry<String, Value> entry : getAttributeEntries().entrySet()) {
+            attrs.put(entry.getKey(), entry.getValue().getList());
+        }
         return attrs;
-
     }
-
-
-    /* ----------------------------------- */
 
     public class Problem {
         private Problem(int code, String message) {
@@ -282,7 +274,4 @@ public class RegisteredProject implements ProjectConfig {
         int    code;
         String message;
     }
-
-
-
 }

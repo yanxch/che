@@ -23,14 +23,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Singleton
 public class ProjectImporterRegistry {
+
     private final Map<String, ProjectImporter> importers;
 
     @Inject
     public ProjectImporterRegistry(Set<ProjectImporter> importers) {
         this.importers = new ConcurrentHashMap<>();
-        for (ProjectImporter importer : importers) {
-            register(importer);
-        }
+
+        importers.forEach(this::register);
     }
 
     public void register(ProjectImporter importer) {

@@ -348,10 +348,6 @@ public class ProjectTypeTest {
             public List<String> getValues(String attributeName) throws ValueStorageException {
                 return Arrays.asList("gena");
             }
-
-//            @Override
-//            public void setValues(String attributeName, List<String> value) throws ValueStorageException, InvalidValueException {
-//            }
         }
     }
 

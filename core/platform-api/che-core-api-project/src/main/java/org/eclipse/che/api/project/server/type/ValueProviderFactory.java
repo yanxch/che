@@ -20,7 +20,7 @@ import org.eclipse.che.api.project.server.FolderEntry;
 public interface ValueProviderFactory {
 
     /**
-     * Create new instance of ValueProvider2. Project is used for access to low-level information about project.
+     * Create new instance of {@link ValueProvider}. Project is used for access to low-level information about project.
      *
      * @param projectFolder
      */

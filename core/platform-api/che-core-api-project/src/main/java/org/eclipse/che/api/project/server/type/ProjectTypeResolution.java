@@ -19,7 +19,7 @@ import java.util.Map;
  */
 public abstract class ProjectTypeResolution {
 
-    private String type;
+    private String             type;
     private Map<String, Value> attributes;
 
     public ProjectTypeResolution(String type, Map<String, Value> attributes) {
@@ -46,9 +46,4 @@ public abstract class ProjectTypeResolution {
     public Map<String, Value> getProvidedAttributes() {
         return attributes;
     }
-
-//     void addAttribute(String id, Value value) {
-//        attributes.put(id, value);
-//    }
-
 }

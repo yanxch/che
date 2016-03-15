@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Map;
 
-
 /**
  * @author Vitaly Parfonov
  */
@@ -57,8 +56,10 @@ public class ZipProjectImporter implements ProjectImporter {
     @Override
     public void importSources(FolderEntry baseFolder,
                               SourceStorage storage,
-                              LineConsumerFactory importOutputConsumerFactory)
-            throws ForbiddenException, ConflictException, IOException, ServerException {
+                              LineConsumerFactory importOutputConsumerFactory) throws ForbiddenException,
+                                                                                      ConflictException,
+                                                                                      IOException,
+                                                                                      ServerException {
         URL url;
         String location = storage.getLocation();
         if (location.startsWith("http://") || location.startsWith("https://")) {
@@ -72,6 +73,7 @@ public class ZipProjectImporter implements ProjectImporter {
                 }
             }
         }
+
         if (url == null) {
             throw new IOException(String.format("Can't find %s", location));
         }
@@ -86,7 +88,6 @@ public class ZipProjectImporter implements ProjectImporter {
         }
     }
 
-    /** {@inheritDoc} */
     @Override
     public ImporterCategory getCategory() {
         return ImporterCategory.ARCHIVE;

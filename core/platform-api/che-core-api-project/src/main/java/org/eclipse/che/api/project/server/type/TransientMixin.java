@@ -21,8 +21,8 @@ package org.eclipse.che.api.project.server.type;
 public abstract class TransientMixin extends ProjectTypeDef {
 
     /**
-     * Protected constructor
      * Mixable is always "true", Primaryable is always "false"
+     *
      * @param id
      * @param displayName
      */

@@ -22,14 +22,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * //
- *
  * @author Vitalii Parfonov
  */
 public class ProjectTypeUtils {
 
-
-    public static ProjectConfigDto ensure(@NotNull ProjectConfigDto projectConfigDto, ProjectTypeRegistry typeRegistry) throws NotFoundException {
+    public static ProjectConfigDto ensure(@NotNull ProjectConfigDto projectConfigDto,
+                                          ProjectTypeRegistry typeRegistry) throws NotFoundException {
         final List<String> ensuredMixins = new ArrayList<>();
         final List<String> persistedAttributes = new ArrayList<>();
         final List<String> mixins = projectConfigDto.getMixins();
@@ -45,6 +43,7 @@ public class ProjectTypeUtils {
                 }
             }
         }
+
         for (String attributeId : attributes.keySet()) {
             if (persistedAttributes.contains(attributeId)) {
                 ensuredAttributes.put(attributeId, attributes.get(attributeId));

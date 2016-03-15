@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
 
 /**
- * For caching and proxy-ing Workspace Configuration
+ * For caching and proxy-ing Workspace Configuration.
  *
  * @author gazarenkov
  */
@@ -56,7 +56,6 @@ public class WorkspaceHolder {
     @Inject
     public WorkspaceHolder(@Named("api.endpoint") String apiEndpoint,
                            HttpJsonRequestFactory httpJsonRequestFactory) throws ServerException {
-
         this.apiEndpoint = apiEndpoint;
         this.httpJsonRequestFactory = httpJsonRequestFactory;
 
@@ -64,7 +63,7 @@ public class WorkspaceHolder {
         // for Docker container name of this property is defined in
         // org.eclipse.che.plugin.docker.machine.DockerInstanceMetadata.CHE_WORKSPACE_ID
         // it resides on Workspace Master side so not accessible from agent code
-        String workspaceId = System.getenv("CHE_WORKSPACE_ID");
+        final String workspaceId = System.getenv("CHE_WORKSPACE_ID");
 
         if (workspaceId == null) {
             throw new ServerException("Workspace ID is not defined for Workspace Agent");
@@ -87,11 +86,14 @@ public class WorkspaceHolder {
 
     /**
      * updates projects on ws master side
+     *
      * @param projects
      * @throws ServerException
      */
     public void updateProjects(Collection<RegisteredProject> projects) throws ServerException {
-        List<RegisteredProject> persistedProjects = projects.stream().filter(project -> !project.isDetected()).collect(Collectors.toList());
+        List<RegisteredProject> persistedProjects = projects.stream()
+                                                            .filter(project -> !project.isDetected())
+                                                            .collect(Collectors.toList());
 
         workspace.setProjects(persistedProjects);
 
@@ -109,7 +111,9 @@ public class WorkspaceHolder {
         }
 
         // sync local projects
-        projects.stream().filter(project -> !project.isSynced()).forEach(RegisteredProject::setSync);
+        projects.stream()
+                .filter(project -> !project.isSynced())
+                .forEach(RegisteredProject::setSync);
     }
 
     /**
@@ -118,7 +122,6 @@ public class WorkspaceHolder {
      * @throws ServerException
      */
     private UsersWorkspaceDto workspaceDto(String wsId) throws ServerException {
-
         final String href = UriBuilder.fromUri(apiEndpoint)
                                       .path(WorkspaceService.class).path(WorkspaceService.class, "getById")
                                       .build(wsId).toString();
@@ -130,7 +133,6 @@ public class WorkspaceHolder {
             throw new ServerException(e);
         }
     }
-
 
     protected static class UsersWorkspaceImpl implements UsersWorkspace {
         private String              id;
@@ -173,18 +175,15 @@ public class WorkspaceHolder {
         }
 
         public void setProjects(final List<RegisteredProject> projects) {
-            List<NewProjectConfig> p = new ArrayList<>();
-            for (RegisteredProject project : projects) {
-                NewProjectConfig config = new NewProjectConfig(project.getPath(),
-                                                            project.getType(),
-                                                            project.getMixins(),
-                                                            project.getName(),
-                                                            project.getDescription(),
-                                                            project.getPersistableAttributes(),
-                                                            project.getSource());
-                p.add(config);
-            }
-
+            List<NewProjectConfig> p = projects.stream()
+                                               .map(project -> new NewProjectConfig(project.getPath(),
+                                                                                    project.getType(),
+                                                                                    project.getMixins(),
+                                                                                    project.getName(),
+                                                                                    project.getDescription(),
+                                                                                    project.getPersistableAttributes(),
+                                                                                    project.getSource()))
+                                               .collect(Collectors.toList());
             getConfig().setProjects(p);
         }
     }
@@ -193,9 +192,9 @@ public class WorkspaceHolder {
         private String                        name;
         private String                        description;
         private String                        defaultEnvName;
-        private List<? extends Command> commands;
+        private List<? extends Command>       commands;
         private List<? extends ProjectConfig> projects;
-        private List<? extends Environment> environments;
+        private List<? extends Environment>   environments;
         private Map<String, String>           attributes;
 
         WorkspaceConfigImpl(WorkspaceConfig config) {

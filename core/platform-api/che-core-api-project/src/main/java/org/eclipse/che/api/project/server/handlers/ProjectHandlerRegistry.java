@@ -25,16 +25,19 @@ import java.util.Set;
 @Singleton
 public class ProjectHandlerRegistry {
 
-    private final Map<String, CreateProjectHandler>     createProjectHandlers     = new HashMap<>();
-    private final Map<String, PostImportProjectHandler> postImportProjectHandlers = new HashMap<>();
-    private final Map<String, GetItemHandler>           getItemHandlers           = new HashMap<>();
-    private final Map<String, ProjectInitHandler>       projectInitHandlers       = new HashMap<>();
+    private final Map<String, CreateProjectHandler>     createProjectHandlers;
+    private final Map<String, PostImportProjectHandler> postImportProjectHandlers;
+    private final Map<String, GetItemHandler>           getItemHandlers;
+    private final Map<String, ProjectInitHandler>       projectInitHandlers;
 
     @Inject
     public ProjectHandlerRegistry(Set<ProjectHandler> projectHandlers) {
-        for (ProjectHandler handler : projectHandlers) {
-            register(handler);
-        }
+        createProjectHandlers = new HashMap<>();
+        postImportProjectHandlers = new HashMap<>();
+        getItemHandlers = new HashMap<>();
+        projectInitHandlers = new HashMap<>();
+
+        projectHandlers.forEach(this::register);
     }
 
     public void register(@NotNull ProjectHandler handler) {
@@ -68,5 +71,4 @@ public class ProjectHandlerRegistry {
     public ProjectInitHandler getProjectInitHandler(@NotNull String projectType) {
         return projectInitHandlers.get(projectType);
     }
-
 }

@@ -115,7 +115,7 @@ public final class Path {
 
     private static String[] splitToSegments(String rawPath) {
         return (isNullOrEmpty(rawPath) || ((rawPath.length() == 1) && (rawPath.charAt(0) == '/')))
-                                ? EMPTY_PATH : PATH_SPLITTER.split(rawPath.charAt(0) == '/' ? rawPath.substring(1) : rawPath);
+               ? EMPTY_PATH : PATH_SPLITTER.split(rawPath.charAt(0) == '/' ? rawPath.substring(1) : rawPath);
     }
 
     public Path newPath(String... relative) {

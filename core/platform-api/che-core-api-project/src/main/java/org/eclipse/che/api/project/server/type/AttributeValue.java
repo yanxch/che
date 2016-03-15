@@ -23,13 +23,15 @@ public class AttributeValue implements Value {
     private final List<String> values = new ArrayList<>();
 
     public AttributeValue(List<String> list) {
-        if(list != null)
+        if (list != null) {
             values.addAll(list);
+        }
     }
 
     public AttributeValue(String str) {
-        if(str != null)
+        if (str != null) {
             values.add(str);
+        }
     }
 
     @Override
@@ -39,8 +41,9 @@ public class AttributeValue implements Value {
 
     public void setString(String str) {
         values.clear();
-        if(str != null)
+        if (str != null) {
             values.add(str);
+        }
     }
 
     @Override
@@ -50,8 +53,9 @@ public class AttributeValue implements Value {
 
     public void setList(List<String> list) {
         values.clear();
-        if(list != null)
+        if (list != null) {
             values.addAll(list);
+        }
     }
 
     @Override
@@ -61,7 +65,6 @@ public class AttributeValue implements Value {
 
     @Override
     public boolean equals(Object obj) {
-
         if (obj instanceof AttributeValue) {
             return this.values.equals(((AttributeValue)obj).getList());
         }

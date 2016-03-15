@@ -14,8 +14,8 @@ import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.vfs.search.SearcherProvider;
 
 /**
- * Attaches any point on backend filesystem some VirtualFile (root folder). Only children of root folder may be accessible through this
- * API.
+ * Attaches any point on backend filesystem some VirtualFile (root folder).
+ * Only children of root folder may be accessible through this API.
  *
  * @author andrew00x
  */

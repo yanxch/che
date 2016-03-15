@@ -63,7 +63,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Facade for all project related operations
+ * Facade for all project related operations.
  *
  * @author gazarenkov
  */
@@ -180,13 +180,13 @@ public final class ProjectManager {
     }
 
     /**
-     * create project:
+     * Create project:
      * - take project config
      *
      * @param projectConfig
-     *         - project configuration
+     *         project configuration
      * @param options
-     *         - options for generator
+     *         options for generator
      * @return new project
      * @throws ConflictException
      * @throws ForbiddenException
@@ -253,7 +253,7 @@ public final class ProjectManager {
      * - refreshing provided (transient) project types and attributes
      *
      * @param newConfig
-     *         - new config
+     *         new config
      * @return updated config
      * @throws ForbiddenException
      * @throws ServerException
@@ -283,7 +283,6 @@ public final class ProjectManager {
 
         projectRegistry.fireInitHandlers(project);
 
-
         // TODO move to register?
         reindexProject(project);
 
@@ -296,7 +295,6 @@ public final class ProjectManager {
                                                                                             UnauthorizedException,
                                                                                             ConflictException,
                                                                                             NotFoundException {
-
         final ProjectImporter importer = importers.getImporter(sourceStorage.getType());
         if (importer == null) {
             throw new NotFoundException(String.format("Unable import sources project from '%s'. Sources type '%s' is not supported.",
@@ -338,9 +336,7 @@ public final class ProjectManager {
 
     // ProjectSuggestion
     public List<ProjectTypeResolution> resolveSources(String path, boolean transientOnly) throws ServerException, NotFoundException {
-
         final List<ProjectTypeResolution> resolutions = new ArrayList<>();
-//        boolean isPresentPrimaryType = false;
 
         for (ProjectType type : projectTypeRegistry.getProjectTypes(ProjectTypeRegistry.CHILD_TO_PARENT_COMPARATOR)) {
             if (transientOnly && type.isPersisted()) {
@@ -348,7 +344,7 @@ public final class ProjectManager {
             }
 
             try {
-                ProjectTypeResolution resolution = estimateProject(path, type.getId());
+                final ProjectTypeResolution resolution = estimateProject(path, type.getId());
                 if (resolution.matched()) {
                     resolutions.add(resolution);
                 }
@@ -356,10 +352,6 @@ public final class ProjectManager {
                 LOG.warn(e.getLocalizedMessage(), e);
             }
         }
-
-//        if (!isPresentPrimaryType) {
-//            estimations.add(newDto(SourceEstimation.class).withType(BaseProjectType.ID));
-//        }
 
         return resolutions;
     }

@@ -12,22 +12,18 @@ package org.eclipse.che.api.project.server.type;
 
 import org.eclipse.che.api.project.server.FolderEntry;
 
-
 /**
  * @author gazarenkov
  */
 public class Variable extends AbstractAttribute {
 
-    protected ValueProviderFactory valueProviderFactory = null;
-    protected AttributeValue       value                = null;
+    protected ValueProviderFactory valueProviderFactory;
+    protected AttributeValue       value;
 
-
-    public Variable(String projectType, String name, String description, boolean required,
-                    ValueProviderFactory valueProviderFactory) {
+    public Variable(String projectType, String name, String description, boolean required, ValueProviderFactory valueProviderFactory) {
         this(projectType, name, description, required);
         this.valueProviderFactory = valueProviderFactory;
     }
-
 
     public Variable(String projectType, String name, String description, boolean required, AttributeValue value) {
         this(projectType, name, description, required);
@@ -42,7 +38,6 @@ public class Variable extends AbstractAttribute {
     public AttributeValue getValue() {
         return value;
     }
-
 
     public final AttributeValue getValue(FolderEntry projectFolder) throws ValueStorageException {
         if (valueProviderFactory != null) {

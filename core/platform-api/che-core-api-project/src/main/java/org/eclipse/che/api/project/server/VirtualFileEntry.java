@@ -19,38 +19,33 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Wrapper for VirtualFile.
+ * Wrapper for {@link VirtualFile}.
  *
  * @author andrew00x
  */
 public abstract class VirtualFileEntry {
 
-    //protected String project;
-    private       VirtualFile virtualFile;
+    private   VirtualFile         virtualFile;
     protected Map<String, String> attributes;
-    protected ProjectRegistry projectRegistry;
+    protected ProjectRegistry     projectRegistry;
 
     VirtualFileEntry(VirtualFile virtualFile) {
         this.virtualFile = virtualFile;
         this.attributes = new HashMap<>();
-        //this.project = project;
     }
 
     VirtualFileEntry(VirtualFile virtualFile, ProjectRegistry projectRegistry) throws ServerException {
         this.virtualFile = virtualFile;
         this.attributes = new HashMap<>();
-        //project = projectRegistry.getParentProject(virtualFile.getPath().toString()).getPath();
         this.projectRegistry = projectRegistry;
     }
 
     /**
-     *
      * @return last modification date
      */
     public long getModified() {
         return virtualFile.getLastModificationDate();
     }
-
 
     /**
      * Tests whether this item is a regular file.
@@ -92,13 +87,15 @@ public abstract class VirtualFileEntry {
      * @return project this item belongs to
      */
     public String getProject() {
-        if(projectRegistry == null)
-            return null;
-
-        final RegisteredProject parentProject = projectRegistry.getParentProject(getPath().toString());
-        if(parentProject == null) {
+        if (projectRegistry == null) {
             return null;
         }
+
+        final RegisteredProject parentProject = projectRegistry.getParentProject(getPath().toString());
+        if (parentProject == null) {
+            return null;
+        }
+
         return parentProject.getPath();
     }
 
@@ -106,13 +103,13 @@ public abstract class VirtualFileEntry {
      * @return whether the item is project
      */
     public boolean isProject() {
-
         // root
-        if(projectRegistry == null || getProject() == null)
+        if (projectRegistry == null || getProject() == null) {
             return false;
+        }
+
         return getProject().equals(getPath().toString());
     }
-
 
     /**
      * Deletes this item.
@@ -133,6 +130,4 @@ public abstract class VirtualFileEntry {
     public Map<String, String> getAttributes() {
         return attributes;
     }
-
-
 }
