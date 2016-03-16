@@ -33,12 +33,13 @@ import org.eclipse.che.ide.api.event.FileContentUpdateEvent;
 import org.eclipse.che.ide.api.event.FileEvent;
 import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent;
 import org.eclipse.che.ide.api.notification.NotificationManager;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsole;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsoleFactory;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.rest.Unmarshallable;
@@ -256,7 +257,7 @@ public class BranchPresenter implements BranchView.ActionDelegate {
     }
 
     private void updateProject(final ProjectConfigDto projectToUpdate) {
-        Promise<ProjectConfigDto> updateProjectPromise = projectService.updateProject(workspaceId, projectToUpdate.getPath(), projectToUpdate);
+        Promise<ProjectConfigDto> updateProjectPromise = projectService.updateProject(workspaceId, Path.valueOf(projectToUpdate.getPath()), projectToUpdate);
         updateProjectPromise.then(new Operation<ProjectConfigDto>() {
             @Override
             public void apply(ProjectConfigDto arg) throws OperationException {

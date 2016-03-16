@@ -25,6 +25,7 @@ import org.eclipse.che.ide.api.event.project.CreateProjectEvent;
 import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent;
 import org.eclipse.che.ide.api.project.wizard.ProjectNotificationSubscriber;
 import org.eclipse.che.ide.api.wizard.Wizard.CompleteCallback;
+import org.eclipse.che.ide.resource.Path;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -72,7 +73,7 @@ public class ProjectUpdater {
         final String projectPath = projectConfig.getPath();
 
         projectService.updateProject(workspaceId,
-                                     projectPath == null ? '/' + projectConfig.getName() : projectPath,
+                                     Path.valueOf(projectPath == null ? '/' + projectConfig.getName() : projectPath),
                                      projectConfig)
                       .then(new Operation<ProjectConfigDto>() {
                           @Override

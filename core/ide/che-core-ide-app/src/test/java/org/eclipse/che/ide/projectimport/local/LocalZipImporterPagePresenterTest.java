@@ -19,7 +19,6 @@ import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.event.project.OpenProjectEvent;
 import org.eclipse.che.ide.api.project.wizard.ProjectNotificationSubscriber;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.ui.dialogs.message.MessageDialog;
@@ -200,7 +199,6 @@ public class LocalZipImporterPagePresenterTest {
         verify(dtoFactory).createDtoFromJson(PARSED_RESPONSE, ProjectConfigDto.class);
         verify(view).closeDialog();
         verify(projectNotificationSubscriber).onSuccess();
-        verify(eventBus).fireEvent(Matchers.<Event<OpenProjectEvent>>anyObject());
         verify(projectNotificationSubscriber, never()).onFailure(anyString());
     }
 

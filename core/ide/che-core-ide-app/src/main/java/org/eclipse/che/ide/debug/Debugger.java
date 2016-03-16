@@ -11,7 +11,7 @@
 package org.eclipse.che.ide.debug;
 
 import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 

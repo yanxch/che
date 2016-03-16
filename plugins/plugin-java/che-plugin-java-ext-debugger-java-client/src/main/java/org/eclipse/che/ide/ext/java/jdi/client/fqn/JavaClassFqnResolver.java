@@ -12,7 +12,7 @@ package org.eclipse.che.ide.ext.java.jdi.client.fqn;
 
 import com.google.inject.Singleton;
 
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 
 import javax.validation.constraints.NotNull;
 

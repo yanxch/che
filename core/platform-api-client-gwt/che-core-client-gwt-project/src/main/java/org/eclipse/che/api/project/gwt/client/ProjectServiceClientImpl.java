@@ -34,6 +34,8 @@ import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.AsyncRequestFactory;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
+import org.eclipse.che.ide.rest.NoOpUnmarshaller;
+import org.eclipse.che.ide.rest.StringUnmarshaller;
 import org.eclipse.che.ide.ui.loaders.request.LoaderFactory;
 import org.eclipse.che.ide.websocket.Message;
 import org.eclipse.che.ide.websocket.MessageBuilder;
@@ -67,6 +69,12 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
     private final AsyncRequestFactory    asyncRequestFactory;
     private final DtoFactory             dtoFactory;
     private final DtoUnmarshallerFactory dtoUnmarshaller;
+
+    private static final NoOpUnmarshaller noOpUnmarshaller;
+
+    static {
+        noOpUnmarshaller = new NoOpUnmarshaller();
+    }
 
     private final String extPath;
 
@@ -207,13 +215,13 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
     }
 
     @Override
-    public Promise<ProjectConfigDto> updateProject(String workspaceId, String path, ProjectConfigDto projectConfig) {
-        final String requestUrl = extPath + "/project/" + workspaceId + normalizePath(path);
+    public Promise<ProjectConfigDto> updateProject(String workspaceId, Path path, ProjectConfigDto projectConfig) {
+        final String requestUrl = extPath + "/project/" + workspaceId + normalizePath(path.toString());
         return asyncRequestFactory.createRequest(PUT, requestUrl, projectConfig, false)
-                           .header(CONTENT_TYPE, MimeType.APPLICATION_JSON)
-                           .header(ACCEPT, MimeType.APPLICATION_JSON)
-                           .loader(loaderFactory.newLoader("Updating project..."))
-                           .send(dtoUnmarshaller.newUnmarshaller(ProjectConfigDto.class));
+                                  .header(CONTENT_TYPE, MimeType.APPLICATION_JSON)
+                                  .header(ACCEPT, MimeType.APPLICATION_JSON)
+                                  .loader(loaderFactory.newLoader("Updating project..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(ProjectConfigDto.class));
     }
 
     @Override
@@ -449,5 +457,130 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
         }
 
         return path.startsWith("/") ? path : '/' + path;
+    }
+
+    @Override
+    public Promise<ProjectConfigDto> createProject(String wsId, ProjectConfigDto config) {
+        final String requestUrl = extPath + "/project/" + wsId;
+
+        return asyncRequestFactory.createPostRequest(requestUrl, config)
+                                  .header(ACCEPT, MimeType.APPLICATION_JSON)
+                                  .loader(loaderFactory.newLoader("Creating project..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(ProjectConfigDto.class));
+    }
+
+    @Override
+    public Promise<ItemReference> createFile(String wsId, Path path, String content) {
+
+        final String requestUrl = extPath + "/project/" + wsId + "/file" + normalizePath(path.parent().toString()) + "?name=" + path.lastSegment();
+
+        return asyncRequestFactory.createPostRequest(requestUrl, null)
+                                  .data(content)
+                                  .loader(loaderFactory.newLoader("Creating file..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(ItemReference.class));
+    }
+
+    @Override
+    public Promise<String> readFile(String wsId, Path path) {
+        final String requestUrl = extPath + "/project/" + wsId + "/file" + normalizePath(path.toString());
+
+        return asyncRequestFactory.createGetRequest(requestUrl)
+                                  .loader(loaderFactory.newLoader("Loading file content..."))
+                                  .send(new StringUnmarshaller());
+    }
+
+    @Override
+    public Promise<Void> writeFile(String wsId, Path path, String content) {
+        final String requestUrl = extPath + "/project/" + wsId + "/file" + normalizePath(path.toString());
+
+        return asyncRequestFactory.createRequest(PUT, requestUrl, null, false)
+                                  .data(content)
+                                  .loader(loaderFactory.newLoader("Updating file..."))
+                                  .send(noOpUnmarshaller);
+    }
+
+    @Override
+    public Promise<ItemReference> createFolder(String wsId, Path path) {
+        final String requestUrl = extPath + "/project/" + wsId + "/folder" + normalizePath(path.toString());
+
+        return asyncRequestFactory.createPostRequest(requestUrl, null)
+                                  .loader(loaderFactory.newLoader("Creating folder..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(ItemReference.class));
+    }
+
+    @Override
+    public Promise<Void> delete(String wsId, Path path) {
+        final String requestUrl = extPath + "/project/" + wsId + normalizePath(path.toString());
+
+        return asyncRequestFactory.createRequest(DELETE, requestUrl, null, false)
+                                  .loader(loaderFactory.newLoader("Deleting project..."))
+                                  .send(noOpUnmarshaller);
+    }
+
+    @Override
+    public Promise<Void> copy(String wsId, Path source, Path target, String newName, boolean overwrite) {
+        final String requestUrl = extPath + "/project/" + wsId + "/copy" + normalizePath(source.toString()) + "?to=" + target.toString();
+
+        final CopyOptions copyOptions = dtoFactory.createDto(CopyOptions.class);
+        copyOptions.setName(newName);
+        copyOptions.setOverWrite(overwrite);
+
+        return asyncRequestFactory.createPostRequest(requestUrl, copyOptions)
+                                  .loader(loaderFactory.newLoader("Copying..."))
+                                  .send(noOpUnmarshaller);
+    }
+
+    @Override
+    public Promise<Void> move(String wsId, Path source, Path target, String newName, boolean overwrite) {
+        final String requestUrl = extPath + "/project/" + wsId + "/move" + normalizePath(source.toString()) + "?to=" + target.toString();
+
+        final MoveOptions moveOptions = dtoFactory.createDto(MoveOptions.class);
+        moveOptions.setName(newName);
+        moveOptions.setOverWrite(overwrite);
+
+        return asyncRequestFactory.createPostRequest(requestUrl, moveOptions)
+                                  .loader(loaderFactory.newLoader("Moving..."))
+                                  .send(noOpUnmarshaller);
+    }
+
+    @Override
+    public Promise<TreeElement> getTree(String wsId, Path path, int depth, boolean includeFiles) {
+        final String requestUrl =
+                extPath + "/project/" + wsId + "/tree" + normalizePath(path.toString()) + "?depth=" + depth + "&includeFiles=" +
+                includeFiles;
+
+        return asyncRequestFactory.createGetRequest(requestUrl)
+                                  .header(ACCEPT, MimeType.APPLICATION_JSON)
+                                  .loader(loaderFactory.newLoader("Reading project..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(TreeElement.class));
+    }
+
+    @Override
+    public Promise<ItemReference> getItem(String wsId, Path path) {
+        final String requestUrl = extPath + "/project/" + wsId + "/item" + normalizePath(path.toString());
+
+        return asyncRequestFactory.createGetRequest(requestUrl)
+                                  .header(ACCEPT, MimeType.APPLICATION_JSON)
+                                  .loader(loaderFactory.newLoader("Getting item..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(ItemReference.class));
+    }
+
+    @Override
+    public Promise<ProjectConfigDto> getProject(String workspaceId, Path path) {
+        final String requestUrl = extPath + "/project/" + workspaceId + normalizePath(path.toString());
+        return asyncRequestFactory.createGetRequest(requestUrl)
+                                  .header(ACCEPT, MimeType.APPLICATION_JSON)
+                                  .loader(loaderFactory.newLoader("Getting project..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(ProjectConfigDto.class));
+    }
+
+    @Override
+    public Promise<ProjectConfigDto> updateProject(String workspaceId, ProjectConfigDto descriptor) {
+        final String requestUrl = extPath + "/project/" + workspaceId + normalizePath(descriptor.getPath());
+        return asyncRequestFactory.createRequest(PUT, requestUrl, descriptor, false)
+                                  .header(CONTENT_TYPE, MimeType.APPLICATION_JSON)
+                                  .header(ACCEPT, MimeType.APPLICATION_JSON)
+                                  .loader(loaderFactory.newLoader("Updating project..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(ProjectConfigDto.class));
     }
 }

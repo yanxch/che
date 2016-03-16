@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.debug;
 
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 
 /**
  * Immutable object represents a breakpoint. It isn't designed to be preserved.

@@ -18,12 +18,13 @@ import com.google.web.bindery.event.shared.EventBus;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.commons.annotation.Nullable;
-import org.eclipse.che.ide.api.project.node.HasStorablePath;
-import org.eclipse.che.ide.api.project.node.Node;
-import org.eclipse.che.ide.api.project.node.resource.DeleteProcessor;
-import org.eclipse.che.ide.api.project.node.resource.RenameProcessor;
-import org.eclipse.che.ide.api.project.node.settings.NodeSettings;
+import org.eclipse.che.ide.api.data.HasStorablePath;
+import org.eclipse.che.ide.api.data.tree.Node;
+import org.eclipse.che.ide.api.data.DeleteProcessor;
+import org.eclipse.che.ide.api.data.RenameProcessor;
+import org.eclipse.che.ide.api.data.tree.settings.NodeSettings;
 import org.eclipse.che.ide.project.node.resource.ProjectConfigProcessor;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
 
 import javax.validation.constraints.NotNull;
@@ -55,7 +56,7 @@ public class ProjectNode extends ResourceBasedNode<ProjectConfigDto> implements 
 
     @Override
     public void updatePresentation(@NotNull NodePresentation presentation) {
-        presentation.setPresentableText(getData().getName());
+        presentation.setPresentableText(Path.valueOf(getData().getPath()).lastSegment());
         presentation.setPresentableIcon(isValid(getData()) ? nodeManager.getNodesResources().projectFolder()
                                                            : nodeManager.getNodesResources().notValidProjectFolder());
         presentation.setPresentableTextCss("font-weight:bold");

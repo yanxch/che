@@ -1189,4 +1189,14 @@ public final class Path {
         System.arraycopy(segments, 0, newSegments, 0, count);
         return new Path(device, newSegments, separators);
     }
+
+    /**
+     * Returns a copy of this path with removed last segment.
+     *
+     * @return the new path
+     * @since 4.0.0-RC13
+     */
+    public Path parent() {
+        return this.removeLastSegments(1);
+    }
 }

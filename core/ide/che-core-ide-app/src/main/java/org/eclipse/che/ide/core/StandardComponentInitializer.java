@@ -80,6 +80,7 @@ import org.eclipse.che.ide.part.editor.actions.CloseOtherAction;
 import org.eclipse.che.ide.part.editor.actions.PinEditorTabAction;
 import org.eclipse.che.ide.part.editor.actions.ReopenClosedFileAction;
 import org.eclipse.che.ide.part.editor.recent.OpenRecentFilesAction;
+import org.eclipse.che.ide.resources.ProjectAction;
 import org.eclipse.che.ide.ui.loaders.request.MessageLoaderResources;
 import org.eclipse.che.ide.ui.toolbar.MainToolbar;
 import org.eclipse.che.ide.ui.toolbar.ToolbarPresenter;
@@ -273,6 +274,9 @@ public class StandardComponentInitializer {
 
     @Inject
     private CloseCurrentFile closeCurrentFile;
+
+    @Inject
+    private ProjectAction projectAction;
 
     @Inject
     private MessageLoaderResources messageLoaderResources;
@@ -520,6 +524,9 @@ public class StandardComponentInitializer {
 
         actionManager.registerAction("setupProjectAction", settingsAction);
         helpGroup.add(settingsAction);
+
+        actionManager.registerAction("fire", projectAction);
+        helpGroup.add(projectAction);
 
         // Compose main context menu
         DefaultActionGroup resourceOperation = new DefaultActionGroup(actionManager);

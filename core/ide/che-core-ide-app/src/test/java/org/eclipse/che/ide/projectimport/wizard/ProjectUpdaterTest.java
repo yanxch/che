@@ -24,6 +24,7 @@ import org.eclipse.che.ide.api.event.project.CreateProjectEvent;
 import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent;
 import org.eclipse.che.ide.api.project.wizard.ProjectNotificationSubscriber;
 import org.eclipse.che.ide.api.wizard.Wizard;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.junit.Before;
@@ -110,7 +111,7 @@ public class ProjectUpdaterTest {
         getUpdatedProjectMock = createPromiseMock();
         getProjectsMock = createPromiseMock();
 
-        when(projectServiceClient.updateProject(anyString(), anyString(), any(ProjectConfigDto.class))).thenReturn(getUpdatedProjectMock);
+        when(projectServiceClient.updateProject(anyString(), any(Path.class), any(ProjectConfigDto.class))).thenReturn(getUpdatedProjectMock);
         when(projectServiceClient.getProjects(anyString())).thenReturn(getProjectsMock);
 
         updater = new ProjectUpdater(projectServiceClient,
@@ -141,7 +142,7 @@ public class ProjectUpdaterTest {
         verify(projectConfig).getName();
 
         verify(projectServiceClient).updateProject(eq(WORKSPACE_ID),
-                                                   eq('/' + PROJECT_NAME),
+                                                   eq(Path.valueOf('/' + PROJECT_NAME)),
                                                    eq(projectConfig));
 
         verify(getProjectsMock).then(getProjectsCaptor.capture());
@@ -167,7 +168,7 @@ public class ProjectUpdaterTest {
         verify(projectConfig).getName();
 
         verify(projectServiceClient).updateProject(eq(WORKSPACE_ID),
-                                                   eq('/' + PROJECT_NAME),
+                                                   eq(Path.valueOf('/' + PROJECT_NAME)),
                                                    eq(projectConfig));
 
         verify(getProjectsMock).then(getProjectsCaptor.capture());

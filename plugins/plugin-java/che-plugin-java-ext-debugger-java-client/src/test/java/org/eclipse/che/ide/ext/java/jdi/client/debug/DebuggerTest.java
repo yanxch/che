@@ -24,7 +24,7 @@ import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.event.project.ProjectReadyHandler;
 import org.eclipse.che.ide.api.filetypes.FileType;
 import org.eclipse.che.ide.api.filetypes.FileTypeRegistry;
-import org.eclipse.che.ide.api.project.tree.generic.FileNode;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.debug.Breakpoint;
 import org.eclipse.che.ide.debug.BreakpointManager;
 import org.eclipse.che.ide.debug.Debugger;
@@ -37,8 +37,6 @@ import org.eclipse.che.ide.ext.java.jdi.client.fqn.FqnResolverFactory;
 import org.eclipse.che.ide.ext.java.jdi.shared.BreakPoint;
 import org.eclipse.che.ide.ext.java.jdi.shared.DebuggerInfo;
 import org.eclipse.che.ide.ext.java.jdi.shared.Location;
-import org.eclipse.che.ide.ext.java.jdi.shared.UpdateVariableRequest;
-import org.eclipse.che.ide.ext.java.jdi.shared.VariablePath;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.util.storage.LocalStorage;
 import org.eclipse.che.ide.util.storage.LocalStorageProvider;
@@ -54,7 +52,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collections;
 
 import static org.mockito.Matchers.anyInt;
@@ -89,7 +86,7 @@ public class DebuggerTest extends BaseTest {
     @Mock
     private BreakpointManager                   gutterManager;
     @Mock
-    private FileNode                            file;
+    private VirtualFile                         file;
     @Mock
     private ItemReference                       fileReference;
     @Mock
@@ -133,7 +130,7 @@ public class DebuggerTest extends BaseTest {
     public void setUp() {
         super.setUp();
 
-        when(file.getData()).thenReturn(fileReference);
+//        when(file.getData()).thenReturn(fileReference);
         when(dtoFactory.createDto(Location.class)).thenReturn(mock(Location.class));
         when(dtoFactory.createDto(BreakPoint.class)).thenReturn(mock(BreakPoint.class));
         when(resolverFactory.getResolver(anyString())).thenReturn(mock(FqnResolver.class));

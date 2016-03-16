@@ -12,6 +12,7 @@ package org.eclipse.che.ide.api.app;
 
 import org.eclipse.che.api.factory.shared.dto.Factory;
 import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
+import org.eclipse.che.ide.api.workspace.Workspace;
 
 import java.util.List;
 
@@ -26,11 +27,19 @@ public interface AppContext {
     /** Returns list of start-up actions with parameters that comes form URL during IDE initialization. */
     List<StartUpAction> getStartAppActions();
 
+    /** @deprecated use {@link Workspace} */
+    @Deprecated
     UsersWorkspaceDto getWorkspace();
 
+    /** @deprecated use {@link Workspace} */
+    @Deprecated
     void setWorkspace(UsersWorkspaceDto workspace);
 
-    /** Returns id of current workspace of throws IllegalArgumentException if workspace is null. */
+    /**
+     * Returns id of current workspace of throws IllegalArgumentException if workspace is null.
+     * @deprecated use {@link Workspace#getId()}
+     **/
+    @Deprecated
     String getWorkspaceId();
 
     /**
