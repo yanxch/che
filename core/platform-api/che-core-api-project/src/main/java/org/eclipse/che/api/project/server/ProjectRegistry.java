@@ -254,24 +254,24 @@ public class ProjectRegistry {
         final RegisteredProject project = getProject(projectPath);
         final NewProjectConfig conf;
         List<String> newMixins = new ArrayList<>();
-        String newType;
+
 
         if (project == null) {
             if (asMixin) {
                 throw new ConflictException("Can not assign as mixin type '" + type +
                                             "' since the " + projectPath + " is not a project.");
             } else {
-                newType = type;
+
+                final String path = absolutizePath(projectPath);
+                final String name = Path.of(projectPath).getName();
+
+                conf = new NewProjectConfig(path, type, newMixins, name, name, null, null);
+
+                return putProject(conf, root.getChildFolder(path), true, true);
             }
-
-            final String path = absolutizePath(projectPath);
-            final String name = Path.of(projectPath).getName();
-            conf = new NewProjectConfig(absolutizePath(projectPath), newType, newMixins, name, name, null, null);
-
-            return putProject(conf, root.getChildFolder(path), true, true);
         } else {
             newMixins = project.getMixins();
-            newType = project.getType();
+            String newType = project.getType();
             if (asMixin) {
                 if (!newMixins.contains(type)) {
                     newMixins.add(type);
