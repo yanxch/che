@@ -30,6 +30,7 @@ import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter.EditorPartCloseHandler;
 import org.eclipse.che.ide.api.editor.EditorProvider;
 import org.eclipse.che.ide.api.editor.EditorRegistry;
+import org.eclipse.che.ide.api.editor.OpenEditorCallbackImpl;
 import org.eclipse.che.ide.api.event.ActivePartChangedEvent;
 import org.eclipse.che.ide.api.event.ActivePartChangedHandler;
 import org.eclipse.che.ide.api.event.FileContentUpdateEvent;
@@ -303,13 +304,11 @@ public class EditorAgentImpl implements EditorAgent {
         return descriptorPathOfFile.equals(descriptorPath) || descriptorPathOfFile.startsWith(descriptorPath + "/");
     }
 
-    /** {@inheritDoc} */
     @Override
     public void openEditor(@NotNull final VirtualFile file) {
-        doOpen(file, null);
+        doOpen(file, new OpenEditorCallbackImpl());
     }
 
-    /** {@inheritDoc} */
     public void closeEditor(VirtualFile file) {
         EditorPartPresenter openedEditor = getOpenedEditor(Path.valueOf(file.getPath()));
         if (openedEditor != null) {
@@ -317,7 +316,6 @@ public class EditorAgentImpl implements EditorAgent {
         }
     }
 
-    /** {@inheritDoc} */
     @Override
     public void openEditor(@NotNull VirtualFile file, @NotNull OpenEditorCallback callback) {
         doOpen(file, callback);
@@ -347,25 +345,20 @@ public class EditorAgentImpl implements EditorAgent {
                         if (editor instanceof HasReadOnlyProperty) {
                             ((HasReadOnlyProperty)editor).setReadOnly(file.isReadOnly());
                         }
-                        if (callback != null) {
-                            callback.onEditorOpened(editor);
-                        }
 
+                        callback.onEditorOpened(editor);
                         eventBus.fireEvent(new EditorOpenedEvent(file, editor));
                     }
                 }
             });
-
         }
     }
 
-    /** {@inheritDoc} */
     @Override
     public void activateEditor(@NotNull EditorPartPresenter editor) {
         workspace.setActivePart(editor);
     }
 
-    /** {@inheritDoc} */
     @Override
     public List<EditorPartPresenter> getDirtyEditors() {
         List<EditorPartPresenter> dirtyEditors = new ArrayList<>();
@@ -395,14 +388,12 @@ public class EditorAgentImpl implements EditorAgent {
         }
     }
 
-    /** {@inheritDoc} */
     @NotNull
     @Override
     public List<EditorPartPresenter> getOpenedEditors() {
         return openedEditors;
     }
 
-    /** {@inheritDoc} */
     @Override
     public EditorPartPresenter getOpenedEditor(Path path) {
         for (EditorPartPresenter editor : openedEditors) {
@@ -445,7 +436,6 @@ public class EditorAgentImpl implements EditorAgent {
         });
     }
 
-    /** {@inheritDoc} */
     @Override
     public void updateEditorNode(@NotNull String path, @NotNull VirtualFile virtualFile) {
         EditorPartPresenter openedEditor = getOpenedEditor(Path.valueOf(path));
@@ -456,13 +446,11 @@ public class EditorAgentImpl implements EditorAgent {
         openedEditor.onFileChanged();
     }
 
-    /** {@inheritDoc} */
     @Override
     public EditorPartPresenter getActiveEditor() {
         return activeEditor;
     }
 
-    /** {@inheritDoc} */
     @Nullable
     @Override
     public EditorPartPresenter getNextEditor() {
@@ -478,7 +466,6 @@ public class EditorAgentImpl implements EditorAgent {
         return nextPart;
     }
 
-    /** {@inheritDoc} */
     @Nullable
     @Override
     public EditorPartPresenter getPreviousEditor() {
@@ -492,7 +479,6 @@ public class EditorAgentImpl implements EditorAgent {
         return previousEditor;
     }
 
-    /** {@inheritDoc} */
     @Nullable
     @Override
     public EditorPartPresenter getLastEditor() {
@@ -503,7 +489,6 @@ public class EditorAgentImpl implements EditorAgent {
         return result;
     }
 
-    /** {@inheritDoc} */
     @Nullable
     @Override
     public EditorPartPresenter getFirstEditor() {
