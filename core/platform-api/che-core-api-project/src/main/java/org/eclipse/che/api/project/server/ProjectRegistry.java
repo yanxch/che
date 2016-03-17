@@ -92,7 +92,10 @@ public class ProjectRegistry {
         initialized = true;
 
         for (RegisteredProject project : projects.values()) {
-            fireInitHandlers(project);
+
+            // only for projects with sources
+            if(project.getBaseFolder() != null)
+                 fireInitHandlers(project);
         }
     }
 
