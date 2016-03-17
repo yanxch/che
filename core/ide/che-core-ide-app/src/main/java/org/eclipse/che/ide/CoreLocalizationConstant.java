@@ -462,8 +462,12 @@ public interface CoreLocalizationConstant extends Messages {
     @Key("action.completions.title")
     String actionCompetitionsTitle();
 
-    @Key("project.settings.title")
-    String projectSettingsTitle();
+    /* Preferences widget */
+    @Key("unable.to.save.preference")
+    String unableToSavePreference();
+
+    @Key("unable.to.load.preference")
+    String unableToLoadPreference();
 
     @Key("create.ws.title")
     String createWsTitle();
