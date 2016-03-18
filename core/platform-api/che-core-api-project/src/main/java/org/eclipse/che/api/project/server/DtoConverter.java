@@ -163,7 +163,10 @@ public class DtoConverter {
     }
 
     private static List<Link> generateProjectLinks(RegisteredProject project, String workspace, UriBuilder uriBuilder) {
-        final List<Link> links = generateFolderLinks(project.getBaseFolder(), workspace, uriBuilder);
+        final List<Link> links = new LinkedList<>();
+        if (project.getBaseFolder() != null) { //here project can be not imported so base directory not exist on file system but project exist in workspace config
+            links.addAll(generateFolderLinks(project.getBaseFolder(), workspace, uriBuilder));
+        }
         final String relPath = project.getPath().substring(1);
         links.add(LinksHelper.createLink(PUT,
                                          uriBuilder.clone()
