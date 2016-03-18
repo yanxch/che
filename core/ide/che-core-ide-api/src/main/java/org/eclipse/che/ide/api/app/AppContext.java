@@ -136,10 +136,10 @@ public interface AppContext {
     Resource getResource();
 
     /**
-     * Returns the resources which is in current context. By current context means, that resource may be
-     * in use in specified part if IDE. For example, project part may provide resource which is under
+     * Returns the resources which are in current context. By current context means, that resources may be
+     * in use in specified part if IDE. For example, project part may provide resources which are under
      * selection at this moment, editor may provide resource which is open, full text search may provide
-     * resource which is under selection.
+     * resources which are under selection.
      * <p/>
      * If specified part provides more than one resource, then all selected resources are returned.
      *
