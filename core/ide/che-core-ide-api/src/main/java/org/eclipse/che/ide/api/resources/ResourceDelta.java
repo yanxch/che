@@ -63,7 +63,7 @@ public interface ResourceDelta {
      * @see ResourceDelta#getKind()
      * @since 4.0.0-RC14
      */
-    int UNLOADED_FROM_CACHE = 0x16;
+    int UNLOADED_FROM_CACHE = 0x10;
 
     /* -- Constants which describe resource changes -- */
 
@@ -73,7 +73,7 @@ public interface ResourceDelta {
      * @see ResourceDelta#getFlags()
      * @since 4.0.0-RC14
      */
-    int CONTENT = 0x32;
+    int CONTENT = 0x100;
 
     /**
      * Change constant (bit mask) indicating that the resource was moved from another location. The location can be retrieved
@@ -82,7 +82,7 @@ public interface ResourceDelta {
      * @see ResourceDelta#getFlags()
      * @since 4.0.0-RC14
      */
-    int MOVED_FROM = 0x64;
+    int MOVED_FROM = 0x200;
 
     /**
      * Change constant (bit mask) indicating that the resource was moved to another location. The location can be retrieved
@@ -91,7 +91,7 @@ public interface ResourceDelta {
      * @see ResourceDelta#getFlags()
      * @since 4.0.0-RC14
      */
-    int MOVED_TO = 0x128;
+    int MOVED_TO = 0x400;
 
     /**
      * Change constant (bit mask) indicating that the resource was copied from another location. The location can be retrieved
@@ -100,7 +100,7 @@ public interface ResourceDelta {
      * @see ResourceDelta#getFlags()
      * @since 4.0.0-RC14
      */
-    int COPIED_FROM = 0x256;
+    int COPIED_FROM = 0x800;
 
     /**
      * Returns the kind of this resource delta. Normally, one of {@code CREATED}, {@code REMOVED}, {@code CHANGED},
