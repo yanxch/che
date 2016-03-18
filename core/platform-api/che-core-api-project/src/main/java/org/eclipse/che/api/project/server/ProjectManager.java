@@ -20,6 +20,7 @@ import org.eclipse.che.api.core.UnauthorizedException;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.model.project.SourceStorage;
 import org.eclipse.che.api.core.model.project.type.ProjectType;
+import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.core.util.LineConsumerFactory;
 import org.eclipse.che.api.project.server.handlers.CreateProjectHandler;
@@ -302,19 +303,27 @@ public final class ProjectManager {
         }
 
         // Preparing websocket output publisher to broadcast output of import process to the ide clients while importing
+        String normalizePath = (path.startsWith("/")) ? path : "/".concat(path);
         final LineConsumerFactory outputOutputConsumerFactory =
-                () -> new ProjectImportOutputWSLineConsumer(path, projectRegistry.getWorkspaceId(), 300);
+                () -> new ProjectImportOutputWSLineConsumer(normalizePath, projectRegistry.getWorkspaceId(), 300);
 
-        FolderEntry folder = asFolder(path);
+        FolderEntry folder = asFolder(normalizePath);
 
         if (folder == null) {
-            folder = getProjectsRoot().createFolder(path);
+            folder = getProjectsRoot().createFolder(normalizePath);
         }
 
         importer.importSources(folder, sourceStorage, outputOutputConsumerFactory);
 
         final String name = folder.getPath().getName();
-        return projectRegistry.putProject(new NewProjectConfig(path, name, BaseProjectType.ID, sourceStorage), folder, true, false);
+        WorkspaceConfig workspaceConfig = projectRegistry.getWorkspaceConfig();
+        List<? extends ProjectConfig> projects = workspaceConfig.getProjects();
+        for (ProjectConfig project : projects) {
+            if (normalizePath.equals(project.getPath())) {
+                return projectRegistry.putProject(project, folder, true, false);
+            }
+        }
+        return projectRegistry.putProject(new NewProjectConfig(normalizePath, name, BaseProjectType.ID, sourceStorage), folder, true, false);
     }
 
     public ProjectTypeResolution estimateProject(String path, String projectTypeId) throws ServerException,

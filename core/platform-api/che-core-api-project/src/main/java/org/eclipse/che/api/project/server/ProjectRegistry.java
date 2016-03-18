@@ -16,6 +16,7 @@ import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.model.workspace.UsersWorkspace;
+import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.project.server.handlers.ProjectHandlerRegistry;
 import org.eclipse.che.api.project.server.handlers.ProjectInitHandler;
 import org.eclipse.che.api.project.server.type.BaseProjectType;
@@ -104,6 +105,14 @@ public class ProjectRegistry {
      */
     public String getWorkspaceId() {
         return workspaceHolder.getWorkspace().getId();
+    }
+
+
+    /**
+     * @return id of workspace this project belongs to
+     */
+    public WorkspaceConfig getWorkspaceConfig() {
+        return workspaceHolder.getWorkspace().getConfig();
     }
 
     /**
