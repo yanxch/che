@@ -45,6 +45,9 @@ public class GitValueProviderFactory implements ValueProviderFactory {
         return new ValueProvider() {
             @Override
             public List<String> getValues(String attributeName) throws ValueStorageException {
+                if (folder == null) {
+                    return Collections.emptyList();
+                }
                 try (GitConnection gitConnection = gitConnectionFactory.getConnection(resolveLocalPath(folder))) {
                     //check whether the folder belongs to git repository
                     if (!gitConnection.isInsideWorkTree()) {
