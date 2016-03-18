@@ -146,8 +146,6 @@ public class BootstrapController {
                     initializationFailed(reason.getMessage());
                 }
             });
-        } else {
-            eventBus.fireEvent(WsAgentStateEvent.createWsAgentStartedEvent());
         }
     }
 

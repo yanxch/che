@@ -16,7 +16,6 @@ import com.googlecode.gwt.test.utils.GwtReflectionUtils;
 import org.eclipse.che.api.git.shared.LogResponse;
 import org.eclipse.che.api.git.shared.ResetRequest;
 import org.eclipse.che.api.git.shared.Revision;
-import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorInput;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.ext.git.client.BaseTest;
@@ -32,8 +31,6 @@ import org.mockito.stubbing.Answer;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 
 import static org.eclipse.che.api.git.shared.ResetRequest.ResetType.HARD;
 import static org.eclipse.che.api.git.shared.ResetRequest.ResetType.MIXED;
@@ -64,8 +61,6 @@ public class ResetToCommitPresenterTest extends BaseTest {
     @Mock
     private EditorInput            editorInput;
     @Mock
-    private EditorAgent            editorAgent;
-    @Mock
     private EditorPartPresenter    partPresenter;
     @Mock
     private Revision               selectedRevision;
@@ -81,7 +76,6 @@ public class ResetToCommitPresenterTest extends BaseTest {
                                                service,
                                                constant,
                                                eventBus,
-                                               editorAgent,
                                                dialogFactory,
                                                appContext,
                                                notificationManager,
@@ -89,12 +83,8 @@ public class ResetToCommitPresenterTest extends BaseTest {
                                                gitOutputConsoleFactory,
                                                consolesPanelPresenter);
 
-        NavigableMap<String, EditorPartPresenter> partPresenterMap = new TreeMap<>();
-        partPresenterMap.put("partPresenter", partPresenter);
-
         when(view.isMixMode()).thenReturn(IS_MIXED);
         when(selectedRevision.getId()).thenReturn(PROJECT_PATH);
-        when(editorAgent.getOpenedEditors()).thenReturn(partPresenterMap);
         when(partPresenter.getEditorInput()).thenReturn(editorInput);
         when(editorInput.getFile()).thenReturn(file);
         when(file.getPath()).thenReturn(FILE_PATH);
