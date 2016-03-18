@@ -26,6 +26,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Vlad Zhukovskiy
  */
+@Deprecated
 public abstract class AbstractProjectBasedNode<DataObject> extends AbstractTreeNode implements HasDataObject<DataObject>,
                                                                                                HasPresentation,
                                                                                                HasProjectConfig,

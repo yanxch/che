@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.context;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.web.bindery.event.shared.EventBus;
 
@@ -21,29 +22,29 @@ import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.app.CurrentProject;
 import org.eclipse.che.ide.api.app.CurrentUser;
+import org.eclipse.che.ide.api.app.StartUpAction;
+import org.eclipse.che.ide.api.data.HasDataObject;
 import org.eclipse.che.ide.api.event.SelectionChangedEvent;
 import org.eclipse.che.ide.api.event.SelectionChangedHandler;
 import org.eclipse.che.ide.api.event.project.CurrentProjectChangedEvent;
 import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent;
 import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent.ProjectUpdatedHandler;
-import org.eclipse.che.ide.api.project.HasProjectConfig;
-import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.selection.Selection;
 import org.eclipse.che.ide.api.workspace.Workspace;
-import org.eclipse.che.ide.project.node.ProjectNode;
-import org.eclipse.che.ide.api.app.StartUpAction;
 
 import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implementation of {@link AppContext}.
  *
  * @author Vitaly Parfonov
  * @author Artem Zatsarynnyi
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAgentStateHandler, ProjectUpdatedHandler {
@@ -80,18 +81,6 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
         eventBus.addHandler(SelectionChangedEvent.TYPE, this);
         eventBus.addHandler(WsAgentStateEvent.TYPE, this);
         eventBus.addHandler(ProjectUpdatedEvent.getType(), this);
-    }
-
-    private static ProjectConfigDto getRootConfig(Node selectedNode) {
-        Node parent = selectedNode.getParent();
-        if (parent == null) {
-            if (selectedNode instanceof ProjectNode) {
-                return ((ProjectNode)selectedNode).getData();
-            }
-            return null;
-        }
-
-        return getRootConfig(parent);
     }
 
     @Override
@@ -190,36 +179,43 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
             return;
         }
 
-        if (selection == null) {
-            currentProject = null;
-            browserQueryFieldRenderer.setProjectName("");
+        browserQueryFieldRenderer.setProjectName("");
+
+        currentResource = null;
+        currentResources = null;
+
+        if (selection == null || selection.getHeadElement() == null) {
             return;
         }
 
-        final Object headElement = selection.getHeadElement();
-        if (headElement == null) {
-            currentProject = null;
-            browserQueryFieldRenderer.setProjectName("");
-            return;
-        }
+        final Object headObject = selection.getHeadElement();
+        final List<?> allObjects = selection.getAllElements();
 
-        currentProject = new CurrentProject();
+        if (headObject instanceof HasDataObject) {
+            Object data = ((HasDataObject)headObject).getData();
 
-        if (headElement instanceof HasProjectConfig) {
-            final HasProjectConfig hasProjectConfig = (HasProjectConfig)headElement;
-            final ProjectConfigDto module = (hasProjectConfig).getProjectConfig();
-            currentProject.setProjectConfig(module);
-        }
-
-        if (headElement instanceof Node) {
-            ProjectConfigDto rootConfig = getRootConfig((Node)headElement);
-            if (rootConfig == null) {
-                rootConfig = currentProject.getProjectConfig();
+            if (data instanceof Resource) {
+                currentResource = (Resource)data;
             }
-            currentProject.setRootProject(rootConfig);
-            browserQueryFieldRenderer.setProjectName(rootConfig.getName());
+        } else if (headObject instanceof Resource) {
+            currentResource = (Resource)headObject;
         }
-        eventBus.fireEvent(new CurrentProjectChangedEvent(currentProject.getProjectConfig()));
+
+        Set<Resource> resources = Sets.newHashSet();
+
+        for (Object object : allObjects) {
+            if (object instanceof HasDataObject) {
+                Object data = ((HasDataObject)object).getData();
+
+                if (data instanceof Resource) {
+                    resources.add((Resource)data);
+                }
+            } else if (object instanceof Resource) {
+                resources.add((Resource)object);
+            }
+        }
+
+        currentResources = resources.toArray(new Resource[resources.size()]);
     }
 
     @Override

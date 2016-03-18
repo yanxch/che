@@ -16,6 +16,7 @@ import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
  * @author Vlad Zhukovskiy
  * @author Valeriy Svydenko
  */
+@Deprecated
 public interface HasProjectConfig {
 
     class ProjectConfig implements HasProjectConfig {

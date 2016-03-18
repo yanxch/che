@@ -29,6 +29,7 @@ import java.util.List;
 /**
  * @author Vlad Zhukovskiy
  */
+@Deprecated
 public abstract class ItemReferenceBasedNode extends ResourceBasedNode<ItemReference> implements HasStorablePath {
     protected final ItemReferenceProcessor resourceProcessor;
 

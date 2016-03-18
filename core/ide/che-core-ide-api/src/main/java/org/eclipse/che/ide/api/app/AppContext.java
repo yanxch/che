@@ -25,6 +25,7 @@ import java.util.List;
  *
  * @author Vitaly Parfonov
  * @author Artem Zatsarynnyi
+ * @author Vlad Zhukovskyi
  */
 public interface AppContext {
 

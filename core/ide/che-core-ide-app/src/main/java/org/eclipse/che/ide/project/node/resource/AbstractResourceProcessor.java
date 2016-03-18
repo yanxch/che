@@ -29,6 +29,7 @@ import javax.validation.constraints.NotNull;
 /**
  * @author Vlad Zhukovskiy
  */
+@Deprecated
 public abstract class AbstractResourceProcessor<DataObject> implements DeleteProcessor<DataObject>, RenameProcessor<DataObject> {
     protected EventBus               eventBus;
     protected ProjectServiceClient   projectService;

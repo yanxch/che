@@ -13,18 +13,16 @@ package org.eclipse.che.ide.search.presentation;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 
-import org.eclipse.che.api.project.shared.dto.ItemReference;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.parts.PartStackType;
 import org.eclipse.che.ide.api.parts.WorkspaceAgent;
+import org.eclipse.che.ide.api.resources.Resource;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
-
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
@@ -86,10 +84,10 @@ public class FindResultPresenterTest {
 
     @Test
     public void responseShouldBeHandled() throws Exception {
-        findResultPresenter.handleResponse(Matchers.<List<ItemReference>>any(), anyString());
+        findResultPresenter.handleResponse(Matchers.<Resource[]>any(), anyString());
 
         verify(workspaceAgent).openPart(findResultPresenter, PartStackType.INFORMATION);
         verify(workspaceAgent).setActivePart(findResultPresenter);
-        verify(view).showResults(Matchers.<List<ItemReference>>any(), anyString());
+        verify(view).showResults(Matchers.<Resource[]>any(), anyString());
     }
 }

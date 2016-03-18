@@ -18,6 +18,7 @@ import java.util.List;
 /**
  * @author Vlad Zhukovskiy
  */
+@Deprecated
 public interface ItemReferenceChainFilter {
     Promise<List<ItemReference>> process(List<ItemReference> referenceList);
 }

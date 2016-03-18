@@ -41,6 +41,7 @@ import static org.eclipse.che.api.promises.client.callback.PromiseHelper.newProm
 /**
  * @author Vlad Zhukovskiy
  */
+@Deprecated
 public class FileReferenceNode extends ItemReferenceBasedNode implements VirtualFile, HasAction {
 
     public static final String GET_CONTENT_REL = "get content";

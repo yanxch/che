@@ -19,6 +19,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Vlad Zhukovskiy
  */
+@Deprecated
 public interface SupportRename<DataObject> {
     /**
      * Return rename processor. To detail information {@see RenameProcessor}.

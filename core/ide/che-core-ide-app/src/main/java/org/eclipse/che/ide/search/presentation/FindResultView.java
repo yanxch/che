@@ -12,9 +12,10 @@ package org.eclipse.che.ide.search.presentation;
 
 import com.google.inject.ImplementedBy;
 
-import org.eclipse.che.api.project.shared.dto.ItemReference;
+import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.api.mvp.View;
 import org.eclipse.che.ide.api.parts.base.BaseActionDelegate;
+import org.eclipse.che.ide.api.resources.Resource;
 
 import java.util.List;
 
@@ -41,10 +42,10 @@ public interface FindResultView extends View<FindResultView.ActionDelegate> {
      * @param request
      *         requested text
      */
-    void showResults(List<ItemReference> nodes, String request);
+    void showResults(Resource[] resources, String request);
 
     interface ActionDelegate extends BaseActionDelegate {
-
+        void onSelectionChanged(List<Node> selection);
     }
 
 }

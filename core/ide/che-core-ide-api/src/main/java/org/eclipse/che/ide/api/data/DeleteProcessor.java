@@ -11,7 +11,6 @@
 package org.eclipse.che.ide.api.data;
 
 import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.ide.api.data.HasDataObject;
 
 import javax.validation.constraints.NotNull;
 
@@ -20,6 +19,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Vlad Zhukovskiy
  */
+@Deprecated
 public interface DeleteProcessor<DataObject> {
     /**
      * Delete data object stored in node.

@@ -27,8 +27,9 @@ import org.eclipse.che.ide.api.resources.ResourceChangedEvent.ResourceChangedHan
 import org.eclipse.che.ide.api.resources.ResourceDelta;
 import org.eclipse.che.ide.api.resources.ResourcePathComparator;
 import org.eclipse.che.ide.api.workspace.Workspace;
-import org.eclipse.che.ide.api.workspace.WorkspaceUpdatedEvent;
-import org.eclipse.che.ide.api.workspace.WorkspaceUpdatedEvent.WorkspaceUpdatedHandler;
+import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationAppliedEvent;
+import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationChangedEvent;
+import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationChangedEvent.WorkspaceConfigurationChangedHandler;
 import org.eclipse.che.ide.resources.internal.ResourceManager;
 import org.eclipse.che.ide.resources.internal.ResourceManager.ResourceManagerFactory;
 
@@ -54,8 +55,9 @@ import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
  * @since 4.0.0-RC14
  */
 @Singleton
-public final class WorkspaceImpl implements Workspace, WorkspaceUpdatedHandler, ResourceChangedHandler {
+public final class WorkspaceImpl implements Workspace, WorkspaceConfigurationChangedHandler, ResourceChangedHandler {
 
+    private final EventBus               eventBus;
     private final ResourceManagerFactory resourceManagerFactory;
 
     private ResourceManager resourceManager;
@@ -64,10 +66,12 @@ public final class WorkspaceImpl implements Workspace, WorkspaceUpdatedHandler, 
     private WorkspaceConfig wsConfiguration;
 
     @Inject
-    public WorkspaceImpl(EventBus eventBus, ResourceManagerFactory resourceManagerFactory) {
+    public WorkspaceImpl(EventBus eventBus,
+                         ResourceManagerFactory resourceManagerFactory) {
+        this.eventBus = eventBus;
         this.resourceManagerFactory = resourceManagerFactory;
 
-        eventBus.addHandler(WorkspaceUpdatedEvent.getType(), this);
+        eventBus.addHandler(WorkspaceConfigurationChangedEvent.getType(), this);
         eventBus.addHandler(ResourceChangedEvent.getType(), this);
     }
 
@@ -127,7 +131,7 @@ public final class WorkspaceImpl implements Workspace, WorkspaceUpdatedHandler, 
 
     /** {@inheritDoc} */
     @Override
-    public void onConfigurationUpdated(WorkspaceUpdatedEvent event) {
+    public void onConfigurationChanged(final WorkspaceConfigurationChangedEvent event) {
         this.wsConfiguration = event.getConfiguration();
         this.wsId = event.getID();
 
@@ -137,6 +141,7 @@ public final class WorkspaceImpl implements Workspace, WorkspaceUpdatedHandler, 
             public void apply(Project[] projects) throws OperationException {
                 WorkspaceImpl.this.projects = projects;
                 Arrays.sort(WorkspaceImpl.this.projects, ResourcePathComparator.getInstance());
+                eventBus.fireEvent(new WorkspaceConfigurationAppliedEvent(projects));
             }
         });
     }
@@ -168,7 +173,7 @@ public final class WorkspaceImpl implements Workspace, WorkspaceUpdatedHandler, 
             int index = Arrays.binarySearch(projects, resource, ResourcePathComparator.getInstance());
             int numMoved = projects.length - index - 1;
             if (numMoved > 0) {
-                System.arraycopy(projects, index+1, projects, index, numMoved);
+                System.arraycopy(projects, index + 1, projects, index, numMoved);
             }
             projects = copyOf(projects, --size);
         } else if (delta.getKind() == CHANGED) {

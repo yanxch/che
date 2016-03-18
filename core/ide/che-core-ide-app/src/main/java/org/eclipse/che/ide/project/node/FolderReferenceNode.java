@@ -25,6 +25,7 @@ import javax.validation.constraints.NotNull;
 /**
  * @author Vlad Zhukovskiy
  */
+@Deprecated
 public class FolderReferenceNode extends ItemReferenceBasedNode {
     @Inject
     public FolderReferenceNode(@Assisted ItemReference itemReference,

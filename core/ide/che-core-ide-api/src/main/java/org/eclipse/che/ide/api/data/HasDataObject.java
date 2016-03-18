@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.ide.api.data;
 
-import javax.validation.constraints.NotNull;
-
 /**
  * Indicates that specified node can contains data object, e.g. project descriptor or item reference.
  *
@@ -23,7 +21,6 @@ public interface HasDataObject<D> {
      *
      * @return data object
      */
-    @NotNull
     D getData();
 
     /**
@@ -32,5 +29,5 @@ public interface HasDataObject<D> {
      * @param data
      *         data object
      */
-    void setData(@NotNull D data);
+    void setData(D data);
 }

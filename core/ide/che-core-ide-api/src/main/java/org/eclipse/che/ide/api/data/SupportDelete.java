@@ -18,6 +18,7 @@ import org.eclipse.che.commons.annotation.Nullable;
  *
  * @author Vlad Zhukovskiy
  */
+@Deprecated
 public interface SupportDelete<DataObject> {
     /**
      * Return delete processor. To detail information {@see DeleteProcessor}.

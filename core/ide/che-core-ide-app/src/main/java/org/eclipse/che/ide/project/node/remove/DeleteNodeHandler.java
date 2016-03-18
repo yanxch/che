@@ -10,9 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.project.node.remove;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import com.google.gwt.core.client.JsArrayMixed;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,28 +20,27 @@ import org.eclipse.che.api.promises.client.FunctionException;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper.RequestCall;
 import org.eclipse.che.api.promises.client.js.JsPromiseError;
 import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.ide.CoreLocalizationConstant;
-import org.eclipse.che.ide.api.data.tree.Node;
-import org.eclipse.che.ide.project.node.FileReferenceNode;
-import org.eclipse.che.ide.project.node.FolderReferenceNode;
-import org.eclipse.che.ide.project.node.ProjectNode;
-import org.eclipse.che.ide.project.node.ResourceBasedNode;
+import org.eclipse.che.ide.api.resources.Folder;
+import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.ui.dialogs.CancelCallback;
 import org.eclipse.che.ide.ui.dialogs.ConfirmCallback;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 
-import javax.validation.constraints.NotNull;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.Lists.newArrayList;
 import static org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper.createFromAsyncRequest;
+import static org.eclipse.che.ide.api.resources.Resource.FILE;
+import static org.eclipse.che.ide.api.resources.Resource.FOLDER;
+import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
 
 /**
  * Helper class which allow to delete multiple nodes with user prompt.
@@ -62,41 +59,44 @@ public class DeleteNodeHandler {
         this.dialogFactory = dialogFactory;
     }
 
-    @NotNull
-    public Promise<Void> delete(@NotNull ResourceBasedNode<?> node) {
-        return delete(node, false);
+    public Promise<Void> deleteAll(Resource... resources) {
+        return deleteAll(false, resources);
     }
 
-    @NotNull
-    public Promise<Void> delete(@NotNull ResourceBasedNode<?> node, boolean needConfirmation) {
-        return deleteAll(Collections.<ResourceBasedNode<?>>singletonList(node), needConfirmation);
-    }
+    public Promise<Void> deleteAll(boolean needConfirmation, Resource... resources) {
+        checkArgument(resources != null, "Null resource occurred");
+        checkArgument(resources.length > 0, "No resources were provided to remove");
 
-    @NotNull
-    public Promise<Void> deleteAll(@NotNull List<ResourceBasedNode<?>> nodes) {
-        return deleteAll(nodes, false);
-    }
-
-    @NotNull
-    public Promise<Void> deleteAll(@NotNull List<ResourceBasedNode<?>> nodes, boolean needConfirmation) {
-
-        if (nodes == null || nodes.isEmpty()) {
-            return Promises.reject(JsPromiseError.create("Nodes shouldn't be empty"));
-        }
-
-        final List<ResourceBasedNode<?>> filteredNodes = filterDescendants(nodes);
+        final Resource[] filtered = filterDescendants(resources);
 
         if (!needConfirmation) {
-            Promise<Void> promise = Promises.resolve(null);
-            return chainNodes(promise, filteredNodes.iterator());
+            Promise<?>[] deleteAll = new Promise<?>[resources.length];
+            for (int i = 0; i < resources.length; i++) {
+                deleteAll[i] = resources[i].delete();
+            }
+
+            return Promises.all(deleteAll).then(new Function<JsArrayMixed, Void>() {
+                @Override
+                public Void apply(JsArrayMixed arg) throws FunctionException {
+                    return null;
+                }
+            });
         }
 
-        List<ResourceBasedNode<?>> projects = Lists.newArrayList(Iterables.filter(filteredNodes, isProjectNode()));
+        List<Resource> projectsList = newArrayList(/*Iterables.filter(filtered, isProjectNode())*/);
 
-        if (projects.isEmpty()) {
+        for (Resource resource : filtered) {
+            if (resource.getResourceType() == PROJECT) {
+                projectsList.add(resource);
+            }
+        }
+
+        Resource[] projects = projectsList.toArray(new Resource[projectsList.size()]);
+
+        if (projectsList.isEmpty()) {
             //if no project were found in nodes list
-            return promptUserToDelete(filteredNodes);
-        } else if (projects.size() < filteredNodes.size()) {
+            return promptUserToDelete(filtered);
+        } else if (projects.length < filtered.length) {
             //inform user that we can't delete mixed list of the nodes
             return Promises.reject(JsPromiseError.create(localization.mixedProjectDeleteMessage()));
         } else {
@@ -105,59 +105,47 @@ public class DeleteNodeHandler {
         }
     }
 
-    @NotNull
-    private Predicate<ResourceBasedNode<?>> isProjectNode() {
-        return new Predicate<ResourceBasedNode<?>>() {
-            @Override
-            public boolean apply(ResourceBasedNode<?> node) {
-                return node instanceof ProjectNode;
-            }
-        };
-    }
-
-    @NotNull
-    private Promise<Void> promptUserToDelete(@NotNull final List<ResourceBasedNode<?>> nodes) {
+    private Promise<Void> promptUserToDelete(final Resource[] resources) {
         return createFromAsyncRequest(new RequestCall<Void>() {
             @Override
             public void makeCall(AsyncCallback<Void> callback) {
-                String warningMessage = generateWarningMessage(nodes);
+                String warningMessage = generateWarningMessage(resources);
 
                 boolean anyDirectories = false;
 
                 String directoryName = null;
-                for (ResourceBasedNode<?> node : nodes) {
-                    if (node instanceof FolderReferenceNode) {
+                for (Resource resource : resources) {
+                    if (resource instanceof Folder) {
                         anyDirectories = true;
-                        directoryName = node.getName();
+                        directoryName = resource.getName();
                         break;
                     }
                 }
 
                 if (anyDirectories) {
-                    warningMessage += nodes.size() == 1 ? localization.deleteAllFilesAndSubdirectories(directoryName)
-                                                        : localization.deleteFilesAndSubdirectoriesInTheSelectedDirectory();
+                    warningMessage += resources.length == 1 ? localization.deleteAllFilesAndSubdirectories(directoryName)
+                                                            : localization.deleteFilesAndSubdirectoriesInTheSelectedDirectory();
                 }
 
                 dialogFactory.createConfirmDialog(localization.deleteDialogTitle(),
                                                   warningMessage,
-                                                  onConfirm(nodes, callback),
+                                                  onConfirm(resources, callback),
                                                   onCancel(callback)).show();
             }
         });
     }
 
-    @NotNull
-    private String generateWarningMessage(@NotNull List<ResourceBasedNode<?>> nodes) {
-        if (nodes.size() == 1) {
-            String name = nodes.get(0).getName();
-            String type = getDisplayType(nodes.get(0));
+    private String generateWarningMessage(Resource[] resources) {
+        if (resources.length == 1) {
+            String name = resources[0].getName();
+            String type = getDisplayType(resources[0]);
 
             return "Delete " + type + " \"" + name + "\"?";
         }
 
         Map<String, Integer> pluralToSingular = new HashMap<>();
-        for (ResourceBasedNode<?> node : nodes) {
-            final String type = getDisplayType(node);
+        for (Resource resource : resources) {
+            final String type = getDisplayType(resource);
 
             if (!pluralToSingular.containsKey(type)) {
                 pluralToSingular.put(type, 1);
@@ -201,34 +189,33 @@ public class DeleteNodeHandler {
         return buffer.toString();
     }
 
-    @NotNull
-    private String getDisplayType(@NotNull ResourceBasedNode<?> node) {
-        if (node instanceof ProjectNode) {
+    private String getDisplayType(Resource resource) {
+        if (resource.getResourceType() == PROJECT) {
             return "project";
-        } else if (node instanceof FolderReferenceNode) {
+        } else if (resource.getResourceType() == FOLDER) {
             return "folder";
-        } else if (node instanceof FileReferenceNode) {
+        } else if (resource.getResourceType() == FILE) {
             return "file";
         } else {
             return "resource";
         }
     }
 
-    @NotNull
-    private List<ResourceBasedNode<?>> filterDescendants(@NotNull List<ResourceBasedNode<?>> nodes) {
-        List<ResourceBasedNode<?>> filteredElements = Lists.newArrayList(nodes);
+    private Resource[] filterDescendants(Resource[] resources) {
+        List<Resource> filteredElements = newArrayList(resources);
 
         int previousSize;
 
         do {
             previousSize = filteredElements.size();
             outer:
-            for (ResourceBasedNode<?> element : filteredElements) {
-                for (ResourceBasedNode<?> element2 : filteredElements) {
+            for (Resource element : filteredElements) {
+                for (Resource element2 : filteredElements) {
                     if (element == element2) {
                         continue;
                     }
-                    if (isAncestor(element, element2)) {
+                    //compare only paths to increase performance, don't operation in this case with parents
+                    if (element.getLocation().isPrefixOf(element2.getLocation())) {
                         filteredElements.remove(element2);
                         break outer;
                     }
@@ -237,68 +224,23 @@ public class DeleteNodeHandler {
         }
         while (filteredElements.size() != previousSize);
 
-        return filteredElements;
+        return filteredElements.toArray(new Resource[filteredElements.size()]);
     }
 
-    private boolean isAncestor(@NotNull Node ancestor, @NotNull Node element) {
-        if (ancestor == null) {
-            return false;
-        }
-
-        Node parent = element;
-
-        while (true) {
-            if (parent == null) {
-                return false;
-            }
-
-            if (parent.equals(ancestor)) {
-                return true;
-            }
-
-            parent = parent.getParent();
-        }
-    }
-
-    @NotNull
-    private Promise<Void> chainNodes(@NotNull Promise<Void> promise,
-                                     @NotNull Iterator<ResourceBasedNode<?>> nodes) {
-        if (!nodes.hasNext()) {
-            return promise;
-        }
-
-        final ResourceBasedNode<?> node = nodes.next();
-
-        final Promise<Void> derivedPromise = promise.thenPromise(new Function<Void, Promise<Void>>() {
-            @Override
-            public Promise<Void> apply(Void empty) throws FunctionException {
-                return node.delete();
-            }
-        });
-
-        final Promise<Void> derivedErrorSafePromise = derivedPromise.catchErrorPromise(new Function<PromiseError, Promise<Void>>() {
-            @Override
-            public Promise<Void> apply(PromiseError arg) throws FunctionException {
-                // 'hide' the error to avoid rejecting chain of promises
-                return Promises.resolve(null);
-            }
-        });
-
-        return chainNodes(derivedErrorSafePromise, nodes);
-    }
-
-    @NotNull
-    private ConfirmCallback onConfirm(@NotNull final List<ResourceBasedNode<?>> node,
-                                      @NotNull final AsyncCallback<Void> callback) {
+    private ConfirmCallback onConfirm(final Resource[] resources,
+                                      final AsyncCallback<Void> callback) {
         return new ConfirmCallback() {
             @Override
             public void accepted() {
-                Promise<Void> promise = Promises.resolve(null);
+                Promise<?>[] deleteAll = new Promise<?>[resources.length];
+                for (int i = 0; i < resources.length; i++) {
+                    deleteAll[i] = resources[i].delete();
+                }
 
-                chainNodes(promise, node.iterator()).then(new Operation<Void>() {
+                Promises.all(deleteAll).then(new Operation<JsArrayMixed>() {
                     @Override
-                    public void apply(Void empty) throws OperationException {
-                        callback.onSuccess(empty);
+                    public void apply(JsArrayMixed arg) throws OperationException {
+                        callback.onSuccess(null);
                     }
                 });
             }

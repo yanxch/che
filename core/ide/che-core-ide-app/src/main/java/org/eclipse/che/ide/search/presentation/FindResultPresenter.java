@@ -15,12 +15,14 @@ import com.google.gwt.user.client.ui.IsWidget;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.api.project.shared.dto.ItemReference;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
+import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.api.parts.PartStackType;
 import org.eclipse.che.ide.api.parts.WorkspaceAgent;
 import org.eclipse.che.ide.api.parts.base.BasePresenter;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.selection.Selection;
 import org.vectomatic.dom.svg.ui.SVGResource;
 
 import java.util.List;
@@ -29,6 +31,7 @@ import java.util.List;
  * Presenter for the searching some text in the workspace.
  *
  * @author Valeriy Svydenko
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class FindResultPresenter extends BasePresenter implements FindResultView.ActionDelegate {
@@ -82,14 +85,19 @@ public class FindResultPresenter extends BasePresenter implements FindResultView
     /**
      * Activate Find results part and showing all occurrences.
      *
-     * @param response
+     * @param resources
      *         list of files which contains requested text
      * @param request
      *         requested text
      */
-    public void handleResponse(List<ItemReference> response, String request) {
+    public void handleResponse(Resource[] resources, String request) {
         workspaceAgent.openPart(this, PartStackType.INFORMATION);
         workspaceAgent.setActivePart(this);
-        view.showResults(response, request);
+        view.showResults(resources, request);
+    }
+
+    @Override
+    public void onSelectionChanged(List<Node> selection) {
+        setSelection(new Selection<>(selection));
     }
 }

@@ -42,6 +42,7 @@ import static org.eclipse.che.api.promises.client.callback.PromiseHelper.newProm
  * @author Vlad Zhukovskiy
  * @author Dmitry Shnurenko
  */
+@Deprecated
 public class ProjectConfigProcessor extends AbstractResourceProcessor<ProjectConfigDto> {
 
     private final String workspaceId;

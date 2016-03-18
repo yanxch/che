@@ -40,6 +40,7 @@ import org.eclipse.che.ide.api.action.ActionManager;
 import org.eclipse.che.ide.api.action.Presentation;
 import org.eclipse.che.ide.api.action.PromisableAction;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.data.tree.settings.SettingsProvider;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.event.ConfigureProjectEvent;
 import org.eclipse.che.ide.api.event.ConfigureProjectHandler;
@@ -59,7 +60,10 @@ import org.eclipse.che.ide.api.parts.ProjectExplorerPart;
 import org.eclipse.che.ide.api.parts.base.BasePresenter;
 import org.eclipse.che.ide.api.data.HasStorablePath;
 import org.eclipse.che.ide.api.data.tree.Node;
+import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.selection.Selection;
+import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationAppliedEvent;
+import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationAppliedEvent.WorkspaceConfigurationAppliedHandler;
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerView.ActionDelegate;
 import org.eclipse.che.ide.part.explorer.project.synchronize.ProjectConfigSynchronizationListener;
 import org.eclipse.che.ide.project.event.ProjectExplorerLoadedEvent;
@@ -73,6 +77,7 @@ import org.eclipse.che.ide.project.node.ModuleNode;
 import org.eclipse.che.ide.project.node.NodeManager;
 import org.eclipse.che.ide.project.node.ProjectNode;
 import org.eclipse.che.ide.projecttype.wizard.presenter.ProjectWizardPresenter;
+import org.eclipse.che.ide.resources.tree.ResourceNode;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.ui.smartTree.event.BeforeExpandNodeEvent;
 import org.eclipse.che.ide.ui.smartTree.event.BeforeLoadEvent;
@@ -88,6 +93,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkState;
 import static org.eclipse.che.api.promises.client.callback.PromiseHelper.newCallback;
 import static org.eclipse.che.api.promises.client.callback.PromiseHelper.newPromise;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
@@ -109,8 +115,11 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
                                                                        ConfigureProjectHandler,
                                                                        ResourceNodeRenamedHandler,
                                                                        ResourceNodeDeletedHandler,
-                                                                       ModuleCreatedHandler {
+                                                                       ModuleCreatedHandler,
+                                                                       WorkspaceConfigurationAppliedHandler {
     private final ProjectExplorerView          view;
+    private final ResourceNode.NodeFactory nodeFactory;
+    private final SettingsProvider settingsProvider;
     private final EventBus                     eventBus;
     private final NodeManager                  nodeManager;
     private final AppContext                   appContext;
@@ -142,8 +151,11 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
                                     ProjectServiceClient projectService,
                                     NotificationManager notificationManager,
                                     ProjectConfigSynchronizationListener synchronizationListener,
-                                    Provider<EditorAgent> editorAgentProvider) {
+                                    Provider<EditorAgent> editorAgentProvider,
+                                    ResourceNode.NodeFactory nodeFactory, SettingsProvider settingsProvider) {
         this.view = view;
+        this.nodeFactory = nodeFactory;
+        this.settingsProvider = settingsProvider;
         this.view.setDelegate(this);
 
         this.eventBus = eventBus;
@@ -167,6 +179,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         eventBus.addHandler(ResourceNodeRenamedEvent.getType(), this);
         eventBus.addHandler(ResourceNodeDeletedEvent.getType(), this);
         eventBus.addHandler(ModuleCreatedEvent.getType(), this);
+        eventBus.addHandler(WorkspaceConfigurationAppliedEvent.getType(), this);
 
         addBeforeExpandHandler(synchronizationListener);
     }
@@ -174,20 +187,20 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
     /** {@inheritDoc} */
     @Override
     public void onWsAgentStarted(WsAgentStateEvent event) {
-        nodeManager.getProjectNodes().then(new Operation<List<Node>>() {
-            @Override
-            public void apply(List<Node> nodes) throws OperationException {
-                view.removeAllNodes();
-                view.addNodes(null, nodes);
-
-                eventBus.fireEvent(new ProjectExplorerLoadedEvent(nodes));
-            }
-        }).catchError(new Operation<PromiseError>() {
-            @Override
-            public void apply(PromiseError arg) throws OperationException {
-                notificationManager.notify(locale.projectExplorerProjectsLoadFailed());
-            }
-        });
+//        nodeManager.getProjectNodes().then(new Operation<List<Node>>() {
+//            @Override
+//            public void apply(List<Node> nodes) throws OperationException {
+//                view.removeAllNodes();
+//                view.addNodes(null, nodes);
+//
+//                eventBus.fireEvent(new ProjectExplorerLoadedEvent(nodes));
+//            }
+//        }).catchError(new Operation<PromiseError>() {
+//            @Override
+//            public void apply(PromiseError arg) throws OperationException {
+//                notificationManager.notify(locale.projectExplorerProjectsLoadFailed());
+//            }
+//        });
     }
 
     /** {@inheritDoc} */
@@ -196,6 +209,22 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         view.removeAllNodes();
         notificationManager.notify(locale.projectExplorerExtensionServerStopped(),
                                    locale.projectExplorerExtensionServerStoppedDescription(), FAIL, false);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void onConfigurationApplied(WorkspaceConfigurationAppliedEvent event) {
+        view.removeAllNodes();
+
+        final Project[] projects = event.getProjects();
+
+        checkState(projects != null, "No projects were provided");
+
+        for (Project project : projects) {
+            view.addNode(null, nodeFactory.newProjectNode(project, settingsProvider.getSettings()));
+        }
+
+        eventBus.fireEvent(new ProjectExplorerLoadedEvent(getRootNodes()));
     }
 
     /** {@inheritDoc} */
@@ -728,7 +757,8 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
      * @return handler registration
      */
     public HandlerRegistration addExpandHandler(ExpandNodeEvent.ExpandNodeHandler handler) {
-        return view.addExpandHandler(handler);
+//        return view.addExpandHandler(handler);
+        return view.addExpandHandler(null);
     }
 
     /**
@@ -739,7 +769,8 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
      * @return handler registration
      */
     public HandlerRegistration addBeforeExpandHandler(BeforeExpandNodeEvent.BeforeExpandNodeHandler handler) {
-        return view.addBeforeExpandHandler(handler);
+//        return view.addBeforeExpandHandler(handler);
+        return null;
     }
 
     /**
@@ -750,7 +781,8 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
      * @return handler registration
      */
     public HandlerRegistration addBeforeNodeLoadHandler(BeforeLoadEvent.BeforeLoadHandler handler) {
-        return view.addBeforeNodeLoadHandler(handler);
+//        return view.addBeforeNodeLoadHandler(handler);
+        return null;
     }
 
     /**

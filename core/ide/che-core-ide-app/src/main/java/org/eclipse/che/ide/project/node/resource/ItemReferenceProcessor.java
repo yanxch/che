@@ -35,6 +35,7 @@ import static org.eclipse.che.api.promises.client.callback.PromiseHelper.*;
 /**
  * @author Vlad Zhukovskiy
  */
+@Deprecated
 public class ItemReferenceProcessor extends AbstractResourceProcessor<ItemReference> {
     
     private final String workspaceId;

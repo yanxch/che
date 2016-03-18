@@ -39,6 +39,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Vlad Zhukovskiy
  */
+@Deprecated
 public abstract class ResourceBasedNode<DataObject> extends AbstractProjectBasedNode<DataObject> implements SupportRename<DataObject>,
                                                                                                             SupportDelete<DataObject> {
 

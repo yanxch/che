@@ -162,6 +162,7 @@ import org.eclipse.che.ide.projecttype.ProjectTypeRegistryImpl;
 import org.eclipse.che.ide.projecttype.wizard.PreSelectedProjectTypeManagerImpl;
 import org.eclipse.che.ide.projecttype.wizard.ProjectWizardFactory;
 import org.eclipse.che.ide.projecttype.wizard.ProjectWizardRegistryImpl;
+import org.eclipse.che.ide.resources.tree.ResourceNode;
 import org.eclipse.che.ide.rest.RestContext;
 import org.eclipse.che.ide.rest.RestContextProvider;
 import org.eclipse.che.ide.search.factory.FindResultNodeFactory;
@@ -260,6 +261,7 @@ public class CoreGinModule extends AbstractGinModule {
 
         install(new GinFactoryModuleBuilder().build(ResourceManager.ResourceFactory.class));
         install(new GinFactoryModuleBuilder().build(ResourceManager.ResourceManagerFactory.class));
+        install(new GinFactoryModuleBuilder().build(ResourceNode.NodeFactory.class));
 
         bind(AppContext.class).to(AppContextImpl.class);
         bind(Workspace.class).to(WorkspaceImpl.class);

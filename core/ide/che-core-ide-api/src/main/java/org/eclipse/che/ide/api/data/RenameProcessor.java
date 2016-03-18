@@ -12,8 +12,6 @@ package org.eclipse.che.ide.api.data;
 
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.commons.annotation.Nullable;
-import org.eclipse.che.ide.api.data.HasDataObject;
-import org.eclipse.che.ide.api.data.HasStorablePath;
 
 import javax.validation.constraints.NotNull;
 
@@ -22,6 +20,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Vlad Zhukovskiy
  */
+@Deprecated
 public interface RenameProcessor<DataObject> {
     /**
      * Rename data object stored in node.

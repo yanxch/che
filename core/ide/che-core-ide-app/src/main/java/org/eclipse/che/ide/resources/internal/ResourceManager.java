@@ -48,7 +48,7 @@ import org.eclipse.che.ide.api.resources.marker.Marker;
 import org.eclipse.che.ide.api.resources.marker.event.MarkerCreatedEvent;
 import org.eclipse.che.ide.api.resources.marker.event.MarkerDeletedEvent;
 import org.eclipse.che.ide.api.workspace.Workspace;
-import org.eclipse.che.ide.api.workspace.WorkspaceUpdatedEvent;
+import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationChangedEvent;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.workspace.WorkspaceComponent;
@@ -91,7 +91,7 @@ import static org.eclipse.che.ide.util.NameUtils.checkProjectName;
  * the interfaces.
  * <p/>
  * Each instance of {@link ResourceManager} is bound to own workspace id. So, when {@link WorkspaceComponent}
- * starts, it handles workspace configuration and sends {@link WorkspaceUpdatedEvent}
+ * starts, it handles workspace configuration and sends {@link WorkspaceConfigurationChangedEvent}
  * event which implementation of {@link Workspace} handles. Based on this configuration it creates
  * new instance of {@link ResourceManager} and requests project lists from the server by calling
  * {@link #getWorkspaceProjects()} and storing received project lists in workspace context.
