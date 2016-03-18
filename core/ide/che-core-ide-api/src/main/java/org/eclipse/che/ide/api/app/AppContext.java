@@ -10,8 +10,12 @@
  *******************************************************************************/
 package org.eclipse.che.ide.api.app;
 
+import com.google.common.annotations.Beta;
+
 import org.eclipse.che.api.factory.shared.dto.Factory;
 import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.workspace.Workspace;
 
 import java.util.List;
@@ -37,6 +41,7 @@ public interface AppContext {
 
     /**
      * Returns id of current workspace of throws IllegalArgumentException if workspace is null.
+     *
      * @deprecated use {@link Workspace#getId()}
      **/
     @Deprecated
@@ -50,6 +55,7 @@ public interface AppContext {
      *
      * @return opened project or <code>null</code> if none opened
      */
+    @Deprecated
     CurrentProject getCurrentProject();
 
     /**
@@ -109,4 +115,55 @@ public interface AppContext {
     String getProjectsRoot();
 
     void setProjectsRoot(String projectsRoot);
+
+
+    /**
+     * Returns the resource which is in current context. By current context means, that resource may be
+     * in use in specified part if IDE. For example, project part may provide resource which is under
+     * selection at this moment, editor may provide resource which is open, full text search may provide
+     * resource which is under selection.
+     * <p/>
+     * If specified part provides more than one resource, then last selected resource is returned.
+     *
+     * May return {@code null} if there is no resource in context.
+     *
+     * @return the resource in context
+     * @see Resource
+     * @see #getResources()
+     * @since 4.0.0-RC14
+     */
+    @Beta
+    Resource getResource();
+
+    /**
+     * Returns the resources which is in current context. By current context means, that resource may be
+     * in use in specified part if IDE. For example, project part may provide resource which is under
+     * selection at this moment, editor may provide resource which is open, full text search may provide
+     * resource which is under selection.
+     * <p/>
+     * If specified part provides more than one resource, then all selected resources are returned.
+     *
+     * May return {@code null} if there is no resources in context.
+     *
+     * @return the resource in context
+     * @see Resource
+     * @see #getResource()
+     * @since 4.0.0-RC14
+     */
+    @Beta
+    Resource[] getResources();
+
+    /**
+     * Returns the root project which is in context. To find out specified sub-project in context, method
+     * {@link #getResource()} should be called. Resource is bound to own project and to get {@link Project}
+     * instance from {@link Resource}, method {@link Resource#getRelatedProject()} should be called.
+     *
+     * May return {@code null} if there is no project in context.
+     *
+     * @return the root project or {@code null}
+     * @see Project
+     * @since 4.0.0-RC14
+     */
+    @Beta
+    Project getRootProject();
 }

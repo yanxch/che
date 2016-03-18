@@ -28,7 +28,10 @@ import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent;
 import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent.ProjectUpdatedHandler;
 import org.eclipse.che.ide.api.project.HasProjectConfig;
 import org.eclipse.che.ide.api.data.tree.Node;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.selection.Selection;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.project.node.ProjectNode;
 import org.eclipse.che.ide.api.app.StartUpAction;
 
@@ -47,9 +50,10 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
 
     private final EventBus                  eventBus;
     private final BrowserQueryFieldRenderer browserQueryFieldRenderer;
+    private final Workspace workspace;
     private final List<String>              projectsInImport;
 
-    private UsersWorkspaceDto   workspace;
+    private UsersWorkspaceDto   usersWorkspaceDto;
     private CurrentProject      currentProject;
     private CurrentUser         currentUser;
     private Factory             factory;
@@ -61,10 +65,15 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
      */
     private List<StartUpAction> startAppActions;
 
+    private Resource   currentResource;
+    private Resource[] currentResources;
+
     @Inject
-    public AppContextImpl(EventBus eventBus, BrowserQueryFieldRenderer browserQueryFieldRenderer) {
+    public AppContextImpl(EventBus eventBus, BrowserQueryFieldRenderer browserQueryFieldRenderer,
+                          Workspace workspace) {
         this.eventBus = eventBus;
         this.browserQueryFieldRenderer = browserQueryFieldRenderer;
+        this.workspace = workspace;
 
         projectsInImport = new ArrayList<>();
 
@@ -87,21 +96,21 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
 
     @Override
     public UsersWorkspaceDto getWorkspace() {
-        return workspace;
+        return usersWorkspaceDto;
     }
 
     @Override
     public void setWorkspace(UsersWorkspaceDto workspace) {
-        this.workspace = workspace;
+        this.usersWorkspaceDto = workspace;
     }
 
     @Override
     public String getWorkspaceId() {
-        if (workspace == null) {
+        if (usersWorkspaceDto == null) {
             throw new IllegalArgumentException(getClass() + " Workspace can not be null.");
         }
 
-        return workspace.getId();
+        return usersWorkspaceDto.getId();
     }
 
     @Override
@@ -237,5 +246,34 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
             currentProject.setRootProject(updatedProjectDescriptor);
             browserQueryFieldRenderer.setProjectName(updatedProjectDescriptor.getName());
         }
+    }
+
+    @Override
+    public Resource getResource() {
+        return currentResource;
+    }
+
+    @Override
+    public Resource[] getResources() {
+        return currentResources;
+    }
+
+    @Override
+    public Project getRootProject() {
+        if (currentResource == null) {
+            return null;
+        }
+
+        if (currentResources == null || currentResources.length > 1) {
+            return null;
+        }
+
+        for (Project project : workspace.getProjects()) {
+            if (project.getLocation().isPrefixOf(currentResource.getLocation())) {
+                return project;
+            }
+        }
+
+        return null;
     }
 }

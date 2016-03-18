@@ -21,7 +21,9 @@ import java.util.List;
  * @author Vitaly Parfonov
  * @author Valeriy Svydenko
  * @author Dmitry Shnurenko
+ * @deprecated will be removed in nearest future
  */
+@Deprecated
 public class CurrentProject {
 
     private ProjectConfigDto rootProject;
