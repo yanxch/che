@@ -8,7 +8,7 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.resources.internal;
+package org.eclipse.che.ide.resources.impl;
 
 import org.eclipse.che.api.core.model.project.SourceStorage;
 import org.eclipse.che.api.promises.client.Promise;

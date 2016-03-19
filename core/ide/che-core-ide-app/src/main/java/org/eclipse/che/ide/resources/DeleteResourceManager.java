@@ -4,11 +4,11 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * <p/>
  * Contributors:
- *   Codenvy, S.A. - initial API and implementation
+ * Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.project.node.remove;
+package org.eclipse.che.ide.resources;
 
 import com.google.gwt.core.client.JsArrayMixed;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -20,9 +20,9 @@ import org.eclipse.che.api.promises.client.FunctionException;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper.RequestCall;
 import org.eclipse.che.api.promises.client.js.JsPromiseError;
-import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.resources.Folder;
 import org.eclipse.che.ide.api.resources.Resource;
@@ -43,27 +43,51 @@ import static org.eclipse.che.ide.api.resources.Resource.FOLDER;
 import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
 
 /**
- * Helper class which allow to delete multiple nodes with user prompt.
+ * Manager that performs removing resources. Support confirmation for removing.
  *
  * @author Vlad Zhukovskiy
  */
 @Singleton
-public class DeleteNodeHandler {
+public class DeleteResourceManager {
 
     private final CoreLocalizationConstant localization;
     private final DialogFactory            dialogFactory;
+    private final PromiseProvider          promiseProvider;
 
     @Inject
-    public DeleteNodeHandler(CoreLocalizationConstant localization, DialogFactory dialogFactory) {
+    public DeleteResourceManager(CoreLocalizationConstant localization,
+                                 DialogFactory dialogFactory,
+                                 PromiseProvider promiseProvider) {
         this.localization = localization;
         this.dialogFactory = dialogFactory;
+        this.promiseProvider = promiseProvider;
     }
 
-    public Promise<Void> deleteAll(Resource... resources) {
-        return deleteAll(false, resources);
+    /**
+     * Deletes the given resources and its descendants in the standard manner from file system.
+     * Method doesn't require a confirmation from the user and removes resources silently.
+     *
+     * @param resources
+     *         the resources to delete
+     * @return the {@link Promise} with void if removal has successfully completed
+     * @see #delete(boolean, Resource...)
+     */
+    public Promise<Void> delete(Resource... resources) {
+        return delete(false, resources);
     }
 
-    public Promise<Void> deleteAll(boolean needConfirmation, Resource... resources) {
+    /**
+     * Deletes the given resources and its descendants in the standard manner from file system.
+     * Method requires a confirmation from the user before resource will be removed.
+     *
+     * @param needConfirmation
+     *         true if confirmation is need
+     * @param resources
+     *         the resources to delete
+     * @return the {@link Promise} with void if removal has successfully completed
+     * @see #delete(Resource...)
+     */
+    public Promise<Void> delete(boolean needConfirmation, Resource... resources) {
         checkArgument(resources != null, "Null resource occurred");
         checkArgument(resources.length > 0, "No resources were provided to remove");
 
@@ -75,7 +99,7 @@ public class DeleteNodeHandler {
                 deleteAll[i] = resources[i].delete();
             }
 
-            return Promises.all(deleteAll).then(new Function<JsArrayMixed, Void>() {
+            return promiseProvider.all(deleteAll).then(new Function<JsArrayMixed, Void>() {
                 @Override
                 public Void apply(JsArrayMixed arg) throws FunctionException {
                     return null;
@@ -83,7 +107,7 @@ public class DeleteNodeHandler {
             });
         }
 
-        List<Resource> projectsList = newArrayList(/*Iterables.filter(filtered, isProjectNode())*/);
+        List<Resource> projectsList = newArrayList();
 
         for (Resource resource : filtered) {
             if (resource.getResourceType() == PROJECT) {
@@ -98,7 +122,7 @@ public class DeleteNodeHandler {
             return promptUserToDelete(filtered);
         } else if (projects.length < filtered.length) {
             //inform user that we can't delete mixed list of the nodes
-            return Promises.reject(JsPromiseError.create(localization.mixedProjectDeleteMessage()));
+            return promiseProvider.reject(JsPromiseError.create(localization.mixedProjectDeleteMessage()));
         } else {
             //delete only project nodes
             return promptUserToDelete(projects);
@@ -237,7 +261,7 @@ public class DeleteNodeHandler {
                     deleteAll[i] = resources[i].delete();
                 }
 
-                Promises.all(deleteAll).then(new Operation<JsArrayMixed>() {
+                promiseProvider.all(deleteAll).then(new Operation<JsArrayMixed>() {
                     @Override
                     public void apply(JsArrayMixed arg) throws OperationException {
                         callback.onSuccess(null);

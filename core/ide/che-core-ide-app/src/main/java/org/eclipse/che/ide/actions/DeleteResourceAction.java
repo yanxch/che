@@ -27,7 +27,7 @@ import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.action.PromisableAction;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.resources.Resource;
-import org.eclipse.che.ide.project.node.remove.DeleteNodeHandler;
+import org.eclipse.che.ide.resources.DeleteResourceManager;
 
 import javax.validation.constraints.NotNull;
 
@@ -36,33 +36,34 @@ import static org.eclipse.che.api.promises.client.callback.CallbackPromiseHelper
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
- * Action for deleting an item which is selected in 'Project Explorer'.
+ * Deletes resources which are in application context.
  *
  * @author Artem Zatsarynnyi
  * @author Dmitry Shnurenko
  * @author Vlad Zhukovskyi
+ * @see DeleteResourceManager
  */
 @Singleton
-public class DeleteItemAction extends AbstractPerspectiveAction implements PromisableAction {
-    private final AnalyticsEventLogger     eventLogger;
-    private final DeleteNodeHandler        deleteNodeHandler;
-    private final AppContext               appContext;
+public class DeleteResourceAction extends AbstractPerspectiveAction implements PromisableAction {
+    private final AnalyticsEventLogger  eventLogger;
+    private final DeleteResourceManager deleteResourceManager;
+    private final AppContext            appContext;
 
     private Callback<Void, Throwable> actionCompletedCallBack;
 
     @Inject
-    public DeleteItemAction(Resources resources,
-                            AnalyticsEventLogger eventLogger,
-                            DeleteNodeHandler deleteNodeHandler,
-                            CoreLocalizationConstant localization,
-                            AppContext appContext) {
+    public DeleteResourceAction(Resources resources,
+                                AnalyticsEventLogger eventLogger,
+                                DeleteResourceManager deleteResourceManager,
+                                CoreLocalizationConstant localization,
+                                AppContext appContext) {
         super(singletonList(PROJECT_PERSPECTIVE_ID),
               localization.deleteItemActionText(),
               localization.deleteItemActionDescription(),
               null,
               resources.delete());
         this.eventLogger = eventLogger;
-        this.deleteNodeHandler = deleteNodeHandler;
+        this.deleteResourceManager = deleteResourceManager;
         this.appContext = appContext;
     }
 
@@ -71,7 +72,7 @@ public class DeleteItemAction extends AbstractPerspectiveAction implements Promi
     public void actionPerformed(ActionEvent e) {
         eventLogger.log(this);
 
-        deleteNodeHandler.deleteAll(true, appContext.getResources()).then(new Operation<Void>() {
+        deleteResourceManager.delete(true, appContext.getResources()).then(new Operation<Void>() {
             @Override
             public void apply(Void arg) throws OperationException {
                 if (actionCompletedCallBack != null) {

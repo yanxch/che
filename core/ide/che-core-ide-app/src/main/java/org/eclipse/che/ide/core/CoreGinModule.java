@@ -93,7 +93,7 @@ import org.eclipse.che.ide.api.project.wizard.ImportProjectNotificationSubscribe
 import org.eclipse.che.ide.api.project.wizard.ImportWizardRegistrar;
 import org.eclipse.che.ide.api.project.wizard.ImportWizardRegistry;
 import org.eclipse.che.ide.api.project.wizard.ProjectNotificationSubscriber;
-import org.eclipse.che.ide.resources.internal.ResourceManager;
+import org.eclipse.che.ide.resources.impl.ResourceManager;
 import org.eclipse.che.ide.api.reference.FqnProvider;
 import org.eclipse.che.ide.api.selection.SelectionAgent;
 import org.eclipse.che.ide.api.theme.Theme;

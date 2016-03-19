@@ -26,9 +26,9 @@ import org.eclipse.che.ide.actions.ShowReferenceAction;
 import org.eclipse.che.ide.actions.CreateModuleAction;
 import org.eclipse.che.ide.actions.CreateProjectAction;
 import org.eclipse.che.ide.actions.CutAction;
-import org.eclipse.che.ide.actions.DeleteItemAction;
-import org.eclipse.che.ide.actions.DownloadAsZipAction;
-import org.eclipse.che.ide.actions.DownloadItemAction;
+import org.eclipse.che.ide.actions.DeleteResourceAction;
+import org.eclipse.che.ide.actions.DownloadProjectAction;
+import org.eclipse.che.ide.actions.DownloadResourceAction;
 import org.eclipse.che.ide.actions.ExpandEditorAction;
 import org.eclipse.che.ide.actions.ExpandNodeAction;
 import org.eclipse.che.ide.actions.FoldersAlwaysOnTopAction;
@@ -152,7 +152,7 @@ public class StandardComponentInitializer {
     private PasteAction pasteAction;
 
     @Inject
-    private DeleteItemAction deleteItemAction;
+    private DeleteResourceAction deleteResourceAction;
 
     @Inject
     private RenameItemAction renameItemAction;
@@ -212,10 +212,10 @@ public class StandardComponentInitializer {
     private UploadFolderAction uploadFolderAction;
 
     @Inject
-    private DownloadAsZipAction downloadAsZipAction;
+    private DownloadProjectAction downloadProjectAction;
 
     @Inject
-    private DownloadItemAction downloadItemAction;
+    private DownloadResourceAction downloadResourceAction;
 
     @Inject
     private ImportProjectAction importProjectAction;
@@ -390,8 +390,8 @@ public class StandardComponentInitializer {
         actionManager.registerAction("createProject", createProjectAction);
         workspaceGroup.add(createProjectAction);
 
-        actionManager.registerAction("downloadAsZipAction", downloadAsZipAction);
-        workspaceGroup.add(downloadAsZipAction);
+        actionManager.registerAction("downloadAsZipAction", downloadProjectAction);
+        workspaceGroup.add(downloadProjectAction);
 
         workspaceGroup.addSeparator();
 
@@ -427,7 +427,7 @@ public class StandardComponentInitializer {
         actionManager.registerAction("uploadFolder", uploadFolderAction);
         projectGroup.add(uploadFolderAction);
 
-        projectGroup.add(downloadAsZipAction);
+        projectGroup.add(downloadProjectAction);
 
         actionManager.registerAction("showHideHiddenFiles", showHiddenFilesAction);
         projectGroup.add(showHiddenFilesAction);
@@ -469,8 +469,8 @@ public class StandardComponentInitializer {
         actionManager.registerAction("renameResource", renameItemAction);
         editGroup.add(renameItemAction);
 
-        actionManager.registerAction("deleteItem", deleteItemAction);
-        editGroup.add(deleteItemAction);
+        actionManager.registerAction("deleteItem", deleteResourceAction);
+        editGroup.add(deleteResourceAction);
 
         actionManager.registerAction("fullTextSearch", fullTextSearchAction);
         editGroup.add(fullTextSearchAction);
@@ -490,7 +490,7 @@ public class StandardComponentInitializer {
         assistantGroup.add(completeAction);
 
         actionManager.registerAction("importLocalProjectAction", importLocalProjectAction);
-        actionManager.registerAction("downloadItemAction", downloadItemAction);
+        actionManager.registerAction("downloadItemAction", downloadResourceAction);
         actionManager.registerAction("navigateToFile", navigateToFileAction);
         assistantGroup.add(navigateToFileAction);
 
@@ -533,9 +533,9 @@ public class StandardComponentInitializer {
         resourceOperation.add(copyAction);
         resourceOperation.add(pasteAction);
         resourceOperation.add(renameItemAction);
-        resourceOperation.add(deleteItemAction);
+        resourceOperation.add(deleteResourceAction);
         resourceOperation.addSeparator();
-        resourceOperation.add(downloadItemAction);
+        resourceOperation.add(downloadResourceAction);
         resourceOperation.addSeparator();
         resourceOperation.add(createModuleAction);
 
@@ -564,7 +564,7 @@ public class StandardComponentInitializer {
         changeResourceGroup.add(cutAction);
         changeResourceGroup.add(copyAction);
         changeResourceGroup.add(pasteAction);
-        changeResourceGroup.add(deleteItemAction);
+        changeResourceGroup.add(deleteResourceAction);
 
         DefaultActionGroup mainToolbarGroup = (DefaultActionGroup)actionManager.getAction(IdeActions.GROUP_MAIN_TOOLBAR);
         mainToolbarGroup.add(newGroup);

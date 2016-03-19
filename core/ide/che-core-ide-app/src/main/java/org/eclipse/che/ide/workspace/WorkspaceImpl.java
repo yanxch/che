@@ -30,8 +30,8 @@ import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationAppliedEvent;
 import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationChangedEvent;
 import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationChangedEvent.WorkspaceConfigurationChangedHandler;
-import org.eclipse.che.ide.resources.internal.ResourceManager;
-import org.eclipse.che.ide.resources.internal.ResourceManager.ResourceManagerFactory;
+import org.eclipse.che.ide.resources.impl.ResourceManager;
+import org.eclipse.che.ide.resources.impl.ResourceManager.ResourceManagerFactory;
 
 import java.util.Arrays;
 import java.util.List;

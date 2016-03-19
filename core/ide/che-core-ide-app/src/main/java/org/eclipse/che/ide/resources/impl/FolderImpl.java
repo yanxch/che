@@ -8,7 +8,7 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.resources.internal;
+package org.eclipse.che.ide.resources.impl;
 
 import com.google.common.annotations.Beta;
 import com.google.inject.Inject;
