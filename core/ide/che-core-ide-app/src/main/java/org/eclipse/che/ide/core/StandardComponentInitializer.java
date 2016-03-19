@@ -539,6 +539,8 @@ public class StandardComponentInitializer {
         DefaultActionGroup changeResourceGroup = new DefaultActionGroup(actionManager);
         actionManager.registerAction("changeResourceGroup", changeResourceGroup);
         actionManager.registerAction("editFile", editFileAction);
+        actionManager.registerAction("goInto", goIntoAction);
+        actionManager.registerAction("showReference", showReferenceAction);
 
         actionManager.registerAction("collapseAll", collapseAllAction);
 

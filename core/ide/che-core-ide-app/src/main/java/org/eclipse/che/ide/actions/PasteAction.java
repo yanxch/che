@@ -262,31 +262,31 @@ public class PasteAction extends Action {
      * Asks the user for new item name and retries copying.
      */
     private void copyWithNewName() {
-        /** Get item to copy */
-        final ResourceBasedNode<?> item = itemsToProcess.get(itemIndex);
-
-        /** Ask user for new resource name. */
-        renameItemAction.askForNewName(item, new InputCallback() {
-            @Override
-            public void accepted(String value) {
-                try {
-                    /** Copy the item, giving new name */
-                    projectServiceClient
-                            .copy(workspaceId, ((HasStorablePath)item).getStorablePath(), ((HasStorablePath)destination).getStorablePath(),
-                                  value,
-                                  copyCallback);
-                } catch (Exception error) {
-                    /** Handle error and stop copying */
-                    notificationManager.notify(localization.failedToCopyItems(), error.getMessage(), FAIL, true, item.getProjectConfig());
-                    dialogFactory.createMessageDialog("ERROR", error.getMessage(), null).show();
-                }
-            }
-        }, new CancelCallback() {
-            @Override
-            public void cancelled() {
-                /** Stop copying and do nothing */
-            }
-        });
+//        /** Get item to copy */
+//        final ResourceBasedNode<?> item = itemsToProcess.get(itemIndex);
+//
+//        /** Ask user for new resource name. */
+//        renameItemAction.askForNewName(item, new InputCallback() {
+//            @Override
+//            public void accepted(String value) {
+//                try {
+//                    /** Copy the item, giving new name */
+//                    projectServiceClient
+//                            .copy(workspaceId, ((HasStorablePath)item).getStorablePath(), ((HasStorablePath)destination).getStorablePath(),
+//                                  value,
+//                                  copyCallback);
+//                } catch (Exception error) {
+//                    /** Handle error and stop copying */
+//                    notificationManager.notify(localization.failedToCopyItems(), error.getMessage(), FAIL, true, item.getProjectConfig());
+//                    dialogFactory.createMessageDialog("ERROR", error.getMessage(), null).show();
+//                }
+//            }
+//        }, new CancelCallback() {
+//            @Override
+//            public void cancelled() {
+//                /** Stop copying and do nothing */
+//            }
+//        });
     }
 
     /**
@@ -416,35 +416,35 @@ public class PasteAction extends Action {
      * Asks the user for new item name and retries moving.
      */
     private void moveWithNewName() {
-        /** Get item to move */
-        final ResourceBasedNode<?> item = itemsToProcess.get(itemIndex);
-
-        /** Ask user for new resource name. */
-        renameItemAction.askForNewName(item, new InputCallback() {
-            @Override
-            public void accepted(String value) {
-                try {
-                    /** Move the item, giving new name */
-                    projectServiceClient
-                            .move(workspaceId, ((HasStorablePath)item).getStorablePath(), ((HasStorablePath)destination).getStorablePath(),
-                                  value,
-                                  moveCallback);
-                } catch (Exception error) {
-                    /** Handle error and stop moving */
-                    notificationManager.notify(localization.failedToMoveItems(), error.getMessage(), FAIL, true, item.getProjectConfig());
-                    dialogFactory.createMessageDialog("ERROR", error.getMessage(), null).show();
-
-                    /** Clears item list to disable Paste button */
-                    itemsToProcess.clear();
-                }
-            }
-        }, new CancelCallback() {
-            @Override
-            public void cancelled() {
-                /** Stop moving and clears item list to disable Paste button */
-                itemsToProcess.clear();
-            }
-        });
+//        /** Get item to move */
+//        final ResourceBasedNode<?> item = itemsToProcess.get(itemIndex);
+//
+//        /** Ask user for new resource name. */
+//        renameItemAction.askForNewName(item, new InputCallback() {
+//            @Override
+//            public void accepted(String value) {
+//                try {
+//                    /** Move the item, giving new name */
+//                    projectServiceClient
+//                            .move(workspaceId, ((HasStorablePath)item).getStorablePath(), ((HasStorablePath)destination).getStorablePath(),
+//                                  value,
+//                                  moveCallback);
+//                } catch (Exception error) {
+//                    /** Handle error and stop moving */
+//                    notificationManager.notify(localization.failedToMoveItems(), error.getMessage(), FAIL, true, item.getProjectConfig());
+//                    dialogFactory.createMessageDialog("ERROR", error.getMessage(), null).show();
+//
+//                    /** Clears item list to disable Paste button */
+//                    itemsToProcess.clear();
+//                }
+//            }
+//        }, new CancelCallback() {
+//            @Override
+//            public void cancelled() {
+//                /** Stop moving and clears item list to disable Paste button */
+//                itemsToProcess.clear();
+//            }
+//        });
     }
 
     /**

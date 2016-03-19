@@ -136,6 +136,11 @@ public abstract class ResourceNode<R extends Resource> extends AbstractTreeNode 
     }
 
     @Override
+    public boolean supportGoInto() {
+        return getData() instanceof Container;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ResourceNode)) return false;
