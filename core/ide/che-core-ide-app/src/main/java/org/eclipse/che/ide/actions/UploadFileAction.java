@@ -4,9 +4,9 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * <p/>
  * Contributors:
- *   Codenvy, S.A. - initial API and implementation
+ * Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
 package org.eclipse.che.ide.actions;
 
@@ -18,13 +18,14 @@ import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
-import org.eclipse.che.ide.api.selection.Selection;
-import org.eclipse.che.ide.api.selection.SelectionAgent;
+import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.resources.Container;
+import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.upload.file.UploadFilePresenter;
 
 import javax.validation.constraints.NotNull;
-import java.util.Arrays;
 
+import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
@@ -32,42 +33,41 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
  *
  * @author Roman Nikitenko
  * @author Dmitry Shnurenko
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class UploadFileAction extends AbstractPerspectiveAction {
 
     private final UploadFilePresenter  presenter;
-    private final SelectionAgent       selectionAgent;
     private final AnalyticsEventLogger eventLogger;
+    private final AppContext           appContext;
 
     @Inject
     public UploadFileAction(UploadFilePresenter presenter,
                             CoreLocalizationConstant locale,
-                            SelectionAgent selectionAgent,
                             AnalyticsEventLogger eventLogger,
-                            Resources resources) {
-        super(Arrays.asList(PROJECT_PERSPECTIVE_ID), locale.uploadFileName(), locale.uploadFileDescription(), null, resources.uploadFile());
+                            Resources resources,
+                            AppContext appContext) {
+        super(singletonList(PROJECT_PERSPECTIVE_ID), locale.uploadFileName(), locale.uploadFileDescription(), null, resources.uploadFile());
         this.presenter = presenter;
-        this.selectionAgent = selectionAgent;
         this.eventLogger = eventLogger;
+        this.appContext = appContext;
     }
 
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
         eventLogger.log(this);
+
         presenter.showDialog();
     }
 
     /** {@inheritDoc} */
     @Override
-    public void updateInPerspective(@NotNull ActionEvent event) {
-        event.getPresentation().setVisible(true);
-        boolean enabled = false;
-        Selection<?> selection = selectionAgent.getSelection();
-        if (selection != null) {
-            enabled = selection.getHeadElement() != null;
-        }
-        event.getPresentation().setEnabled(enabled);
+    public void updateInPerspective(@NotNull ActionEvent e) {
+        final Resource[] resources = appContext.getResources();
+
+        e.getPresentation().setVisible(true);
+        e.getPresentation().setEnabled(resources != null && resources.length == 1 && resources[0] instanceof Container);
     }
 }

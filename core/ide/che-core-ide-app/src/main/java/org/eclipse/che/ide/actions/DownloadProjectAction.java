@@ -20,12 +20,14 @@ import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.download.DownloadContainer;
 
 import javax.validation.constraints.NotNull;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Collections.singletonList;
+import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
@@ -73,10 +75,10 @@ public class DownloadProjectAction extends AbstractPerspectiveAction {
 
     /** {@inheritDoc} */
     @Override
-    public void updateInPerspective(@NotNull ActionEvent event) {
-        final Project project = appContext.getRootProject();
+    public void updateInPerspective(@NotNull ActionEvent e) {
+        final Resource[] resources = appContext.getResources();
 
-        event.getPresentation().setVisible(true);
-        event.getPresentation().setEnabled(project != null && appContext.getCurrentUser().isUserPermanent());
+        e.getPresentation().setVisible(true);
+        e.getPresentation().setEnabled(resources != null && resources.length == 1 && resources[0].getResourceType() == PROJECT);
     }
 }

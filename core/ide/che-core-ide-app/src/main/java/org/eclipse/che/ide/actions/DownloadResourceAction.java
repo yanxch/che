@@ -66,10 +66,10 @@ public class DownloadResourceAction extends AbstractPerspectiveAction {
 
     /** {@inheritDoc} */
     @Override
-    public void updateInPerspective(@NotNull ActionEvent event) {
+    public void updateInPerspective(@NotNull ActionEvent e) {
         final Resource[] resources = appContext.getResources();
 
-        event.getPresentation().setVisible(true);
-        event.getPresentation().setEnabled(resources != null && resources.length == 1 && appContext.getCurrentUser().isUserPermanent());
+        e.getPresentation().setVisible(true);
+        e.getPresentation().setEnabled(resources != null && resources.length == 1);
     }
 }
