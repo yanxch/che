@@ -259,7 +259,7 @@ public class ConsolesPanelPresenterTest {
         verify(view, times(2)).selectNode(anyObject());
         verify(view).setProcessesData(anyObject());
         verify(view).getNodeById(anyString());
-        verify(view).setStopButtonVisibility(anyString(), anyBoolean());
+        verify(view).setProcessRunning(anyString(), anyBoolean());
     }
 
     @Test
@@ -290,7 +290,7 @@ public class ConsolesPanelPresenterTest {
         verify(view, times(2)).selectNode(anyObject());
         verify(view).setProcessesData(anyObject());
         verify(view).getNodeById(anyString());
-        verify(view).setStopButtonVisibility(anyString(), eq(true));
+        verify(view).setProcessRunning(anyString(), eq(true));
     }
 
     @Test
@@ -321,11 +321,11 @@ public class ConsolesPanelPresenterTest {
         verify(view, times(2)).selectNode(anyObject());
         verify(view).setProcessesData(anyObject());
         verify(view).getNodeById(anyString());
-        verify(view).setStopButtonVisibility(anyString(), eq(false));
+        verify(view).setProcessRunning(anyString(), eq(false));
     }
 
     @Test
-    public void shouldHideStopProcessButtonAtAddingTerminal() throws Exception {
+    public void shouldShowStopProcessButtonAtAddingTerminal() throws Exception {
         MachineDto machineDto = mock(MachineDto.class);
         MachineConfigDto machineConfigDto = mock(MachineConfigDto.class);
         when(machineDto.getConfig()).thenReturn(machineConfigDto);
@@ -361,7 +361,7 @@ public class ConsolesPanelPresenterTest {
         verify(terminal).setVisible(eq(true));
         verify(terminal).connect();
         verify(terminal).setListener(anyObject());
-        verify(view).setStopButtonVisibility(anyString(), eq(false));
+        verify(view).setProcessRunning(anyString(), eq(true));
     }
 
     @Test
@@ -448,7 +448,7 @@ public class ConsolesPanelPresenterTest {
         presenter.onTreeNodeSelected(commandNode);
 
         verify(view).showProcessOutput(eq(PROCESS_ID));
-        verify(view).setStopButtonVisibility(anyString(), eq(true));
+        verify(view).setProcessRunning(anyString(), eq(true));
     }
 
     @Test
@@ -461,7 +461,7 @@ public class ConsolesPanelPresenterTest {
 
         presenter.onTreeNodeSelected(commandNode);
 
-        verify(view).setStopButtonVisibility(PROCESS_ID, false);
+        verify(view).setProcessRunning(PROCESS_ID, false);
     }
 
     @Test
@@ -474,7 +474,7 @@ public class ConsolesPanelPresenterTest {
 
         presenter.onTreeNodeSelected(commandNode);
 
-        verify(view).setStopButtonVisibility(PROCESS_ID, true);
+        verify(view).setProcessRunning(PROCESS_ID, true);
     }
 
     @Test
@@ -484,7 +484,7 @@ public class ConsolesPanelPresenterTest {
 
         presenter.onProcessFinished(new ProcessFinishedEvent(null));
 
-        verify(view).setStopButtonVisibility(PROCESS_ID, false);
+        verify(view).setProcessRunning(PROCESS_ID, false);
     }
 
     @Test
@@ -571,7 +571,7 @@ public class ConsolesPanelPresenterTest {
         presenter.onTreeNodeSelected(terminalNode);
 
         verify(view).showProcessOutput(eq(PROCESS_ID));
-        verify(view, never()).setStopButtonVisibility(PROCESS_ID, true);
+        verify(view, never()).setProcessRunning(PROCESS_ID, true);
     }
 
     @Test
