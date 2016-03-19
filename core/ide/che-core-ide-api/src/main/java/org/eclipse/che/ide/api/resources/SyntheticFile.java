@@ -36,7 +36,6 @@ public class SyntheticFile implements VirtualFile {
     private       String          content;
     private final PromiseProvider promiseProvider;
 
-    @Inject
     public SyntheticFile(String name, String content, PromiseProvider promiseProvider) {
         this.name = name;
         this.content = content;

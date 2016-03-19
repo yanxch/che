@@ -16,7 +16,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.eclipse.che.ide.Resources;
-import org.eclipse.che.ide.actions.CloseCurrentFile;
+import org.eclipse.che.ide.actions.CloseActiveEditor;
 import org.eclipse.che.ide.actions.CollapseAllAction;
 import org.eclipse.che.ide.actions.CompleteAction;
 import org.eclipse.che.ide.actions.CopyAction;
@@ -30,18 +30,15 @@ import org.eclipse.che.ide.actions.DeleteResourceAction;
 import org.eclipse.che.ide.actions.DownloadProjectAction;
 import org.eclipse.che.ide.actions.DownloadResourceAction;
 import org.eclipse.che.ide.actions.ExpandEditorAction;
-import org.eclipse.che.ide.actions.ExpandNodeAction;
-import org.eclipse.che.ide.actions.FoldersAlwaysOnTopAction;
 import org.eclipse.che.ide.actions.FormatterAction;
 import org.eclipse.che.ide.actions.FullTextSearchAction;
 import org.eclipse.che.ide.actions.GoIntoAction;
 import org.eclipse.che.ide.actions.HotKeysListAction;
-import org.eclipse.che.ide.actions.ImportLocalProjectAction;
 import org.eclipse.che.ide.actions.ImportProjectAction;
 import org.eclipse.che.ide.actions.LoaderAction;
 import org.eclipse.che.ide.actions.NavigateToFileAction;
 import org.eclipse.che.ide.actions.OpenFileAction;
-import org.eclipse.che.ide.actions.OpenSelectedFileAction;
+import org.eclipse.che.ide.actions.EditFileAction;
 import org.eclipse.che.ide.actions.PasteAction;
 import org.eclipse.che.ide.actions.ProjectConfigurationAction;
 import org.eclipse.che.ide.actions.RedoAction;
@@ -161,9 +158,6 @@ public class StandardComponentInitializer {
     private CollapseAllAction collapseAllAction;
 
     @Inject
-    private FoldersAlwaysOnTopAction foldersAlwaysOnTopAction;
-
-    @Inject
     private CloseAction closeAction;
 
     @Inject
@@ -185,10 +179,7 @@ public class StandardComponentInitializer {
     private GoIntoAction goIntoAction;
 
     @Inject
-    private ExpandNodeAction expandNodeAction;
-
-    @Inject
-    private OpenSelectedFileAction openSelectedFileAction;
+    private EditFileAction editFileAction;
 
     @Inject
     private OpenFileAction openFileAction;
@@ -219,9 +210,6 @@ public class StandardComponentInitializer {
 
     @Inject
     private ImportProjectAction importProjectAction;
-
-    @Inject
-    private ImportLocalProjectAction importLocalProjectAction;
 
     @Inject
     private CreateProjectAction createProjectAction;
@@ -269,7 +257,7 @@ public class StandardComponentInitializer {
     private OpenRecentFilesAction openRecentFilesAction;
 
     @Inject
-    private CloseCurrentFile closeCurrentFile;
+    private CloseActiveEditor closeActiveEditor;
 
     @Inject
     private ProjectAction projectAction;
@@ -445,8 +433,8 @@ public class StandardComponentInitializer {
 
         editGroup.addSeparator();
 
-        actionManager.registerAction("closeCurrentFile", closeCurrentFile);
-        editGroup.add(closeCurrentFile);
+        actionManager.registerAction("closeActiveEditor", closeActiveEditor);
+        editGroup.add(closeActiveEditor);
 
         actionManager.registerAction("format", formatterAction);
         editGroup.add(formatterAction);
@@ -489,7 +477,6 @@ public class StandardComponentInitializer {
         actionManager.registerAction("callCompletion", completeAction);
         assistantGroup.add(completeAction);
 
-        actionManager.registerAction("importLocalProjectAction", importLocalProjectAction);
         actionManager.registerAction("downloadItemAction", downloadResourceAction);
         actionManager.registerAction("navigateToFile", navigateToFileAction);
         assistantGroup.add(navigateToFileAction);
@@ -527,7 +514,7 @@ public class StandardComponentInitializer {
         resourceOperation.addSeparator();
         resourceOperation.add(showReferenceAction);
         resourceOperation.add(goIntoAction);
-        resourceOperation.add(openSelectedFileAction);
+        resourceOperation.add(editFileAction);
 
         resourceOperation.add(cutAction);
         resourceOperation.add(copyAction);
@@ -551,13 +538,12 @@ public class StandardComponentInitializer {
         // Compose main toolbar
         DefaultActionGroup changeResourceGroup = new DefaultActionGroup(actionManager);
         actionManager.registerAction("changeResourceGroup", changeResourceGroup);
-        actionManager.registerAction("openSelectedFile", openSelectedFileAction);
+        actionManager.registerAction("editFile", editFileAction);
 
         actionManager.registerAction("collapseAll", collapseAllAction);
 
 //        actionManager.registerAction("findReplace", findReplaceAction);
         actionManager.registerAction("openFile", openFileAction);
-        actionManager.registerAction("expandNode", expandNodeAction);
         actionManager.registerAction("switchLeftTab", switchLeftTabAction);
         actionManager.registerAction("switchRightTab", switchRightTabAction);
 
@@ -576,11 +562,6 @@ public class StandardComponentInitializer {
 
         DefaultActionGroup rightToolbarGroup = (DefaultActionGroup)actionManager.getAction(IdeActions.GROUP_RIGHT_TOOLBAR);
         toolbarPresenter.bindRightGroup(rightToolbarGroup);
-
-        DefaultActionGroup projectExplorerContextMenu =
-                (DefaultActionGroup)actionManager.getAction(IdeActions.GROUP_PROJECT_EXPLORER_CONTEXT_MENU);
-        projectExplorerContextMenu.add(foldersAlwaysOnTopAction);
-        actionManager.registerAction("foldersAlwaysOnTop", foldersAlwaysOnTopAction);
 
         //Editor context menu group
         DefaultActionGroup editorTabContextMenu =

@@ -45,6 +45,7 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
  */
 @Singleton
 public class DeleteResourceAction extends AbstractPerspectiveAction implements PromisableAction {
+
     private final AnalyticsEventLogger  eventLogger;
     private final DeleteResourceManager deleteResourceManager;
     private final AppContext            appContext;

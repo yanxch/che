@@ -35,6 +35,7 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
  * Action for finding text in the files on the workspace.
  *
  * @author Valeriy Svydenko
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class FullTextSearchAction extends AbstractPerspectiveAction {
@@ -59,6 +60,7 @@ public class FullTextSearchAction extends AbstractPerspectiveAction {
         this.eventLogger = eventLogger;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void updateInPerspective(@NotNull ActionEvent event) {
         final Project project = appContext.getRootProject();
@@ -67,6 +69,7 @@ public class FullTextSearchAction extends AbstractPerspectiveAction {
         event.getPresentation().setEnabled(project != null);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
         eventLogger.log(this);

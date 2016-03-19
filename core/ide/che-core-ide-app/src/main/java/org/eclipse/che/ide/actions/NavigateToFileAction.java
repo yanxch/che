@@ -18,12 +18,13 @@ import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
+import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.navigation.NavigateToFilePresenter;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 
 import javax.validation.constraints.NotNull;
-import java.util.Collections;
 
+import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
@@ -31,28 +32,29 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
  *
  * @author Ann Shumilova
  * @author Dmitry Shnurenko
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class NavigateToFileAction extends AbstractPerspectiveAction {
 
     private final NavigateToFilePresenter  presenter;
     private final AnalyticsEventLogger     eventLogger;
-    private final ProjectExplorerPresenter projectExplorerPresenter;
+    private final AppContext appContext;
 
     @Inject
     public NavigateToFileAction(NavigateToFilePresenter presenter,
                                 AnalyticsEventLogger eventLogger,
                                 Resources resources,
-                                ProjectExplorerPresenter projectExplorerPresenter,
-                                CoreLocalizationConstant localizationConstant) {
-        super(Collections.singletonList(PROJECT_PERSPECTIVE_ID),
+                                CoreLocalizationConstant localizationConstant,
+                                AppContext appContext) {
+        super(singletonList(PROJECT_PERSPECTIVE_ID),
               localizationConstant.actionNavigateToFileText(),
               localizationConstant.actionNavigateToFileDescription(),
               null,
               resources.navigateToFile());
         this.presenter = presenter;
         this.eventLogger = eventLogger;
-        this.projectExplorerPresenter = projectExplorerPresenter;
+        this.appContext = appContext;
     }
 
     @Override
@@ -63,6 +65,9 @@ public class NavigateToFileAction extends AbstractPerspectiveAction {
 
     @Override
     public void updateInPerspective(@NotNull ActionEvent event) {
-        event.getPresentation().setEnabled(!projectExplorerPresenter.getRootNodes().isEmpty());
+        final Project project = appContext.getRootProject();
+
+        event.getPresentation().setVisible(true);
+        event.getPresentation().setEnabled(project != null && appContext.getCurrentUser().isUserPermanent());
     }
 }

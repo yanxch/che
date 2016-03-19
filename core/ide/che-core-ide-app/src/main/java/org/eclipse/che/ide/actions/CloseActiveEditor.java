@@ -27,30 +27,32 @@ import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.CLOSE;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
- * General action which listen current active editor and closes it if need.
+ * General action which listens current active editor and closes it if need.
  *
  * @author Vlad Zhukovskiy
  */
 @Singleton
-public class CloseCurrentFile extends AbstractPerspectiveAction {
+public class CloseActiveEditor extends AbstractPerspectiveAction {
 
     private final EditorAgent editorAgent;
     private final EventBus eventBus;
 
     @Inject
-    public CloseCurrentFile(CoreLocalizationConstant locale,
-                            EditorAgent editorAgent,
-                            EventBus eventBus) {
+    public CloseActiveEditor(CoreLocalizationConstant locale,
+                             EditorAgent editorAgent,
+                             EventBus eventBus) {
         super(singletonList(PROJECT_PERSPECTIVE_ID), locale.editorTabClose(), locale.editorTabCloseDescription(), null, null);
         this.editorAgent = editorAgent;
         this.eventBus = eventBus;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void updateInPerspective(@NotNull ActionEvent event) {
         event.getPresentation().setEnabledAndVisible(editorAgent.getActiveEditor() != null);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
         eventBus.fireEvent(new FileEvent(editorAgent.getActiveEditor().getEditorInput().getFile(), CLOSE));
