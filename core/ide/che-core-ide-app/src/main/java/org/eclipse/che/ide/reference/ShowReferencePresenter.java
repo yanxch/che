@@ -19,8 +19,6 @@ import org.eclipse.che.ide.api.resources.Resource;
 
 import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkState;
-
 /**
  * @author Dmitry Shnurenko
  * @author Vlad Zhukovskyi
@@ -50,8 +48,6 @@ public class ShowReferencePresenter implements ShowReferenceView.ActionDelegate 
         final Project project = resource.getRelatedProject();
         final FqnProvider provider = providers.get(project.getType());
 
-        checkState(provider != null, "Fqn provider does not defined for " + project.getType() + " project type.");
-
-        view.show(provider.getFqn(resource), resource.getLocation());
+        view.show(provider != null ? provider.getFqn(resource) : "", resource.getLocation());
     }
 }

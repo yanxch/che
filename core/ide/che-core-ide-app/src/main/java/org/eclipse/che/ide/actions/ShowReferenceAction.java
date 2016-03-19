@@ -47,7 +47,7 @@ public class ShowReferenceAction extends Action {
         final Resource[] resources = appContext.getResources();
 
         event.getPresentation().setVisible(true);
-        event.getPresentation().setEnabled(resources != null && resources.length == 1 && appContext.getCurrentUser().isUserPermanent());
+        event.getPresentation().setEnabled(resources != null && resources.length == 1);
     }
 
     /** {@inheritDoc} */
