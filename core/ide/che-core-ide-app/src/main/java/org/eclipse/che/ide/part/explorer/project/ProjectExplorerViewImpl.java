@@ -525,7 +525,7 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
 
     /** {@inheritDoc} */
     @Override
-    public void refresh(Node node) {
+    public void redraw(Node node) {
         tree.refresh(node);
     }
 

@@ -100,7 +100,7 @@ public interface ProjectExplorerView extends View<ProjectExplorerView.ActionDele
      * @param node
      *         node to refresh
      */
-    void refresh(Node node);
+    void redraw(Node node);
 
     /**
      * Retrieve sort information.

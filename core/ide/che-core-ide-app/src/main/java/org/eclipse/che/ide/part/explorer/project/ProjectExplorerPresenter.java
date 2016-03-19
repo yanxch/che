@@ -4,12 +4,14 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * <p/>
  * Contributors:
- *   Codenvy, S.A. - initial API and implementation
+ * Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
 package org.eclipse.che.ide.part.explorer.project;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -40,6 +42,9 @@ import org.eclipse.che.ide.api.action.ActionManager;
 import org.eclipse.che.ide.api.action.Presentation;
 import org.eclipse.che.ide.api.action.PromisableAction;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.data.HasStorablePath;
+import org.eclipse.che.ide.api.data.tree.Node;
+import org.eclipse.che.ide.api.data.tree.settings.NodeSettings;
 import org.eclipse.che.ide.api.data.tree.settings.SettingsProvider;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.event.ConfigureProjectEvent;
@@ -58,9 +63,14 @@ import org.eclipse.che.ide.api.parts.HasView;
 import org.eclipse.che.ide.api.parts.PerspectiveManager;
 import org.eclipse.che.ide.api.parts.ProjectExplorerPart;
 import org.eclipse.che.ide.api.parts.base.BasePresenter;
-import org.eclipse.che.ide.api.data.HasStorablePath;
-import org.eclipse.che.ide.api.data.tree.Node;
+import org.eclipse.che.ide.api.resources.Container;
+import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.resources.Folder;
 import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.resources.ResourceChangedEvent;
+import org.eclipse.che.ide.api.resources.ResourceChangedEvent.ResourceChangedHandler;
+import org.eclipse.che.ide.api.resources.ResourceDelta;
 import org.eclipse.che.ide.api.selection.Selection;
 import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationAppliedEvent;
 import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationAppliedEvent.WorkspaceConfigurationAppliedHandler;
@@ -94,9 +104,16 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterables.tryFind;
 import static org.eclipse.che.api.promises.client.callback.PromiseHelper.newCallback;
 import static org.eclipse.che.api.promises.client.callback.PromiseHelper.newPromise;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
+import static org.eclipse.che.ide.api.resources.Resource.FILE;
+import static org.eclipse.che.ide.api.resources.Resource.FOLDER;
+import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.CHANGED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.CREATED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
 
 /**
  * Project explorer presenter. Handle basic logic to control project tree display.
@@ -116,10 +133,11 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
                                                                        ResourceNodeRenamedHandler,
                                                                        ResourceNodeDeletedHandler,
                                                                        ModuleCreatedHandler,
-                                                                       WorkspaceConfigurationAppliedHandler {
+                                                                       WorkspaceConfigurationAppliedHandler,
+                                                                       ResourceChangedHandler {
     private final ProjectExplorerView          view;
-    private final ResourceNode.NodeFactory nodeFactory;
-    private final SettingsProvider settingsProvider;
+    private final ResourceNode.NodeFactory     nodeFactory;
+    private final SettingsProvider             settingsProvider;
     private final EventBus                     eventBus;
     private final NodeManager                  nodeManager;
     private final AppContext                   appContext;
@@ -152,7 +170,8 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
                                     NotificationManager notificationManager,
                                     ProjectConfigSynchronizationListener synchronizationListener,
                                     Provider<EditorAgent> editorAgentProvider,
-                                    ResourceNode.NodeFactory nodeFactory, SettingsProvider settingsProvider) {
+                                    ResourceNode.NodeFactory nodeFactory,
+                                    SettingsProvider settingsProvider) {
         this.view = view;
         this.nodeFactory = nodeFactory;
         this.settingsProvider = settingsProvider;
@@ -171,15 +190,16 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         this.notificationManager = notificationManager;
         this.editorAgentProvider = editorAgentProvider;
 
-        eventBus.addHandler(CreateProjectEvent.TYPE, this);
-        eventBus.addHandler(DeleteProjectEvent.TYPE, this);
-        eventBus.addHandler(ConfigureProjectEvent.TYPE, this);
-        eventBus.addHandler(ProjectUpdatedEvent.getType(), this);
+//        eventBus.addHandler(CreateProjectEvent.TYPE, this);
+//        eventBus.addHandler(DeleteProjectEvent.TYPE, this);
+//        eventBus.addHandler(ConfigureProjectEvent.TYPE, this);
+//        eventBus.addHandler(ProjectUpdatedEvent.getType(), this);
         eventBus.addHandler(WsAgentStateEvent.TYPE, this);
-        eventBus.addHandler(ResourceNodeRenamedEvent.getType(), this);
-        eventBus.addHandler(ResourceNodeDeletedEvent.getType(), this);
-        eventBus.addHandler(ModuleCreatedEvent.getType(), this);
+//        eventBus.addHandler(ResourceNodeRenamedEvent.getType(), this);
+//        eventBus.addHandler(ResourceNodeDeletedEvent.getType(), this);
+//        eventBus.addHandler(ModuleCreatedEvent.getType(), this);
         eventBus.addHandler(WorkspaceConfigurationAppliedEvent.getType(), this);
+        eventBus.addHandler(ResourceChangedEvent.getType(), this);
 
         addBeforeExpandHandler(synchronizationListener);
     }
@@ -187,20 +207,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
     /** {@inheritDoc} */
     @Override
     public void onWsAgentStarted(WsAgentStateEvent event) {
-//        nodeManager.getProjectNodes().then(new Operation<List<Node>>() {
-//            @Override
-//            public void apply(List<Node> nodes) throws OperationException {
-//                view.removeAllNodes();
-//                view.addNodes(null, nodes);
-//
-//                eventBus.fireEvent(new ProjectExplorerLoadedEvent(nodes));
-//            }
-//        }).catchError(new Operation<PromiseError>() {
-//            @Override
-//            public void apply(PromiseError arg) throws OperationException {
-//                notificationManager.notify(locale.projectExplorerProjectsLoadFailed());
-//            }
-//        });
+        //nothing to do
     }
 
     /** {@inheritDoc} */
@@ -225,6 +232,82 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         }
 
         eventBus.fireEvent(new ProjectExplorerLoadedEvent(getRootNodes()));
+    }
+
+    @Override
+    public void onResourceChanged(ResourceChangedEvent event) {
+        final ResourceDelta delta = event.getDelta();
+        final Resource resource = delta.getResource();
+
+        switch (delta.getKind()) {
+            case CREATED:
+                onResourceCreated(resource);
+                break;
+            case REMOVED:
+                onResourceRemoved(resource);
+                break;
+            case CHANGED:
+                onResourceChanged(delta);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected void onResourceCreated(Resource resource) {
+        final List<Node> existedNodes = view.getAllNodes();
+
+        Optional<Node> optExistNode = tryFind(existedNodes, hasResource(resource));
+
+        if (optExistNode.isPresent()) {
+            //suppress warning here, we've checked node for HasDataObject instance before
+            ((ResourceNode<Resource>)optExistNode.get()).setData(resource);
+            view.redraw(optExistNode.get());
+            return;
+        }
+
+        final NodeSettings nodeSettings = settingsProvider.getSettings();
+
+        //handle root project creation
+        if (resource.getResourceType() == PROJECT || resource.getLocation().segmentCount() == 1) {
+            view.addNode(null, nodeFactory.newProjectNode((Project)resource, nodeSettings));
+        } else {
+            final Optional<Container> optParent = resource.getParent();
+
+            if (!optParent.isPresent()) {
+                return;
+            }
+
+            optExistNode = tryFind(existedNodes, hasResource(optParent.get()));
+
+            if (!optExistNode.isPresent()) {
+                return;
+            }
+
+            final Node newNode;
+
+            switch (resource.getResourceType()) {
+                case PROJECT:
+                    newNode = nodeFactory.newProjectNode((Project)resource, nodeSettings);
+                    break;
+                case FOLDER:
+                    newNode = nodeFactory.newFolderNode((Folder)resource, nodeSettings);
+                    break;
+                case FILE:
+                    newNode = nodeFactory.newFileNode((File)resource, nodeSettings);
+                    break;
+                default:
+                    throw new IllegalStateException("Filed to resolve resource type");
+            }
+
+            view.addNode(optExistNode.get(), newNode);
+        }
+    }
+
+    protected void onResourceRemoved(Resource resource) {
+
+    }
+
+    protected void onResourceChanged(ResourceDelta delta) {
+
     }
 
     /** {@inheritDoc} */
@@ -337,7 +420,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
             }
         }
 
-        view.refresh(node);
+        view.redraw(node);
 
         if (view.isExpanded(node) && view.isLoaded(node)) {
             view.reloadChildren(node, true);
@@ -406,7 +489,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
             }
         }
 
-        view.refresh(event.getNode());
+        view.redraw(event.getNode());
 
         if (!event.getNode().isLeaf() && view.isLoaded(event.getNode())) {
             view.reloadChildren(event.getNode(), true);
@@ -869,5 +952,18 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
                 notificationManager.notify(locale.projectExplorerProjectsLoadFailed());
             }
         });
+    }
+
+    protected Predicate<Node> hasResource(final Resource object) {
+        return new Predicate<Node>() {
+            @Override
+            public boolean apply(Node input) {
+                try {
+                    return input instanceof ResourceNode && ((ResourceNode<?>)input).getData().equals(object);
+                } catch (NullPointerException e) {
+                    return false;
+                }
+            }
+        };
     }
 }
