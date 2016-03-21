@@ -46,6 +46,7 @@ import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.menu.ContextMenu;
 import org.eclipse.che.ide.project.node.ProjectNode;
 import org.eclipse.che.ide.project.node.SyntheticBasedNode;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.ui.FontAwesome;
 import org.eclipse.che.ide.ui.Tooltip;
 import org.eclipse.che.ide.ui.smartTree.KeyboardNavigationHandler;
@@ -72,7 +73,6 @@ import org.eclipse.che.ide.ui.smartTree.presentation.DefaultPresentationRenderer
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static java.util.Collections.singletonList;
@@ -129,13 +129,7 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
             @NotNull
             @Override
             public String getKey(@NotNull Node item) {
-                if (item instanceof HasStorablePath) {
-                    return ((HasStorablePath)item).getStorablePath();
-                } else if (item instanceof SyntheticBasedNode) {
-                    return String.valueOf(((HasProjectConfig)item).getProjectConfig().getPath() + item.hashCode());
-                } else {
-                    return String.valueOf(item.hashCode());
-                }
+                return String.valueOf(item.hashCode());
             }
         };
 
@@ -661,7 +655,7 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
     /** {@inheritDoc} */
     @Override
     public Promise<Node> getNodeByPath(HasStorablePath path, boolean forceUpdate, boolean closeMissingFiles) {
-        return searchNodeHandler.getNodeByPath(path, forceUpdate, closeMissingFiles);
+        return searchNodeHandler.getNodeByPath(Path.valueOf(path.getStorablePath()), forceUpdate, closeMissingFiles);
     }
 
     /** {@inheritDoc} */

@@ -10,13 +10,13 @@
  *******************************************************************************/
 package org.eclipse.che.ide.part.explorer.project;
 
-import com.google.common.base.Strings;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper;
-import org.eclipse.che.ide.api.data.HasStorablePath;
 import org.eclipse.che.ide.api.data.tree.Node;
+import org.eclipse.che.ide.resource.Path;
+import org.eclipse.che.ide.resources.tree.ResourceNode;
 import org.eclipse.che.ide.ui.smartTree.Tree;
 import org.eclipse.che.ide.ui.smartTree.event.BeforeExpandNodeEvent;
 import org.eclipse.che.ide.ui.smartTree.event.BeforeExpandNodeEvent.BeforeExpandNodeHandler;
@@ -43,7 +43,7 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
 
     private boolean inSearchMode = false;
 
-    private HasStorablePath path;
+    private Path path;
 
     private AsyncCallback<Node> callback;
 
@@ -70,7 +70,7 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
      *         allow editor to close removed files if they were opened
      * @return promise object with found node or promise error if node wasn't found
      */
-    public Promise<Node> getNodeByPath(final HasStorablePath path, boolean forceUpdate, boolean closeMissingFiles) {
+    public Promise<Node> getNodeByPath(final Path path, boolean forceUpdate, boolean closeMissingFiles) {
         this.forceUpdate = forceUpdate;
         this.closeMissingFiles = closeMissingFiles;
         return AsyncPromiseHelper.createFromAsyncRequest(new AsyncPromiseHelper.RequestCall<Node>() {
@@ -81,8 +81,8 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
         });
     }
 
-    protected void getNodeByPath(HasStorablePath path, AsyncCallback<Node> callback) {
-        if (path == null || Strings.isNullOrEmpty(path.getStorablePath())) {
+    protected void getNodeByPath(Path path, AsyncCallback<Node> callback) {
+        if (path == null) {
             callback.onFailure(new IllegalArgumentException("Invalid search path"));
         }
 
@@ -94,14 +94,14 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
         this.path = path;
         this.inSearchMode = true;
 
-        Node rootNode = getRootNode(path);
+        ResourceNode rootNode = getRootNode(path);
 
         if (rootNode == null) {
             inSearchMode = false;
             return;
         }
 
-        if (rootNode instanceof HasStorablePath && ((HasStorablePath)rootNode).getStorablePath().equals(path.getStorablePath())) {
+        if (rootNode.getData().getLocation().equals(path)) {
             //maybe we searched root node, so just return it back
             inSearchMode = false;
             callback.onSuccess(rootNode);
@@ -129,16 +129,16 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
             List<Node> children = tree.getNodeStorage().getChildren(node);
 
             for (Node child : children) {
-                if (!(child instanceof HasStorablePath)) {
+                if (!(child instanceof ResourceNode)) {
                     continue;
                 }
 
-                String childPath = ((HasStorablePath)child).getStorablePath();
-                if (path.getStorablePath().equals(childPath)) {
+//                String childPath = ((HasStorablePath)child).getStorablePath();
+                if (path.equals(((ResourceNode)child).getData().getLocation())) {
                     callback.onSuccess(child);
                     inSearchMode = false;
                     return;
-                } else if (path.getStorablePath().startsWith(childPath + (child.isLeaf() ? "" : "/"))) {
+                } else if (((ResourceNode)child).getData().getLocation().isPrefixOf(path)/*path.getStorablePath().startsWith(childPath + (child.isLeaf() ? "" : "/"))*/) {
                     event.setCancelled(true); //disallow to continue expanding current node
                     tree.setExpanded(child, true);
                     return;
@@ -159,16 +159,16 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
         List<Node> children = tree.getNodeStorage().getChildren(event.getNode());
 
         for (Node child : children) {
-            if (!(child instanceof HasStorablePath)) {
+            if (!(child instanceof ResourceNode)) {
                 continue;
             }
 
-            String childPath = ((HasStorablePath)child).getStorablePath();
-            if (path.getStorablePath().equals(childPath)) {
+//            String childPath = ((HasStorablePath)child).getStorablePath();
+            if (path.equals(((ResourceNode)child).getData().getLocation())) {
                 callback.onSuccess(child);
                 inSearchMode = false;
                 return;
-            } else if (path.getStorablePath().startsWith(childPath + (child.isLeaf() ? "" : "/"))) {
+            } else if (((ResourceNode)child).getData().getLocation().isPrefixOf(path)/*path.getStorablePath().startsWith(childPath + (child.isLeaf() ? "" : "/"))*/) {
                 tree.setExpanded(child, true);
                 return;
             }
@@ -187,17 +187,17 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
         List<Node> addedNodes = event.getNodes();
 
         for (Node node : addedNodes) {
-            if (!(node instanceof HasStorablePath)) {
+            if (!(node instanceof ResourceNode)) {
                 continue;
             }
 
-            String childPath = ((HasStorablePath)node).getStorablePath();
+//            String childPath = ((HasStorablePath)node).getStorablePath();
 
-            if (path.getStorablePath().equals(childPath)) {
+            if (path.equals(((ResourceNode)node).getData().getLocation())) {
                 callback.onSuccess(node);
                 inSearchMode = false;
                 break;
-            } else if (path.getStorablePath().startsWith(childPath + (node.isLeaf() ? "" : "/"))) {
+            } else if (((ResourceNode)node).getData().getLocation().isPrefixOf(path)/*path.getStorablePath().startsWith(childPath + (node.isLeaf() ? "" : "/"))*/) {
                 tree.setExpanded(node, true);
                 return;
             }
@@ -213,22 +213,22 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
         List<Node> receivedNodes = event.getReceivedNodes();
 
         for (Node receivedNode : receivedNodes) {
-            if (!(receivedNode instanceof HasStorablePath)) {
+            if (!(receivedNode instanceof ResourceNode)) {
                 continue;
             }
 
-            String childPath = ((HasStorablePath)receivedNode).getStorablePath();
-            if (path.getStorablePath().equals(childPath)) {
+//            String childPath = ((HasStorablePath)receivedNode).getStorablePath();
+            if (path.equals(((ResourceNode)receivedNode).getData().getLocation())) {
                 callback.onSuccess(receivedNode);
                 inSearchMode = false;
                 return;
-            } else if (path.getStorablePath().startsWith(childPath + (receivedNode.isLeaf() ? "" : "/"))) {
+            } else if (((ResourceNode)receivedNode).getData().getLocation().isPrefixOf(path)/*path.getStorablePath().startsWith(childPath + (receivedNode.isLeaf() ? "" : "/"))*/) {
                 tree.setExpanded(receivedNode, true);
                 return;
             }
         }
 
-        callback.onFailure(new IllegalStateException("Node '" + path.getStorablePath() + "' not found"));
+        callback.onFailure(new IllegalStateException("Node '" + path + "' not found"));
         inSearchMode = false;
     }
 
@@ -246,27 +246,19 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
         return closeMissingFiles;
     }
 
-    private Node getRootNode(HasStorablePath path) {
+    private ResourceNode getRootNode(Path path) {
         for (Node root : tree.getRootNodes()) {
-            if (!(root instanceof HasStorablePath)) {
+            if (!(root instanceof ResourceNode)) {
                 continue;
             }
 
-            String rootPath = ((HasStorablePath)root).getStorablePath();
+            final Path rootPath = ((ResourceNode)root).getData().getLocation();
 
-            if (Strings.isNullOrEmpty(rootPath)) {
+            if (!rootPath.isPrefixOf(path)) {
                 continue;
             }
 
-            if (!rootPath.endsWith("/")) {
-                rootPath = rootPath + "/";
-            }
-
-            if (!path.getStorablePath().startsWith(rootPath)) {
-                continue;
-            }
-
-            return root;
+            return (ResourceNode)root;
         }
 
         return null;

@@ -14,8 +14,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.CoreLocalizationConstant;
-import org.eclipse.che.ide.api.data.HasStorablePath;
-import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.api.data.tree.NodeInterceptor;
 import org.eclipse.che.ide.api.parts.PartStackUIResources;
 import org.eclipse.che.ide.api.parts.base.BaseView;
@@ -23,12 +21,9 @@ import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.search.factory.FindResultNodeFactory;
 import org.eclipse.che.ide.ui.smartTree.NodeLoader;
 import org.eclipse.che.ide.ui.smartTree.NodeStorage;
-import org.eclipse.che.ide.ui.smartTree.NodeUniqueKeyProvider;
 import org.eclipse.che.ide.ui.smartTree.Tree;
-import org.eclipse.che.ide.ui.smartTree.UniqueKeyProvider;
 import org.eclipse.che.ide.ui.smartTree.event.SelectionChangedEvent;
 
-import javax.validation.constraints.NotNull;
 import java.util.Collections;
 
 /**
@@ -50,19 +45,7 @@ class FindResultViewImpl extends BaseView<FindResultView.ActionDelegate> impleme
         setTitle(localizationConstant.actionFullTextSearch());
         this.findResultNodeFactory = findResultNodeFactory;
 
-        UniqueKeyProvider<Node> nodeIdProvider = new NodeUniqueKeyProvider() {
-            @NotNull
-            @Override
-            public String getKey(@NotNull Node item) {
-                if (item instanceof HasStorablePath) {
-                    return ((HasStorablePath)item).getStorablePath();
-                } else {
-                    return String.valueOf(item.hashCode());
-                }
-            }
-        };
-
-        NodeStorage nodeStorage = new NodeStorage(nodeIdProvider);
+        NodeStorage nodeStorage = new NodeStorage();
         NodeLoader loader = new NodeLoader(Collections.<NodeInterceptor>emptySet());
         tree = new Tree(nodeStorage, loader);
 

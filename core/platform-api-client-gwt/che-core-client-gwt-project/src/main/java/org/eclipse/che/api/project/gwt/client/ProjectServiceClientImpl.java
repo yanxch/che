@@ -551,7 +551,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
         return asyncRequestFactory.createGetRequest(requestUrl)
                                   .header(ACCEPT, MimeType.APPLICATION_JSON)
-                                  .loader(loaderFactory.newLoader("Reading project..."))
+                                  .loader(loaderFactory.newLoader("Reading structure..."))
                                   .send(dtoUnmarshaller.newUnmarshaller(TreeElement.class));
     }
 

@@ -51,6 +51,8 @@ import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationChangedEvent;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.resource.Path;
+import org.eclipse.che.ide.ui.loaders.request.LoaderFactory;
+import org.eclipse.che.ide.ui.loaders.request.MessageLoader;
 import org.eclipse.che.ide.workspace.WorkspaceComponent;
 import org.eclipse.che.ide.workspace.WorkspaceImpl;
 
@@ -138,6 +140,7 @@ public final class ResourceManager {
     private final DtoFactory           dtoFactory;
     private final ProjectTypeRegistry  typeRegistry;
     private final String               wsAgentPath;
+    private final LoaderFactory        loaderFactory;
     private final String               wsId;
 
     /**
@@ -163,7 +166,8 @@ public final class ResourceManager {
                            PromiseProvider promise,
                            DtoFactory dtoFactory,
                            ProjectTypeRegistry typeRegistry,
-                           @Named("cheExtensionPath") String wsAgentPath) {
+                           @Named("cheExtensionPath") String wsAgentPath,
+                           LoaderFactory loaderFactory) {
         this.wsId = wsId;
         this.ps = ps;
         this.eventBus = eventBus;
@@ -172,6 +176,7 @@ public final class ResourceManager {
         this.dtoFactory = dtoFactory;
         this.typeRegistry = typeRegistry;
         this.wsAgentPath = wsAgentPath;
+        this.loaderFactory = loaderFactory;
         this.resourceStore = new ResourceStore();
 
         this.workspaceRoot = resourceFactory.newFolderImpl(Path.ROOT, this);
@@ -553,9 +558,13 @@ public final class ResourceManager {
             @Override
             public Set<Resource> apply(TreeElement tree) throws FunctionException {
 
+                final MessageLoader progressLoader = loaderFactory.newLoader("Traversing the project...");
+                progressLoader.show();
+
                 traverse(tree, new ResourceVisitor() {
                     @Override
                     public void visit(Resource resource) {
+                        progressLoader.setMessage("Processing " + resource.getName() + "...");
                         final Optional<Resource> optionalCachedResource = resourceStore.get(resource.getLocation());
                         final boolean isPresent = optionalCachedResource.isPresent();
 
@@ -563,6 +572,7 @@ public final class ResourceManager {
                             resourceStore.dispose(optionalCachedResource.get(), force);
                         }
 
+                        progressLoader.setMessage("Registering " + resource.getName() + "...");
                         resourceStore.init(resource);
 
                         if (resource.getResourceType() == PROJECT) {
@@ -573,6 +583,7 @@ public final class ResourceManager {
 
                                 if (optionalMarker.isPresent()) {
                                     resource.addMarker(optionalMarker.get());
+                                    progressLoader.setMessage("Marking " + resource.getName() + " as problematic project...");
                                 }
                             }
                         }
@@ -585,9 +596,12 @@ public final class ResourceManager {
 
                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, status)));
 
+                        progressLoader.setMessage("Processing " + resource.getName() + " finished...");
                         resources.add(resource);
                     }
                 });
+
+                progressLoader.hide();
 
                 return resources;
             }

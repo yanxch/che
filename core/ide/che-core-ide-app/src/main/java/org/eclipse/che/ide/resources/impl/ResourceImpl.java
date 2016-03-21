@@ -170,7 +170,7 @@ abstract class ResourceImpl implements Resource {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return Objects.hashCode(getResourceType(), getLocation());
+        return Objects.hashCode(getResourceType(), getLocation().toString());
     }
 
     /** {@inheritDoc} */

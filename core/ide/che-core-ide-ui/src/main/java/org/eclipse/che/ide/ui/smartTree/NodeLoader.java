@@ -416,11 +416,11 @@ public class NodeLoader implements LoaderHandler.HasLoaderHandlers {
         return new Operation<List<Node>>() {
             @Override
             public void apply(List<Node> children) throws OperationException {
-                if (nodeInterceptors.isEmpty()) {
+//                if (nodeInterceptors.isEmpty()) {
                     onLoadSuccess(parent, children);
-                }
+//                }
 
-                iterate(new LinkedList<>(nodeInterceptors), parent, children);
+//                iterate(new LinkedList<>(nodeInterceptors), parent, children);
             }
         };
     }

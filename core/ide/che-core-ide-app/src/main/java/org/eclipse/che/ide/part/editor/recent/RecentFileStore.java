@@ -98,22 +98,22 @@ public class RecentFileStore implements RecentFileList, FileEventHandler {
     /** {@inheritDoc} */
     @Override
     public void onFileOperation(FileEvent event) {
-        if (event.getOperationType() == OPEN) {
-            VirtualFile file = event.getFile();
-            if (file instanceof FileReferenceNode) {
-                add((FileReferenceNode)file);
-            } else {
-                //we got this file not from the project explorer
-                projectExplorer.getNodeByPath(new StorablePath(file.getPath())).then(new Operation<Node>() {
-                    @Override
-                    public void apply(Node node) throws OperationException {
-                        if (node instanceof FileReferenceNode) {
-                            add((FileReferenceNode)node);
-                        }
-                    }
-                });
-            }
-        }
+//        if (event.getOperationType() == OPEN) {
+//            VirtualFile file = event.getFile();
+//            if (file instanceof FileReferenceNode) {
+//                add((FileReferenceNode)file);
+//            } else {
+//                //we got this file not from the project explorer
+//                projectExplorer.getNodeByPath(new StorablePath(file.getPath())).then(new Operation<Node>() {
+//                    @Override
+//                    public void apply(Node node) throws OperationException {
+//                        if (node instanceof FileReferenceNode) {
+//                            add((FileReferenceNode)node);
+//                        }
+//                    }
+//                });
+//            }
+//        }
     }
 
     /** {@inheritDoc} */
