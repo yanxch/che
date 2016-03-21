@@ -23,7 +23,7 @@ import org.eclipse.che.ide.api.resources.Folder;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Project.UpdateRequest;
 import org.eclipse.che.ide.api.resources.Resource;
-import org.eclipse.che.ide.api.resources.ResourceNameComparator;
+import org.eclipse.che.ide.api.resources.ResourcePathComparator;
 import org.eclipse.che.ide.resource.Path;
 
 import java.util.Set;
@@ -74,7 +74,7 @@ abstract class ContainerImpl extends ResourceImpl implements Container {
                 }
 
                 Resource[] resources = children.toArray(new Resource[children.size()]);
-                sort(resources, ResourceNameComparator.getInstance());
+                sort(resources, ResourcePathComparator.getInstance());
                 return promiseProvider.resolve(resources);
             }
         });

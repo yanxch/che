@@ -31,16 +31,12 @@ import org.eclipse.che.ide.project.shared.NodesResources;
 import org.eclipse.che.ide.ui.smartTree.presentation.HasPresentation;
 import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
 
-import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.cycle;
-import static com.google.common.collect.Iterables.transform;
-import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Lists.newArrayListWithExpectedSize;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static org.eclipse.che.ide.api.resources.Resource.FILE;
@@ -102,7 +98,13 @@ public abstract class ResourceNode<R extends Resource> extends AbstractTreeNode 
                     return NO_CHILDREN;
                 }
 
-                return unmodifiableList(newArrayList(transform(cycle(children), toNode())));
+                final List<Node> nodes = newArrayListWithExpectedSize(children.length);
+
+                for (Resource child : children) {
+                    nodes.add(createNode(child));
+                }
+
+                return unmodifiableList(nodes);
             }
         });
     }
@@ -160,24 +162,12 @@ public abstract class ResourceNode<R extends Resource> extends AbstractTreeNode 
                           .toString();
     }
 
-    private com.google.common.base.Function<Resource, Node> toNode() {
-        return new com.google.common.base.Function<Resource, Node>() {
-            @Nullable
-            @Override
-            public Node apply(@Nullable Resource input) {
-                checkNotNull(input);
-
-                return createNode(input);
-            }
-        };
-    }
-
     public interface NodeFactory {
-        FileNode newFileNode(File file, NodeSettings nodeSettings);
+        FileNode newFileNode(File resource, NodeSettings nodeSettings);
 
-        FolderNode newFolderNode(Folder folder, NodeSettings nodeSettings);
+        FolderNode newFolderNode(Folder resource, NodeSettings nodeSettings);
 
-        ProjectNode newProjectNode(Project project, NodeSettings nodeSettings);
+        ProjectNode newProjectNode(Project resource, NodeSettings nodeSettings);
     }
 
     protected Node createNode(Resource resource) {
