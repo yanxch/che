@@ -10,11 +10,11 @@
       Codenvy, S.A. - initial API and implementation
 
 -->
-<che-toolbar che-title="All Workspaces"
+<che-toolbar che-title="All Workspaces ({{listWorkspacesCtrl.userWorkspaces.length}})"
               che-add-button-name="New Workspace"
               che-add-button-href="#/create-workspace"
               che-search-placeholder="Search for workspaces..."
-              che-search-model="listWorkspacesCtrl.workspaceFilter.name"
+              che-search-model="listWorkspacesCtrl.workspaceFilter.config.name"
               che-event-logger="workspaces/new.workspace"></che-toolbar>
 <md-content md-scroll-y flex layout="column" md-theme="maincontent-theme">
   <md-progress-linear md-mode="indeterminate" class="workspaces-list-progress"
@@ -25,11 +25,9 @@
                        che-icon-class="fa fa-server fa-lg icon"></che-empty-state>
     </div>
     <div ng-if="listWorkspacesCtrl.userWorkspaces.length > 0">
-      <che-list-title che-icon="fa fa-folder" class="workspace-list-title">
-        <span class="workspace-list-title">Workspaces ({{listWorkspacesCtrl.userWorkspaces.length}})</span>
-        <span ng-show="listWorkspacesCtrl.userWorkspaces.length == 0" class="workspace-list-empty">- No workspaces inside</span>
-        <span ng-show="(listWorkspacesCtrl.userWorkspaces | filter:listWorkspacesCtrl.workspaceFilter).length == 0 &&
-              workspaces.length > 0" class="workspace-list-empty">- No workspaces found</span>
+      <che-list-title che-icon="fa fa-folder" class="workspace-list-title"
+                      ng-show="(listWorkspacesCtrl.userWorkspaces | filter:listWorkspacesCtrl.workspaceFilter).length === 0">
+        <span class="workspace-list-empty">- No workspaces found</span>
       </che-list-title>
       <che-list ng-show="(listWorkspacesCtrl.userWorkspaces | filter:listWorkspacesCtrl.workspaceFilter).length > 0">
         <che-workspace-item ng-repeat="workspace in listWorkspacesCtrl.userWorkspaces | filter:listWorkspacesCtrl.workspaceFilter"

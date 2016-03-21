@@ -34,6 +34,7 @@ class IdeSvc {
         this.$location = $location;
         this.routeHistory = routeHistory;
 
+        this.ideParams = new Map();
 
         this.currentStep = 0;
         this.selectedWorkspace = null;
@@ -114,28 +115,34 @@ class IdeSvc {
 
     startWorkspace(bus, data) {
 
-        let startWorkspacePromise = this.cheAPI.getWorkspace().startWorkspace(data.id, data.defaultEnv);
+        let startWorkspacePromise = this.cheAPI.getWorkspace().startWorkspace(data.id, data.config.defaultEnv);
 
         startWorkspacePromise.then((data) => {
             // get channels
-            let environments = data.environments;
-            let defaultEnvName = data.defaultEnv;
+            let environments = data.config.environments;
+            let defaultEnvName = data.config.defaultEnv;
             let defaultEnvironment = this.lodash.find(environments, (environment) => {
               return environment.name === defaultEnvName;
             });
 
-            let channels = defaultEnvironment.machineConfigs[0].channels;
-            let statusChannel = channels.status;
-            let outputChannel = channels.output;
-            let agentChannel = 'workspace:' + data.id + ':ext-server:output';
-
+            let machineConfigsLinks = defaultEnvironment.machineConfigs[0].links;
+            let findStatusLink = this.lodash.find(machineConfigsLinks, (machineConfigsLink) => {
+              return machineConfigsLink.rel === 'get machine status channel';
+            });
+            let findOutputLink = this.lodash.find(machineConfigsLinks, (machineConfigsLink) => {
+              return machineConfigsLink.rel === 'get machine logs channel';
+            });
 
             let workspaceId = data.id;
+
+            let agentChannel = 'workspace:' + data.id + ':ext-server:output';
+            let statusChannel = findStatusLink ? findStatusLink.parameters[0].defaultValue : null;
+            let outputChannel = findOutputLink ? findOutputLink.parameters[0].defaultValue : null;
 
             // for now, display log of status channel in case of errors
             bus.subscribe(statusChannel, (message) => {
                 if (message.eventType === 'DESTROYED' && message.workspaceId === data.id) {
-                    this.getCreationSteps()[this.getCurrentProgressStep()].hasError = true;
+                    this.steps[this.currentStep].hasError = true;
 
                     // need to show the error
                     this.$mdDialog.show(
@@ -147,7 +154,7 @@ class IdeSvc {
                     );
                 }
                 if (message.eventType === 'ERROR' && message.workspaceId === data.id) {
-                    this.getCreationSteps()[this.getCurrentProgressStep()].hasError = true;
+                    this.steps[this.currentStep].hasError = true;
                     // need to show the error
                     this.$mdDialog.show(
                         this.$mdDialog.alert()
@@ -166,6 +173,19 @@ class IdeSvc {
               }
 
               let agentStep = 2;
+
+              if (message.eventType === 'ERROR' && message.workspaceId === data.id) {
+                this.steps[agentStep].hasError = true;
+                // need to show the error
+                this.$mdDialog.show(
+                  this.$mdDialog.alert()
+                    .title('Error when starting agent')
+                    .content('Unable to start workspace agent. Error when trying to start the workspace agent: ' + message.error)
+                    .ariaLabel('Workspace agent start')
+                    .ok('OK')
+                );
+              }
+
                 if (this.steps[agentStep].logs.length > 0) {
                     this.steps[agentStep].logs = this.steps[agentStep].logs + '\n' + message;
                 } else {
@@ -216,6 +236,10 @@ class IdeSvc {
         });
     }
 
+    setLoadingParameter(paramName, paramValue) {
+      this.ideParams.set(paramName, paramValue);
+    }
+
     setIDEAction(ideAction) {
       this.ideAction = ideAction;
     }
@@ -248,8 +272,15 @@ class IdeSvc {
           this.ideAction = null;
         }
 
+        if (this.ideParams) {
+          for (var [key, val] of this.ideParams) {
+            appendUrl = appendUrl + '&' + key + '=' + val;
+          }
+          this.ideParams.clear();
+        }
+
         if (inDevMode) {
-            this.$rootScope.ideIframeLink = this.$sce.trustAsResourceUrl(this.proxySettings + contextPath + this.selectedWorkspace.name + appendUrl);
+            this.$rootScope.ideIframeLink = this.$sce.trustAsResourceUrl(this.proxySettings + contextPath + this.selectedWorkspace.config.name + appendUrl);
         } else {
             this.$rootScope.ideIframeLink = ideUrlLink + appendUrl;
         }

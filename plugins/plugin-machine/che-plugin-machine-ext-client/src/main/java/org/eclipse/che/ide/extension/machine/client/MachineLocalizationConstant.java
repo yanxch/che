@@ -76,12 +76,17 @@ public interface MachineLocalizationConstant extends Messages {
     @Key("control.machine.destroy.description")
     String machineDestroyDescription();
 
+    @Key("control.terminal.new")
+    String newTerminal();
+
     @Key("control.terminal.create.text")
     String newTerminalTitle();
 
     @Key("control.terminal.create.description")
     String newTerminalDescription();
 
+    @Key("control.connect.ssh")
+    String connectViaSSH();
 
     /* Messages */
     @Key("messages.noDevMachine")
@@ -213,8 +218,8 @@ public interface MachineLocalizationConstant extends Messages {
     @Key("perspective.project.action.tooltip")
     String perspectiveProjectActionTooltip();
 
-    @Key("perspective.machine.action.tooltip")
-    String perspectiveMachineActionTooltip();
+    @Key("perspective.operations.action.tooltip")
+    String perspectiveOperationsActionTooltip();
 
     @Key("tab.info")
     String tabInfo();

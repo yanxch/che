@@ -26,8 +26,6 @@ import org.mockito.Mock;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_LOCAL;
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_REMOTE;
@@ -84,12 +82,12 @@ public class MergePresenterTest extends BaseTest {
                                        projectExplorer,
                                        gitOutputConsoleFactory,
                                        consolesPanelPresenter);
-        NavigableMap<String, EditorPartPresenter> partPresenterMap = new TreeMap<>();
-        partPresenterMap.put("partPresenter", partPresenter);
+        List<EditorPartPresenter> partPresenterList = new ArrayList<>();
+        partPresenterList.add(partPresenter);
 
         when(mergeResult.getMergeStatus()).thenReturn(ALREADY_UP_TO_DATE);
         when(selectedReference.getDisplayName()).thenReturn(DISPLAY_NAME);
-        when(editorAgent.getOpenedEditors()).thenReturn(partPresenterMap);
+        when(editorAgent.getOpenedEditors()).thenReturn(partPresenterList);
         when(partPresenter.getEditorInput()).thenReturn(editorInput);
         when(editorInput.getFile()).thenReturn(file);
         when(file.getPath()).thenReturn(FILE_PATH);
@@ -184,7 +182,7 @@ public class MergePresenterTest extends BaseTest {
         verify(partPresenter).getEditorInput();
         verify(file).getPath();
         verify(gitOutputConsoleFactory).create(MERGE_COMMAND_NAME);
-        verify(console).printInfo(anyString());
+        verify(console).print(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
         verify(notificationManager).notify(anyString(), rootProjectConfig);
     }

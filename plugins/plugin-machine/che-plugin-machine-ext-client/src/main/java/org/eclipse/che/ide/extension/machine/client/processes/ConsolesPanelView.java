@@ -54,7 +54,7 @@ public interface ConsolesPanelView extends View<ConsolesPanelView.ActionDelegate
     void setProcessesData(@NotNull ProcessTreeNode root);
 
     /** Select given process node */
-    void selectNode(@NotNull ProcessTreeNode node);
+    void selectNode(ProcessTreeNode node);
 
     /** Displays output for process with given ID */
     void showProcessOutput(String processId);
@@ -78,12 +78,14 @@ public interface ConsolesPanelView extends View<ConsolesPanelView.ActionDelegate
     ProcessTreeNode getNodeById(@NotNull String nodeId);
 
     /**
-     * Sets visibility of 'Stop process' button for node with given ID
+     * Sets new running state for a process.
      *
      * @param nodeId
-     *         id of process node
+     *         process node ID
+     * @param running
+     *         running or not
      */
-    void setStopButtonVisibility(String nodeId, boolean visible);
+    void setProcessRunning(String nodeId, boolean running);
 
     interface ActionDelegate extends BaseActionDelegate {
 
@@ -104,21 +106,12 @@ public interface ConsolesPanelView extends View<ConsolesPanelView.ActionDelegate
         void onPreviewSsh(@NotNull String machineId);
 
         /**
-         * Will be called when user selects command node
+         * Perform actions when tree node is selected.
          *
-         * @param commandId
-         *         id of command node
+         * @param node
+         *         selected tree node
          */
-        void onCommandSelected(@NotNull String commandId);
-
-        /**
-         * Will be called when user selects terminal node
-         *
-         * @param terminalId
-         *         id of terminal node
-         */
-        void onTerminalSelected(@NotNull String terminalId);
-
+        void onTreeNodeSelected(@NotNull ProcessTreeNode node);
 
         /**
          * Will be called when user clicks 'Stop' button

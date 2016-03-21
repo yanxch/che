@@ -29,8 +29,8 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.lang.reflect.Method;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -81,10 +81,10 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
                                                  projectExplorer,
                                                  gitOutputConsoleFactory,
                                                  consolesPanelPresenter);
-        NavigableMap<String, EditorPartPresenter> partPresenterMap = new TreeMap<>();
-        partPresenterMap.put("partPresenter", partPresenter);
+        List<EditorPartPresenter> partPresenterList = new ArrayList<>();
+        partPresenterList.add(partPresenter);
 
-        when(editorAgent.getOpenedEditors()).thenReturn(partPresenterMap);
+        when(editorAgent.getOpenedEditors()).thenReturn(partPresenterList);
         when(partPresenter.getEditorInput()).thenReturn(editorInput);
         when(editorInput.getFile()).thenReturn(file);
     }
@@ -165,7 +165,7 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
         verify(service).remove(anyString(), eq(rootProjectConfig), anyObject(), eq(REMOVED), anyObject());
         verify(notificationManager).notify(anyString(), rootProjectConfig);
         verify(gitOutputConsoleFactory).create(REMOVE_FROM_INDEX_COMMAND_NAME);
-        verify(console).printInfo(anyString());
+        verify(console).print(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
         verify(constant, times(2)).removeFilesSuccessfull();
         verify(view).close();

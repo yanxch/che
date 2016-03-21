@@ -15,10 +15,12 @@ import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import com.google.web.bindery.event.shared.EventBus;
 
+import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.machine.gwt.client.MachineServiceClient;
 import org.eclipse.che.api.machine.gwt.client.events.DevMachineStateEvent;
 import org.eclipse.che.api.machine.gwt.client.events.DevMachineStateHandler;
 import org.eclipse.che.api.machine.shared.dto.CommandDto;
+import org.eclipse.che.api.machine.shared.dto.MachineConfigDto;
 import org.eclipse.che.api.machine.shared.dto.MachineDto;
 import org.eclipse.che.api.machine.shared.dto.MachineProcessDto;
 import org.eclipse.che.api.promises.client.Operation;
@@ -144,7 +146,7 @@ public class ConsolesPanelPresenterTest {
     public void setUp() {
         when(appContext.getWorkspaceId()).thenReturn(WORKSPACE_ID);
 
-        when(machineService.getWorkspaceMachines(anyString())).thenReturn(machinesPromise);
+        when(machineService.getMachines(anyString())).thenReturn(machinesPromise);
         when(machineService.getMachine(anyString())).thenReturn(machinePromise);
         when(machinePromise.then(Matchers.<Operation<MachineDto>>anyObject())).thenReturn(machinePromise);
 
@@ -181,8 +183,11 @@ public class ConsolesPanelPresenterTest {
         processes.add(machineProcessDto);
 
         MachineDto machineDto = mock(MachineDto.class);
-        when(machineDto.isDev()).thenReturn(true);
+        MachineConfigDto machineConfigDto = mock(MachineConfigDto.class);
+        when(machineDto.getConfig()).thenReturn(machineConfigDto);
+        when(machineConfigDto.isDev()).thenReturn(true);
         when(machineDto.getId()).thenReturn(MACHINE_ID);
+        when(machineDto.getStatus()).thenReturn(MachineStatus.RUNNING);
         List<MachineDto> machines = new ArrayList<>(2);
         machines.add(machineDto);
 
@@ -200,7 +205,10 @@ public class ConsolesPanelPresenterTest {
     @Test
     public void shouldFetchMachines() throws Exception {
         MachineDto machineDto = mock(MachineDto.class);
-        when(machineDto.isDev()).thenReturn(true);
+        MachineConfigDto machineConfigDto = mock(MachineConfigDto.class);
+        when(machineDto.getConfig()).thenReturn(machineConfigDto);
+        when(machineConfigDto.isDev()).thenReturn(true);
+        when(machineDto.getStatus()).thenReturn(MachineStatus.RUNNING);
         List<MachineDto> machines = new ArrayList<>(2);
         machines.add(machineDto);
 
@@ -212,7 +220,7 @@ public class ConsolesPanelPresenterTest {
         devMachineStateHandler.onMachineStarted(devMachineStateEvent);
 
         verify(appContext, times(2)).getWorkspaceId();
-        verify(machineService, times(2)).getWorkspaceMachines(eq(WORKSPACE_ID));
+        verify(machineService, times(2)).getMachines(eq(WORKSPACE_ID));
         verify(machinesPromise, times(2)).then(machinesCaptor.capture());
         machinesCaptor.getValue().apply(machines);
         verify(view).setProcessesData(anyObject());
@@ -251,7 +259,7 @@ public class ConsolesPanelPresenterTest {
         verify(view, times(2)).selectNode(anyObject());
         verify(view).setProcessesData(anyObject());
         verify(view).getNodeById(anyString());
-        verify(view).setStopButtonVisibility(anyString(), anyBoolean());
+        verify(view).setProcessRunning(anyString(), anyBoolean());
     }
 
     @Test
@@ -282,7 +290,7 @@ public class ConsolesPanelPresenterTest {
         verify(view, times(2)).selectNode(anyObject());
         verify(view).setProcessesData(anyObject());
         verify(view).getNodeById(anyString());
-        verify(view).setStopButtonVisibility(anyString(), eq(true));
+        verify(view).setProcessRunning(anyString(), eq(true));
     }
 
     @Test
@@ -313,13 +321,16 @@ public class ConsolesPanelPresenterTest {
         verify(view, times(2)).selectNode(anyObject());
         verify(view).setProcessesData(anyObject());
         verify(view).getNodeById(anyString());
-        verify(view).setStopButtonVisibility(anyString(), eq(false));
+        verify(view).setProcessRunning(anyString(), eq(false));
     }
 
     @Test
-    public void shouldHideStopProcessButtonAtAddingTerminal() throws Exception {
+    public void shouldShowStopProcessButtonAtAddingTerminal() throws Exception {
         MachineDto machineDto = mock(MachineDto.class);
-        when(machineDto.isDev()).thenReturn(true);
+        MachineConfigDto machineConfigDto = mock(MachineConfigDto.class);
+        when(machineDto.getConfig()).thenReturn(machineConfigDto);
+        when(machineConfigDto.isDev()).thenReturn(true);
+        when(machineDto.getStatus()).thenReturn(MachineStatus.RUNNING);
 
         ProcessTreeNode machineNode = mock(ProcessTreeNode.class);
         when(machineNode.getId()).thenReturn(MACHINE_ID);
@@ -350,13 +361,15 @@ public class ConsolesPanelPresenterTest {
         verify(terminal).setVisible(eq(true));
         verify(terminal).connect();
         verify(terminal).setListener(anyObject());
-        verify(view).setStopButtonVisibility(anyString(), eq(false));
+        verify(view).setProcessRunning(anyString(), eq(true));
     }
 
     @Test
     public void shouldReplaceCommandOutput() throws Exception {
         MachineDto machineDto = mock(MachineDto.class);
         when(machineDto.getId()).thenReturn(MACHINE_ID);
+        MachineConfigDto machineConfigDto = mock(MachineConfigDto.class);
+        when(machineDto.getConfig()).thenReturn(machineConfigDto);
 
         List<ProcessTreeNode> children = new ArrayList<>();
         ProcessTreeNode commandNode = new ProcessTreeNode(COMMAND_NODE, null, PROCESS_NAME, null, children);
@@ -390,7 +403,10 @@ public class ConsolesPanelPresenterTest {
     @Test
     public void shouldAddTerminal() throws Exception {
         MachineDto machineDto = mock(MachineDto.class);
-        when(machineDto.isDev()).thenReturn(true);
+        MachineConfigDto machineConfigDto = mock(MachineConfigDto.class);
+        when(machineDto.getConfig()).thenReturn(machineConfigDto);
+        when(machineConfigDto.isDev()).thenReturn(true);
+        when(machineDto.getStatus()).thenReturn(MachineStatus.RUNNING);
 
         ProcessTreeNode machineNode = mock(ProcessTreeNode.class);
         when(machineNode.getId()).thenReturn(MACHINE_ID);
@@ -424,32 +440,41 @@ public class ConsolesPanelPresenterTest {
 
     @Test
     public void shouldShowCommanOutputWhenCommandSelected() throws Exception {
+        ProcessTreeNode commandNode = mock(ProcessTreeNode.class);
+        when(commandNode.getId()).thenReturn(PROCESS_ID);
+
         presenter.consoles.put(PROCESS_ID, outputConsole);
 
-        presenter.onCommandSelected(PROCESS_ID);
+        presenter.onTreeNodeSelected(commandNode);
 
         verify(view).showProcessOutput(eq(PROCESS_ID));
-        verify(view).setStopButtonVisibility(anyString(), eq(true));
+        verify(view).setProcessRunning(anyString(), eq(true));
     }
 
     @Test
     public void stopButtonShouldBeHiddenWhenConsoleHasFinishedProcess() {
+        ProcessTreeNode commandNode = mock(ProcessTreeNode.class);
+        when(commandNode.getId()).thenReturn(PROCESS_ID);
+
         when(outputConsole.isFinished()).thenReturn(true);
         presenter.consoles.put(PROCESS_ID, outputConsole);
 
-        presenter.onCommandSelected(PROCESS_ID);
+        presenter.onTreeNodeSelected(commandNode);
 
-        verify(view).setStopButtonVisibility(PROCESS_ID, false);
+        verify(view).setProcessRunning(PROCESS_ID, false);
     }
 
     @Test
     public void stopButtonStateShouldBeRefreshedWhenConsoleHasRunningProcess() {
+        ProcessTreeNode commandNode = mock(ProcessTreeNode.class);
+        when(commandNode.getId()).thenReturn(PROCESS_ID);
+
         when(outputConsole.isFinished()).thenReturn(false);
         presenter.consoles.put(PROCESS_ID, outputConsole);
 
-        presenter.onCommandSelected(PROCESS_ID);
+        presenter.onTreeNodeSelected(commandNode);
 
-        verify(view).setStopButtonVisibility(PROCESS_ID, true);
+        verify(view).setProcessRunning(PROCESS_ID, true);
     }
 
     @Test
@@ -459,7 +484,7 @@ public class ConsolesPanelPresenterTest {
 
         presenter.onProcessFinished(new ProcessFinishedEvent(null));
 
-        verify(view).setStopButtonVisibility(PROCESS_ID, false);
+        verify(view).setProcessRunning(PROCESS_ID, false);
     }
 
     @Test
@@ -541,10 +566,12 @@ public class ConsolesPanelPresenterTest {
         TerminalPresenter terminal = mock(TerminalPresenter.class);
         presenter.terminals.put(PROCESS_ID, terminal);
 
-        presenter.onTerminalSelected(PROCESS_ID);
+        ProcessTreeNode terminalNode = mock(ProcessTreeNode.class);
+        when(terminalNode.getId()).thenReturn(PROCESS_ID);
+        presenter.onTreeNodeSelected(terminalNode);
 
         verify(view).showProcessOutput(eq(PROCESS_ID));
-        verify(view, never()).setStopButtonVisibility(PROCESS_ID, true);
+        verify(view, never()).setProcessRunning(PROCESS_ID, true);
     }
 
     @Test

@@ -23,6 +23,7 @@ import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
+import org.eclipse.che.ide.api.editor.OpenEditorCallbackImpl;
 import org.eclipse.che.ide.api.project.node.HasAction;
 import org.eclipse.che.ide.api.project.node.HasStorablePath;
 import org.eclipse.che.ide.api.project.node.Node;
@@ -40,6 +41,7 @@ import org.eclipse.che.ide.jseditor.client.text.LinearRange;
 import org.eclipse.che.ide.jseditor.client.texteditor.EmbeddedTextEditorPresenter;
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 import org.eclipse.che.ide.project.node.FileReferenceNode;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.ui.smartTree.TreeStyles;
 import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
 import org.eclipse.che.ide.util.dom.Elements;
@@ -139,7 +141,7 @@ public class MatchNode extends AbstractPresentationNode implements HasAction {
     @Override
     public void actionPerformed() {
         if (compilationUnit != null) {
-            EditorPartPresenter editorPartPresenter = editorAgent.getOpenedEditors().get(compilationUnit.getPath());
+            EditorPartPresenter editorPartPresenter = editorAgent.getOpenedEditor(Path.valueOf(compilationUnit.getPath()));
             if (editorPartPresenter != null) {
                 editorAgent.activateEditor(editorPartPresenter);
                 fileOpened(editorPartPresenter);
@@ -190,7 +192,7 @@ public class MatchNode extends AbstractPresentationNode implements HasAction {
     }
 
     private void openFile(VirtualFile result) {
-        editorAgent.openEditor(result, new EditorAgent.OpenEditorCallback() {
+        editorAgent.openEditor(result, new OpenEditorCallbackImpl() {
             @Override
             public void onEditorOpened(EditorPartPresenter editor) {
                 fileOpened(editor);

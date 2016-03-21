@@ -44,9 +44,9 @@ export class CheWorkspace {
     // remote call
     this.remoteWorkspaceAPI = this.$resource('/api/workspace', {}, {
         getDetails: {method: 'GET', url: '/api/workspace/:workspaceId'},
-        create: {method: 'POST', url: '/api/workspace/config?account=:accountId'},
-        deleteConfig: {method: 'DELETE', url: '/api/workspace/:workspaceId/config'},
-        updateConfig: {method: 'PUT', url : '/api/workspace/:workspaceId/config'},
+        create: {method: 'POST', url: '/api/workspace?account=:accountId'},
+        deleteConfig: {method: 'DELETE', url: '/api/workspace/:workspaceId'},
+        updateConfig: {method: 'PUT', url : '/api/workspace/:workspaceId'},
         addProject: {method: 'POST', url : '/api/workspace/:workspaceId/project'},
         getRuntime: {method: 'GET', url : '/api/workspace/:workspaceId/runtime'},
         deleteRuntime: {method: 'DELETE', url : '/api/workspace/:workspaceId/runtime'},
@@ -101,7 +101,7 @@ export class CheWorkspace {
       // add workspace if not temporary
       data.forEach((workspace) => {
 
-        if (!workspace.temporary) {
+        if (!workspace.config.temporary) {
           remoteWorkspaces.push(workspace);
           this.workspaces.push(workspace);
           this.workspacesById.set(workspace.id, workspace);
@@ -154,14 +154,14 @@ export class CheWorkspace {
   }
 
 
-  createWorkspace(accountId, workspaceName, recipeUrl, ram) {
-    // /api/workspace/config?account=accountId
-
+  createWorkspace(accountId, workspaceName, recipeUrl, ram, attributes) {
+    // /api/workspace?account=accountId
+    let attr = attributes ? attributes : {};
 
     let data = {
       'environments': [],
       'name': workspaceName,
-      'attributes': {},
+      'attributes': attributes,
       'projects': [],
       'defaultEnv': workspaceName,
       'description': null,
@@ -297,17 +297,17 @@ export class CheWorkspace {
       return '';
     }
     // extract the Websocket URL of the runtime
-    let servers = runtimeData.devMachine.metadata.servers;
+    let servers = runtimeData.devMachine.runtime.servers;
 
-    var extensionServerAddress;
+    var wsagentServerAddress;
     for (var key in servers) {
       let server = servers[key];
-      if ('extensions' === server.ref) {
-        extensionServerAddress = server.address;
+      if ('wsagent' === server.ref) {
+        wsagentServerAddress = server.address;
       }
     }
 
-    let endpoint = runtimeData.devMachine.metadata.envVariables.CHE_API_ENDPOINT;
+    let endpoint = runtimeData.devMachine.runtime.envVariables.CHE_API_ENDPOINT;
 
     var contextPath;
     if (endpoint.endsWith('/ide/api')) {
@@ -316,7 +316,7 @@ export class CheWorkspace {
       contextPath = 'api';
     }
 
-    return 'ws://' + extensionServerAddress + '/' + contextPath + '/ext/ws/' + workspaceId;
+    return 'ws://' + wsagentServerAddress + '/' + contextPath + '/ext/ws/' + workspaceId;
 
   }
 

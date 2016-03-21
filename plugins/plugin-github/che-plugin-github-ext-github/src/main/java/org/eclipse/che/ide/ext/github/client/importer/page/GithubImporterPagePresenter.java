@@ -10,22 +10,33 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.github.client.importer.page;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import com.google.gwt.core.client.JsArrayMixed;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.inject.Inject;
 
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.api.promises.client.PromiseError;
+import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.oauth.OAuth2Authenticator;
+import org.eclipse.che.ide.api.oauth.OAuth2AuthenticatorRegistry;
+import org.eclipse.che.ide.api.oauth.OAuth2AuthenticatorUrlProvider;
 import org.eclipse.che.ide.api.wizard.AbstractWizardPage;
 import org.eclipse.che.ide.commons.exception.UnauthorizedException;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.ext.github.client.GitHubClientService;
 import org.eclipse.che.ide.ext.github.client.GitHubLocalizationConstant;
-import org.eclipse.che.ide.ext.github.client.authenticator.GitHubAuthenticator;
 import org.eclipse.che.ide.ext.github.client.load.ProjectData;
-import org.eclipse.che.ide.ext.github.client.marshaller.AllRepositoriesUnmarshaller;
 import org.eclipse.che.ide.ext.github.shared.GitHubRepository;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
+import org.eclipse.che.ide.ext.github.shared.GitHubUser;
+import org.eclipse.che.ide.rest.RestContext;
 import org.eclipse.che.ide.util.NameUtils;
 import org.eclipse.che.security.oauth.OAuthStatus;
 
@@ -60,16 +71,24 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
     private       Map<String, List<GitHubRepository>> repositories;
     private       GitHubLocalizationConstant          locale;
     private       GithubImporterPageView              view;
-    private       GitHubAuthenticator                 gitHubAuthenticator;
+    private final String                              restContext;
+    private final AppContext                          appContext;
+    private       OAuth2Authenticator                 gitHubAuthenticator;
+
+    private       boolean                             ignoreChanges;
 
     @Inject
     public GithubImporterPagePresenter(GithubImporterPageView view,
-                                       GitHubAuthenticator gitHubAuthenticator,
+                                       OAuth2AuthenticatorRegistry gitHubAuthenticatorRegistry,
                                        GitHubClientService gitHubClientService,
                                        DtoFactory dtoFactory,
+                                       @RestContext String restContext,
+                                       AppContext appContext,
                                        GitHubLocalizationConstant locale) {
         this.view = view;
-        this.gitHubAuthenticator = gitHubAuthenticator;
+        this.restContext = restContext;
+        this.appContext = appContext;
+        this.gitHubAuthenticator = gitHubAuthenticatorRegistry.getAuthenticator("github");
         this.gitHubClientService = gitHubClientService;
         this.dtoFactory = dtoFactory;
         this.view.setDelegate(this);
@@ -83,6 +102,10 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
 
     @Override
     public void projectNameChanged(@NotNull String name) {
+        if (ignoreChanges) {
+            return;
+        }
+
         dataObject.setName(name);
         updateDelegate.updateControls();
 
@@ -94,14 +117,18 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
      */
     private void validateProjectName() {
         if (NameUtils.checkProjectName(view.getProjectName())) {
-            view.hideNameError();
+            view.markNameValid();
         } else {
-            view.showNameError();
+            view.markNameInvalid();
         }
     }
 
     @Override
     public void projectUrlChanged(@NotNull String url) {
+        if (ignoreChanges) {
+            return;
+        }
+
         dataObject.getSource().setLocation(url);
         isGitUrlCorrect(url);
 
@@ -173,7 +200,17 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
     public void go(@NotNull AcceptsOneWidget container) {
         container.setWidget(view);
 
-        updateView();
+        if (Strings.isNullOrEmpty(dataObject.getName()) && Strings.isNullOrEmpty(dataObject.getSource().getLocation())) {
+            ignoreChanges = true;
+
+            view.unmarkURL();
+            view.unmarkName();
+            view.setURLErrorMessage(null);
+        }
+
+        view.setProjectName(dataObject.getName());
+        view.setProjectDescription(dataObject.getDescription());
+        view.setProjectUrl(dataObject.getSource().getLocation());
 
         view.setKeepDirectoryChecked(false);
         view.setDirectoryName("");
@@ -182,41 +219,62 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
 
         view.setInputsEnableState(true);
         view.focusInUrlInput();
-    }
 
-    /**
-     * Updates the view.
-     */
-    private void updateView() {
-        view.setProjectName(dataObject.getName());
-        view.setProjectDescription(dataObject.getDescription());
-        view.setProjectUrl(dataObject.getSource().getLocation());
+        ignoreChanges = false;
     }
 
     @Override
     public void onLoadRepoClicked() {
-        getUserRepos();
+        getUserRepositoriesAndOrganizations();
     }
 
     /** Get the list of all authorized user's repositories. */
-    private void getUserRepos() {
+    private void getUserRepositoriesAndOrganizations() {
         showProcessing(true);
-        gitHubClientService.getAllRepositories(
-                new AsyncRequestCallback<Map<String, List<GitHubRepository>>>(new AllRepositoriesUnmarshaller(dtoFactory)) {
-                    @Override
-                    protected void onSuccess(Map<String, List<GitHubRepository>> result) {
-                        showProcessing(false);
-                        onListLoaded(result);
-                    }
 
-                    @Override
-                    protected void onFailure(Throwable exception) {
-                        showProcessing(false);
-                        if (exception instanceof UnauthorizedException) {
-                            authorize();
-                        }
-                    }
-                });
+        Promise<GitHubUser> userInfo = gitHubClientService.getUserInfo();
+        Promise<List<GitHubUser>> organizations = gitHubClientService.getOrganizations();
+        Promise<List<GitHubRepository>> allRepositories = gitHubClientService.getRepositoriesList();
+
+        doRequest(userInfo, organizations, allRepositories);
+    }
+
+    protected void doRequest(Promise<GitHubUser> userInfo,
+                             Promise<List<GitHubUser>> organizations,
+                             Promise<List<GitHubRepository>> allRepositories) {
+        Promises.all(userInfo, organizations, allRepositories).then(new Operation<JsArrayMixed>() {
+            @Override
+            public void apply(JsArrayMixed arg) throws OperationException {
+                onSuccessRequest(arg);
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError arg) throws OperationException {
+                onFailRequest(arg);
+            }
+        });
+    }
+
+    protected void onSuccessRequest(JsArrayMixed arg) {
+        onListLoaded(toOrgList(arg), toRepoList(arg));
+        showProcessing(false);
+    }
+
+    protected List<GitHubRepository> toRepoList(JsArrayMixed arg) {
+        return dtoFactory.createListDtoFromJson(arg.getObject(2).toString(), GitHubRepository.class);
+    }
+
+    protected List<GitHubUser> toOrgList(JsArrayMixed arg) {
+        List<GitHubUser> organizations = dtoFactory.createListDtoFromJson(arg.getObject(1).toString(), GitHubUser.class);
+        organizations.add(dtoFactory.createDtoFromJson(arg.getObject(0).toString(), GitHubUser.class));
+        return organizations;
+    }
+
+    protected void onFailRequest(PromiseError arg) {
+        showProcessing(false);
+        if (arg.getCause() instanceof UnauthorizedException) {
+            authorize();
+        }
     }
 
     /**
@@ -224,18 +282,21 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
      */
     private void authorize() {
         showProcessing(true);
-        gitHubAuthenticator.authorize(new AsyncCallback<OAuthStatus>() {
-            @Override
-            public void onFailure(Throwable caught) {
-                showProcessing(false);
-            }
+        gitHubAuthenticator.authenticate(
+                OAuth2AuthenticatorUrlProvider.get(restContext, "github", appContext.getCurrentUser().getProfile().getUserId(),
+                                                   Lists.asList("user", new String[]{"repo", "write:public_key"})),
+                new AsyncCallback<OAuthStatus>() {
+                    @Override
+                    public void onFailure(Throwable caught) {
+                        showProcessing(false);
+                    }
 
-            @Override
-            public void onSuccess(OAuthStatus result) {
-                showProcessing(false);
-                getUserRepos();
-            }
-        });
+                    @Override
+                    public void onSuccess(OAuthStatus result) {
+                        showProcessing(false);
+                        getUserRepositoriesAndOrganizations();
+                    }
+                });
     }
 
     @Override
@@ -244,7 +305,9 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
         dataObject.setDescription(repository.getDescription());
         dataObject.getSource().setLocation(repository.getRepositoryUrl());
 
-        updateView();
+        view.setProjectName(repository.getName());
+        view.setProjectDescription(repository.getDescription());
+        view.setProjectUrl(repository.getRepositoryUrl());
 
         updateDelegate.updateControls();
     }
@@ -257,14 +320,39 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
     /**
      * Perform actions when the list of repositories was loaded.
      *
-     * @param repositories
+     * @param gitHubRepositories
      *         loaded list of repositories
+     * @param gitHubOrganizations
      */
-    private void onListLoaded(@NotNull Map<String, List<GitHubRepository>> repositories) {
-        this.repositories = repositories;
+    protected void onListLoaded(@NotNull List<GitHubUser> gitHubOrganizations,
+                                @NotNull List<GitHubRepository> gitHubRepositories) {
+        this.repositories = new HashMap<>();
+
+        Map<String, String> login2OrgName = getLogin2OrgName(gitHubOrganizations);
+        for (String orgName : login2OrgName.values()) {
+            repositories.put(orgName, new ArrayList<GitHubRepository>());
+        }
+
+        for (GitHubRepository gitHubRepository : gitHubRepositories) {
+            String orgName = login2OrgName.get(gitHubRepository.getOwnerLogin());
+            if (orgName != null && repositories.containsKey(orgName)) {
+                repositories.get(orgName).add(gitHubRepository);
+            }
+        }
+
         view.setAccountNames(repositories.keySet());
         refreshProjectList();
         view.showGithubPanel();
+    }
+
+    private Map<String, String> getLogin2OrgName(List<GitHubUser> organizations) {
+        Map<String, String> result = new HashMap<>();
+        for (GitHubUser gitHubUser : organizations) {
+            String userName = gitHubUser.getName() != null ? gitHubUser.getName() : gitHubUser.getLogin();
+            result.put(gitHubUser.getLogin(), userName);
+        }
+
+        return result;
     }
 
     /**
@@ -330,26 +418,38 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
      */
     private boolean isGitUrlCorrect(@NotNull String url) {
         if (WHITE_SPACE.test(url)) {
-            view.showUrlError(locale.importProjectMessageStartWithWhiteSpace());
+            view.markURLInvalid();
+            view.setURLErrorMessage(locale.importProjectMessageStartWithWhiteSpace());
             return false;
         }
+
         if (SCP_LIKE_SYNTAX.test(url)) {
-            view.hideUrlError();
+            view.markURLValid();
+            view.setURLErrorMessage(null);
             return true;
         }
+
         if (!PROTOCOL.test(url)) {
-            view.showUrlError(locale.importProjectMessageProtocolIncorrect());
+            view.markURLInvalid();
+            view.setURLErrorMessage(locale.importProjectMessageProtocolIncorrect());
             return false;
         }
+
         if (!(HOST1.test(url) || HOST2.test(url))) {
-            view.showUrlError(locale.importProjectMessageHostIncorrect());
+            view.markURLInvalid();
+            view.setURLErrorMessage(locale.importProjectMessageHostIncorrect());
             return false;
         }
+
         if (!(REPO_NAME.test(url))) {
-            view.showUrlError(locale.importProjectMessageNameRepoIncorrect());
+            view.markURLInvalid();
+            view.setURLErrorMessage(locale.importProjectMessageNameRepoIncorrect());
             return false;
         }
-        view.hideUrlError();
+
+        view.markURLValid();
+        view.setURLErrorMessage(null);
         return true;
     }
+
 }

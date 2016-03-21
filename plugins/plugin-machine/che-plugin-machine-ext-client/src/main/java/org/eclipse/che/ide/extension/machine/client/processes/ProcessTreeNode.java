@@ -65,10 +65,12 @@ public class ProcessTreeNode {
         this.icon = icon;
         this.children = children;
 
+        running = true;
+
         switch (type) {
             case MACHINE_NODE:
                 id = ((MachineDto)data).getId();
-                displayName = ((MachineDto)data).getName();
+                displayName = ((MachineDto)data).getConfig().getName();
                 break;
             case COMMAND_NODE:
                 id = data + UUID.uuid();

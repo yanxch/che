@@ -350,13 +350,36 @@ public interface GitServiceClient {
      * @param callback
      *         callback
      * @throws WebSocketException
+     * @deprecated use {@link #push(String, ProjectConfigDto, List, String , boolean)}
      */
+    @Deprecated
     void push(String workspaceId,
               ProjectConfigDto project,
               List<String> refSpec,
               String remote, boolean force,
               AsyncRequestCallback<PushResponse> callback);
 
+
+    /**
+     * Push changes from local repository to remote one (sends request over WebSocket).
+     *
+     * @param wsId
+     *         id of current workspace
+     * @param project
+     *         project
+     * @param refSpec
+     *         list of refspec to push
+     * @param remote
+     *         remote repository name or url
+     * @param force
+     *         push refuses to update a remote ref that is not an ancestor of the local ref used to overwrite it. If <code>true</code>
+     *         disables the check. This can cause the remote repository to lose commits
+     */
+    Promise<PushResponse> push(String wsId,
+                               ProjectConfigDto project,
+                               List<String> refSpec,
+                               String remote,
+                               boolean force);
     /**
      * Clones one remote repository to local one (over WebSocket).
      *
@@ -595,8 +618,21 @@ public interface GitServiceClient {
      * @param project
      *         project (root of GIT repository)
      * @param callback
+     * @deprecated use {@link #status(String, ProjectConfigDto)}
      */
+    @Deprecated
     void status(String workspaceId, ProjectConfigDto project, AsyncRequestCallback<Status> callback);
+
+    /**
+     * Returns the current working tree status.
+     *
+     * @param workspaceId
+     *         id of the workspace
+     * @param project
+     *         the project.
+     * @return the promise which either resolves working tree status or rejects with an error
+     */
+    Promise<Status> status(String workspaceId, ProjectConfigDto project);
 
     /**
      * Get the Git ReadOnly Url for the pointed item's location.

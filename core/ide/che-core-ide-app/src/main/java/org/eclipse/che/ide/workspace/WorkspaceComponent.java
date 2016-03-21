@@ -19,7 +19,7 @@ import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.api.machine.gwt.client.MachineManager;
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateEvent;
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateHandler;
-import org.eclipse.che.api.machine.shared.dto.MachineStateDto;
+import org.eclipse.che.api.machine.shared.dto.MachineConfigDto;
 import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
@@ -28,7 +28,7 @@ import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.workspace.gwt.client.WorkspaceServiceClient;
 import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedEvent;
 import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStoppedEvent;
-import org.eclipse.che.api.workspace.shared.dto.EnvironmentStateDto;
+import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
 import org.eclipse.che.api.workspace.shared.dto.event.WorkspaceStatusEvent;
 import org.eclipse.che.ide.CoreLocalizationConstant;
@@ -169,7 +169,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
             needToReloadComponents = false;
         }
 
-        browserQueryFieldRenderer.setWorkspaceName(workspace.getName());
+        browserQueryFieldRenderer.setWorkspaceName(workspace.getConfig().getName());
     }
 
     /**
@@ -182,6 +182,9 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
         loader.show(initialLoadingInfo);
         initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), IN_PROGRESS);
 
+        if (messageBus != null) {
+            messageBus.cancelReconnection();
+        }
         messageBus = messageBusProvider.createMessageBus(workspace.getId());
 
         messageBus.addOnOpenHandler(new ConnectionOpenedHandler() {
@@ -195,7 +198,8 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                         @Override
                         public void apply(List<SnapshotDto> snapshots) throws OperationException {
                             if (snapshots.isEmpty()) {
-                                handleWsStart(workspaceServiceClient.startById(workspace.getId(), workspace.getDefaultEnv()));
+                                handleWsStart(workspaceServiceClient.startById(workspace.getId(),
+                                                                               workspace.getConfig().getDefaultEnv()));
                             } else {
                                 showRecoverWorkspaceConfirmDialog(workspace);
                             }
@@ -223,7 +227,8 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                                               @Override
                                               public void accepted() {
                                                   handleWsStart(workspaceServiceClient.recoverWorkspace(workspace.getId(),
-                                                                                                        workspace.getDefaultEnv(),
+                                                                                                        workspace.getConfig()
+                                                                                                                 .getDefaultEnv(),
                                                                                                         null));
                                               }
                                           },
@@ -231,7 +236,8 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                                               @Override
                                               public void cancelled() {
                                                   handleWsStart(workspaceServiceClient.startById(workspace.getId(),
-                                                                                                 workspace.getDefaultEnv()));
+                                                                                                 workspace.getConfig()
+                                                                                                          .getDefaultEnv()));
                                               }
                                           })
                      .show();
@@ -246,20 +252,20 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
             public void apply(UsersWorkspaceDto workspace) throws OperationException {
                 initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
                 setCurrentWorkspace(workspace);
-                EnvironmentStateDto currentEnvironment = null;
-                for (EnvironmentStateDto state : workspace.getEnvironments()) {
-                    if (state.getName().equals(workspace.getDefaultEnv())) {
-                        currentEnvironment = state;
+                EnvironmentDto currentEnvironment = null;
+                for (EnvironmentDto environment : workspace.getConfig().getEnvironments()) {
+                    if (environment.getName().equals(workspace.getConfig().getDefaultEnv())) {
+                        currentEnvironment = environment;
                         break;
                     }
                 }
-                List<MachineStateDto> machineStates =
-                        currentEnvironment != null ? currentEnvironment.getMachineConfigs() : new ArrayList<MachineStateDto>();
+                List<MachineConfigDto> machineConfigs =
+                        currentEnvironment != null ? currentEnvironment.getMachineConfigs() : new ArrayList<MachineConfigDto>();
 
-                for (MachineStateDto machineState : machineStates) {
-                    if (machineState.isDev()) {
+                for (MachineConfigDto machineConfig : machineConfigs) {
+                    if (machineConfig.isDev()) {
                         MachineManager machineManager = machineManagerProvider.get();
-                        machineManager.onDevMachineCreating(machineState);
+                        machineManager.onDevMachineCreating(machineConfig);
                     }
                 }
             }
@@ -279,7 +285,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
             messageBus.subscribe("workspace:" + workspace.getId(), new SubscriptionHandler<WorkspaceStatusEvent>(unmarshaller) {
                 @Override
                 protected void onMessageReceived(WorkspaceStatusEvent statusEvent) {
-                    String workspaceName = workspace.getName();
+                    String workspaceName = workspace.getConfig().getName();
 
                     switch (statusEvent.getEventType()) {
 

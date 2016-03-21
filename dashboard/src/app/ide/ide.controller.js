@@ -42,6 +42,7 @@ class IdeCtrl {
     }
 
     let ideAction = $routeParams.action;
+    let ideParams = $routeParams.ideParams;
     if (ideAction) {
       // send action
       this.ideSvc.setIDEAction(ideAction);
@@ -52,9 +53,30 @@ class IdeCtrl {
       // remove action from path
       $location.url('/ide/' + this.selectedWorkspaceName, false);
 
-    } else {
-      // no action, keep current flow
+    } else if (ideParams) {
+      let params = new Map();
+      let isArray = Array.isArray(ideParams);
+      if (isArray) {
+        ideParams.forEach((param) => {
+          let argParam = this.getParams(param);
+          params.set(argParam.key, argParam.value);
+        });
+      } else {
+        let argParam = this.getParams(ideParams);
+        params.set(argParam.key, argParam.value);
+      }
 
+      for (var [key, val] of params) {
+        this.ideSvc.setLoadingParameter(key, val);
+      }
+
+      // pop current route as we will redirect
+      routeHistory.popCurrentPath();
+
+      // remove action from path
+      $location.url('/ide/' + this.selectedWorkspaceName, false);
+
+    } else {
       this.ideIFrameSvc.addIFrame();
 
       let promise = cheWorkspace.fetchWorkspaces();
@@ -69,6 +91,20 @@ class IdeCtrl {
 
   }
 
+  /**
+   * Transform colon separator value into key/value
+   * @param arg
+   * @returns object with key and value
+   */
+  getParams(arg) {
+    let array = arg.split(':');
+    var obj = {};
+    obj.key = array[0];
+    obj.value = array[1];
+    return obj;
+
+  }
+
   displayIDE() {
     this.ideSvc.displayIDE();
 
@@ -79,7 +115,7 @@ class IdeCtrl {
 
     this.workspaces = this.cheWorkspace.getWorkspaces();
     for (var i = 0; i < this.workspaces.length; i++) {
-      if (this.workspaces[i].name === this.selectedWorkspaceName) {
+      if (this.workspaces[i].config.name === this.selectedWorkspaceName) {
         this.selectedWorkspace = this.workspaces[i];
         this.ideSvc.setSelectedWorkspace(this.selectedWorkspace);
       }

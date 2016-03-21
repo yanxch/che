@@ -1091,6 +1091,11 @@ public interface Theme {
     String getBlueIconColor();
 
     /**
+     * @return the red color for icon.
+     */
+    String getRedIconColor();
+
+    /**
      * @return the color of the popup background.
      */
     String getPopupBkgColor();
@@ -1452,4 +1457,12 @@ public interface Theme {
     String toolButtonHoverBoxShadow();
     String toolButtonActiveBoxShadow();
 
+    /********************************************************************************************
+     *
+     * Git output console
+     *
+     ********************************************************************************************/
+    String gitConsoleStagedFilesColor();
+    String gitConsoleUnstagedFilesColor();
+    String gitConsoleErrorColor();
 }

@@ -56,8 +56,11 @@ import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.actions.ActionManagerImpl;
 import org.eclipse.che.ide.actions.find.FindActionView;
 import org.eclipse.che.ide.actions.find.FindActionViewImpl;
+import org.eclipse.che.ide.analytics.AnalyticsEventLoggerExt;
+import org.eclipse.che.ide.analytics.DummyAnalyticsLoger;
 import org.eclipse.che.ide.api.action.ActionManager;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.component.Component;
 import org.eclipse.che.ide.api.component.WsAgentComponent;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorRegistry;
@@ -68,6 +71,8 @@ import org.eclipse.che.ide.api.filetypes.FileTypeRegistry;
 import org.eclipse.che.ide.api.icon.IconRegistry;
 import org.eclipse.che.ide.api.keybinding.KeyBindingAgent;
 import org.eclipse.che.ide.api.notification.NotificationManager;
+import org.eclipse.che.ide.api.oauth.OAuth2Authenticator;
+import org.eclipse.che.ide.api.oauth.OAuth2AuthenticatorRegistry;
 import org.eclipse.che.ide.api.parts.EditorPartStack;
 import org.eclipse.che.ide.api.parts.PartStack;
 import org.eclipse.che.ide.api.parts.PartStackUIResources;
@@ -87,30 +92,24 @@ import org.eclipse.che.ide.api.project.type.ProjectTypeRegistry;
 import org.eclipse.che.ide.api.project.type.wizard.PreSelectedProjectTypeManager;
 import org.eclipse.che.ide.api.project.type.wizard.ProjectWizardRegistrar;
 import org.eclipse.che.ide.api.project.type.wizard.ProjectWizardRegistry;
-import org.eclipse.che.ide.api.project.wizard.ProjectNotificationSubscriber;
 import org.eclipse.che.ide.api.project.wizard.ImportProjectNotificationSubscriberFactory;
 import org.eclipse.che.ide.api.project.wizard.ImportWizardRegistrar;
 import org.eclipse.che.ide.api.project.wizard.ImportWizardRegistry;
+import org.eclipse.che.ide.api.project.wizard.ProjectNotificationSubscriber;
+import org.eclipse.che.ide.api.reference.FqnProvider;
 import org.eclipse.che.ide.api.selection.SelectionAgent;
 import org.eclipse.che.ide.api.theme.Theme;
 import org.eclipse.che.ide.api.theme.ThemeAgent;
 import org.eclipse.che.ide.client.StartUpActionsProcessor;
-import org.eclipse.che.ide.icon.DefaultIconsComponent;
-import org.eclipse.che.ide.preferences.PreferencesComponent;
-import org.eclipse.che.ide.projecttype.ProjectTemplatesComponent;
-import org.eclipse.che.ide.projecttype.ProjectTypeComponent;
-import org.eclipse.che.ide.workspace.WorkspaceComponentProvider;
 import org.eclipse.che.ide.context.AppContextImpl;
-import org.eclipse.che.ide.api.component.Component;
 import org.eclipse.che.ide.editor.EditorAgentImpl;
 import org.eclipse.che.ide.editor.EditorRegistryImpl;
 import org.eclipse.che.ide.filetypes.FileTypeRegistryImpl;
 import org.eclipse.che.ide.hotkeys.dialog.HotKeysDialogView;
 import org.eclipse.che.ide.hotkeys.dialog.HotKeysDialogViewImpl;
+import org.eclipse.che.ide.icon.DefaultIconsComponent;
 import org.eclipse.che.ide.icon.IconRegistryImpl;
 import org.eclipse.che.ide.keybinding.KeyBindingManager;
-import org.eclipse.che.ide.analytics.AnalyticsEventLoggerExt;
-import org.eclipse.che.ide.analytics.DummyAnalyticsLoger;
 import org.eclipse.che.ide.menu.MainMenuView;
 import org.eclipse.che.ide.menu.MainMenuViewImpl;
 import org.eclipse.che.ide.menu.StatusPanelGroupView;
@@ -120,6 +119,8 @@ import org.eclipse.che.ide.navigation.NavigateToFileViewImpl;
 import org.eclipse.che.ide.notification.NotificationManagerImpl;
 import org.eclipse.che.ide.notification.NotificationManagerView;
 import org.eclipse.che.ide.notification.NotificationManagerViewImpl;
+import org.eclipse.che.ide.oauth.DefaultOAuthAuthenticatorImpl;
+import org.eclipse.che.ide.oauth.OAuth2AuthenticatorRegistryImpl;
 import org.eclipse.che.ide.part.FocusManager;
 import org.eclipse.che.ide.part.PartStackPresenter;
 import org.eclipse.che.ide.part.PartStackPresenter.PartStackEventHandler;
@@ -134,6 +135,7 @@ import org.eclipse.che.ide.part.explorer.project.DefaultNodeInterceptor;
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerView;
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerViewImpl;
+import org.eclipse.che.ide.preferences.PreferencesComponent;
 import org.eclipse.che.ide.preferences.PreferencesManagerImpl;
 import org.eclipse.che.ide.preferences.PreferencesView;
 import org.eclipse.che.ide.preferences.PreferencesViewImpl;
@@ -148,13 +150,15 @@ import org.eclipse.che.ide.project.node.factory.NodeFactory;
 import org.eclipse.che.ide.project.node.icon.DockerfileIconProvider;
 import org.eclipse.che.ide.project.node.icon.FileIconProvider;
 import org.eclipse.che.ide.project.node.icon.NodeIconProvider;
-import org.eclipse.che.ide.projectimport.wizard.ProjectNotificationSubscriberImpl;
 import org.eclipse.che.ide.projectimport.wizard.ImportWizardFactory;
 import org.eclipse.che.ide.projectimport.wizard.ImportWizardRegistryImpl;
+import org.eclipse.che.ide.projectimport.wizard.ProjectNotificationSubscriberImpl;
 import org.eclipse.che.ide.projectimport.zip.ZipImportWizardRegistrar;
 import org.eclipse.che.ide.projecttree.TreeStructureProviderRegistryImpl;
 import org.eclipse.che.ide.projecttype.BlankProjectWizardRegistrar;
 import org.eclipse.che.ide.projecttype.ProjectTemplateRegistryImpl;
+import org.eclipse.che.ide.projecttype.ProjectTemplatesComponent;
+import org.eclipse.che.ide.projecttype.ProjectTypeComponent;
 import org.eclipse.che.ide.projecttype.ProjectTypeRegistryImpl;
 import org.eclipse.che.ide.projecttype.wizard.PreSelectedProjectTypeManagerImpl;
 import org.eclipse.che.ide.projecttype.wizard.ProjectWizardFactory;
@@ -163,7 +167,6 @@ import org.eclipse.che.ide.rest.RestContext;
 import org.eclipse.che.ide.rest.RestContextProvider;
 import org.eclipse.che.ide.search.factory.FindResultNodeFactory;
 import org.eclipse.che.ide.selection.SelectionAgentImpl;
-import org.eclipse.che.ide.settings.common.SettingsPagePresenter;
 import org.eclipse.che.ide.statepersistance.OpenedFilesPersistenceComponent;
 import org.eclipse.che.ide.statepersistance.PersistenceComponent;
 import org.eclipse.che.ide.statepersistance.ShowHiddenFilesPersistenceComponent;
@@ -217,6 +220,7 @@ import org.eclipse.che.ide.workspace.PartStackViewFactory;
 import org.eclipse.che.ide.workspace.WorkBenchControllerFactory;
 import org.eclipse.che.ide.workspace.WorkBenchPartController;
 import org.eclipse.che.ide.workspace.WorkBenchPartControllerImpl;
+import org.eclipse.che.ide.workspace.WorkspaceComponentProvider;
 import org.eclipse.che.ide.workspace.WorkspacePresenter;
 import org.eclipse.che.ide.workspace.WorkspaceView;
 import org.eclipse.che.ide.workspace.WorkspaceViewImpl;
@@ -242,6 +246,8 @@ public class CoreGinModule extends AbstractGinModule {
         GinMapBinder<String, Perspective> mapBinder = GinMapBinder.newMapBinder(binder(), String.class, Perspective.class);
         mapBinder.addBinding(PROJECT_PERSPECTIVE_ID).to(ProjectPerspective.class);
 
+        GinMapBinder.newMapBinder(binder(), String.class, FqnProvider.class);
+
         install(new GinFactoryModuleBuilder().implement(WorkBenchPartController.class,
                                                         WorkBenchPartControllerImpl.class).build(WorkBenchControllerFactory.class));
         // generic bindings
@@ -257,13 +263,18 @@ public class CoreGinModule extends AbstractGinModule {
         install(new GinFactoryModuleBuilder().implement(PartStackView.class, PartStackViewImpl.class).build(PartStackViewFactory.class));
         install(new GinFactoryModuleBuilder().implement(PartStack.class, PartStackPresenter.class).build(PartStackPresenterFactory.class));
 
-        bind(PreferencesManager.class).to(PreferencesManagerImpl.class).in(Singleton.class);
+        bind(PreferencesManager.class).to(PreferencesManagerImpl.class);
+        GinMultibinder.newSetBinder(binder(), PreferencesManager.class).addBinding().to(PreferencesManagerImpl.class);
+
         bind(NotificationManager.class).to(NotificationManagerImpl.class).in(Singleton.class);
         bind(ThemeAgent.class).to(ThemeAgentImpl.class).in(Singleton.class);
         bind(FileTypeRegistry.class).to(FileTypeRegistryImpl.class).in(Singleton.class);
 
+
         bind(AnalyticsEventLogger.class).to(DummyAnalyticsLoger.class).in(Singleton.class);
         bind(AnalyticsEventLoggerExt.class).to(DummyAnalyticsLoger.class).in(Singleton.class);
+
+        GinMultibinder.newSetBinder(binder(), OAuth2Authenticator.class).addBinding().to(DefaultOAuthAuthenticatorImpl.class);
 
         configureComponents();
         configureProjectWizard();
@@ -307,6 +318,7 @@ public class CoreGinModule extends AbstractGinModule {
         bind(ProjectWizardRegistry.class).to(ProjectWizardRegistryImpl.class).in(Singleton.class);
         install(new GinFactoryModuleBuilder().build(ProjectWizardFactory.class));
         bind(PreSelectedProjectTypeManager.class).to(PreSelectedProjectTypeManagerImpl.class).in(Singleton.class);
+        bind(OAuth2AuthenticatorRegistry.class).to(OAuth2AuthenticatorRegistryImpl.class).in(Singleton.class);
     }
 
     private void configureImportWizard() {
@@ -414,8 +426,6 @@ public class CoreGinModule extends AbstractGinModule {
         bind(LoaderView.class).to(LoaderViewImpl.class).in(Singleton.class);
 
         bind(HotKeysDialogView.class).to(HotKeysDialogViewImpl.class).in(Singleton.class);
-
-        GinMultibinder.newSetBinder(binder(), SettingsPagePresenter.class);
 
         bind(RecentFileList.class).to(RecentFileStore.class).in(Singleton.class);
         install(new GinFactoryModuleBuilder().build(RecentFileActionFactory.class));

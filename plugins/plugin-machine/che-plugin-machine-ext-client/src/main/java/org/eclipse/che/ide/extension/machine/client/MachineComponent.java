@@ -17,7 +17,7 @@ import com.google.inject.Singleton;
 import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.machine.gwt.client.MachineManager;
 import org.eclipse.che.api.machine.gwt.client.MachineServiceClient;
-import org.eclipse.che.api.machine.shared.dto.MachineStateDto;
+import org.eclipse.che.api.machine.shared.dto.MachineDto;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
@@ -48,23 +48,25 @@ public class MachineComponent implements WsAgentComponent {
 
     @Override
     public void start(final Callback<WsAgentComponent, Exception> callback) {
-        machineServiceClient.getMachinesStates(appContext.getWorkspace().getId()).then(new Operation<List<MachineStateDto>>() {
+        machineServiceClient.getMachines(appContext.getWorkspace().getId()).then(new Operation<List<MachineDto>>() {
             @Override
-            public void apply(List<MachineStateDto> arg) throws OperationException {
+            public void apply(List<MachineDto> arg) throws OperationException {
                 if (arg.isEmpty()) {
                     callback.onSuccess(MachineComponent.this);
                     return;
                 }
 
-                for (MachineStateDto descriptor : arg) {
-                    boolean isDev = descriptor.isDev();
+                for (MachineDto descriptor : arg) {
+                    boolean isDev = descriptor.getConfig().isDev();
                     MachineStatus status = descriptor.getStatus();
 
                     if (isDev && status == RUNNING) {
                         callback.onSuccess(MachineComponent.this);
-
                         appContext.setDevMachineId(descriptor.getId());
-                        machineManager.onMachineRunning(descriptor.getId());
+
+                        if (!machineManager.isDevMachineStatusTracked(descriptor)) {
+                            machineManager.onMachineRunning(descriptor.getId());
+                        }
                         break;
                     }
                     if (isDev && status == CREATING) {

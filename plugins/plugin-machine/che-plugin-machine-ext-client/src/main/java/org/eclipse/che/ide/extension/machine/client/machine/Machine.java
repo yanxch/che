@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import org.eclipse.che.api.core.model.machine.MachineStatus;
+import org.eclipse.che.api.machine.shared.Constants;
 import org.eclipse.che.api.machine.shared.dto.MachineDto;
 import org.eclipse.che.api.machine.shared.dto.MachineSourceDto;
 import org.eclipse.che.api.machine.shared.dto.ServerDto;
@@ -36,9 +37,6 @@ import java.util.Objects;
  */
 public class Machine {
 
-    public static final String TERMINAL_REF_KEY   = "terminal";
-    public static final String EXTENSIONS_REF_KEY = "extensions";
-
     private final MachineDto    descriptor;
     private final EntityFactory entityFactory;
 
@@ -59,7 +57,7 @@ public class Machine {
 
     /** @return current machine's display name */
     public String getDisplayName() {
-        return descriptor.getName();
+        return descriptor.getConfig().getName();
     }
 
     /** @return state of current machine */
@@ -69,12 +67,12 @@ public class Machine {
 
     /** @return type of current machine */
     public String getType() {
-        return descriptor.getType();
+        return descriptor.getConfig().getType();
     }
 
     /** @return script of machine recipe */
     public String getRecipeUrl() {
-        MachineSourceDto machineSource = descriptor.getSource();
+        MachineSourceDto machineSource = descriptor.getConfig().getSource();
 
         String machineSourceType = machineSource.getType();
 
@@ -89,9 +87,9 @@ public class Machine {
     @NotNull
     public String getWsServerExtensionsUrl() {
         String url = "";
-        Map<String, ServerDto> serverDescriptors = descriptor.getMetadata().getServers();
+        Map<String, ServerDto> serverDescriptors = descriptor.getRuntime().getServers();
         for (ServerDto descriptor : serverDescriptors.values()) {
-            if (EXTENSIONS_REF_KEY.equals(descriptor.getRef())) {
+            if (Constants.WSAGENT_REFERENCE.equals(descriptor.getRef())) {
                 url = descriptor.getUrl();
             }
         }
@@ -109,12 +107,12 @@ public class Machine {
      * @return <code>true</code> machine is bounded to workspace,<code>false</code> machine isn't bounded to workspace
      */
     public boolean isDev() {
-        return descriptor.isDev();
+        return descriptor.getConfig().isDev();
     }
 
     /** Returns information about machine. */
     public Map<String, String> getProperties() {
-        return descriptor.getMetadata().getProperties();
+        return descriptor.getRuntime().getProperties();
     }
 
     public void setActiveTabName(String activeTabName) {
@@ -126,11 +124,10 @@ public class Machine {
     }
 
     public String getTerminalUrl() {
-        Map<String, ServerDto> serverDescriptors = descriptor.getMetadata().getServers();
+        Map<String, ServerDto> serverDescriptors = descriptor.getRuntime().getServers();
 
         for (ServerDto descriptor : serverDescriptors.values()) {
-
-            if (TERMINAL_REF_KEY.equals(descriptor.getRef())) {
+            if (Constants.TERMINAL_REFERENCE.equals(descriptor.getRef())) {
                 String terminalUrl = descriptor.getUrl();
 
                 terminalUrl = terminalUrl.substring(terminalUrl.indexOf(':'), terminalUrl.length());
@@ -151,7 +148,7 @@ public class Machine {
     public List<Server> getServersList() {
         List<Server> serversList = new ArrayList<>();
 
-        Map<String, ServerDto> servers = descriptor.getMetadata().getServers();
+        Map<String, ServerDto> servers = descriptor.getRuntime().getServers();
 
         for (Map.Entry<String, ServerDto> entry : servers.entrySet()) {
             String exposedPort = entry.getKey();

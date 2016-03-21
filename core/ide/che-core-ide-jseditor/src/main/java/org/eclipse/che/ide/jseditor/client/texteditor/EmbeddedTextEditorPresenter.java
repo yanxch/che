@@ -13,6 +13,7 @@ package org.eclipse.che.ide.jseditor.client.texteditor;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
@@ -23,6 +24,7 @@ import com.google.inject.assistedinject.AssistedInject;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.ide.api.editor.AbstractEditorPresenter;
+import org.eclipse.che.ide.api.editor.EditorAgent.OpenEditorCallback;
 import org.eclipse.che.ide.api.editor.EditorInput;
 import org.eclipse.che.ide.api.editor.EditorWithAutoSave;
 import org.eclipse.che.ide.api.editor.EditorWithErrors;
@@ -62,6 +64,7 @@ import org.eclipse.che.ide.jseditor.client.filetype.FileTypeIdentifier;
 import org.eclipse.che.ide.jseditor.client.formatter.ContentFormatter;
 import org.eclipse.che.ide.jseditor.client.gutter.Gutters;
 import org.eclipse.che.ide.jseditor.client.gutter.HasGutter;
+import org.eclipse.che.ide.jseditor.client.keymap.KeyBindingAction;
 import org.eclipse.che.ide.jseditor.client.keymap.Keybinding;
 import org.eclipse.che.ide.jseditor.client.position.PositionConverter;
 import org.eclipse.che.ide.jseditor.client.quickfix.QuickAssistantFactory;
@@ -103,6 +106,8 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
 
     /** File type used when we have no idea of the actual content type. */
     public final static String DEFAULT_CONTENT_TYPE = "text/plain";
+
+    private static final String TOGGLE_LINE_BREAKPOINT = "Toggle line breakpoint";
 
     private final WorkspaceAgent         workspaceAgent;
     private final EditorWidgetFactory<T> editorWidgetFactory;
@@ -172,7 +177,7 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
     }
 
     @Override
-    protected void initializeEditor() {
+    protected void initializeEditor(final OpenEditorCallback callback) {
         new TextEditorInit<T>(configuration,
                               generalEventBus,
                               this.codeAssistantFactory,
@@ -193,11 +198,13 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
             @Override
             public void onError() {
                 displayErrorPanel(constant.editorInitErrorMessage());
+                callback.onInitializationFailed();
             }
 
             @Override
             public void onFileError() {
                 displayErrorPanel(constant.editorFileErrorMessage());
+                callback.onInitializationFailed();
             }
         };
         documentStorage.getDocument(input.getFile(), dualCallback);
@@ -227,6 +234,13 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
                 }
             }
         });
+        this.editorWidget.addKeybinding(new Keybinding(true, false, false, false, KeyCodes.KEY_F8, new KeyBindingAction() {
+            @Override
+            public void action() {
+                int currentLine = editorWidget.getDocument().getCursorPosition().getLine();
+                breakpointManager.changeBreakpointState(currentLine);
+            }
+        }),  TOGGLE_LINE_BREAKPOINT);
     }
 
     private void setupFileContentUpdateHandler() {

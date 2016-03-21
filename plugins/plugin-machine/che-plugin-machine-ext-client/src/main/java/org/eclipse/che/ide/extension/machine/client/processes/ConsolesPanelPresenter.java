@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
+import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.machine.gwt.client.MachineServiceClient;
 import org.eclipse.che.api.machine.gwt.client.events.DevMachineStateEvent;
 import org.eclipse.che.api.machine.gwt.client.events.DevMachineStateHandler;
@@ -102,6 +103,7 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
     private final CommandTypeRegistry         commandTypeRegistry;
 
     ProcessTreeNode                rootNode;
+    ProcessTreeNode                selectedTreeNode;
     Map<String, TerminalPresenter> terminals = new HashMap<>();
 
     Map<String, OutputConsole>     consoles = new HashMap<>();
@@ -161,7 +163,7 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
     public void onProcessFinished(ProcessFinishedEvent event) {
         for (Map.Entry<String, OutputConsole> entry : consoles.entrySet()) {
             if (entry.getValue().isFinished()) {
-                view.setStopButtonVisibility(entry.getKey(), false);
+                view.setProcessRunning(entry.getKey(), false);
             }
         }
     }
@@ -202,20 +204,20 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
     public void fetchMachines() {
         String workspaceId = appContext.getWorkspaceId();
 
-        machineService.getWorkspaceMachines(workspaceId).then(new Operation<List<MachineDto>>() {
+        machineService.getMachines(workspaceId).then(new Operation<List<MachineDto>>() {
             @Override
             public void apply(List<MachineDto> machines) throws OperationException {
                 List<ProcessTreeNode> rootChildren = new ArrayList<>();
 
                 rootNode = new ProcessTreeNode(ROOT_NODE, null, null, null, rootChildren);
-                for (MachineDto descriptor : machines) {
-                    if (descriptor.isDev()) {
+                for (MachineDto machine : machines) {
+                    if (machine.getStatus() == MachineStatus.RUNNING && machine.getConfig().isDev()) {
                         List<ProcessTreeNode> processTreeNodes = new ArrayList<ProcessTreeNode>();
-                        ProcessTreeNode machineNode = new ProcessTreeNode(MACHINE_NODE, rootNode, descriptor, null, processTreeNodes);
+                        ProcessTreeNode machineNode = new ProcessTreeNode(MACHINE_NODE, rootNode, machine, null, processTreeNodes);
                         machineNode.setRunning(true);
                         rootChildren.add(machineNode);
                         view.setProcessesData(rootNode);
-                        restoreState(descriptor.getId());
+                        restoreState(machine.getId());
                     }
                 }
             }
@@ -303,6 +305,29 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
     }
 
     /**
+     * Opens new terminal for the selected machine.
+     */
+    public void newTerminal() {
+        workspaceAgent.setActivePart(this);
+
+        if (selectedTreeNode == null) {
+            if (appContext.getDevMachineId() != null) {
+                onAddTerminal(appContext.getDevMachineId());
+            }
+            return;
+        }
+
+        if (selectedTreeNode.getType() == MACHINE_NODE) {
+            onAddTerminal(selectedTreeNode.getId());
+        } else {
+            if (selectedTreeNode.getParent() != null &&
+                    selectedTreeNode.getParent().getType() == MACHINE_NODE) {
+                onAddTerminal(selectedTreeNode.getParent().getId());
+            }
+        }
+    }
+
+    /**
      * Adds new terminal to the processes panel
      *
      * @param machineId
@@ -366,7 +391,7 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         OutputConsole defaultConsole = commandConsoleFactory.create("SSH");
         addCommandOutput(machineId, defaultConsole);
 
-        String machineName = machine.getName();
+        String machineName = machine.getConfig().getName();
         String sshServiceAddress = getSshServerAddress(machine);
         String machineHost = "";
         String sshPort = SSH_PORT;
@@ -389,8 +414,8 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
      * @return ssh service address in format host:port
      */
     private String getSshServerAddress(MachineDto machine) {
-        if (machine.getMetadata().getServers().containsKey(SSH_PORT)) {
-            return machine.getMetadata().getServers().get(SSH_PORT).getAddress();
+        if (machine.getRuntime().getServers().containsKey(SSH_PORT + "/tcp")) {
+            return machine.getRuntime().getServers().get(SSH_PORT + "/tcp").getAddress();
         } else {
             return null;
         }
@@ -407,15 +432,11 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
     }
 
     @Override
-    public void onTerminalSelected(@NotNull String terminalId) {
-        view.showProcessOutput(terminalId);
-        resfreshStopButtonState(terminalId);
-    }
+    public void onTreeNodeSelected(@NotNull ProcessTreeNode node) {
+        selectedTreeNode = node;
 
-    @Override
-    public void onCommandSelected(@NotNull String commandId) {
-        view.showProcessOutput(commandId);
-        resfreshStopButtonState(commandId);
+        view.showProcessOutput(node.getId());
+        resfreshStopButtonState(node.getId());
     }
 
     @Override
@@ -490,12 +511,14 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
     }
     
     private void resfreshStopButtonState(String selectedNodeId) {
+        if (selectedNodeId == null) {
+            return;
+        }
+
         for (Map.Entry<String, OutputConsole> entry : consoles.entrySet()) {
             String nodeId = entry.getKey();
-            if (selectedNodeId.equals(nodeId) && !entry.getValue().isFinished()) {
-                view.setStopButtonVisibility(selectedNodeId, true);
-            } else {
-                view.setStopButtonVisibility(nodeId, false);
+            if (selectedNodeId.equals(nodeId)) {
+                view.setProcessRunning(nodeId, !entry.getValue().isFinished());
             }
         }
     }
