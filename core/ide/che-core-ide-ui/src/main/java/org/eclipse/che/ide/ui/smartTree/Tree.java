@@ -1473,6 +1473,7 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
         Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
             @Override
             public void execute() {
+                getSelectionModel().fireSelectionChange();
                 if (contextMenuInvocationHandler != null && disableNativeContextMenu) {
                     contextMenuInvocationHandler.onInvokeContextMenu(x, y);
                 }

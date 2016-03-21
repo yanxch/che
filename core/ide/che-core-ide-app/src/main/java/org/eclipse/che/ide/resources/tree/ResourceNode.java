@@ -24,8 +24,6 @@ import org.eclipse.che.ide.api.data.tree.settings.HasSettings;
 import org.eclipse.che.ide.api.data.tree.settings.NodeSettings;
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.File;
-import org.eclipse.che.ide.api.resources.Folder;
-import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.project.shared.NodesResources;
 import org.eclipse.che.ide.ui.smartTree.presentation.HasPresentation;
@@ -165,9 +163,7 @@ public abstract class ResourceNode<R extends Resource> extends AbstractTreeNode 
     public interface NodeFactory {
         FileNode newFileNode(File resource, NodeSettings nodeSettings);
 
-        FolderNode newFolderNode(Folder resource, NodeSettings nodeSettings);
-
-        ProjectNode newProjectNode(Project resource, NodeSettings nodeSettings);
+        ContainerNode newContainerNode(Container resource, NodeSettings nodeSettings);
     }
 
     protected Node createNode(Resource resource) {
@@ -175,9 +171,8 @@ public abstract class ResourceNode<R extends Resource> extends AbstractTreeNode 
 
         switch (resource.getResourceType()) {
             case PROJECT:
-                return nodeFactory.newProjectNode((Project)resource, getSettings());
             case FOLDER:
-                return nodeFactory.newFolderNode((Folder)resource, getSettings());
+                return nodeFactory.newContainerNode((Container)resource, getSettings());
             case FILE:
                 return nodeFactory.newFileNode((File)resource, getSettings());
             default:

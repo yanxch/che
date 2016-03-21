@@ -588,11 +588,7 @@ public final class ResourceManager {
                             }
                         }
 
-                        int status = LOADED_INTO_CACHE;
-
-                        if (isPresent) {
-                            status |= CHANGED;
-                        }
+                        int status = isPresent ? CHANGED : LOADED_INTO_CACHE;
 
                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, status)));
 

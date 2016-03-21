@@ -65,7 +65,6 @@ import org.eclipse.che.ide.api.parts.ProjectExplorerPart;
 import org.eclipse.che.ide.api.parts.base.BasePresenter;
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.File;
-import org.eclipse.che.ide.api.resources.Folder;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.resources.ResourceChangedEvent;
@@ -87,6 +86,7 @@ import org.eclipse.che.ide.project.node.ModuleNode;
 import org.eclipse.che.ide.project.node.NodeManager;
 import org.eclipse.che.ide.project.node.ProjectNode;
 import org.eclipse.che.ide.projecttype.wizard.presenter.ProjectWizardPresenter;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.resources.tree.ResourceNode;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.ui.smartTree.event.BeforeExpandNodeEvent;
@@ -228,7 +228,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         checkState(projects != null, "No projects were provided");
 
         for (Project project : projects) {
-            view.addNode(null, nodeFactory.newProjectNode(project, settingsProvider.getSettings()));
+            view.addNode(null, nodeFactory.newContainerNode(project, settingsProvider.getSettings()));
         }
 
         eventBus.fireEvent(new ProjectExplorerLoadedEvent(getRootNodes()));
@@ -241,7 +241,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
 
         switch (delta.getKind()) {
             case CREATED:
-                onResourceCreated(resource);
+                onResourceCreated(delta);
                 break;
             case REMOVED:
                 onResourceRemoved(resource);
@@ -252,15 +252,30 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
     }
 
     @SuppressWarnings("unchecked")
-    protected void onResourceCreated(Resource resource) {
+    protected void onResourceCreated(ResourceDelta delta) {
+        final Resource resource = delta.getResource();
+        final boolean move = delta.getFromPath() != null;
+        final Path toUpdate = move ? delta.getFromPath() : delta.getResource().getLocation();
         final List<Node> existedNodes = view.getAllNodes();
 
-        Optional<Node> optExistNode = tryFind(existedNodes, hasResource(resource));
+        Optional<Node> optExistNode = tryFind(existedNodes, hasResourceWithPath(toUpdate));
 
         if (optExistNode.isPresent()) {
             //suppress warning here, we've checked node for HasDataObject instance before
-            ((ResourceNode<Resource>)optExistNode.get()).setData(resource);
-            view.redraw(optExistNode.get());
+            final ResourceNode<Resource> node = (ResourceNode<Resource>)optExistNode.get();
+
+            if (move) {
+                final String oldNodeId = view.getNodeIdProvider().getKey(node);
+                (node).setData(delta.getResource());
+                if (!view.reIndex(oldNodeId, node)) {
+                    Log.info(getClass(), "Node wasn't re-indexed");
+                }
+                view.redraw(node);
+                return;
+            }
+
+            (node).setData(resource);
+            view.redraw(node);
             return;
         }
 
@@ -268,7 +283,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
 
         //handle root project creation
         if (resource.getResourceType() == PROJECT || resource.getLocation().segmentCount() == 1) {
-            view.addNode(null, nodeFactory.newProjectNode((Project)resource, nodeSettings));
+            view.addNode(null, nodeFactory.newContainerNode((Project)resource, nodeSettings));
         } else {
             final Optional<Container> optParent = resource.getParent();
 
@@ -276,7 +291,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
                 return;
             }
 
-            optExistNode = tryFind(existedNodes, hasResource(optParent.get()));
+            optExistNode = tryFind(existedNodes, hasResourceWithPath(optParent.get().getLocation()));
 
             if (!optExistNode.isPresent()) {
                 return;
@@ -286,10 +301,8 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
 
             switch (resource.getResourceType()) {
                 case PROJECT:
-                    newNode = nodeFactory.newProjectNode((Project)resource, nodeSettings);
-                    break;
                 case FOLDER:
-                    newNode = nodeFactory.newFolderNode((Folder)resource, nodeSettings);
+                    newNode = nodeFactory.newContainerNode((Container)resource, nodeSettings);
                     break;
                 case FILE:
                     newNode = nodeFactory.newFileNode((File)resource, nodeSettings);
@@ -302,12 +315,21 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         }
     }
 
+    @SuppressWarnings("unchecked")
     protected void onResourceRemoved(Resource resource) {
+        final List<Node> existedNodes = view.getAllNodes();
 
+        Optional<Node> optExistNode = tryFind(existedNodes, hasResourceWithPath(resource.getLocation()));
+
+        if (optExistNode.isPresent()) {
+            //suppress warning here, we've checked node for HasDataObject instance before
+            view.removeNode(optExistNode.get(), false);
+        }
     }
 
+    @SuppressWarnings("unchecked")
     protected void onResourceChanged(ResourceDelta delta) {
-
+        //handle change event
     }
 
     /** {@inheritDoc} */
@@ -954,12 +976,12 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         });
     }
 
-    protected Predicate<Node> hasResource(final Resource object) {
+    protected Predicate<Node> hasResourceWithPath(final Path object) {
         return new Predicate<Node>() {
             @Override
             public boolean apply(Node input) {
                 try {
-                    return input instanceof ResourceNode && ((ResourceNode<?>)input).getData().equals(object);
+                    return input instanceof ResourceNode && ((ResourceNode<?>)input).getData().getLocation().equals(object);
                 } catch (NullPointerException e) {
                     return false;
                 }
