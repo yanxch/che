@@ -10,9 +10,14 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ui.smartTree;
 
+import elemental.dom.Element;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -28,13 +33,15 @@ import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.api.data.tree.NodeInterceptor;
+import org.eclipse.che.ide.ui.Tooltip;
 import org.eclipse.che.ide.ui.smartTree.event.BeforeLoadEvent;
 import org.eclipse.che.ide.ui.smartTree.event.CancellableEvent;
-import org.eclipse.che.ide.ui.smartTree.handler.GroupingHandlerRegistration;
 import org.eclipse.che.ide.ui.smartTree.event.LoadEvent;
 import org.eclipse.che.ide.ui.smartTree.event.LoadExceptionEvent;
 import org.eclipse.che.ide.ui.smartTree.event.LoaderHandler;
 import org.eclipse.che.ide.ui.smartTree.event.PostLoadEvent;
+import org.eclipse.che.ide.ui.smartTree.handler.GroupingHandlerRegistration;
+import org.eclipse.che.ide.ui.smartTree.presentation.HasPresentation;
 import org.eclipse.che.ide.util.loging.Log;
 
 import javax.validation.constraints.NotNull;
@@ -46,6 +53,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static org.eclipse.che.ide.ui.menu.PositionController.HorizontalAlign.RIGHT;
+import static org.eclipse.che.ide.ui.menu.PositionController.VerticalAlign.TOP_TOP;
 
 /**
  * Class that perform loading node children. May transform nodes if ones passed set of node interceptors.
@@ -147,13 +158,28 @@ public class NodeLoader implements LoaderHandler.HasLoaderHandlers {
 
         @Override
         public void onLoadException(LoadExceptionEvent event) {
-            NodeDescriptor requested = tree.getNodeDescriptor(event.getRequestedNode());
+            final Node node = event.getRequestedNode();
+
+            checkNotNull(node, "Null node occurred");
+
+            final NodeDescriptor requested = tree.getNodeDescriptor(node);
 
             if (requested == null) {
                 return;
             }
 
+            tree.getView().onLoadChange(requested, false);
             requested.setLoading(false);
+
+            if (node instanceof HasPresentation) {
+                //add badge which will display error loading status, temporary solution
+                final DivElement errorCaption = Document.get().createDivElement();
+                errorCaption.getStyle().setDisplay(Style.Display.INLINE_BLOCK);
+                errorCaption.appendChild(tree.getTreeStyles().warning().getSvg().getElement());
+                Tooltip.create((Element)errorCaption, TOP_TOP, RIGHT, "Failed to load children for " + node.getName());
+                ((HasPresentation)node).getPresentation(true).setUserElement(errorCaption);
+                tree.refresh(node);
+            }
         }
 
         @Override
@@ -310,6 +336,7 @@ public class NodeLoader implements LoaderHandler.HasLoaderHandlers {
         return new Operation<PromiseError>() {
             @Override
             public void apply(PromiseError t) throws OperationException {
+                Log.info(this.getClass(), "apply():313: " + "error");
                 childRequested.remove(parent);
                 fireEvent(new LoadExceptionEvent(parent, t.getCause()));
             }
