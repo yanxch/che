@@ -444,8 +444,6 @@ public final class ResourceManager {
 
                                          final Resource movedResource = newResourceFrom(reference);
                                          resourceStore.init(movedResource);
-                                         eventBus.fireEvent(new ResourceChangedEvent(
-                                                 new ResourceDeltaImpl(movedResource, source, CREATED | MOVED_FROM | MOVED_TO)));
 
                                          if (source instanceof Container) {
                                              final int readDepth[] = new int[1];
@@ -462,17 +460,23 @@ public final class ResourceManager {
                                                      }
                                                  }
                                              });
+
                                              resourceStore.dispose(source, true);
 
                                              return getRemoteResources((Container)movedResource, readDepth[0], true, false)
                                                      .then(new Function<Set<Resource>, Resource>() {
                                                          @Override
                                                          public Resource apply(Set<Resource> ignored) throws FunctionException {
+                                                             eventBus.fireEvent(new ResourceChangedEvent(
+                                                                     new ResourceDeltaImpl(movedResource, source, CREATED | MOVED_FROM | MOVED_TO)));
+
                                                              return movedResource;
                                                          }
                                                      });
                                          } else {
                                              resourceStore.dispose(source, false);
+                                             eventBus.fireEvent(new ResourceChangedEvent(
+                                                     new ResourceDeltaImpl(movedResource, source, CREATED | MOVED_FROM | MOVED_TO)));
                                          }
 
                                          return promise.resolve(movedResource);

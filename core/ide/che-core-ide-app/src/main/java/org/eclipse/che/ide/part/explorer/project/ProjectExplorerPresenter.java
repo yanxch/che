@@ -87,6 +87,8 @@ import org.eclipse.che.ide.project.node.NodeManager;
 import org.eclipse.che.ide.project.node.ProjectNode;
 import org.eclipse.che.ide.projecttype.wizard.presenter.ProjectWizardPresenter;
 import org.eclipse.che.ide.resource.Path;
+import org.eclipse.che.ide.resources.tree.ContainerNode;
+import org.eclipse.che.ide.resources.tree.FileNode;
 import org.eclipse.che.ide.resources.tree.ResourceNode;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.ui.smartTree.event.BeforeExpandNodeEvent;
@@ -265,11 +267,50 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
             final ResourceNode<Resource> node = (ResourceNode<Resource>)optExistNode.get();
 
             if (move) {
+                if (resource instanceof Container) {
+                    for (final Node nodeToFix : view.getAllNodes(node)) {
+                        final String idKey = view.getNodeIdProvider().getKey(nodeToFix);
+
+                        if (nodeToFix instanceof ResourceNode) {
+                            Path rawPath = ((ResourceNode)nodeToFix).getData().getLocation().removeFirstSegments(toUpdate.segmentCount());
+
+                            Log.info(this.getClass(), "onResourceCreated():278: " + "newPath to update: " + rawPath);
+
+                            if (nodeToFix instanceof FileNode) {
+                                ((Container)resource).getFile(rawPath).then(new Operation<Optional<File>>() {
+                                    @Override
+                                    public void apply(Optional<File> optFile) throws OperationException {
+                                        if (optFile.isPresent()) {
+                                            ((FileNode)nodeToFix).setData(optFile.get());
+                                            if (!view.reIndex(idKey, nodeToFix)) {
+                                                Log.info(getClass(), "Node wasn't re-indexed");
+                                            }
+                                        }
+                                    }
+                                });
+                            } else if (nodeToFix instanceof ContainerNode) {
+                                ((Container)resource).getContainer(rawPath).then(new Operation<Optional<Container>>() {
+                                    @Override
+                                    public void apply(Optional<Container> optContainer) throws OperationException {
+                                        if (optContainer.isPresent()) {
+                                            ((ContainerNode)nodeToFix).setData(optContainer.get());
+                                            if (!view.reIndex(idKey, nodeToFix)) {
+                                                Log.info(getClass(), "Node wasn't re-indexed");
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+
                 final String oldNodeId = view.getNodeIdProvider().getKey(node);
                 (node).setData(delta.getResource());
                 if (!view.reIndex(oldNodeId, node)) {
                     Log.info(getClass(), "Node wasn't re-indexed");
                 }
+
                 view.redraw(node);
                 return;
             }
