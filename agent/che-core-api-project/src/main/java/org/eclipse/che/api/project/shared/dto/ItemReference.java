@@ -65,14 +65,6 @@ public interface ItemReference extends Hyperlinks {
     ItemReference withAttributes(Map<String, String> attributes);
 
 
-//    /** creating date. */
-//    long getCreated();
-//
-//    void setCreated(long created);
-//
-//    ItemReference withCreated(long created);
-
-
     /** last modified date. */
     long getModified();
 

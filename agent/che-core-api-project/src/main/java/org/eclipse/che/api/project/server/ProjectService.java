@@ -101,13 +101,11 @@ public class ProjectService extends Service {
     private static final Tika   TIKA = new Tika();
 
     private ProjectManager      projectManager;
-    private ProjectTypeRegistry projectTypeRegistry;
     private EventService        eventService;
 
     @Inject
-    public ProjectService(ProjectManager projectManager, ProjectTypeRegistry projectTypeRegistry, EventService eventService) {
+    public ProjectService(ProjectManager projectManager, EventService eventService) {
         this.projectManager = projectManager;
-        this.projectTypeRegistry = projectTypeRegistry;
         this.eventService = eventService;
     }
 
@@ -202,14 +200,10 @@ public class ProjectService extends Service {
                                                                                     ForbiddenException,
                                                                                     ServerException,
                                                                                     IOException {
-        //here we filtering not persisted mixin
-        //maybe not good place do it here
-        final ProjectConfigDto ensure = ProjectTypeUtils.ensure(projectConfigDto, projectTypeRegistry);
         if (path != null) {
-            ensure.setPath(path);
+            projectConfigDto.setPath(path);
         }
-
-        return toProjectConfig(projectManager.updateProject(ensure), workspace, getServiceContext().getServiceUriBuilder());
+        return toProjectConfig(projectManager.updateProject(projectConfigDto), workspace, getServiceContext().getServiceUriBuilder());
     }
 
     @DELETE
