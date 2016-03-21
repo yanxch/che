@@ -543,7 +543,7 @@ public final class ResourceManager {
     protected Promise<Set<Resource>> getRemoteResources(final Container container, int depth, boolean includeFiles, final boolean force) {
         checkArgument(depth > -1, "Invalid depth");
 
-        final Set<Resource> resources = Sets.<Resource>newHashSet(container);
+        final Set<Resource> resources = newHashSet();
 
         if (depth == DEPTH_ZERO) {
             return promise.resolve(unmodifiableSet(resources));
@@ -658,7 +658,8 @@ public final class ResourceManager {
         resourceStore.traverse(new ResourceVisitor() {
             @Override
             public void visit(Resource resource) {
-                if (resource.getParent() == container) {
+                final Optional<Container> optionalParent = resource.getParent();
+                if (optionalParent.isPresent() && optionalParent.get().equals(container)) {
                     resources.add(resource);
                 }
             }
