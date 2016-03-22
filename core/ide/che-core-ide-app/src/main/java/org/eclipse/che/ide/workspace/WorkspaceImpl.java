@@ -64,6 +64,7 @@ public final class WorkspaceImpl implements Workspace, WorkspaceConfigurationCha
     private Project[]       projects;
     private String          wsId;
     private WorkspaceConfig wsConfiguration;
+    private boolean         temporary;
 
     @Inject
     public WorkspaceImpl(EventBus eventBus,
@@ -129,11 +130,17 @@ public final class WorkspaceImpl implements Workspace, WorkspaceConfigurationCha
         return commands.toArray(new Command[commands.size()]);
     }
 
+    @Override
+    public boolean isTemporary() {
+        return temporary;
+    }
+
     /** {@inheritDoc} */
     @Override
     public void onConfigurationChanged(final WorkspaceConfigurationChangedEvent event) {
         this.wsConfiguration = event.getConfiguration();
         this.wsId = event.getID();
+        this.temporary = event.isTemporary();
 
         resourceManager = resourceManagerFactory.newResourceManager(event.getID());
         resourceManager.getWorkspaceProjects().then(new Operation<Project[]>() {

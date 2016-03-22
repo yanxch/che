@@ -28,7 +28,6 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.api.core.model.workspace.UsersWorkspace;
 import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedEvent;
 import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedHandler;
 import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
@@ -39,6 +38,7 @@ import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.component.Component;
 import org.eclipse.che.ide.api.component.WsAgentComponent;
 import org.eclipse.che.ide.api.event.WindowActionEvent;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.statepersistance.AppStateManager;
 import org.eclipse.che.ide.util.loging.Log;
 import org.eclipse.che.ide.workspace.WorkspacePresenter;
@@ -52,6 +52,7 @@ import java.util.Map;
  *
  * @author Nikolay Zamosenchuk
  * @author Dmitry Shnurenko
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class BootstrapController {
@@ -62,7 +63,7 @@ public class BootstrapController {
     private final AnalyticsEventLoggerExt      analyticsEventLoggerExt;
     private final ProductInfoDataProvider      productInfoDataProvider;
     private final Provider<AppStateManager>    appStateManagerProvider;
-    private final AppContext                   appContext;
+    private final Workspace workspace;
 
     @Inject
     public BootstrapController(Provider<WorkspacePresenter> workspaceProvider,
@@ -72,14 +73,15 @@ public class BootstrapController {
                                ProductInfoDataProvider productInfoDataProvider,
                                Provider<AppStateManager> appStateManagerProvider,
                                AppContext appContext,
-                               DtoRegistrar dtoRegistrar) {
+                               DtoRegistrar dtoRegistrar,
+                               Workspace workspace) {
         this.workspaceProvider = workspaceProvider;
         this.extensionInitializer = extensionInitializer;
         this.eventBus = eventBus;
         this.analyticsEventLoggerExt = analyticsEventLoggerExt;
         this.productInfoDataProvider = productInfoDataProvider;
         this.appStateManagerProvider = appStateManagerProvider;
-        this.appContext = appContext;
+        this.workspace = workspace;
 
         appContext.setStartUpActions(StartUpActionsParser.getStartUpActions());
         dtoRegistrar.registerDtoProviders();
@@ -239,9 +241,7 @@ public class BootstrapController {
 
             analyticsEventLoggerExt.logEvent("session-usage", parameters);
 
-            UsersWorkspace workspace = appContext.getWorkspace();
-
-            if (workspace != null && workspace.isTemporary()) {
+            if (workspace.isTemporary()) {
                 analyticsEventLoggerExt.logEvent("session-usage", parameters);
             }
 

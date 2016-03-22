@@ -111,4 +111,13 @@ public interface Workspace {
      * @since 4.0.0-RC14
      */
     Command[] getCommands();
+
+    /**
+     * Returns the persistence status of current workspace.
+     *
+     * @return the true if workspace is temporary, otherwise returns the false
+     * @see UsersWorkspace#isTemporary()
+     * @since 4.0.0-RC14
+     */
+    boolean isTemporary();
 }
