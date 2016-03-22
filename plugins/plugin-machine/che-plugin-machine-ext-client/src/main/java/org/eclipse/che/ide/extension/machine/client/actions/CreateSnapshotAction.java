@@ -8,9 +8,10 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.actions;
+package org.eclipse.che.ide.extension.machine.client.actions;
 
 import org.eclipse.che.ide.CoreLocalizationConstant;
+import org.eclipse.che.ide.actions.WorkspaceSnapshotCreator;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.workspace.Workspace;
@@ -20,6 +21,7 @@ import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
 
 import static java.util.Collections.singletonList;
+import static org.eclipse.che.ide.extension.machine.client.perspective.OperationsPerspective.OPERATIONS_PERSPECTIVE_ID;
 
 /**
  * @author Yevhenii Voevodin
@@ -28,16 +30,13 @@ import static java.util.Collections.singletonList;
 @Singleton
 public class CreateSnapshotAction extends AbstractPerspectiveAction {
 
-    private static final String MACHINE_PERSPECTIVE_ID = "Machine Perspective";
 
     private final WorkspaceSnapshotCreator snapshotCreator;
     private final Workspace                workspace;
 
     @Inject
-    public CreateSnapshotAction(CoreLocalizationConstant locale,
-                                WorkspaceSnapshotCreator snapshotCreator,
-                                Workspace workspace) {
-        super(singletonList(MACHINE_PERSPECTIVE_ID), locale.createSnapshotTitle(), locale.createSnapshotDescription(), null, null);
+    public CreateSnapshotAction(CoreLocalizationConstant locale, AppContext appContext, WorkspaceSnapshotCreator snapshotCreator, Workspace workspace) {
+        super(singletonList(OPERATIONS_PERSPECTIVE_ID), locale.createSnapshotTitle(), locale.createSnapshotDescription(), null, null);
         this.snapshotCreator = snapshotCreator;
         this.workspace = workspace;
     }

@@ -117,7 +117,12 @@ public final class ProjectManager {
             }
         };
         fileWatchNotifier.addNotificationListener(defaultListener);
-        fileWatcher.startup();
+        try {
+            fileWatcher.startup();
+        } catch (IOException e) {
+            LOG.error(e.getMessage(), e);
+            fileWatchNotifier.removeNotificationListener(defaultListener);
+        }
     }
 
     @PreDestroy
@@ -378,12 +383,10 @@ public final class ProjectManager {
         final String apath = ProjectRegistry.absolutizePath(path);
 
         // delete item
-        VirtualFile item = vfs.getRoot().getChild(Path.of(apath));
-        if (item == null) {
-            return;
+        final VirtualFile item = vfs.getRoot().getChild(Path.of(apath));
+        if (item != null) {
+            item.delete();
         }
-
-        item.delete();
 
         // delete child projects
         projectRegistry.removeProjects(apath);
