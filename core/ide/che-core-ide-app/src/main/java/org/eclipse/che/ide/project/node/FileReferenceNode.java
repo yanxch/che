@@ -29,6 +29,7 @@ import org.eclipse.che.ide.api.data.tree.settings.NodeSettings;
 import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.project.node.icon.NodeIconProvider;
 import org.eclipse.che.ide.project.node.resource.ItemReferenceProcessor;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.StringUnmarshaller;
 import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
 import org.vectomatic.dom.svg.ui.SVGResource;
@@ -87,6 +88,11 @@ public class FileReferenceNode extends ItemReferenceBasedNode implements Virtual
     @Override
     public String getPath() {
         return getStorablePath();
+    }
+
+    @Override
+    public Path getLocation() {
+        return Path.valueOf(getPath());
     }
 
     @Override

@@ -30,6 +30,7 @@ import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.ext.java.client.navigation.service.JavaNavigationService;
 import org.eclipse.che.ide.ext.java.client.project.node.JavaNodeManager;
 import org.eclipse.che.ide.ext.java.shared.JarEntry;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.StringUnmarshaller;
 import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
@@ -98,6 +99,11 @@ public class JarFileNode extends AbstractJarEntryNode implements VirtualFile, Ha
     @Override
     public String getPath() {
         return getData().getPath();
+    }
+
+    @Override
+    public Path getLocation() {
+        return Path.valueOf(getPath());
     }
 
     /** {@inheritDoc} */

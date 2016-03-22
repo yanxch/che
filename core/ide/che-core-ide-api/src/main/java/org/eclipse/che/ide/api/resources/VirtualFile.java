@@ -10,8 +10,11 @@
  *******************************************************************************/
 package org.eclipse.che.ide.api.resources;
 
+import com.google.common.annotations.Beta;
+
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.ide.api.project.HasProjectConfig;
+import org.eclipse.che.ide.resource.Path;
 
 /**
  * Represents a file on the client side.
@@ -32,8 +35,21 @@ public interface VirtualFile {
      * Path should always be non-null or non-empty.
      *
      * @return non-null unique path.
+     * @deprecated use {@link #getLocation()}
      */
+    @Deprecated
     String getPath();
+
+    /**
+     * Returns path for the virtual file. Path may in various representation based on implementation.
+     * Usually it something like physical file or folder path, e.g. `/path/to/som/file`.
+     * Path should always be non-null or non-empty.
+     *
+     * @return non-null unique path.
+     * @since 4.0.0-RC14
+     */
+    @Beta
+    Path getLocation();
 
     /**
      * Returns name for the virtual file.

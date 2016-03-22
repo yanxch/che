@@ -512,55 +512,55 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
     /** {@inheritDoc} */
     @Override
     public void onResourceRenamedEvent(final ResourceNodeRenamedEvent event) {
-        //Here we have old node with old data object and new renamed data object
-        //so we need fetch storable path from it and call tree to find node by this
-        //storable path. When tree will find our node by path, the old node will be
-        //deleted automatically. Otherwise if we can't determine storable path from
-        //node, then we just take parent node and try navigate on it in the tree.
-
-        final String oldNodeId = view.getNodeIdProvider().getKey(event.getNode());
-
-        Map<String, Node> oldIdToNode = new HashMap<>();
-        for (Node n : view.getAllNodes(event.getNode())) {
-            oldIdToNode.put(view.getNodeIdProvider().getKey(n), n);
-        }
-
-        if (event.getNode() instanceof ItemReferenceBasedNode) {
-            ItemReference newDTO = (ItemReference)event.getNewDataObject();
-            ItemReferenceBasedNode node = (ItemReferenceBasedNode)event.getNode();
-
-            if (node instanceof FileReferenceNode) {
-                ItemReferenceBasedNode wrapped = nodeManager.wrap(newDTO, node.getProjectConfig());
-
-                editorAgentProvider.get().updateEditorNode(node.getData().getPath(), (FileReferenceNode)wrapped);
-            }
-
-            node.setData(newDTO);
-        } else if (event.getNode() instanceof ModuleNode) {
-            ProjectConfigDto newDTO = (ProjectConfigDto)event.getNewDataObject();
-            ModuleNode node = (ModuleNode)event.getNode();
-            node.setData(newDTO);
-        }
-
-        if (!view.reIndex(oldNodeId, event.getNode())) {
-            Log.info(getClass(), "Node wasn't re-indexed");
-        }
-
-        for (Map.Entry<String, Node> entry : oldIdToNode.entrySet()) {
-            if (!view.reIndex(entry.getKey(), entry.getValue())) {
-                Log.info(getClass(), "Node wasn't re-indexed");
-            }
-        }
-
-        view.redraw(event.getNode());
-
-        if (!event.getNode().isLeaf() && view.isLoaded(event.getNode())) {
-            view.reloadChildren(event.getNode(), true);
-        }
-
-        //here we have possible odd behaviour: after renaming directory we should perform checking structure of the expanded directories
-        //cause some of them after renaming may become source directory and we need to replace them with correct nodes, possible solution
-        //is to use node interceptors to intercept expanded nodes
+//        //Here we have old node with old data object and new renamed data object
+//        //so we need fetch storable path from it and call tree to find node by this
+//        //storable path. When tree will find our node by path, the old node will be
+//        //deleted automatically. Otherwise if we can't determine storable path from
+//        //node, then we just take parent node and try navigate on it in the tree.
+//
+//        final String oldNodeId = view.getNodeIdProvider().getKey(event.getNode());
+//
+//        Map<String, Node> oldIdToNode = new HashMap<>();
+//        for (Node n : view.getAllNodes(event.getNode())) {
+//            oldIdToNode.put(view.getNodeIdProvider().getKey(n), n);
+//        }
+//
+//        if (event.getNode() instanceof ItemReferenceBasedNode) {
+//            ItemReference newDTO = (ItemReference)event.getNewDataObject();
+//            ItemReferenceBasedNode node = (ItemReferenceBasedNode)event.getNode();
+//
+//            if (node instanceof FileReferenceNode) {
+//                ItemReferenceBasedNode wrapped = nodeManager.wrap(newDTO, node.getProjectConfig());
+//
+//                editorAgentProvider.get().updateEditorNode(node.getData().getPath(), (FileReferenceNode)wrapped);
+//            }
+//
+//            node.setData(newDTO);
+//        } else if (event.getNode() instanceof ModuleNode) {
+//            ProjectConfigDto newDTO = (ProjectConfigDto)event.getNewDataObject();
+//            ModuleNode node = (ModuleNode)event.getNode();
+//            node.setData(newDTO);
+//        }
+//
+//        if (!view.reIndex(oldNodeId, event.getNode())) {
+//            Log.info(getClass(), "Node wasn't re-indexed");
+//        }
+//
+//        for (Map.Entry<String, Node> entry : oldIdToNode.entrySet()) {
+//            if (!view.reIndex(entry.getKey(), entry.getValue())) {
+//                Log.info(getClass(), "Node wasn't re-indexed");
+//            }
+//        }
+//
+//        view.redraw(event.getNode());
+//
+//        if (!event.getNode().isLeaf() && view.isLoaded(event.getNode())) {
+//            view.reloadChildren(event.getNode(), true);
+//        }
+//
+//        //here we have possible odd behaviour: after renaming directory we should perform checking structure of the expanded directories
+//        //cause some of them after renaming may become source directory and we need to replace them with correct nodes, possible solution
+//        //is to use node interceptors to intercept expanded nodes
     }
 
     /** {@inheritDoc} */

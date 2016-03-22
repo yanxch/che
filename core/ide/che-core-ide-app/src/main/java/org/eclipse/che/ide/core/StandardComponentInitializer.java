@@ -47,8 +47,8 @@ import org.eclipse.che.ide.actions.SaveAction;
 import org.eclipse.che.ide.actions.SaveAllAction;
 import org.eclipse.che.ide.actions.ShowHiddenFilesAction;
 import org.eclipse.che.ide.actions.ShowPreferencesAction;
-import org.eclipse.che.ide.actions.SwitchLeftTabAction;
-import org.eclipse.che.ide.actions.SwitchRightTabAction;
+import org.eclipse.che.ide.editor.SwitchPreviousEditorAction;
+import org.eclipse.che.ide.editor.SwitchNextEditorAction;
 import org.eclipse.che.ide.actions.UndoAction;
 import org.eclipse.che.ide.actions.UploadFileAction;
 import org.eclipse.che.ide.actions.UploadFolderAction;
@@ -242,10 +242,10 @@ public class StandardComponentInitializer {
     private CompleteAction completeAction;
 
     @Inject
-    private SwitchLeftTabAction switchLeftTabAction;
+    private SwitchPreviousEditorAction switchPreviousEditorAction;
 
     @Inject
-    private SwitchRightTabAction switchRightTabAction;
+    private SwitchNextEditorAction switchNextEditorAction;
 
     @Inject
     private LoaderAction loaderAction;
@@ -463,6 +463,10 @@ public class StandardComponentInitializer {
         actionManager.registerAction("fullTextSearch", fullTextSearchAction);
         editGroup.add(fullTextSearchAction);
 
+        editGroup.addSeparator();
+        editGroup.add(switchPreviousEditorAction);
+        editGroup.add(switchNextEditorAction);
+
         // Assistant (New Menu)
         DefaultActionGroup assistantGroup = (DefaultActionGroup)actionManager.getAction(IdeActions.GROUP_ASSISTANT);
 
@@ -546,8 +550,8 @@ public class StandardComponentInitializer {
 
 //        actionManager.registerAction("findReplace", findReplaceAction);
         actionManager.registerAction("openFile", openFileAction);
-        actionManager.registerAction("switchLeftTab", switchLeftTabAction);
-        actionManager.registerAction("switchRightTab", switchRightTabAction);
+        actionManager.registerAction("switchLeftTab", switchPreviousEditorAction);
+        actionManager.registerAction("switchRightTab", switchNextEditorAction);
 
         changeResourceGroup.add(cutAction);
         changeResourceGroup.add(copyAction);

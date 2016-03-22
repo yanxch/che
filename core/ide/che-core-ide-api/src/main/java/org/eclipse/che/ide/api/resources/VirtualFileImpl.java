@@ -13,6 +13,7 @@ package org.eclipse.che.ide.api.resources;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.ide.api.project.HasProjectConfig;
+import org.eclipse.che.ide.resource.Path;
 
 /**
  * Implementation of {@link VirtualFile}. Keeps only necessary information.
@@ -34,6 +35,11 @@ public class VirtualFileImpl implements VirtualFile {
         } else {
             return fileInfo.getPath();
         }
+    }
+
+    @Override
+    public Path getLocation() {
+        return Path.valueOf(getPath());
     }
 
     @Override

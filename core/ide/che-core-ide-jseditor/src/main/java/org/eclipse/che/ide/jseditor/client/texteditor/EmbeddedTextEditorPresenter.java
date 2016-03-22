@@ -315,6 +315,8 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
         if (reconciler != null) {
             reconciler.uninstall();
         }
+
+        workspaceAgent.removePart(this);
     }
 
     @Inject
@@ -396,10 +398,8 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
             return;
         }
 
-        final String eventFilePath = event.getFile().getPath();
-        final String filePath = input.getFile().getPath();
-        if (filePath.equals(eventFilePath)) {
-            workspaceAgent.removePart(this);
+        if (input.getFile().equals(event.getFile())) {
+            close(false);
         }
     }
 

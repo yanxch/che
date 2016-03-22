@@ -202,7 +202,7 @@ public class RefactoringUpdater {
         String tempPath = to.getPath();
         to.setData(from.getData());
         to.setParent(from.getParent());
-        editorAgent.updateEditorNode(tempPath, to);
+//        editorAgent.updateEditorNode(tempPath, to);
         eventBus.fireEvent(new FileContentUpdateEvent(from.getPath()));
     }
 

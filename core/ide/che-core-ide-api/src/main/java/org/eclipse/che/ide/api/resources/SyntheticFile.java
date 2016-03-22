@@ -13,11 +13,11 @@ package org.eclipse.che.ide.api.resources;
 import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.inject.Inject;
 
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.project.HasProjectConfig;
+import org.eclipse.che.ide.resource.Path;
 
 /**
  * Implementation for {@link VirtualFile} which describe resource which doesn't exist on file system and is auto generated.
@@ -45,6 +45,11 @@ public class SyntheticFile implements VirtualFile {
     @Override
     public String getPath() {
         throw new UnsupportedOperationException("Synthetic file doesn't have a path");
+    }
+
+    @Override
+    public Path getLocation() {
+        return Path.valueOf(getPath());
     }
 
     @Override
