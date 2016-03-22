@@ -35,7 +35,7 @@ public class CreateSnapshotAction extends AbstractPerspectiveAction {
     private final Workspace                workspace;
 
     @Inject
-    public CreateSnapshotAction(CoreLocalizationConstant locale, AppContext appContext, WorkspaceSnapshotCreator snapshotCreator, Workspace workspace) {
+    public CreateSnapshotAction(CoreLocalizationConstant locale, WorkspaceSnapshotCreator snapshotCreator, Workspace workspace) {
         super(singletonList(OPERATIONS_PERSPECTIVE_ID), locale.createSnapshotTitle(), locale.createSnapshotDescription(), null, null);
         this.snapshotCreator = snapshotCreator;
         this.workspace = workspace;
