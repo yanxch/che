@@ -18,8 +18,6 @@ import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
-import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.navigation.NavigateToFilePresenter;
 
 import javax.validation.constraints.NotNull;
@@ -39,14 +37,12 @@ public class NavigateToFileAction extends AbstractPerspectiveAction {
 
     private final NavigateToFilePresenter  presenter;
     private final AnalyticsEventLogger     eventLogger;
-    private final AppContext appContext;
 
     @Inject
     public NavigateToFileAction(NavigateToFilePresenter presenter,
                                 AnalyticsEventLogger eventLogger,
                                 Resources resources,
-                                CoreLocalizationConstant localizationConstant,
-                                AppContext appContext) {
+                                CoreLocalizationConstant localizationConstant) {
         super(singletonList(PROJECT_PERSPECTIVE_ID),
               localizationConstant.actionNavigateToFileText(),
               localizationConstant.actionNavigateToFileDescription(),
@@ -54,7 +50,6 @@ public class NavigateToFileAction extends AbstractPerspectiveAction {
               resources.navigateToFile());
         this.presenter = presenter;
         this.eventLogger = eventLogger;
-        this.appContext = appContext;
     }
 
     @Override
@@ -65,9 +60,6 @@ public class NavigateToFileAction extends AbstractPerspectiveAction {
 
     @Override
     public void updateInPerspective(@NotNull ActionEvent event) {
-        final Project project = appContext.getRootProject();
-
-        event.getPresentation().setVisible(true);
-        event.getPresentation().setEnabled(project != null && appContext.getCurrentUser().isUserPermanent());
+        event.getPresentation().setEnabledAndVisible(true);
     }
 }
