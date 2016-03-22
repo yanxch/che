@@ -10,24 +10,36 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.web.js;
 
+import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
+import org.eclipse.che.ide.CoreLocalizationConstant;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.ext.web.WebLocalizationConstant;
 import org.eclipse.che.ide.newresource.AbstractNewResourceAction;
+import org.eclipse.che.ide.ui.dialogs.DialogFactory;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.web.bindery.event.shared.EventBus;
 
 /**
  * Action to create new JavaScript file.
  *
  * @author Artem Zatsarynnyi
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class NewJavaScriptFileAction extends AbstractNewResourceAction {
 
     @Inject
-    public NewJavaScriptFileAction(WebLocalizationConstant localizationConstant) {
+    public NewJavaScriptFileAction(WebLocalizationConstant localizationConstant,
+                                   AnalyticsEventLogger eventLogger,
+                                   DialogFactory dialogFactory,
+                                   CoreLocalizationConstant coreLocalizationConstant,
+                                   EventBus eventBus,
+                                   AppContext appContext) {
         super(localizationConstant.newJavaScriptFileActionTitle(),
               localizationConstant.newJavaScriptFileActionDescription(),
-              null);
+              null, eventLogger, dialogFactory, coreLocalizationConstant, eventBus, appContext);
     }
 
     @Override

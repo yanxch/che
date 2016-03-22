@@ -10,26 +10,38 @@
  *******************************************************************************/
 package org.eclipse.che.ide.xml;
 
+import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.newresource.AbstractNewResourceAction;
+import org.eclipse.che.ide.ui.dialogs.DialogFactory;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.web.bindery.event.shared.EventBus;
 
 /**
  * Action to create new XML file.
  *
  * @author Artem Zatsarynnyi
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class NewXmlFileAction extends AbstractNewResourceAction {
     private static final String DEFAULT_CONTENT = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 
     @Inject
-    public NewXmlFileAction(CoreLocalizationConstant localizationConstant, Resources resources) {
+    public NewXmlFileAction(CoreLocalizationConstant localizationConstant,
+                            Resources resources,
+                            AnalyticsEventLogger eventLogger,
+                            DialogFactory dialogFactory,
+                            CoreLocalizationConstant coreLocalizationConstant,
+                            EventBus eventBus,
+                            AppContext appContext) {
         super(localizationConstant.actionNewXmlFileTitle(),
               localizationConstant.actionNewXmlFileDescription(),
-              resources.defaultFile());
+              resources.defaultFile(), eventLogger, dialogFactory, coreLocalizationConstant, eventBus, appContext);
     }
 
     @Override

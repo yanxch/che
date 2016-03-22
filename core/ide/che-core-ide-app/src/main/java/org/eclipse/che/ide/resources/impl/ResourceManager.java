@@ -319,7 +319,7 @@ public final class ResourceManager {
     }
 
     protected Promise<Folder> createFolder(final Container parent, final String name) {
-        checkArgument(!checkFolderName(name), "Invalid folder name");
+        checkArgument(checkFolderName(name), "Invalid folder name");
 
         return findResource(parent.getLocation().append(name), true).thenPromise(new Function<Optional<Resource>, Promise<Folder>>() {
             @Override
@@ -344,7 +344,7 @@ public final class ResourceManager {
     }
 
     protected Promise<File> createFile(final Container parent, final String name, final String content) {
-        checkArgument(!checkFileName(name), "Invalid file name");
+        checkArgument(checkFileName(name), "Invalid file name");
 
         return findResource(parent.getLocation().append(name), true).thenPromise(new Function<Optional<Resource>, Promise<File>>() {
             @Override

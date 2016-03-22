@@ -10,25 +10,37 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.web.css;
 
+import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
+import org.eclipse.che.ide.CoreLocalizationConstant;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.ext.web.WebLocalizationConstant;
 import org.eclipse.che.ide.newresource.AbstractNewResourceAction;
+import org.eclipse.che.ide.ui.dialogs.DialogFactory;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.web.bindery.event.shared.EventBus;
 
 /**
  * Action to create new CSS file.
  *
  * @author Artem Zatsarynnyi
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class NewCssFileAction extends AbstractNewResourceAction {
     private static final String DEFAULT_CONTENT = "@CHARSET \"UTF-8\";";
 
     @Inject
-    public NewCssFileAction(WebLocalizationConstant localizationConstant) {
+    public NewCssFileAction(WebLocalizationConstant localizationConstant,
+                            AnalyticsEventLogger eventLogger,
+                            DialogFactory dialogFactory,
+                            CoreLocalizationConstant coreLocalizationConstant,
+                            EventBus eventBus,
+                            AppContext appContext) {
         super(localizationConstant.newCssFileActionTitle(),
               localizationConstant.newCssFileActionDescription(),
-              null);
+              null, eventLogger, dialogFactory, coreLocalizationConstant, eventBus, appContext);
     }
 
     @Override

@@ -12,33 +12,46 @@ package org.eclipse.che.ide.newresource;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.web.bindery.event.shared.EventBus;
 
+import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
+import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.data.HasStorablePath;
-import org.eclipse.che.ide.project.node.ResourceBasedNode;
+import org.eclipse.che.ide.api.resources.Container;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 import org.eclipse.che.ide.ui.dialogs.InputCallback;
 import org.eclipse.che.ide.ui.dialogs.input.InputDialog;
+import org.eclipse.che.ide.ui.dialogs.input.InputValidator;
+import org.eclipse.che.ide.util.NameUtils;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Action to create new folder.
  *
  * @author Artem Zatsarynnyi
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class NewFolderAction extends AbstractNewResourceAction {
-    private final CoreLocalizationConstant localizationConstant;
-    private final AppContext               appContext;
-    
+
+    private InputValidator folderNameValidator;
+
     @Inject
-    public NewFolderAction(CoreLocalizationConstant localizationConstant, Resources resources, AppContext appContext) {
+    public NewFolderAction(CoreLocalizationConstant localizationConstant,
+                           Resources resources,
+                           AnalyticsEventLogger eventLogger,
+                           DialogFactory dialogFactory,
+                           EventBus eventBus,
+                           AppContext appContext) {
         super(localizationConstant.actionNewFolderTitle(),
               localizationConstant.actionNewFolderDescription(),
-              resources.defaultFolder());
-        this.localizationConstant = localizationConstant;
-        this.appContext = appContext;
+              resources.defaultFolder(), eventLogger, dialogFactory, localizationConstant, eventBus, appContext);
+        this.folderNameValidator = new FolderNameValidator();
     }
 
     @Override
@@ -46,8 +59,8 @@ public class NewFolderAction extends AbstractNewResourceAction {
         eventLogger.log(this);
 
         InputDialog inputDialog = dialogFactory.createInputDialog(
-                localizationConstant.newResourceTitle(localizationConstant.actionNewFolderTitle()),
-                localizationConstant.newResourceLabel(localizationConstant.actionNewFolderTitle().toLowerCase()),
+                coreLocalizationConstant.newResourceTitle(coreLocalizationConstant.actionNewFolderTitle()),
+                coreLocalizationConstant.newResourceLabel(coreLocalizationConstant.actionNewFolderTitle().toLowerCase()),
                 new InputCallback() {
                     @Override
                     public void accepted(String value) {
@@ -58,14 +71,32 @@ public class NewFolderAction extends AbstractNewResourceAction {
     }
 
     private void onAccepted(String value) {
-        final ResourceBasedNode<?> parent = getResourceBasedNode();
+        final Resource resource = appContext.getResource();
 
-        if (parent == null) {
-            throw new IllegalStateException("No selected parent.");
+        checkState(resource instanceof Container, "Parent should be a container");
+
+        ((Container)resource).newFolder(value);
+    }
+
+    private class FolderNameValidator implements InputValidator {
+        @Nullable
+        @Override
+        public Violation validate(String value) {
+            if (!NameUtils.checkFolderName(value)) {
+                return new Violation() {
+                    @Override
+                    public String getMessage() {
+                        return coreLocalizationConstant.invalidName();
+                    }
+
+                    @Nullable
+                    @Override
+                    public String getCorrectedValue() {
+                        return null;
+                    }
+                };
+            }
+            return null;
         }
-
-        final String folderPath = ((HasStorablePath)parent).getStorablePath() + '/' + value;
-
-        projectServiceClient.createFolder(appContext.getWorkspace().getId(), folderPath, createCallback(parent));
     }
 }
