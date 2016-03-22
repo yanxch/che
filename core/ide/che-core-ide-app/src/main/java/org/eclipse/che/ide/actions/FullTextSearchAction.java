@@ -27,8 +27,8 @@ import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.search.FullTextSearchPresenter;
 
 import javax.validation.constraints.NotNull;
-import java.util.Collections;
 
+import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
@@ -50,7 +50,7 @@ public class FullTextSearchAction extends AbstractPerspectiveAction {
                                 AnalyticsEventLogger eventLogger,
                                 Resources resources,
                                 CoreLocalizationConstant locale) {
-        super(Collections.singletonList(PROJECT_PERSPECTIVE_ID),
+        super(singletonList(PROJECT_PERSPECTIVE_ID),
               locale.actionFullTextSearch(),
               locale.actionFullTextSearchDescription(),
               null,

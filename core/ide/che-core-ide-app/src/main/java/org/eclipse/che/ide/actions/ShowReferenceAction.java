@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 /**
  * @author Dmitry Shnurenko
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class ShowReferenceAction extends Action {
