@@ -13,6 +13,7 @@ package org.eclipse.che.ide.resources.impl;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 
+import org.eclipse.che.api.core.model.project.SourceStorage;
 import org.eclipse.che.api.promises.client.Function;
 import org.eclipse.che.api.promises.client.FunctionException;
 import org.eclipse.che.api.promises.client.Promise;
@@ -21,11 +22,12 @@ import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.File;
 import org.eclipse.che.ide.api.resources.Folder;
 import org.eclipse.che.ide.api.resources.Project;
-import org.eclipse.che.ide.api.resources.Project.UpdateRequest;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.resources.ResourcePathComparator;
 import org.eclipse.che.ide.resource.Path;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -88,12 +90,117 @@ abstract class ContainerImpl extends ResourceImpl implements Container {
 
     /** {@inheritDoc} */
     @Override
-    public UpdateRequest newProject(final String name, final String type, final boolean importSources) {
-        return new UpdateRequestImpl(getLocation().append(name), type) {
+    public Project.ImportRequest importProject() {
+        return new Project.ImportRequest() {
+            private String name;
+            private SourceStorage sourceStorage;
+
+            /** {@inheritDoc} */
+            @Override
+            public String getName() {
+                return name;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void setName(String name) {
+                this.name = name;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public SourceStorage getSourceStorage() {
+                return sourceStorage;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void setSourceStorage(SourceStorage sourceStorage) {
+                this.sourceStorage = sourceStorage;
+            }
+
             /** {@inheritDoc} */
             @Override
             public Promise<Project> send() {
-                return resourceManager.createProject(this, importSources);
+                return resourceManager.importProject(this);
+            }
+        };
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Project.CreateRequest newProject() {
+        return new Project.CreateRequest() {
+            private String name;
+            private String description;
+            private String type;
+            private List<String> mixins;
+            private Map<String, List<String>> attributes;
+
+            /** {@inheritDoc} */
+            @Override
+            public String getName() {
+                return name;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void setName(String name) {
+                this.name = name;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public String getDescription() {
+                return description;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void setDescription(String description) {
+                this.description = description;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public String getType() {
+                return type;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void setType(String type) {
+                this.type = type;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public List<String> getMixins() {
+                return mixins;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void setMixins(List<String> mixins) {
+                this.mixins = mixins;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public Map<String, List<String>> getAttributes() {
+                return attributes;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void setAttributes(Map<String, List<String>> attributes) {
+                this.attributes = attributes;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public Promise<Project> send() {
+                return resourceManager.createProject(this);
             }
         };
     }

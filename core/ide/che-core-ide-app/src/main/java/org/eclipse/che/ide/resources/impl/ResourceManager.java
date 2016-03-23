@@ -30,6 +30,8 @@ import org.eclipse.che.api.project.shared.dto.ItemReference;
 import org.eclipse.che.api.project.shared.dto.TreeElement;
 import org.eclipse.che.api.promises.client.Function;
 import org.eclipse.che.api.promises.client.FunctionException;
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
@@ -248,6 +250,8 @@ public final class ResourceManager {
      * Method is not intended to be called in third party components. It is the service method
      * for {@link Project}.
      *
+     * @param path
+     *         the path to project which should be updated
      * @param request
      *         the update request
      * @return the {@link Promise} with new {@link Project} object.
@@ -256,9 +260,8 @@ public final class ResourceManager {
      * @see Project#update()
      * @since 4.0.0-RC14
      */
-    protected Promise<Project> update(final UpdateRequest request) {
+    protected Promise<Project> update(final Path path, final UpdateRequest request) {
 
-        final Path path = request.getProject().getLocation();
         final ProjectConfigDto dto = dtoFactory.createDto(ProjectConfigDto.class)
                                                .withPath(path.toString())
                                                .withDescription(request.getDescription())
@@ -298,8 +301,6 @@ public final class ResourceManager {
                 final ProjectImpl updatedResource = resourceFactory.newProjectImpl(reference, ResourceManager.this);
                 resourceStore.init(updatedResource);
 
-                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(updatedResource, request.getProject(), CHANGED)));
-
                 //fetch updated configuration from the server
                 return ps.getProjects(wsId).then(new Function<List<ProjectConfigDto>, Project>() {
                     @Override
@@ -309,7 +310,12 @@ public final class ResourceManager {
                         cachedDtoConfigs.clear();
                         cachedDtoConfigs.addAll(updatedConfiguration);
 
-                        getRemoteResources(updatedResource, readDepth[0], true, false);
+                        getRemoteResources(updatedResource, readDepth[0], true, false).then(new Operation<Set<Resource>>() {
+                            @Override
+                            public void apply(Set<Resource> ignored) throws OperationException {
+                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(updatedResource, CHANGED)));
+                            }
+                        });
 
                         return updatedResource;
                     }
@@ -370,48 +376,25 @@ public final class ResourceManager {
         });
     }
 
-    protected Promise<Project> createProject(final UpdateRequest createRequest, final boolean importSources) {
-        return findResource(createRequest.getPath(), true).thenPromise(new Function<Optional<Resource>, Promise<Project>>() {
+    protected Promise<Project> createProject(final Project.CreateRequest createRequest) {
+        final Path path = Path.valueOf(createRequest.getName()).makeAbsolute();
+
+        return findResource(path, true).thenPromise(new Function<Optional<Resource>, Promise<Project>>() {
             @Override
             public Promise<Project> apply(Optional<Resource> resource) throws FunctionException {
                 checkState(!resource.isPresent(), "Resource already exists");
 
-                final Path projectPath = createRequest.getPath();
-                final String name = projectPath.lastSegment();
-
-                checkArgument(checkProjectName(name), "Invalid project name");
+                checkArgument(checkProjectName(createRequest.getName()), "Invalid project name");
                 checkArgument(typeRegistry.getProjectType(createRequest.getType()) != null, "Invalid project type");
 
-                final Promise<ProjectConfigDto> newProjectPromise;
+                final ProjectConfigDto dto = dtoFactory.createDto(ProjectConfigDto.class)
+                                                       .withPath(path.toString())
+                                                       .withDescription(createRequest.getDescription())
+                                                       .withType(createRequest.getType())
+                                                       .withMixins(createRequest.getMixins())
+                                                       .withAttributes(createRequest.getAttributes());
 
-                if (importSources) {
-                    checkNotNull(createRequest.getSourceStorage(), "Null source configuration occurred");
-
-                    final SourceStorage sourceStorage = createRequest.getSourceStorage();
-                    final SourceStorageDto sourceStorageDto = dtoFactory.createDto(SourceStorageDto.class)
-                                                                        .withType(sourceStorage.getType())
-                                                                        .withLocation(sourceStorage.getLocation())
-                                                                        .withParameters(sourceStorage.getParameters());
-
-                    newProjectPromise = ps.importProject(wsId, name, false, sourceStorageDto)
-                                          .thenPromise(new Function<Void, Promise<ProjectConfigDto>>() {
-                                              @Override
-                                              public Promise<ProjectConfigDto> apply(Void ignored) throws FunctionException {
-                                                  return ps.getProject(wsId, projectPath);
-                                              }
-                                          });
-                } else {
-                    final ProjectConfigDto dto = dtoFactory.createDto(ProjectConfigDto.class)
-                                                           .withPath(projectPath.toString())
-                                                           .withDescription(createRequest.getDescription())
-                                                           .withType(createRequest.getType())
-                                                           .withMixins(createRequest.getMixins())
-                                                           .withAttributes(createRequest.getAttributes());
-
-                    newProjectPromise = ps.createProject(wsId, dto);
-                }
-
-                return newProjectPromise.then(new Function<ProjectConfigDto, Project>() {
+                return ps.createProject(wsId, dto).then(new Function<ProjectConfigDto, Project>() {
                     @Override
                     public Project apply(ProjectConfigDto config) throws FunctionException {
                         final ProjectImpl newResource = resourceFactory.newProjectImpl(config, ResourceManager.this);
@@ -422,6 +405,44 @@ public final class ResourceManager {
                         return newResource;
                     }
                 });
+            }
+        });
+    }
+
+    protected Promise<Project> importProject(final Project.ImportRequest importRequest) {
+        final Path path = Path.valueOf(importRequest.getName()).makeAbsolute();
+
+        return findResource(path, true).thenPromise(new Function<Optional<Resource>, Promise<Project>>() {
+            @Override
+            public Promise<Project> apply(Optional<Resource> resource) throws FunctionException {
+                checkState(!resource.isPresent(), "Resource already exists");
+
+                checkArgument(checkProjectName(importRequest.getName()), "Invalid project name");
+                checkNotNull(importRequest.getSourceStorage(), "Null source configuration occurred");
+
+                final SourceStorage sourceStorage = importRequest.getSourceStorage();
+                final SourceStorageDto sourceStorageDto = dtoFactory.createDto(SourceStorageDto.class)
+                                                                    .withType(sourceStorage.getType())
+                                                                    .withLocation(sourceStorage.getLocation())
+                                                                    .withParameters(sourceStorage.getParameters());
+
+                return ps.importProject(wsId, importRequest.getName(), false, sourceStorageDto)
+                         .thenPromise(new Function<Void, Promise<Project>>() {
+                             @Override
+                             public Promise<Project> apply(Void ignored) throws FunctionException {
+                                 return ps.getProject(wsId, path).then(new Function<ProjectConfigDto, Project>() {
+                                     @Override
+                                     public Project apply(ProjectConfigDto config) throws FunctionException {
+                                         final ProjectImpl newResource = resourceFactory.newProjectImpl(config, ResourceManager.this);
+                                         resourceStore.init(newResource);
+
+                                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, CREATED)));
+
+                                         return newResource;
+                                     }
+                                 });
+                             }
+                         });
             }
         });
     }
@@ -468,7 +489,8 @@ public final class ResourceManager {
                                                          @Override
                                                          public Resource apply(Set<Resource> ignored) throws FunctionException {
                                                              eventBus.fireEvent(new ResourceChangedEvent(
-                                                                     new ResourceDeltaImpl(movedResource, source, CREATED | MOVED_FROM | MOVED_TO)));
+                                                                     new ResourceDeltaImpl(movedResource, source,
+                                                                                           CREATED | MOVED_FROM | MOVED_TO)));
 
                                                              return movedResource;
                                                          }

@@ -418,4 +418,25 @@ public interface Resource extends Comparable<Resource> {
     /** {@inheritDoc} */
     @Override
     int hashCode();
+
+    /**
+     * Base interface for resource modification request.
+     *
+     * @param <R> the resource type, should extends {@link Resource}
+     */
+    @Beta
+    interface Request<R extends Resource> {
+        /**
+         * Sends the request to server and returns the {@link Promise} with new instance of {@link R} which belongs
+         * to provided request configuration.
+         *
+         * Uses to modify state of concrete resource.
+         *
+         * @return the {@link Promise} with new instance {@link R}
+         * @see Container#newProject()
+         * @see Container#importProject()
+         * @see Project#update()
+         */
+        Promise<R> send();
+    }
 }

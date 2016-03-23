@@ -95,10 +95,65 @@ class ProjectImpl extends ContainerImpl implements Project {
     /** {@inheritDoc} */
     @Override
     public UpdateRequest update() {
-        return new UpdateRequestImpl(this) {
+        return new UpdateRequest() {
+
+            private String description;
+            private String type;
+            private List<String> mixins;
+            private Map<String, List<String>> attributes;
+
+            /** {@inheritDoc} */
+            @Override
+            public String getDescription() {
+                return description;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void setDescription(String description) {
+                this.description = description;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public String getType() {
+                return type;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void setType(String type) {
+                this.type = type;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public List<String> getMixins() {
+                return mixins;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void setMixins(List<String> mixins) {
+                this.mixins = mixins;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public Map<String, List<String>> getAttributes() {
+                return attributes;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void setAttributes(Map<String, List<String>> attributes) {
+                this.attributes = attributes;
+            }
+
+            /** {@inheritDoc} */
             @Override
             public Promise<Project> send() {
-                return resourceManager.update(this);
+                return resourceManager.update(getLocation(), this);
             }
         };
     }

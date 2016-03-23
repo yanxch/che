@@ -62,37 +62,37 @@ public class ProjectAction extends Action implements ResourceChangedHandler {
 
         final Project spring = getProject("spring");
 
-        createProject("ss" + UUID.uuid(5)).thenPromise(new Function<Project, Promise<Project>>() {
-            @Override
-            public Promise<Project> apply(Project arg) throws FunctionException {
-                return createProject("ss" + UUID.uuid(5)).thenPromise(new Function<Project, Promise<Project>>() {
-                    @Override
-                    public Promise<Project> apply(Project arg) throws FunctionException {
-                        return createProject("ss" + UUID.uuid(5)).thenPromise(new Function<Project, Promise<Project>>() {
-                            @Override
-                            public Promise<Project> apply(Project arg) throws FunctionException {
-                                return createProject("foooo").thenPromise(new Function<Project, Promise<Project>>() {
-                                    @Override
-                                    public Promise<Project> apply(Project arg) throws FunctionException {
-                                        return arg.delete().then(new Function<Void, Project>() {
-                                            @Override
-                                            public Project apply(Void arg) throws FunctionException {
-                                                return null;
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-        });
+//        createProject("ss" + UUID.uuid(5)).thenPromise(new Function<Project, Promise<Project>>() {
+//            @Override
+//            public Promise<Project> apply(Project arg) throws FunctionException {
+//                return createProject("ss" + UUID.uuid(5)).thenPromise(new Function<Project, Promise<Project>>() {
+//                    @Override
+//                    public Promise<Project> apply(Project arg) throws FunctionException {
+//                        return createProject("ss" + UUID.uuid(5)).thenPromise(new Function<Project, Promise<Project>>() {
+//                            @Override
+//                            public Promise<Project> apply(Project arg) throws FunctionException {
+//                                return createProject("foooo").thenPromise(new Function<Project, Promise<Project>>() {
+//                                    @Override
+//                                    public Promise<Project> apply(Project arg) throws FunctionException {
+//                                        return arg.delete().then(new Function<Void, Project>() {
+//                                            @Override
+//                                            public Project apply(Void arg) throws FunctionException {
+//                                                return null;
+//                                            }
+//                                        });
+//                                    }
+//                                });
+//                            }
+//                        });
+//                    }
+//                });
+//            }
+//        });
     }
 
-    private Promise<Project> createProject(String name) {
-        return workspace.getWorkspaceRoot().newProject(name, "blank", false).send();
-    }
+//    private Promise<Project> createProject(String name) {
+//        return workspace.getWorkspaceRoot().newProject(name, "blank", false).send();
+//    }
 
     private Project getProject(String name) {
         for (Project project : workspace.getProjects()) {

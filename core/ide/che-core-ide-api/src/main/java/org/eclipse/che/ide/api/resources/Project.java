@@ -14,10 +14,8 @@ import com.google.common.annotations.Beta;
 
 import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.model.project.SourceStorage;
-import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.ide.api.resources.marker.AbstractMarker;
 import org.eclipse.che.ide.api.workspace.Workspace;
-import org.eclipse.che.ide.resource.Path;
 
 import java.util.List;
 import java.util.Map;
@@ -51,9 +49,9 @@ public interface Project extends Container, ProjectConfig {
      * <pre>
      *     Project project = ... ;
      *
-     *     Project.Request updateRequest = project.update()
-     *                                            .withType("blank")
-     *                                            .withDescription("New description");
+     *     Project.UpdateRequest updateRequest = project.update()
+     *                                                  .setType("blank")
+     *                                                  .setDescription("New description");
      *
      *     Promise<Project> updatedProject = updateRequest.send();
      * </pre>
@@ -112,45 +110,34 @@ public interface Project extends Container, ProjectConfig {
     }
 
     /**
-     * Base interface for project update and create operation.
+     * Base interface for project create operation.
      *
-     * @see Container#newProject(String, String)
-     * @see Project#update()
+     * @see Container#newProject()
      * @since 4.0.0-RC14
      */
     @Beta
-    interface UpdateRequest {
+    interface CreateRequest extends Resource.Request<Project> {
         /**
-         * Returns the {@link Project} resource if performs update operation.
-         * For project creating workflow this method should return a {@code null}.
+         * Returns the project name.
          *
-         * @return the {@link Project} or a {@code null}
-         * @see #update()
+         * @return the project name
+         * @see ProjectConfig#getName()
          * @since 4.0.0-RC14
          */
-        Project getProject();
+        String getName();
 
         /**
-         * Returns the path for new project or path from {@link #getProject()} if no path was provided.
+         * Sets the name for the project.
          *
-         * @return path to project
+         * @param name
+         *         the project name
+         * @see #getName() ()
          * @since 4.0.0-RC14
          */
-        Path getPath();
+        void setName(String name);
 
         /**
-         * Sets the path for the project.
-         *
-         * @param path
-         *         the project path
-         * @return instance of {@link UpdateRequest}
-         * @see #getPath()
-         * @since 4.0.0-RC14
-         */
-        UpdateRequest withPath(Path path);
-
-        /**
-         * Returns the project description or description from {@link #getProject()}  if no description was provided.
+         * Returns the project description.
          *
          * @return the project description
          * @see ProjectConfig#getDescription()
@@ -163,14 +150,13 @@ public interface Project extends Container, ProjectConfig {
          *
          * @param description
          *         the project description
-         * @return instance of {@link UpdateRequest}
          * @see #getDescription()
          * @since 4.0.0-RC14
          */
-        UpdateRequest withDescription(String description);
+        void setDescription(String description);
 
         /**
-         * Returns the project type or type from {@link #getProject()} if no project type was provided.
+         * Returns the project type.
          *
          * @return the project type
          * @see ProjectConfig#getType()
@@ -183,14 +169,13 @@ public interface Project extends Container, ProjectConfig {
          *
          * @param type
          *         the project type
-         * @return instance of {@link UpdateRequest}
          * @see #getType()
          * @since 4.0.0-RC14
          */
-        UpdateRequest withType(String type);
+        void setType(String type);
 
         /**
-         * Returns the project mixins or the mixins from {@link #getProject()} if no mixins were provided.
+         * Returns the project mixins.
          *
          * @return the project mixins
          * @see ProjectConfig#getMixins()
@@ -203,14 +188,13 @@ public interface Project extends Container, ProjectConfig {
          *
          * @param mixins
          *         the project mixins
-         * @return instance of {@link UpdateRequest}
          * @see #getMixins()
          * @since 4.0.0-RC14
          */
-        UpdateRequest withMixins(List<String> mixins);
+        void setMixins(List<String> mixins);
 
         /**
-         * Returns the project attributes or the attributes from {@link #getProject()} if no attributes were provided.
+         * Returns the project attributes.
          *
          * @return the project attributes
          * @see ProjectConfig#getAttributes()
@@ -223,14 +207,126 @@ public interface Project extends Container, ProjectConfig {
          *
          * @param attributes
          *         the project attributes
-         * @return instance of {@link UpdateRequest}
          * @see #getAttributes()
          * @since 4.0.0-RC14
          */
-        UpdateRequest withAttributes(Map<String, List<String>> attributes);
+        void setAttributes(Map<String, List<String>> attributes);
+    }
+
+    /**
+     * Base interface for project update operation.
+     *
+     * @see Project#update()
+     * @since 4.0.0-RC14
+     */
+    @Beta
+    interface UpdateRequest extends Resource.Request<Project> {
+        /**
+         * Returns the project description.
+         *
+         * @return the project description
+         * @see ProjectConfig#getDescription()
+         * @since 4.0.0-RC14
+         */
+        String getDescription();
 
         /**
-         * Returns the source storage or the storage from {@link #getProject()} if no storage were provided.
+         * Sets the description for the project.
+         *
+         * @param description
+         *         the project description
+         * @see #getDescription()
+         * @since 4.0.0-RC14
+         */
+        void setDescription(String description);
+
+        /**
+         * Returns the project type.
+         *
+         * @return the project type
+         * @see ProjectConfig#getType()
+         * @since 4.0.0-RC14
+         */
+        String getType();
+
+        /**
+         * Sets the project type.
+         *
+         * @param type
+         *         the project type
+         * @see #getType()
+         * @since 4.0.0-RC14
+         */
+        void setType(String type);
+
+        /**
+         * Returns the project mixins.
+         *
+         * @return the project mixins
+         * @see ProjectConfig#getMixins()
+         * @since 4.0.0-RC14
+         */
+        List<String> getMixins();
+
+        /**
+         * Sets the project mixins.
+         *
+         * @param mixins
+         *         the project mixins
+         * @see #getMixins()
+         * @since 4.0.0-RC14
+         */
+        void setMixins(List<String> mixins);
+
+        /**
+         * Returns the project attributes.
+         *
+         * @return the project attributes
+         * @see ProjectConfig#getAttributes()
+         * @since 4.0.0-RC14
+         */
+        Map<String, List<String>> getAttributes();
+
+        /**
+         * Sets the project attributes.
+         *
+         * @param attributes
+         *         the project attributes
+         * @see #getAttributes()
+         * @since 4.0.0-RC14
+         */
+        void setAttributes(Map<String, List<String>> attributes);
+    }
+
+    /**
+     * Base interface for project import operation.
+     *
+     * @see Container#importProject()
+     * @since 4.0.0-RC14
+     */
+    @Beta
+    interface ImportRequest extends Resource.Request<Project> {
+        /**
+         * Returns the project name.
+         *
+         * @return the project name
+         * @see ProjectConfig#getName()
+         * @since 4.0.0-RC14
+         */
+        String getName();
+
+        /**
+         * Sets the name for the project.
+         *
+         * @param name
+         *         the project name
+         * @see #getName() ()
+         * @since 4.0.0-RC14
+         */
+        void setName(String name);
+
+        /**
+         * Returns the source storage.
          *
          * @return the source storage
          * @see ProjectConfig#getSource()
@@ -243,20 +339,9 @@ public interface Project extends Container, ProjectConfig {
          *
          * @param sourceStorage
          *         the project source storage
-         * @return instance of {@link UpdateRequest}
-         * @see #getSource()
+         * @see #getSourceStorage()
          * @since 4.0.0-RC14
          */
-        UpdateRequest withSourceStorage(SourceStorage sourceStorage);
-
-        /**
-         * Sends the request to server and returns the {@link Promise} with new instance of {@link Project} which belongs
-         * to provided request configuration.
-         *
-         * @return the {@link Promise} with new instance {@link Project}
-         * @see Container#newProject(String, String)
-         * @see Project#update()
-         */
-        Promise<Project> send();
+        void setSourceStorage(SourceStorage sourceStorage);
     }
 }

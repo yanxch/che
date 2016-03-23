@@ -27,7 +27,7 @@ import org.eclipse.che.ide.api.resources.Project;
  * <p/>
  * Workspace root is representing by default resource container and can be retrieved by calling
  * {@link Workspace#getWorkspaceRoot()}. To create a new project in the workspace root method
- * {@link Container#newProject(String, String, boolean)} can be called.
+ * {@link Container#newProject()} can be called.
  * <p/>
  * Note. That folders and files are disallowed to be created in workspace root. When this operation
  * performs, exception will be thrown.
@@ -44,7 +44,7 @@ public interface Workspace {
      * then empty array is returned.
      *
      * @return the registered projects
-     * @see Container#newProject(String, String, boolean)
+     * @see Container#newProject()
      * @since 4.0.0-RC14
      */
     Project[] getProjects();
