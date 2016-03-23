@@ -58,13 +58,11 @@ public abstract class AbstractNewResourceAction extends AbstractPerspectiveActio
     public AbstractNewResourceAction(String title,
                                      String description,
                                      SVGResource svgIcon,
-                                     AnalyticsEventLogger eventLogger,
                                      DialogFactory dialogFactory,
                                      CoreLocalizationConstant coreLocalizationConstant,
                                      EventBus eventBus,
                                      AppContext appContext) {
         super(singletonList(PROJECT_PERSPECTIVE_ID), title, description, null, svgIcon);
-        this.eventLogger = eventLogger;
         this.dialogFactory = dialogFactory;
         this.coreLocalizationConstant = coreLocalizationConstant;
         this.eventBus = eventBus;

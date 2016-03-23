@@ -21,8 +21,8 @@ import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.projectimport.wizard.presenter.ImportProjectWizardPresenter;
 
 import javax.validation.constraints.NotNull;
-import java.util.Arrays;
 
+import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
@@ -42,7 +42,7 @@ public class ImportProjectAction extends AbstractPerspectiveAction {
                                CoreLocalizationConstant locale,
                                Resources resources,
                                AppContext appContext) {
-        super(Arrays.asList(PROJECT_PERSPECTIVE_ID), locale.importProjectFromLocationName(),
+        super(singletonList(PROJECT_PERSPECTIVE_ID), locale.importProjectFromLocationName(),
               locale.importProjectFromLocationDescription(),
               null,
               resources.importProjectFromLocation());

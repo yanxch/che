@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.ide.xml;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.app.AppContext;
@@ -34,14 +33,13 @@ public class NewXmlFileAction extends AbstractNewResourceAction {
     @Inject
     public NewXmlFileAction(CoreLocalizationConstant localizationConstant,
                             Resources resources,
-                            AnalyticsEventLogger eventLogger,
                             DialogFactory dialogFactory,
                             CoreLocalizationConstant coreLocalizationConstant,
                             EventBus eventBus,
                             AppContext appContext) {
         super(localizationConstant.actionNewXmlFileTitle(),
               localizationConstant.actionNewXmlFileDescription(),
-              resources.defaultFile(), eventLogger, dialogFactory, coreLocalizationConstant, eventBus, appContext);
+              resources.defaultFile(), dialogFactory, coreLocalizationConstant, eventBus, appContext);
     }
 
     @Override

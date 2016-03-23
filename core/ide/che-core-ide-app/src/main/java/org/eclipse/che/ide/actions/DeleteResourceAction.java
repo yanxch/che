@@ -14,7 +14,6 @@ import com.google.gwt.core.client.Callback;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
@@ -46,7 +45,6 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
 @Singleton
 public class DeleteResourceAction extends AbstractPerspectiveAction implements PromisableAction {
 
-    private final AnalyticsEventLogger  eventLogger;
     private final DeleteResourceManager deleteResourceManager;
     private final AppContext            appContext;
 
@@ -54,7 +52,6 @@ public class DeleteResourceAction extends AbstractPerspectiveAction implements P
 
     @Inject
     public DeleteResourceAction(Resources resources,
-                                AnalyticsEventLogger eventLogger,
                                 DeleteResourceManager deleteResourceManager,
                                 CoreLocalizationConstant localization,
                                 AppContext appContext) {
@@ -63,7 +60,6 @@ public class DeleteResourceAction extends AbstractPerspectiveAction implements P
               localization.deleteItemActionDescription(),
               null,
               resources.delete());
-        this.eventLogger = eventLogger;
         this.deleteResourceManager = deleteResourceManager;
         this.appContext = appContext;
     }
@@ -71,8 +67,6 @@ public class DeleteResourceAction extends AbstractPerspectiveAction implements P
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        eventLogger.log(this);
-
         deleteResourceManager.delete(true, appContext.getResources()).then(new Operation<Void>() {
             @Override
             public void apply(Void arg) throws OperationException {

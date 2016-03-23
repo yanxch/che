@@ -22,8 +22,8 @@ import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.event.ConfigureProjectEvent;
 
 import javax.validation.constraints.NotNull;
-import java.util.Arrays;
 
+import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
@@ -43,7 +43,7 @@ public class ProjectConfigurationAction extends AbstractPerspectiveAction {
                                       CoreLocalizationConstant localization,
                                       Resources resources,
                                       EventBus eventBus) {
-        super(Arrays.asList(PROJECT_PERSPECTIVE_ID),
+        super(singletonList(PROJECT_PERSPECTIVE_ID),
               localization.actionProjectConfigurationTitle(),
               localization.actionProjectConfigurationDescription(),
               null,

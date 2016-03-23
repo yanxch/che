@@ -13,7 +13,6 @@ package org.eclipse.che.ide.actions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
@@ -38,25 +37,20 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
 public class DownloadResourceAction extends AbstractPerspectiveAction {
 
     private final AppContext           appContext;
-    private final AnalyticsEventLogger eventLogger;
     private final DownloadContainer    downloadContainer;
 
     @Inject
     public DownloadResourceAction(AppContext appContext,
                                   CoreLocalizationConstant locale,
-                                  AnalyticsEventLogger eventLogger,
                                   DownloadContainer downloadContainer) {
         super(singletonList(PROJECT_PERSPECTIVE_ID), locale.downloadItemName(), locale.downloadItemDescription(), null, null);
         this.appContext = appContext;
-        this.eventLogger = eventLogger;
         this.downloadContainer = downloadContainer;
     }
 
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        eventLogger.log(this);
-
         final Resource resource = appContext.getResource();
 
         checkState(resource != null, "Null resource occurred");

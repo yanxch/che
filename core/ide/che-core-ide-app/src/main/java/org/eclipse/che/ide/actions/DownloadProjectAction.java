@@ -13,7 +13,6 @@ package org.eclipse.che.ide.actions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
@@ -41,7 +40,6 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
 @Singleton
 public class DownloadProjectAction extends AbstractPerspectiveAction {
 
-    private final AnalyticsEventLogger     eventLogger;
     private final AppContext               appContext;
     private       DownloadContainer        downloadContainer;
 
@@ -49,7 +47,6 @@ public class DownloadProjectAction extends AbstractPerspectiveAction {
     public DownloadProjectAction(AppContext appContext,
                                  CoreLocalizationConstant locale,
                                  Resources resources,
-                                 AnalyticsEventLogger eventLogger,
                                  DownloadContainer downloadContainer) {
         super(singletonList(PROJECT_PERSPECTIVE_ID),
               locale.downloadProjectAsZipName(),
@@ -57,15 +54,12 @@ public class DownloadProjectAction extends AbstractPerspectiveAction {
               null,
               resources.downloadZip());
         this.appContext = appContext;
-        this.eventLogger = eventLogger;
         this.downloadContainer = downloadContainer;
     }
 
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        eventLogger.log(this);
-
         final Project project = appContext.getRootProject();
 
         checkState(project != null, "Null project occurred");

@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.web.css;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.ext.web.WebLocalizationConstant;
@@ -33,14 +32,13 @@ public class NewLessFileAction extends AbstractNewResourceAction {
 
     @Inject
     public NewLessFileAction(WebLocalizationConstant localizationConstant,
-                             AnalyticsEventLogger eventLogger,
                              DialogFactory dialogFactory,
                              CoreLocalizationConstant coreLocalizationConstant,
                              EventBus eventBus,
                              AppContext appContext) {
         super(localizationConstant.newLessFileActionTitle(),
               localizationConstant.newLessFileActionDescription(),
-              null, eventLogger, dialogFactory, coreLocalizationConstant, eventBus, appContext);
+              null, dialogFactory, coreLocalizationConstant, eventBus, appContext);
     }
 
     @Override

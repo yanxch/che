@@ -113,7 +113,7 @@ public class OpenedFilesPersistenceComponentTest {
 
         List<ActionDescriptor> actionDescriptors = component.getActions();
 
-        assertEquals(3, actionDescriptors.size());
+        assertEquals(2, actionDescriptors.size());
     }
 
     private void configureOpenedEditors() {

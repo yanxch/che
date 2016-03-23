@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.ide.newresource;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.app.AppContext;
@@ -30,12 +29,11 @@ public class NewFileAction extends AbstractNewResourceAction {
     @Inject
     public NewFileAction(CoreLocalizationConstant localizationConstant,
                          Resources resources,
-                         AnalyticsEventLogger eventLogger,
                          DialogFactory dialogFactory,
                          EventBus eventBus,
                          AppContext appContext) {
         super(localizationConstant.actionNewFileTitle(),
               localizationConstant.actionNewFileDescription(),
-              resources.defaultFile(), eventLogger, dialogFactory, localizationConstant, eventBus, appContext);
+              resources.defaultFile(), dialogFactory, localizationConstant, eventBus, appContext);
     }
 }

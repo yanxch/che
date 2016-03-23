@@ -14,7 +14,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
@@ -43,24 +42,19 @@ public class EditFileAction extends AbstractPerspectiveAction {
 
     private final AppContext               appContext;
     private final EventBus                 eventBus;
-    private final AnalyticsEventLogger     eventLogger;
 
     @Inject
     public EditFileAction(AppContext appContext,
                           EventBus eventBus,
-                          AnalyticsEventLogger eventLogger,
                           Resources resources) {
         super(singletonList(PROJECT_PERSPECTIVE_ID), "Edit file", null, null, resources.defaultFile());
         this.appContext = appContext;
         this.eventBus = eventBus;
-        this.eventLogger = eventLogger;
     }
 
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        eventLogger.log(this);
-
         final Resource[] resources = appContext.getResources();
 
         checkState(resources != null && resources.length == 1 && resources[0] instanceof File,

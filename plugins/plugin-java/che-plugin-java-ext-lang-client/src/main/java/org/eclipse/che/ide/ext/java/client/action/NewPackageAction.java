@@ -14,7 +14,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.action.ActionEvent;
@@ -48,14 +47,13 @@ public class NewPackageAction extends AbstractNewResourceAction {
     @Inject
     public NewPackageAction(JavaResources javaResources,
                             JavaLocalizationConstant localizationConstant,
-                            AnalyticsEventLogger eventLogger,
                             DialogFactory dialogFactory,
                             CoreLocalizationConstant coreLocalizationConstant,
                             EventBus eventBus,
                             AppContext appContext) {
         super(localizationConstant.actionNewPackageTitle(),
               localizationConstant.actionNewPackageDescription(),
-              javaResources.packageItem(), eventLogger, dialogFactory, coreLocalizationConstant, eventBus, appContext);
+              javaResources.packageItem(), dialogFactory, coreLocalizationConstant, eventBus, appContext);
     }
 
     @Override

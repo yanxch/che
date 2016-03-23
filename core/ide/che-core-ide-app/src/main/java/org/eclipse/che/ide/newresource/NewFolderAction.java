@@ -14,7 +14,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
@@ -44,13 +43,12 @@ public class NewFolderAction extends AbstractNewResourceAction {
     @Inject
     public NewFolderAction(CoreLocalizationConstant localizationConstant,
                            Resources resources,
-                           AnalyticsEventLogger eventLogger,
                            DialogFactory dialogFactory,
                            EventBus eventBus,
                            AppContext appContext) {
         super(localizationConstant.actionNewFolderTitle(),
               localizationConstant.actionNewFolderDescription(),
-              resources.defaultFolder(), eventLogger, dialogFactory, localizationConstant, eventBus, appContext);
+              resources.defaultFolder(), dialogFactory, localizationConstant, eventBus, appContext);
         this.folderNameValidator = new FolderNameValidator();
     }
 

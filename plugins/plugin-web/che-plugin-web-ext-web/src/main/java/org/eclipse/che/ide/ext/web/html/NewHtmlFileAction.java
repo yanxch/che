@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.web.html;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.ext.web.WebLocalizationConstant;
@@ -41,14 +40,13 @@ public class NewHtmlFileAction extends AbstractNewResourceAction {
 
     @Inject
     public NewHtmlFileAction(WebLocalizationConstant localizationConstant,
-                             AnalyticsEventLogger eventLogger,
                              DialogFactory dialogFactory,
                              CoreLocalizationConstant coreLocalizationConstant,
                              EventBus eventBus,
                              AppContext appContext) {
         super(localizationConstant.newHtmlFileActionTitle(),
               localizationConstant.newHtmlFileActionDescription(),
-              null, eventLogger, dialogFactory, coreLocalizationConstant, eventBus, appContext);
+              null, dialogFactory, coreLocalizationConstant, eventBus, appContext);
     }
 
     @Override
