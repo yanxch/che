@@ -12,7 +12,6 @@ package org.eclipse.che.ide.newresource;
 
 import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.commons.annotation.Nullable;
@@ -51,7 +50,6 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
 public abstract class AbstractNewResourceAction extends AbstractPerspectiveAction {
     private final   InputValidator           fileNameValidator;
     protected final String                   title;
-    protected final AnalyticsEventLogger     eventLogger;
     protected final DialogFactory            dialogFactory;
     protected final CoreLocalizationConstant coreLocalizationConstant;
     protected final EventBus                 eventBus;
@@ -77,10 +75,6 @@ public abstract class AbstractNewResourceAction extends AbstractPerspectiveActio
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (eventLogger != null) {
-            eventLogger.log(this);
-        }
-
         InputDialog inputDialog = dialogFactory.createInputDialog(
                 coreLocalizationConstant.newResourceTitle(title),
                 coreLocalizationConstant.newResourceLabel(title.toLowerCase()),

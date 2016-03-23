@@ -13,7 +13,6 @@ package org.eclipse.che.ide.actions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
@@ -46,14 +45,12 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
  */
 @Singleton
 public class RenameItemAction extends AbstractPerspectiveAction {
-    private final AnalyticsEventLogger     eventLogger;
     private final CoreLocalizationConstant localization;
     private final DialogFactory            dialogFactory;
     private final AppContext               appContext;
 
     @Inject
     public RenameItemAction(Resources resources,
-                            AnalyticsEventLogger eventLogger,
                             CoreLocalizationConstant localization,
                             DialogFactory dialogFactory,
                             AppContext appContext) {
@@ -62,7 +59,6 @@ public class RenameItemAction extends AbstractPerspectiveAction {
               localization.renameItemActionDescription(),
               null,
               resources.rename());
-        this.eventLogger = eventLogger;
         this.localization = localization;
         this.dialogFactory = dialogFactory;
         this.appContext = appContext;
@@ -71,7 +67,7 @@ public class RenameItemAction extends AbstractPerspectiveAction {
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        eventLogger.log(this);
+
 
         final Resource resource = appContext.getResource();
 

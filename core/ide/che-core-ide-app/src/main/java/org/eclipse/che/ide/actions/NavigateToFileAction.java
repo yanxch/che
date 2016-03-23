@@ -13,7 +13,6 @@ package org.eclipse.che.ide.actions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
@@ -36,11 +35,9 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
 public class NavigateToFileAction extends AbstractPerspectiveAction {
 
     private final NavigateToFilePresenter  presenter;
-    private final AnalyticsEventLogger     eventLogger;
 
     @Inject
     public NavigateToFileAction(NavigateToFilePresenter presenter,
-                                AnalyticsEventLogger eventLogger,
                                 Resources resources,
                                 CoreLocalizationConstant localizationConstant) {
         super(singletonList(PROJECT_PERSPECTIVE_ID),
@@ -49,12 +46,10 @@ public class NavigateToFileAction extends AbstractPerspectiveAction {
               null,
               resources.navigateToFile());
         this.presenter = presenter;
-        this.eventLogger = eventLogger;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        eventLogger.log(this);
         presenter.showDialog();
     }
 

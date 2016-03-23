@@ -13,7 +13,6 @@ package org.eclipse.che.ide.actions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
@@ -39,13 +38,11 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
 public class UploadFolderAction extends AbstractPerspectiveAction {
 
     private final UploadFolderFromZipPresenter presenter;
-    private final AnalyticsEventLogger         eventLogger;
     private final AppContext                   appContext;
 
     @Inject
     public UploadFolderAction(UploadFolderFromZipPresenter presenter,
                               CoreLocalizationConstant locale,
-                              AnalyticsEventLogger eventLogger,
                               Resources resources,
                               AppContext appContext) {
         super(singletonList(PROJECT_PERSPECTIVE_ID),
@@ -54,15 +51,12 @@ public class UploadFolderAction extends AbstractPerspectiveAction {
               null,
               resources.uploadFile());
         this.presenter = presenter;
-        this.eventLogger = eventLogger;
         this.appContext = appContext;
     }
 
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        eventLogger.log(this);
-
         presenter.showDialog();
     }
 
