@@ -19,10 +19,8 @@ import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.ide.api.data.HasStorablePath;
 import org.eclipse.che.ide.api.data.tree.Node;
-import org.eclipse.che.ide.api.data.RenameProcessor;
 import org.eclipse.che.ide.ext.java.client.project.settings.JavaNodeSettings;
 import org.eclipse.che.ide.project.node.FolderReferenceNode;
-import org.eclipse.che.ide.project.node.resource.ItemReferenceProcessor;
 import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
 
 import javax.validation.constraints.NotNull;
@@ -40,9 +38,8 @@ public class PackageNode extends FolderReferenceNode {
                        @Assisted ProjectConfigDto projectConfig,
                        @Assisted JavaNodeSettings nodeSettings,
                        @NotNull EventBus eventBus,
-                       @NotNull JavaNodeManager nodeManager,
-                       @NotNull ItemReferenceProcessor resourceProcessor) {
-        super(itemReference, projectConfig, nodeSettings, eventBus, nodeManager, resourceProcessor);
+                       @NotNull JavaNodeManager nodeManager) {
+        super(itemReference, projectConfig, nodeSettings, eventBus, nodeManager);
         this.nodeManager = nodeManager;
     }
 
@@ -100,11 +97,11 @@ public class PackageNode extends FolderReferenceNode {
         return getPackage().startsWith(parent.getPackage()) ? getPackage().substring(parent.getPackage().length() + 1) : getPackage();
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public RenameProcessor<ItemReference> getRenameProcessor() {
-        return null;
-    }
+//    /** {@inheritDoc} */
+//    @Override
+//    public RenameProcessor<ItemReference> getRenameProcessor() {
+//        return null;
+//    }
 
     /** {@inheritDoc} */
     @Override

@@ -16,13 +16,9 @@ import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.data.HasStorablePath;
 import org.eclipse.che.ide.api.data.tree.Node;
-import org.eclipse.che.ide.api.data.DeleteProcessor;
-import org.eclipse.che.ide.api.data.RenameProcessor;
 import org.eclipse.che.ide.api.data.tree.settings.NodeSettings;
-import org.eclipse.che.ide.project.node.resource.ModuleConfigProcessor;
 import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
 
 import javax.validation.constraints.NotNull;
@@ -36,17 +32,14 @@ import java.util.List;
 @Deprecated
 public class ModuleNode extends ResourceBasedNode<ProjectConfigDto> implements HasStorablePath {
 
-    private final ModuleConfigProcessor resourceProcessor;
     private final ProjectConfigDto      projectConfigDto;
 
     @Inject
     public ModuleNode(@Assisted ProjectConfigDto projectConfigDto,
                       @Assisted NodeSettings nodeSettings,
                       EventBus eventBus,
-                      NodeManager nodeManager,
-                      ModuleConfigProcessor resourceProcessor) {
+                      NodeManager nodeManager) {
         super(projectConfigDto, projectConfigDto, nodeSettings, eventBus, nodeManager);
-        this.resourceProcessor = resourceProcessor;
         this.projectConfigDto = projectConfigDto;
     }
 
@@ -74,17 +67,17 @@ public class ModuleNode extends ResourceBasedNode<ProjectConfigDto> implements H
         return false;
     }
 
-    @Nullable
-    @Override
-    public DeleteProcessor<ProjectConfigDto> getDeleteProcessor() {
-        return resourceProcessor;
-    }
-
-    @Nullable
-    @Override
-    public RenameProcessor<ProjectConfigDto> getRenameProcessor() {
-        return resourceProcessor;
-    }
+//    @Nullable
+//    @Override
+//    public DeleteProcessor<ProjectConfigDto> getDeleteProcessor() {
+//        return resourceProcessor;
+//    }
+//
+//    @Nullable
+//    @Override
+//    public RenameProcessor<ProjectConfigDto> getRenameProcessor() {
+//        return resourceProcessor;
+//    }
 
     @NotNull
     @Override

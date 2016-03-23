@@ -16,12 +16,9 @@ import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.project.shared.dto.ItemReference;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.data.tree.MutableNode;
 import org.eclipse.che.ide.api.data.tree.Node;
-import org.eclipse.che.ide.api.data.DeleteProcessor;
-import org.eclipse.che.ide.api.data.RenameProcessor;
 import org.eclipse.che.ide.ext.java.client.project.settings.JavaNodeSettings;
 import org.eclipse.che.ide.project.node.FileReferenceNode;
 import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
@@ -39,9 +36,8 @@ public class JavaFileNode extends FileReferenceNode implements MutableNode {
                         @Assisted JavaNodeSettings nodeSettings,
                         @NotNull EventBus eventBus,
                         @NotNull AppContext appContext,
-                        @NotNull JavaNodeManager nodeManager,
-                        @NotNull JavaItemReferenceProcessor resourceProcessor) {
-        super(itemReference, projectConfig, nodeSettings, eventBus, appContext, nodeManager, resourceProcessor);
+                        @NotNull JavaNodeManager nodeManager) {
+        super(itemReference, projectConfig, nodeSettings, eventBus, appContext, nodeManager);
     }
 
     @Override
@@ -56,17 +52,17 @@ public class JavaFileNode extends FileReferenceNode implements MutableNode {
         return true;
     }
 
-    @Nullable
-    @Override
-    public RenameProcessor<ItemReference> getRenameProcessor() {
-        return null;
-    }
-
-    @Nullable
-    @Override
-    public DeleteProcessor<ItemReference> getDeleteProcessor() {
-        return resourceProcessor;
-    }
+//    @Nullable
+//    @Override
+//    public RenameProcessor<ItemReference> getRenameProcessor() {
+//        return null;
+//    }
+//
+//    @Nullable
+//    @Override
+//    public DeleteProcessor<ItemReference> getDeleteProcessor() {
+//        return resourceProcessor;
+//    }
 
     @Override
     public String getDisplayName() {

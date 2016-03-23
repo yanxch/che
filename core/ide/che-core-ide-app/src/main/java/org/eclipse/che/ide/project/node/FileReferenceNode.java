@@ -28,7 +28,6 @@ import org.eclipse.che.ide.api.project.HasProjectConfig;
 import org.eclipse.che.ide.api.data.tree.settings.NodeSettings;
 import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.project.node.icon.NodeIconProvider;
-import org.eclipse.che.ide.project.node.resource.ItemReferenceProcessor;
 import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.StringUnmarshaller;
 import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
@@ -60,9 +59,8 @@ public class FileReferenceNode extends ItemReferenceBasedNode implements Virtual
                              @Assisted NodeSettings nodeSettings,
                              EventBus eventBus,
                              AppContext appContext,
-                             NodeManager nodeManager,
-                             ItemReferenceProcessor resourceProcessor) {
-        super(itemReference, projectConfig, nodeSettings, eventBus, nodeManager, resourceProcessor);
+                             NodeManager nodeManager) {
+        super(itemReference, projectConfig, nodeSettings, eventBus, nodeManager);
         
         this.workspaceId = appContext.getWorkspace().getId();
     }
