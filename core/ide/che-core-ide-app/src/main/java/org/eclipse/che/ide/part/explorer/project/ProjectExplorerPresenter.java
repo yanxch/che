@@ -26,7 +26,6 @@ import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateEvent;
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateHandler;
 import org.eclipse.che.api.project.gwt.client.ProjectServiceClient;
 import org.eclipse.che.api.project.shared.Constants;
-import org.eclipse.che.api.project.shared.dto.ItemReference;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
@@ -46,17 +45,7 @@ import org.eclipse.che.ide.api.data.HasStorablePath;
 import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.api.data.tree.settings.NodeSettings;
 import org.eclipse.che.ide.api.data.tree.settings.SettingsProvider;
-import org.eclipse.che.ide.api.editor.EditorAgent;
-import org.eclipse.che.ide.api.event.ConfigureProjectEvent;
-import org.eclipse.che.ide.api.event.ConfigureProjectHandler;
-import org.eclipse.che.ide.api.event.ModuleCreatedEvent;
-import org.eclipse.che.ide.api.event.ModuleCreatedEvent.ModuleCreatedHandler;
-import org.eclipse.che.ide.api.event.project.CreateProjectEvent;
-import org.eclipse.che.ide.api.event.project.CreateProjectHandler;
-import org.eclipse.che.ide.api.event.project.DeleteProjectEvent;
-import org.eclipse.che.ide.api.event.project.DeleteProjectHandler;
 import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent;
-import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent.ProjectUpdatedHandler;
 import org.eclipse.che.ide.api.mvp.View;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.parts.HasView;
@@ -76,15 +65,7 @@ import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationAppliedEvent.Work
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerView.ActionDelegate;
 import org.eclipse.che.ide.part.explorer.project.synchronize.ProjectConfigSynchronizationListener;
 import org.eclipse.che.ide.project.event.ProjectExplorerLoadedEvent;
-import org.eclipse.che.ide.project.event.ResourceNodeDeletedEvent;
-import org.eclipse.che.ide.project.event.ResourceNodeDeletedEvent.ResourceNodeDeletedHandler;
-import org.eclipse.che.ide.project.event.ResourceNodeRenamedEvent;
-import org.eclipse.che.ide.project.event.ResourceNodeRenamedEvent.ResourceNodeRenamedHandler;
-import org.eclipse.che.ide.project.node.FileReferenceNode;
-import org.eclipse.che.ide.project.node.ItemReferenceBasedNode;
-import org.eclipse.che.ide.project.node.ModuleNode;
 import org.eclipse.che.ide.project.node.NodeManager;
-import org.eclipse.che.ide.project.node.ProjectNode;
 import org.eclipse.che.ide.projecttype.wizard.presenter.ProjectWizardPresenter;
 import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.resources.tree.ContainerNode;
@@ -101,9 +82,7 @@ import org.vectomatic.dom.svg.ui.SVGResource;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.tryFind;
@@ -128,13 +107,13 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
                                                                        ProjectExplorerPart,
                                                                        HasView,
                                                                        WsAgentStateHandler,
-                                                                       ProjectUpdatedHandler,
-                                                                       CreateProjectHandler,
-                                                                       DeleteProjectHandler,
-                                                                       ConfigureProjectHandler,
-                                                                       ResourceNodeRenamedHandler,
-                                                                       ResourceNodeDeletedHandler,
-                                                                       ModuleCreatedHandler,
+//                                                                       ProjectUpdatedHandler,
+//                                                                       CreateProjectHandler,
+//                                                                       DeleteProjectHandler,
+//                                                                       ConfigureProjectHandler,
+//                                                                       ResourceNodeRenamedHandler,
+//                                                                       ResourceNodeDeletedHandler,
+//                                                                       ModuleCreatedHandler,
                                                                        WorkspaceConfigurationAppliedHandler,
                                                                        ResourceChangedHandler {
     private final ProjectExplorerView          view;
@@ -151,7 +130,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
     private final DtoUnmarshallerFactory       dtoUnmarshaller;
     private final ProjectServiceClient         projectService;
     private final NotificationManager          notificationManager;
-    private final Provider<EditorAgent>        editorAgentProvider;
+//    private final Provider<EditorAgent>        editorAgentProvider;
 
     public static final int PART_SIZE = 250;
 
@@ -171,7 +150,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
                                     ProjectServiceClient projectService,
                                     NotificationManager notificationManager,
                                     ProjectConfigSynchronizationListener synchronizationListener,
-                                    Provider<EditorAgent> editorAgentProvider,
+//                                    Provider<EditorAgent> editorAgentProvider,
                                     ResourceNode.NodeFactory nodeFactory,
                                     SettingsProvider settingsProvider) {
         this.view = view;
@@ -190,7 +169,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         this.dtoUnmarshaller = dtoUnmarshaller;
         this.projectService = projectService;
         this.notificationManager = notificationManager;
-        this.editorAgentProvider = editorAgentProvider;
+//        this.editorAgentProvider = editorAgentProvider;
 
 //        eventBus.addHandler(CreateProjectEvent.TYPE, this);
 //        eventBus.addHandler(DeleteProjectEvent.TYPE, this);
@@ -255,6 +234,8 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
 
     @SuppressWarnings("unchecked")
     protected void onResourceCreated(ResourceDelta delta) {
+        //TODO need to test how this will work with activated "Go Into" feature.
+
         final Resource resource = delta.getResource();
         final boolean move = delta.getFromPath() != null;
         final Path toUpdate = move ? delta.getFromPath() : delta.getResource().getLocation();
@@ -358,6 +339,8 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
 
     @SuppressWarnings("unchecked")
     protected void onResourceRemoved(Resource resource) {
+        //TODO need to test how this will work with activated "Go Into" feature.
+
         final List<Node> existedNodes = view.getAllNodes();
 
         Optional<Node> optExistNode = tryFind(existedNodes, hasResourceWithPath(resource.getLocation()));
@@ -373,44 +356,44 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         //handle change event
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public void onProjectCreated(CreateProjectEvent event) {
-        final ProjectConfigDto projectConfig = event.getProjectConfig();
-
-        if (projectConfig == null) {
-            return;
-        }
-
-        List<Node> nodes = view.getAllNodes();
-
-        Node parent = null;
-
-        for (Node node : nodes) {
-            if (node.getName().equals(projectConfig.getName())) {
-                parent = node.getParent();
-                view.removeNode(node, true);
-
-                break;
-            }
-        }
-
-        if (view.isGoIntoActivated()) {
-            view.resetGoIntoMode();
-        }
-
-        final ProjectNode node = nodeManager.wrap(projectConfig);
-
-        view.addNode(parent, node);
-        view.select(node, false);
-
-        if (!projectConfig.getProblems().isEmpty()) {
-            notificationManager.notify(locale.projectExplorerInvalidProjectDetected(),
-                                       locale.projectExplorerDetectedUnconfiguredProject(), projectConfig);
-            //TODO move this logic to separate component
-            askUserToSetUpProject(projectConfig);
-        }
-    }
+//    /** {@inheritDoc} */
+//    @Override
+//    public void onProjectCreated(CreateProjectEvent event) {
+//        final ProjectConfigDto projectConfig = event.getProjectConfig();
+//
+//        if (projectConfig == null) {
+//            return;
+//        }
+//
+//        List<Node> nodes = view.getAllNodes();
+//
+//        Node parent = null;
+//
+//        for (Node node : nodes) {
+//            if (node.getName().equals(projectConfig.getName())) {
+//                parent = node.getParent();
+//                view.removeNode(node, true);
+//
+//                break;
+//            }
+//        }
+//
+//        if (view.isGoIntoActivated()) {
+//            view.resetGoIntoMode();
+//        }
+//
+//        final ProjectNode node = nodeManager.wrap(projectConfig);
+//
+//        view.addNode(parent, node);
+//        view.select(node, false);
+//
+//        if (!projectConfig.getProblems().isEmpty()) {
+//            notificationManager.notify(locale.projectExplorerInvalidProjectDetected(),
+//                                       locale.projectExplorerDetectedUnconfiguredProject(), projectConfig);
+//            //TODO move this logic to separate component
+//            askUserToSetUpProject(projectConfig);
+//        }
+//    }
 
     private void askUserToSetUpProject(final ProjectConfigDto descriptor) {
         ProjectProblemDialog.AskHandler askHandler = new ProjectProblemDialog.AskHandler() {
@@ -444,74 +427,74 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
                                  askHandler).show();
     }
 
+//    /** {@inheritDoc} */
+//    @Override
+//    public void onProjectUpdated(ProjectUpdatedEvent event) {
+//        ProjectNode node = null;
+//
+//        for (Node seekNode : view.getAllNodes()) {
+//            if (seekNode instanceof ProjectNode &&
+//                ((ProjectNode)seekNode).getData().getPath().equals(event.getPath())) {
+//                node = (ProjectNode)seekNode;
+//                break;
+//            }
+//        }
+//
+//        if (node == null) {
+//            return;
+//        }
+//
+//        final String oldNodeId = view.getNodeIdProvider().getKey(node);
+//
+//        Map<String, Node> oldIdToNode = new HashMap<>();
+//        for (Node n : view.getAllNodes(node)) {
+//            oldIdToNode.put(view.getNodeIdProvider().getKey(n), n);
+//        }
+//
+//        final ProjectConfigDto updatedDescriptor = event.getUpdatedProjectDescriptor();
+//
+//        node.setData(updatedDescriptor);
+//        node.setProjectConfig(updatedDescriptor);
+//
+//        if (!view.reIndex(oldNodeId, node)) {
+//            Log.info(getClass(), "Node wasn't re-indexed");
+//        }
+//
+//        for (Map.Entry<String, Node> entry : oldIdToNode.entrySet()) {
+//            if (!view.reIndex(entry.getKey(), entry.getValue())) {
+//                Log.info(getClass(), "Node wasn't re-indexed");
+//            }
+//        }
+//
+//        view.redraw(node);
+//
+//        if (view.isExpanded(node) && view.isLoaded(node)) {
+//            view.reloadChildren(node, true);
+//        }
+//    }
+
+//    /** {@inheritDoc} */
+//    @Override
+//    public void onProjectDeleted(DeleteProjectEvent event) {
+//        ProjectNode toDelete = null;
+//
+//        for (Node node : view.getRootNodes()) {
+//            if (node instanceof ProjectNode &&
+//                ((ProjectNode)node).getData().getPath().equals(event.getProjectConfig().getPath())) {
+//                toDelete = (ProjectNode)node;
+//            }
+//        }
+//
+//        if (toDelete == null) {
+//            return;
+//        }
+//
+//        view.removeNode(toDelete, true);
+//    }
+
     /** {@inheritDoc} */
-    @Override
-    public void onProjectUpdated(ProjectUpdatedEvent event) {
-        ProjectNode node = null;
-
-        for (Node seekNode : view.getAllNodes()) {
-            if (seekNode instanceof ProjectNode &&
-                ((ProjectNode)seekNode).getData().getPath().equals(event.getPath())) {
-                node = (ProjectNode)seekNode;
-                break;
-            }
-        }
-
-        if (node == null) {
-            return;
-        }
-
-        final String oldNodeId = view.getNodeIdProvider().getKey(node);
-
-        Map<String, Node> oldIdToNode = new HashMap<>();
-        for (Node n : view.getAllNodes(node)) {
-            oldIdToNode.put(view.getNodeIdProvider().getKey(n), n);
-        }
-
-        final ProjectConfigDto updatedDescriptor = event.getUpdatedProjectDescriptor();
-
-        node.setData(updatedDescriptor);
-        node.setProjectConfig(updatedDescriptor);
-
-        if (!view.reIndex(oldNodeId, node)) {
-            Log.info(getClass(), "Node wasn't re-indexed");
-        }
-
-        for (Map.Entry<String, Node> entry : oldIdToNode.entrySet()) {
-            if (!view.reIndex(entry.getKey(), entry.getValue())) {
-                Log.info(getClass(), "Node wasn't re-indexed");
-            }
-        }
-
-        view.redraw(node);
-
-        if (view.isExpanded(node) && view.isLoaded(node)) {
-            view.reloadChildren(node, true);
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void onProjectDeleted(DeleteProjectEvent event) {
-        ProjectNode toDelete = null;
-
-        for (Node node : view.getRootNodes()) {
-            if (node instanceof ProjectNode &&
-                ((ProjectNode)node).getData().getPath().equals(event.getProjectConfig().getPath())) {
-                toDelete = (ProjectNode)node;
-            }
-        }
-
-        if (toDelete == null) {
-            return;
-        }
-
-        view.removeNode(toDelete, true);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void onResourceRenamedEvent(final ResourceNodeRenamedEvent event) {
+//    @Override
+//    public void onResourceRenamedEvent(final ResourceNodeRenamedEvent event) {
 //        //Here we have old node with old data object and new renamed data object
 //        //so we need fetch storable path from it and call tree to find node by this
 //        //storable path. When tree will find our node by path, the old node will be
@@ -561,55 +544,55 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
 //        //here we have possible odd behaviour: after renaming directory we should perform checking structure of the expanded directories
 //        //cause some of them after renaming may become source directory and we need to replace them with correct nodes, possible solution
 //        //is to use node interceptors to intercept expanded nodes
-    }
+//    }
 
-    /** {@inheritDoc} */
-    @Override
-    public void onResourceEvent(ResourceNodeDeletedEvent event) {
-        view.removeNode(event.getNode(), true);
-    }
+//    /** {@inheritDoc} */
+//    @Override
+//    public void onResourceEvent(ResourceNodeDeletedEvent event) {
+//        view.removeNode(event.getNode(), true);
+//    }
 
-    /** {@inheritDoc} */
-    @Override
-    public void onModuleCreated(ModuleCreatedEvent event) {
-        if (isGoIntoActivated()) {
-            resetGoIntoMode();
-        }
-
-        ProjectConfigDto createdModule = event.getModule();
-
-        String pathToModule = createdModule.getPath();
-
-        String pathToParent = pathToModule.substring(0, pathToModule.lastIndexOf("/"));
-
-        ProjectConfigDto projectConfig = appContext.getCurrentProject().getProjectConfig();
-
-        // TODO: rework after new Project API
-//        ProjectConfigDto parentModule = projectConfig.findModule(pathToParent);
-//
-//        if (parentModule == null) {
-//            projectConfig.getModules().add(createdModule);
-//        } else {
-//            parentModule.getModules().add(createdModule);
+//    /** {@inheritDoc} */
+//    @Override
+//    public void onModuleCreated(ModuleCreatedEvent event) {
+//        if (isGoIntoActivated()) {
+//            resetGoIntoMode();
 //        }
+//
+//        ProjectConfigDto createdModule = event.getModule();
+//
+//        String pathToModule = createdModule.getPath();
+//
+//        String pathToParent = pathToModule.substring(0, pathToModule.lastIndexOf("/"));
+//
+//        ProjectConfigDto projectConfig = appContext.getCurrentProject().getProjectConfig();
+//
+//        // TODO: rework after new Project API
+////        ProjectConfigDto parentModule = projectConfig.findModule(pathToParent);
+////
+////        if (parentModule == null) {
+////            projectConfig.getModules().add(createdModule);
+////        } else {
+////            parentModule.getModules().add(createdModule);
+////        }
+//
+//        reloadChildren();
+//    }
 
-        reloadChildren();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void onConfigureProject(ConfigureProjectEvent event) {
-        final ProjectConfigDto toConfigure = event.getProject();
-        if (toConfigure != null) {
-            Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-                @Override
-                public void execute() {
-                    //Scheduler need to wait when configuration wizard will create and prepare wizard pages
-                    projectConfigWizard.show(toConfigure);
-                }
-            });
-        }
-    }
+//    /** {@inheritDoc} */
+//    @Override
+//    public void onConfigureProject(ConfigureProjectEvent event) {
+//        final ProjectConfigDto toConfigure = event.getProject();
+//        if (toConfigure != null) {
+//            Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+//                @Override
+//                public void execute() {
+//                    //Scheduler need to wait when configuration wizard will create and prepare wizard pages
+//                    projectConfigWizard.show(toConfigure);
+//                }
+//            });
+//        }
+//    }
 
     private Promise<ProjectConfigDto> updateProject(final ProjectConfigDto project) {
         return newPromise(new AsyncPromiseHelper.RequestCall<ProjectConfigDto>() {
