@@ -171,8 +171,8 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
     }
 
     @Override
-    public Promise<List<SourceEstimation>> resolveSources(String workspaceId, String path) {
-        final String requestUrl = extPath + "/project/" + workspaceId + "/resolve" + normalizePath(path);
+    public Promise<List<SourceEstimation>> resolveSources(String workspaceId, Path path) {
+        final String requestUrl = extPath + "/project/" + workspaceId + "/resolve" + normalizePath(path.toString());
         return asyncRequestFactory.createGetRequest(requestUrl)
                                   .header(ACCEPT, MimeType.APPLICATION_JSON)
                                   .loader(loaderFactory.newLoader("Resolving sources..."))

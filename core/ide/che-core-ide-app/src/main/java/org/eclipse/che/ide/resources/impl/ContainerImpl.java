@@ -13,7 +13,7 @@ package org.eclipse.che.ide.resources.impl;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 
-import org.eclipse.che.api.core.model.project.SourceStorage;
+import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.promises.client.Function;
 import org.eclipse.che.api.promises.client.FunctionException;
 import org.eclipse.che.api.promises.client.Promise;
@@ -26,8 +26,6 @@ import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.resources.ResourcePathComparator;
 import org.eclipse.che.ide.resource.Path;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -90,33 +88,21 @@ abstract class ContainerImpl extends ResourceImpl implements Container {
 
     /** {@inheritDoc} */
     @Override
-    public Project.ImportRequest importProject() {
-        return new Project.ImportRequest() {
-            private String name;
-            private SourceStorage sourceStorage;
+    public Project.ProjectRequest importProject() {
+        return new Project.ProjectRequest() {
+            private ProjectConfig config;
 
             /** {@inheritDoc} */
             @Override
-            public String getName() {
-                return name;
+            public Request<Project, ProjectConfig> withBody(ProjectConfig object) {
+                this.config = object;
+                return this;
             }
 
             /** {@inheritDoc} */
             @Override
-            public void setName(String name) {
-                this.name = name;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public SourceStorage getSourceStorage() {
-                return sourceStorage;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public void setSourceStorage(SourceStorage sourceStorage) {
-                this.sourceStorage = sourceStorage;
+            public ProjectConfig getBody() {
+                return config;
             }
 
             /** {@inheritDoc} */
@@ -129,72 +115,21 @@ abstract class ContainerImpl extends ResourceImpl implements Container {
 
     /** {@inheritDoc} */
     @Override
-    public Project.CreateRequest newProject() {
-        return new Project.CreateRequest() {
-            private String name;
-            private String description;
-            private String type;
-            private List<String> mixins;
-            private Map<String, List<String>> attributes;
+    public Project.ProjectRequest newProject() {
+        return new Project.ProjectRequest() {
+            private ProjectConfig config;
 
             /** {@inheritDoc} */
             @Override
-            public String getName() {
-                return name;
+            public Request<Project, ProjectConfig> withBody(ProjectConfig object) {
+                this.config = object;
+                return this;
             }
 
             /** {@inheritDoc} */
             @Override
-            public void setName(String name) {
-                this.name = name;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public String getDescription() {
-                return description;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public void setDescription(String description) {
-                this.description = description;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public String getType() {
-                return type;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public void setType(String type) {
-                this.type = type;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public List<String> getMixins() {
-                return mixins;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public void setMixins(List<String> mixins) {
-                this.mixins = mixins;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public Map<String, List<String>> getAttributes() {
-                return attributes;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public void setAttributes(Map<String, List<String>> attributes) {
-                this.attributes = attributes;
+            public ProjectConfig getBody() {
+                return config;
             }
 
             /** {@inheritDoc} */

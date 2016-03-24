@@ -319,6 +319,11 @@ public class CategoriesPageViewImpl implements CategoriesPageView {
     }
 
     @Override
+    public void setNameFieldReadOnly(boolean readOnly) {
+        projectName.setReadOnly(readOnly);
+    }
+
+    @Override
     public void setCategories(Map<String, Set<ProjectTypeDto>> typesByCategory,
                               Map<String, Set<ProjectTemplateDescriptor>> templatesByCategory) {
         this.typesByCategory = typesByCategory;

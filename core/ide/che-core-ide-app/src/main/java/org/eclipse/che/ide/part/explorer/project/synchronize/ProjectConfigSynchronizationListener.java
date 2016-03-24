@@ -27,6 +27,7 @@ import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.data.tree.Node;
+import org.eclipse.che.ide.api.project.MutableProjectConfig;
 import org.eclipse.che.ide.api.wizard.Wizard;
 import org.eclipse.che.ide.project.node.ProjectNode;
 import org.eclipse.che.ide.projectimport.wizard.ProjectImporter;
@@ -242,7 +243,7 @@ public class ProjectConfigSynchronizationListener implements BeforeExpandNodeEve
             public void onFailure(Throwable exception) {
                 Log.error(getClass(), exception);
             }
-        }, projectConfig);
+        }, new MutableProjectConfig(projectConfig));
     }
 
     private void deleteProject() {

@@ -50,6 +50,8 @@ public interface CategoriesPageView extends View<CategoriesPageView.ActionDelega
 
     void setProjectTypes(List<ProjectTypeDto> availableProjectTypes);
 
+    void setNameFieldReadOnly(boolean readOnly);
+
     interface ActionDelegate {
 
         void projectNameChanged(String name);

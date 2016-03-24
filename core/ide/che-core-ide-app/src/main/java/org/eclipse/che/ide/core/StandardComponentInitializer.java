@@ -23,7 +23,6 @@ import org.eclipse.che.ide.actions.CopyAction;
 import org.eclipse.che.ide.actions.RedirectToDashboardProjectsAction;
 import org.eclipse.che.ide.actions.RedirectToDashboardWorkspacesAction;
 import org.eclipse.che.ide.actions.ShowReferenceAction;
-import org.eclipse.che.ide.actions.CreateModuleAction;
 import org.eclipse.che.ide.actions.CreateProjectAction;
 import org.eclipse.che.ide.actions.CutAction;
 import org.eclipse.che.ide.actions.DeleteResourceAction;
@@ -215,9 +214,6 @@ public class StandardComponentInitializer {
     private CreateProjectAction createProjectAction;
 
     @Inject
-    private CreateModuleAction createModuleAction;
-
-    @Inject
     private FullTextSearchAction fullTextSearchAction;
 
     @Inject
@@ -406,9 +402,6 @@ public class StandardComponentInitializer {
         newXmlFileAction.getTemplatePresentation().setSVGResource(xmlFile.getSVGImage());
         newGroup.addAction(newXmlFileAction);
 
-        actionManager.registerAction("createModuleAction", createModuleAction);
-        projectGroup.addAction(createModuleAction);
-
         actionManager.registerAction("uploadFile", uploadFileAction);
         projectGroup.add(uploadFileAction);
 
@@ -528,7 +521,6 @@ public class StandardComponentInitializer {
         resourceOperation.addSeparator();
         resourceOperation.add(downloadResourceAction);
         resourceOperation.addSeparator();
-        resourceOperation.add(createModuleAction);
 
         DefaultActionGroup mainContextMenuGroup = (DefaultActionGroup)actionManager.getAction(IdeActions.GROUP_MAIN_CONTEXT_MENU);
         mainContextMenuGroup.add(newGroup);

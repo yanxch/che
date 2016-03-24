@@ -15,7 +15,6 @@ import com.google.gwtmockito.GwtMockitoTestRunner;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.ide.Resources;
-import org.eclipse.che.ide.api.extension.ExtensionRegistry;
 import org.eclipse.che.ide.api.notification.Notification;
 import org.eclipse.che.ide.api.notification.NotificationListener;
 import org.eclipse.che.ide.api.notification.ReadState;
@@ -126,9 +125,9 @@ public class NotificationManagerImplTest {
         StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, false, null, listener);
 
         manager.onClick(notification);
-        verify(listener).onClick();
-        verify(listener, never()).onClose();
-        verify(listener, never()).onDoubleClick();
+        verify(listener).onClick(eq(notification));
+        verify(listener, never()).onClose(eq(notification));
+        verify(listener, never()).onDoubleClick(eq(notification));
     }
 
     @Test
@@ -137,9 +136,9 @@ public class NotificationManagerImplTest {
         StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, false, null, listener);
 
         manager.onDoubleClick(notification);
-        verify(listener, never()).onClick();
-        verify(listener, never()).onClose();
-        verify(listener).onDoubleClick();
+        verify(listener, never()).onClick(eq(notification));
+        verify(listener, never()).onClose(eq(notification));
+        verify(listener).onDoubleClick(eq(notification));
     }
 
     @Test
@@ -148,9 +147,9 @@ public class NotificationManagerImplTest {
         StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, false, null, listener);
 
         manager.onClose(notification);
-        verify(listener, never()).onClick();
-        verify(listener).onClose();
-        verify(listener, never()).onDoubleClick();
+        verify(listener, never()).onClick(eq(notification));
+        verify(listener).onClose(eq(notification));
+        verify(listener, never()).onDoubleClick(eq(notification));
     }
 
     @Test

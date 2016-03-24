@@ -10,123 +10,107 @@
  *******************************************************************************/
 package org.eclipse.che.ide.projectimport.wizard;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.api.project.gwt.client.ProjectServiceClient;
-import org.eclipse.che.api.project.shared.Constants;
-import org.eclipse.che.api.project.shared.dto.ProjectTypeDto;
 import org.eclipse.che.api.project.shared.dto.SourceEstimation;
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.api.promises.client.Function;
+import org.eclipse.che.api.promises.client.FunctionException;
+import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.api.promises.client.PromiseProvider;
+import org.eclipse.che.ide.api.notification.Notification;
+import org.eclipse.che.ide.api.notification.NotificationListener;
+import org.eclipse.che.ide.api.notification.NotificationManager;
+import org.eclipse.che.ide.api.project.MutableProjectConfig;
 import org.eclipse.che.ide.api.project.type.ProjectTypeRegistry;
-import org.eclipse.che.ide.api.project.wizard.ProjectNotificationSubscriber;
-import org.eclipse.che.ide.api.wizard.Wizard.CompleteCallback;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
-import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
-import org.eclipse.che.ide.rest.Unmarshallable;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.projecttype.wizard.presenter.ProjectWizardPresenter;
 
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
-import static com.google.common.collect.Iterables.filter;
-import static com.google.common.collect.Iterables.getFirst;
-import static com.google.common.collect.Iterables.size;
-import static com.google.common.collect.Iterables.transform;
-import static org.eclipse.che.ide.util.StringUtils.isNullOrEmpty;
+import static com.google.common.collect.Lists.newArrayList;
+import static org.eclipse.che.ide.api.notification.StatusNotification.Status.SUCCESS;
 
 /**
  * The class contains business logic which allows resolve project type and call updater.
  *
  * @author Dmitry Shnurenko
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class ProjectResolver {
 
-    private final DtoUnmarshallerFactory        dtoUnmarshallerFactory;
-    private final ProjectServiceClient          projectService;
-    private final ProjectTypeRegistry           projectTypeRegistry;
-    private final String                        workspaceId;
-    private final ProjectNotificationSubscriber projectNotificationSubscriber;
-    private final ProjectUpdater                projectUpdater;
+    private final ProjectTypeRegistry    projectTypeRegistry;
+    private final PromiseProvider        promiseProvider;
+    private final ProjectWizardPresenter projectWizard;
+    private final NotificationManager    notificationManager;
 
     @Inject
-    public ProjectResolver(DtoUnmarshallerFactory dtoUnmarshallerFactory,
-                           ProjectServiceClient projectService,
-                           ProjectTypeRegistry projectTypeRegistry,
-                           AppContext appContext,
-                           ProjectNotificationSubscriber projectNotificationSubscriber,
-                           ProjectUpdater projectUpdater) {
-        this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
-        this.projectService = projectService;
+    public ProjectResolver(ProjectTypeRegistry projectTypeRegistry,
+                           PromiseProvider promiseProvider,
+                           ProjectWizardPresenter projectWizard,
+                           NotificationManager notificationManager) {
         this.projectTypeRegistry = projectTypeRegistry;
-        this.workspaceId = appContext.getWorkspaceId();
-        this.projectNotificationSubscriber = projectNotificationSubscriber;
-        this.projectUpdater = projectUpdater;
+        this.promiseProvider = promiseProvider;
+        this.projectWizard = projectWizard;
+        this.notificationManager = notificationManager;
     }
 
-    /**
-     * The method defines project type of passed project and take resolution should project be configured or not.
-     *
-     * @param callback
-     *         callback which is necessary to inform that resolving completed
-     * @param projectConfig
-     *         project which will be resolved
-     */
-    public void resolveProject(@NotNull final CompleteCallback callback, @NotNull final ProjectConfigDto projectConfig) {
-        final String projectName = projectConfig.getName();
-        Unmarshallable<List<SourceEstimation>> unmarshaller = dtoUnmarshallerFactory.newListUnmarshaller(SourceEstimation.class);
-        projectService.resolveSources(workspaceId, projectName, new AsyncRequestCallback<List<SourceEstimation>>(unmarshaller) {
-
-            Function<SourceEstimation, ProjectTypeDto> estimateToType = new Function<SourceEstimation, ProjectTypeDto>() {
-                @Nullable
-                @Override
-                public ProjectTypeDto apply(@Nullable SourceEstimation input) {
-                    if (input != null) {
-                        return projectTypeRegistry.getProjectType(input.getType());
-                    }
-
-                    return null;
-                }
-            };
-
-            Predicate<ProjectTypeDto> isPrimaryable = new Predicate<ProjectTypeDto>() {
-                @Override
-                public boolean apply(@Nullable ProjectTypeDto input) {
-                    return input != null && input.isPrimaryable();
-
-                }
-            };
-
+    public Promise<Project> resolve(final Project project) {
+        return project.resolve().thenPromise(new Function<List<SourceEstimation>, Promise<Project>>() {
             @Override
-            protected void onSuccess(List<SourceEstimation> result) {
-                Iterable<ProjectTypeDto> types = filter(transform(result, estimateToType), isPrimaryable);
+            public Promise<Project> apply(List<SourceEstimation> estimations) throws FunctionException {
+                if (estimations == null || estimations.isEmpty()) {
+                    return promiseProvider.resolve(project);
+                }
 
-                if (size(types) == 1) {
-                    ProjectTypeDto typeDto = getFirst(types, null);
-
-                    if (typeDto != null) {
-                        projectConfig.withType(typeDto.getId());
+                final List<String> primeTypes = newArrayList();
+                for (SourceEstimation estimation : estimations) {
+                    if (projectTypeRegistry.getProjectType(estimation.getType()).isPrimaryable()) {
+                        primeTypes.add(estimation.getType());
                     }
                 }
 
-                boolean configRequire = false;
+                final MutableProjectConfig config = new MutableProjectConfig(project);
 
-                if (isNullOrEmpty(projectConfig.getType())) {
-                    projectConfig.withType(Constants.BLANK_ID);
-                    configRequire = true;
+                if (primeTypes.isEmpty()) {
+                    return promiseProvider.resolve(project);
+                } else if (primeTypes.size() == 1) {
+                    config.setType(primeTypes.get(0));
+                } else {
+                    final NotificationListener notificationListener = new NotificationListener() {
+                        boolean clicked = false;
+
+                        @Override
+                        public void onClick(Notification notification) {
+                            if (!clicked) {
+                                projectWizard.show(config);
+                                clicked = true;
+                                notification.setListener(null);
+                                notification.setContent("");
+                            }
+                        }
+
+                        @Override
+                        public void onDoubleClick(Notification notification) {
+                            //stub
+                        }
+
+                        @Override
+                        public void onClose(Notification notification) {
+                            //stub
+                        }
+                    };
+
+                    notificationManager.notify("Project " + project.getName() + " has to be configured",
+                                                                                 "Click here to set up your project.",
+                                                                                 SUCCESS, true, notificationListener);
+
+
+                    return promiseProvider.resolve(project);
                 }
 
-                projectUpdater.updateProject(callback, projectConfig, configRequire);
-            }
-
-            @Override
-            protected void onFailure(Throwable exception) {
-                projectNotificationSubscriber.onFailure(exception.getMessage());
-                callback.onFailure(new Exception(exception.getMessage()));
+                return project.update().withBody(config).send();
             }
         });
     }

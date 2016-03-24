@@ -17,12 +17,12 @@ import com.google.inject.Inject;
 import org.eclipse.che.api.project.gwt.client.ProjectImportersServiceClient;
 import org.eclipse.che.api.project.shared.dto.ProjectImporterData;
 import org.eclipse.che.api.project.shared.dto.ProjectImporterDescriptor;
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.ide.CoreLocalizationConstant;
-import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.notification.NotificationManager;
+import org.eclipse.che.ide.api.project.MutableProjectConfig;
 import org.eclipse.che.ide.api.project.wizard.ImportWizardRegistry;
 import org.eclipse.che.ide.api.wizard.AbstractWizardPage;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.projectimport.wizard.presenter.ImportProjectWizardView;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
@@ -43,11 +43,11 @@ import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAI
  *
  * @author Ann Shumilova
  */
-public class MainPagePresenter extends AbstractWizardPage<ProjectConfigDto> implements MainPageView.ActionDelegate {
+public class MainPagePresenter extends AbstractWizardPage<MutableProjectConfig> implements MainPageView.ActionDelegate {
 
     private static final String DEFAULT_PROJECT_IMPORTER = "default-importer";
 
-    private final AppContext                    appContext;
+    private final Workspace                     workspace;
     private final MainPageView                  view;
     private final DtoUnmarshallerFactory        dtoUnmarshallerFactory;
     private final NotificationManager           notificationManager;
@@ -60,7 +60,7 @@ public class MainPagePresenter extends AbstractWizardPage<ProjectConfigDto> impl
     private ImportProjectWizardView.EnterPressedDelegate enterPressedDelegate;
 
     @Inject
-    public MainPagePresenter(AppContext appContext,
+    public MainPagePresenter(Workspace workspace,
                              ProjectImportersServiceClient projectImportersService,
                              DtoUnmarshallerFactory dtoUnmarshallerFactory,
                              NotificationManager notificationManager,
@@ -68,7 +68,7 @@ public class MainPagePresenter extends AbstractWizardPage<ProjectConfigDto> impl
                              MainPageView view,
                              ImportWizardRegistry importWizardRegistry) {
         super();
-        this.appContext = appContext;
+        this.workspace = workspace;
         this.view = view;
         this.projectImportersService = projectImportersService;
         this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
@@ -80,7 +80,7 @@ public class MainPagePresenter extends AbstractWizardPage<ProjectConfigDto> impl
     }
 
     @Override
-    public void init(ProjectConfigDto dataObject) {
+    public void init(MutableProjectConfig dataObject) {
         super.init(dataObject);
     }
 
@@ -173,18 +173,20 @@ public class MainPagePresenter extends AbstractWizardPage<ProjectConfigDto> impl
                             public void run() {
                                 view.setImporters(importersByCategory);
                                 view.selectImporter(defaultImporter != null ? defaultImporter
-                                                                            : importersByCategory.get(importersByCategory.keySet().iterator().next())
-                                                                                                 .iterator().next() );
+                                                                            : importersByCategory
+                                                            .get(importersByCategory.keySet().iterator().next())
+                                                            .iterator().next());
                             }
                         }.schedule(300);
                     }
+
                     @Override
                     protected void onFailure(Throwable exception) {
                         notificationManager.notify(locale.failedToImportProject(), FAIL, true);
                     }
                 };
 
-        projectImportersService.getProjectImporters(appContext.getWorkspace().getId(), callback);
+        projectImportersService.getProjectImporters(workspace.getId(), callback);
     }
 
     /** {@inheritDoc} */

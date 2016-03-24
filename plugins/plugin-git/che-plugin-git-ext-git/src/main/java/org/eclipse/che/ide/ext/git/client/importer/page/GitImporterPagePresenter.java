@@ -15,7 +15,7 @@ import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.inject.Inject;
 
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+import org.eclipse.che.ide.api.project.MutableProjectConfig;
 import org.eclipse.che.ide.api.wizard.AbstractWizardPage;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.util.NameUtils;
@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * @author Roman Nikitenko
  */
-public class GitImporterPagePresenter extends AbstractWizardPage<ProjectConfigDto> implements GitImporterPageView.ActionDelegate {
+public class GitImporterPagePresenter extends AbstractWizardPage<MutableProjectConfig> implements GitImporterPageView.ActionDelegate {
 
     // An alternative scp-like syntax: [user@]host.xz:path/to/repo.git/
     private static final RegExp SCP_LIKE_SYNTAX = RegExp.compile("([A-Za-z0-9_\\-]+\\.[A-Za-z0-9_\\-:]+)+:");
@@ -128,12 +128,12 @@ public class GitImporterPagePresenter extends AbstractWizardPage<ProjectConfigDt
 
         if (keepDirectory) {
             projectParameters().put("keepDirectory", view.getDirectoryName());
-            dataObject.withType("blank");
+            dataObject.setType("blank");
             view.highlightDirectoryNameField(!NameUtils.checkProjectName(view.getDirectoryName()));
             view.focusDirectoryNameFiend();
         } else {
             projectParameters().remove("keepDirectory");
-            dataObject.withType(null);
+            dataObject.setType(null);
             view.highlightDirectoryNameField(false);
         }
     }
@@ -143,12 +143,12 @@ public class GitImporterPagePresenter extends AbstractWizardPage<ProjectConfigDt
         if (view.keepDirectory()) {
             projectParameters().put("keepDirectory", directoryName);
             dataObject.setPath(view.getDirectoryName());
-            dataObject.withType("blank");
+            dataObject.setType("blank");
             view.highlightDirectoryNameField(!NameUtils.checkProjectName(view.getDirectoryName()));
         } else {
             projectParameters().remove("keepDirectory");
             dataObject.setPath(null);
-            dataObject.withType(null);
+            dataObject.setType(null);
             view.highlightDirectoryNameField(false);
         }
     }

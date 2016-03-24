@@ -295,7 +295,7 @@ public class NotificationManagerImpl extends BasePresenter implements Notificati
     public void onClick(Notification notification) {
         NotificationListener listener = notification.getListener();
         if (listener != null) {
-            listener.onClick();
+            listener.onClick(notification);
         }
     }
 
@@ -304,7 +304,7 @@ public class NotificationManagerImpl extends BasePresenter implements Notificati
     public void onDoubleClick(Notification notification) {
         NotificationListener listener = notification.getListener();
         if (listener != null) {
-            listener.onDoubleClick();
+            listener.onDoubleClick(notification);
         }
     }
 
@@ -315,7 +315,7 @@ public class NotificationManagerImpl extends BasePresenter implements Notificati
 
         NotificationListener listener = notification.getListener();
         if (listener != null) {
-            listener.onClose();
+            listener.onClose(notification);
         }
     }
 

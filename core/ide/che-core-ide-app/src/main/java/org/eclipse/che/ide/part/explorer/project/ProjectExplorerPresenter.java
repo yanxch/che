@@ -353,7 +353,22 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
 
     @SuppressWarnings("unchecked")
     protected void onResourceChanged(ResourceDelta delta) {
-        //handle change event
+        final List<Node> existedNodes = view.getAllNodes();
+
+        Optional<Node> optExistNode = tryFind(existedNodes, hasResourceWithPath(delta.getResource().getLocation()));
+
+        if (optExistNode.isPresent()) {
+            final Node node = optExistNode.get();
+
+            if (node instanceof ResourceNode) {
+                final String idKey = view.getNodeIdProvider().getKey(node);
+                ((ResourceNode)node).setData(delta.getResource());
+                if (!view.reIndex(idKey, node)) {
+                    Log.info(getClass(), "Node wasn't re-indexed");
+                }
+                view.redraw(node);
+            }
+        }
     }
 
 //    /** {@inheritDoc} */
@@ -399,7 +414,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         ProjectProblemDialog.AskHandler askHandler = new ProjectProblemDialog.AskHandler() {
             @Override
             public void onConfigure() {
-                projectConfigWizard.show(descriptor);
+//                projectConfigWizard.show(descriptor);
             }
 
             @Override

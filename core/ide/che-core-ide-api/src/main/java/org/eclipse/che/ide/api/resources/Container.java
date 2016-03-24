@@ -14,8 +14,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 
 import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.ide.api.resources.Project.CreateRequest;
-import org.eclipse.che.ide.api.resources.Project.ImportRequest;
+import org.eclipse.che.ide.api.resources.Project.ProjectRequest;
 import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.util.NameUtils;
@@ -116,10 +115,10 @@ public interface Container extends Resource {
      * Fires following events:
      * {@link ResourceChangedEvent} when project has successfully created.
      * <p/>
-     * Calling this method doesn't create a project immediately. To complete the request method {@link CreateRequest#send()} should be
-     * called. {@link CreateRequest} has ability to reconfigure project during update/create operations.
+     * Calling this method doesn't create a project immediately. To complete the request method {@link ProjectRequest#send()} should be
+     * called. {@link ProjectRequest} has ability to reconfigure project during update/create operations.
      * <p/>
-     * Calling {@link CreateRequest#send()} produces new {@link Project} resource.
+     * Calling {@link ProjectRequest#send()} produces new {@link Project} resource.
      * <p/>
      * The supplied argument {@code name} should be a valid and pass validation within {@link NameUtils#checkProjectName(String)}.
      * The supplied argument {@code type} should be a valid and registered project type.
@@ -127,11 +126,11 @@ public interface Container extends Resource {
      * <p/>
      * Example of usage for creating a new project:
      * <pre>
+     *     ProjectConfig config = ... ;
      *     Container workspace = ... ;
      *
      *     Promise<Project> newProjectPromise = workspace.newProject()
-     *                                                   .setName("name")
-     *                                                   .setDescription("Some description")
+     *                                                   .withBody(config)
      *                                                   .send();
      *
      *     newProjectPromise.then(new Operation<Project>() {
@@ -154,11 +153,11 @@ public interface Container extends Resource {
      *         <li>Resource already exists</li>
      *         </ul>
      * @see NameUtils#checkProjectName(String)
-     * @see CreateRequest
-     * @see CreateRequest#send()
+     * @see ProjectRequest
+     * @see ProjectRequest#send()
      * @since 4.0.0-RC14
      */
-    CreateRequest newProject();
+    ProjectRequest newProject();
 
     /**
      * Creates the new {@link Project} in current container with specified source storage (in other words, imports a remote project).
@@ -166,22 +165,21 @@ public interface Container extends Resource {
      * Fires following events:
      * {@link ResourceChangedEvent} when project has successfully created.
      * <p/>
-     * Calling this method doesn't import a project immediately. To complete the request method {@link ImportRequest#send()} should be
+     * Calling this method doesn't import a project immediately. To complete the request method {@link ProjectRequest#send()} should be
      * called.
      * <p/>
-     * Calling {@link ImportRequest#send()} produces new {@link Project} resource.
+     * Calling {@link ProjectRequest#send()} produces new {@link Project} resource.
      * <p/>
      * The supplied argument {@code name} should be a valid and pass validation within {@link NameUtils#checkProjectName(String)}.
      * <p/>
      * <p/>
      * Example of usage for creating a new project:
      * <pre>
-     *     SourceStorage sourceConfig ... ;
+     *     ProjectConfig config = ... ;
      *     Container workspace = ... ;
      *
      *     Promise<Project> newProjectPromise = workspace.importProject()
-     *                                                   .setName("name")
-     *                                                   .setSourceStorage(sourceConfig)
+     *                                                   .withBody(config)
      *                                                   .send();
      *
      *     newProjectPromise.then(new Operation<Project>() {
@@ -203,11 +201,11 @@ public interface Container extends Resource {
      *         <li>Resource already exists</li>
      *         </ul>
      * @see NameUtils#checkProjectName(String)
-     * @see ImportRequest
-     * @see ImportRequest#send()
+     * @see ProjectRequest
+     * @see ProjectRequest#send()
      * @since 4.0.0-RC14
      */
-    ImportRequest importProject();
+    ProjectRequest importProject();
 
     /**
      * Creates the new {@link Folder} in current container.

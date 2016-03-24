@@ -14,8 +14,11 @@ import com.google.common.annotations.Beta;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
+import org.eclipse.che.api.core.model.project.ProjectConfig;
+import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.resources.Folder;
+import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.resource.Path;
 
 /**
@@ -40,5 +43,32 @@ class FolderImpl extends ContainerImpl implements Folder {
     @Override
     public final int getResourceType() {
         return FOLDER;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Project.ProjectRequest toProject() {
+        return new Project.ProjectRequest() {
+            private ProjectConfig config;
+
+            /** {@inheritDoc} */
+            @Override
+            public Request<Project, ProjectConfig> withBody(ProjectConfig object) {
+                this.config = object;
+                return this;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public ProjectConfig getBody() {
+                return config;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public Promise<Project> send() {
+                return resourceManager.update(getLocation(), this);
+            }
+        };
     }
 }

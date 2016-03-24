@@ -27,6 +27,7 @@ import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.project.gwt.client.ProjectServiceClient;
 import org.eclipse.che.api.project.gwt.client.QueryExpression;
 import org.eclipse.che.api.project.shared.dto.ItemReference;
+import org.eclipse.che.api.project.shared.dto.SourceEstimation;
 import org.eclipse.che.api.project.shared.dto.TreeElement;
 import org.eclipse.che.api.promises.client.Function;
 import org.eclipse.che.api.promises.client.FunctionException;
@@ -43,7 +44,7 @@ import org.eclipse.che.ide.api.resources.File;
 import org.eclipse.che.ide.api.resources.Folder;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Project.ProblemProjectMarker;
-import org.eclipse.che.ide.api.resources.Project.UpdateRequest;
+import org.eclipse.che.ide.api.resources.Project.ProjectRequest;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.resources.ResourceChangedEvent;
 import org.eclipse.che.ide.api.resources.marker.Marker;
@@ -256,18 +257,18 @@ public final class ResourceManager {
      *         the update request
      * @return the {@link Promise} with new {@link Project} object.
      * @see ResourceChangedEvent
-     * @see UpdateRequest
+     * @see ProjectRequest
      * @see Project#update()
      * @since 4.0.0-RC14
      */
-    protected Promise<Project> update(final Path path, final UpdateRequest request) {
+    protected Promise<Project> update(final Path path, final ProjectRequest request) {
 
         final ProjectConfigDto dto = dtoFactory.createDto(ProjectConfigDto.class)
                                                .withPath(path.toString())
-                                               .withDescription(request.getDescription())
-                                               .withType(request.getType())
-                                               .withMixins(request.getMixins())
-                                               .withAttributes(request.getAttributes());
+                                               .withDescription(request.getBody().getDescription())
+                                               .withType(request.getBody().getType())
+                                               .withMixins(request.getBody().getMixins())
+                                               .withAttributes(request.getBody().getAttributes());
 
         return ps.updateProject(wsId, dto).thenPromise(new Function<ProjectConfigDto, Promise<Project>>() {
             @Override
@@ -376,23 +377,23 @@ public final class ResourceManager {
         });
     }
 
-    protected Promise<Project> createProject(final Project.CreateRequest createRequest) {
-        final Path path = Path.valueOf(createRequest.getName()).makeAbsolute();
+    protected Promise<Project> createProject(final Project.ProjectRequest createRequest) {
+        final Path path = Path.valueOf(createRequest.getBody().getName()).makeAbsolute();
 
         return findResource(path, true).thenPromise(new Function<Optional<Resource>, Promise<Project>>() {
             @Override
             public Promise<Project> apply(Optional<Resource> resource) throws FunctionException {
                 checkState(!resource.isPresent(), "Resource already exists");
 
-                checkArgument(checkProjectName(createRequest.getName()), "Invalid project name");
-                checkArgument(typeRegistry.getProjectType(createRequest.getType()) != null, "Invalid project type");
+                checkArgument(checkProjectName(createRequest.getBody().getName()), "Invalid project name");
+                checkArgument(typeRegistry.getProjectType(createRequest.getBody().getType()) != null, "Invalid project type");
 
                 final ProjectConfigDto dto = dtoFactory.createDto(ProjectConfigDto.class)
                                                        .withPath(path.toString())
-                                                       .withDescription(createRequest.getDescription())
-                                                       .withType(createRequest.getType())
-                                                       .withMixins(createRequest.getMixins())
-                                                       .withAttributes(createRequest.getAttributes());
+                                                       .withDescription(createRequest.getBody().getDescription())
+                                                       .withType(createRequest.getBody().getType())
+                                                       .withMixins(createRequest.getBody().getMixins())
+                                                       .withAttributes(createRequest.getBody().getAttributes());
 
                 return ps.createProject(wsId, dto).then(new Function<ProjectConfigDto, Project>() {
                     @Override
@@ -409,24 +410,24 @@ public final class ResourceManager {
         });
     }
 
-    protected Promise<Project> importProject(final Project.ImportRequest importRequest) {
-        final Path path = Path.valueOf(importRequest.getName()).makeAbsolute();
+    protected Promise<Project> importProject(final Project.ProjectRequest importRequest) {
+        final Path path = Path.valueOf(importRequest.getBody().getPath());
 
         return findResource(path, true).thenPromise(new Function<Optional<Resource>, Promise<Project>>() {
             @Override
             public Promise<Project> apply(Optional<Resource> resource) throws FunctionException {
                 checkState(!resource.isPresent(), "Resource already exists");
 
-                checkArgument(checkProjectName(importRequest.getName()), "Invalid project name");
-                checkNotNull(importRequest.getSourceStorage(), "Null source configuration occurred");
+                checkArgument(checkProjectName(importRequest.getBody().getName()), "Invalid project name");
+                checkNotNull(importRequest.getBody().getSource(), "Null source configuration occurred");
 
-                final SourceStorage sourceStorage = importRequest.getSourceStorage();
+                final SourceStorage sourceStorage = importRequest.getBody().getSource();
                 final SourceStorageDto sourceStorageDto = dtoFactory.createDto(SourceStorageDto.class)
                                                                     .withType(sourceStorage.getType())
                                                                     .withLocation(sourceStorage.getLocation())
                                                                     .withParameters(sourceStorage.getParameters());
 
-                return ps.importProject(wsId, importRequest.getName(), false, sourceStorageDto)
+                return ps.importProject(wsId, path.lastSegment(), false, sourceStorageDto)
                          .thenPromise(new Function<Void, Promise<Project>>() {
                              @Override
                              public Promise<Project> apply(Void ignored) throws FunctionException {
@@ -923,7 +924,13 @@ public final class ResourceManager {
         return baseUrl + resource.getLocation();
     }
 
+    public Promise<List<SourceEstimation>> resolve(Project project) {
+        return ps.resolveSources(wsId, project.getLocation());
+    }
+
     protected class ResourceStore {
+
+//        Table<Path, Resource, Set<Marker>> internalCacheV2 = HashBasedTable.create();
 
         private Map<Resource, Set<Marker>> internalCache = new HashMap<>();
 
@@ -932,6 +939,9 @@ public final class ResourceManager {
             checkArgument(!internalCache.containsKey(resource), "Store record for '" + resource.getLocation() + "' already exists");
 
             //construct markers
+
+//            final Path parent = resource.getLocation().parent();
+//            internalCacheV2.put(parent, resource, Collections.<Marker>emptySet());
 
             internalCache.put(resource, Collections.<Marker>emptySet());
         }

@@ -23,11 +23,11 @@ import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.promises.client.js.Promises;
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.oauth.OAuth2Authenticator;
 import org.eclipse.che.ide.api.oauth.OAuth2AuthenticatorRegistry;
 import org.eclipse.che.ide.api.oauth.OAuth2AuthenticatorUrlProvider;
+import org.eclipse.che.ide.api.project.MutableProjectConfig;
 import org.eclipse.che.ide.api.wizard.AbstractWizardPage;
 import org.eclipse.che.ide.commons.exception.UnauthorizedException;
 import org.eclipse.che.ide.dto.DtoFactory;
@@ -51,7 +51,7 @@ import java.util.Map;
 /**
  * @author Roman Nikitenko
  */
-public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfigDto> implements GithubImporterPageView.ActionDelegate {
+public class GithubImporterPagePresenter extends AbstractWizardPage<MutableProjectConfig> implements GithubImporterPageView.ActionDelegate {
 
     // An alternative scp-like syntax: [user@]host.xz:path/to/repo.git/
     private static final RegExp SCP_LIKE_SYNTAX = RegExp.compile("([A-Za-z0-9_\\-]+\\.[A-Za-z0-9_\\-:]+)+:");
@@ -171,12 +171,12 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
 
         if (keepDirectory) {
             projectParameters().put("keepDirectory", view.getDirectoryName());
-            dataObject.withType("blank");
+            dataObject.setType("blank");
             view.highlightDirectoryNameField(!NameUtils.checkProjectName(view.getDirectoryName()));
             view.focusDirectoryNameFiend();
         } else {
             projectParameters().remove("keepDirectory");
-            dataObject.withType(null);
+            dataObject.setType(null);
             view.highlightDirectoryNameField(false);
         }
     }
@@ -186,12 +186,12 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
         if (view.keepDirectory()) {
             projectParameters().put("keepDirectory", directoryName);
             dataObject.setPath(view.getDirectoryName());
-            dataObject.withType("blank");
+            dataObject.setType("blank");
             view.highlightDirectoryNameField(!NameUtils.checkProjectName(view.getDirectoryName()));
         } else {
             projectParameters().remove("keepDirectory");
             dataObject.setPath(null);
-            dataObject.withType(null);
+            dataObject.setType(null);
             view.highlightDirectoryNameField(false);
         }
     }

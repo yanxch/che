@@ -12,6 +12,7 @@ package org.eclipse.che.ide.api.resources;
 
 import com.google.common.annotations.Beta;
 
+import org.eclipse.che.ide.api.resources.Project.ProjectRequest;
 import org.eclipse.che.ide.resource.Path;
 
 /**
@@ -27,4 +28,5 @@ import org.eclipse.che.ide.resource.Path;
  */
 @Beta
 public interface Folder extends Container {
+    ProjectRequest toProject();
 }

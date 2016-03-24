@@ -97,8 +97,6 @@ import static org.eclipse.che.ide.util.dom.Elements.disableTextSelection;
  * Following snippet displays how to initialize tree widget:
  * <pre>
  *     NodeUniqueKeyProvider idProvider = new NodeUniqueKeyProvider() {
- *         @NotNull
- *         @Override
  *         public String getKey(@NotNull Node item) {
  *             return String.valueOf(item.hashCode());
  *         }
@@ -860,7 +858,6 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
 
         ((HasPresentation) node).getPresentation(true); //update presentation
         Element el = getPresentationRenderer().render(node, nodeDescriptor.getDomId(), getJoint(node), nodeStorage.getDepth(node) - 1);
-
         view.onElementChanged(nodeDescriptor, el);
     }
 
@@ -1039,6 +1036,8 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
                                 Element html = renderNode(visible.get(i), nodeStorage.getDepth(parent));
                                 Element rootContainer = view.getRootContainer(getNodeDescriptor(visible.get(i)));
                                 rootContainer.replaceChild(rootContainer.getFirstChildElement(), html);
+                            } else {
+                                refresh(visible.get(i));
                             }
                         }
                     }

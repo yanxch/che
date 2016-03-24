@@ -12,20 +12,28 @@ package org.eclipse.che.ide.projecttype.wizard.categoriespage;
 
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.inject.Inject;
+
 import org.eclipse.che.api.project.shared.dto.ProjectTemplateDescriptor;
 import org.eclipse.che.api.project.shared.dto.ProjectTypeDto;
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.ide.api.project.type.ProjectTemplateRegistry;
 import org.eclipse.che.ide.api.project.type.ProjectTypeRegistry;
 import org.eclipse.che.ide.api.project.type.wizard.PreSelectedProjectTypeManager;
 import org.eclipse.che.ide.api.project.type.wizard.ProjectWizardMode;
 import org.eclipse.che.ide.api.project.type.wizard.ProjectWizardRegistry;
 import org.eclipse.che.ide.api.wizard.AbstractWizardPage;
+import org.eclipse.che.ide.api.project.MutableProjectConfig;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.util.NameUtils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.eclipse.che.ide.api.project.type.wizard.ProjectWizardMode.CREATE;
+import static org.eclipse.che.ide.api.project.type.wizard.ProjectWizardMode.UPDATE;
 import static org.eclipse.che.ide.api.project.type.wizard.ProjectWizardRegistrar.WIZARD_MODE_KEY;
 
 /**
@@ -34,17 +42,18 @@ import static org.eclipse.che.ide.api.project.type.wizard.ProjectWizardRegistrar
  * @author Evgen Vidolob
  * @author Artem Zatsarynnyi
  * @author Dmitry Shnurenko
+ * @author Vlad Zhukovskyi
  */
-public class CategoriesPagePresenter extends AbstractWizardPage<ProjectConfigDto> implements CategoriesPageView.ActionDelegate {
+public class CategoriesPagePresenter extends AbstractWizardPage<MutableProjectConfig> implements CategoriesPageView.ActionDelegate {
     public final static String DEFAULT_TEMPLATE_CATEGORY = "Samples";
 
-    private final CategoriesPageView view;
-    private final ProjectTypeRegistry projectTypeRegistry;
-    private final ProjectTemplateRegistry projectTemplateRegistry;
-    private final ProjectWizardRegistry wizardRegistry;
-    private final PreSelectedProjectTypeManager preSelectedProjectTypeManager;
-    private ProjectTypeDto selectedProjectType;
-    private ProjectTemplateDescriptor selectedProjectTemplate;
+    private final CategoriesPageView               view;
+    private final ProjectTypeRegistry              projectTypeRegistry;
+    private final ProjectTemplateRegistry          projectTemplateRegistry;
+    private final ProjectWizardRegistry            wizardRegistry;
+    private final PreSelectedProjectTypeManager    preSelectedProjectTypeManager;
+    private       ProjectTypeDto                   selectedProjectType;
+    private       ProjectTemplateDescriptor        selectedProjectTemplate;
     private       ProjectTypeSelectionListener     projectTypeSelectionListener;
     private       ProjectTemplateSelectionListener projectTemplateSelectionListener;
     private       boolean                          initialized;
@@ -67,7 +76,7 @@ public class CategoriesPagePresenter extends AbstractWizardPage<ProjectConfigDto
     }
 
     @Override
-    public void init(ProjectConfigDto dataObject) {
+    public void init(MutableProjectConfig dataObject) {
         super.init(dataObject);
         // this page may be reused so need to init it only once
         if (initialized) {
@@ -79,7 +88,7 @@ public class CategoriesPagePresenter extends AbstractWizardPage<ProjectConfigDto
         if (CREATE == wizardMode) {
             // set pre-selected project type
             final String preSelectedProjectTypeId;
-            if(dataObject.getType() != null ) {
+            if (dataObject.getType() != null) {
                 preSelectedProjectTypeId = dataObject.getType();
             } else {
                 preSelectedProjectTypeId = preSelectedProjectTypeManager.getPreSelectedProjectTypeId();
@@ -111,8 +120,14 @@ public class CategoriesPagePresenter extends AbstractWizardPage<ProjectConfigDto
             && (selectedProjectType == null || !selectedProjectType.getId().equals(dataObject.getType()))) {
             view.selectProjectType(dataObject.getType());
         }
-        view.setName(dataObject.getName());
+        view.setName(!isNullOrEmpty(dataObject.getName())
+                     ? dataObject.getName()
+                     : dataObject.getPath() != null ? Path.valueOf(dataObject.getPath()).lastSegment() : null);
         view.setDescription(dataObject.getDescription());
+
+        final ProjectWizardMode wizardMode = ProjectWizardMode.parse(context.get(WIZARD_MODE_KEY));
+
+        view.setNameFieldReadOnly(wizardMode == UPDATE);
     }
 
     @Override
@@ -139,7 +154,11 @@ public class CategoriesPagePresenter extends AbstractWizardPage<ProjectConfigDto
 
     @Override
     public void projectNameChanged(String name) {
-        dataObject.setPath(name);
+        final ProjectWizardMode wizardMode = ProjectWizardMode.parse(context.get(WIZARD_MODE_KEY));
+
+        if (wizardMode != UPDATE) {
+            dataObject.setPath(name);
+        }
         dataObject.setName(name);
         updateDelegate.updateControls();
 

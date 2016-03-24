@@ -17,6 +17,7 @@ import com.google.inject.assistedinject.Assisted;
 
 import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.model.project.SourceStorage;
+import org.eclipse.che.api.project.shared.dto.SourceEstimation;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.resources.Project;
@@ -94,60 +95,21 @@ class ProjectImpl extends ContainerImpl implements Project {
 
     /** {@inheritDoc} */
     @Override
-    public UpdateRequest update() {
-        return new UpdateRequest() {
-
-            private String description;
-            private String type;
-            private List<String> mixins;
-            private Map<String, List<String>> attributes;
+    public ProjectRequest update() {
+        return new ProjectRequest() {
+            private ProjectConfig config;
 
             /** {@inheritDoc} */
             @Override
-            public String getDescription() {
-                return description;
+            public Request<Project, ProjectConfig> withBody(ProjectConfig object) {
+                this.config = object;
+                return this;
             }
 
             /** {@inheritDoc} */
             @Override
-            public void setDescription(String description) {
-                this.description = description;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public String getType() {
-                return type;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public void setType(String type) {
-                this.type = type;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public List<String> getMixins() {
-                return mixins;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public void setMixins(List<String> mixins) {
-                this.mixins = mixins;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public Map<String, List<String>> getAttributes() {
-                return attributes;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public void setAttributes(Map<String, List<String>> attributes) {
-                this.attributes = attributes;
+            public ProjectConfig getBody() {
+                return config;
             }
 
             /** {@inheritDoc} */
@@ -162,6 +124,11 @@ class ProjectImpl extends ContainerImpl implements Project {
     @Override
     public boolean isProblem() {
         return getMarker(ProblemProjectMarker.PROBLEM_PROJECT).isPresent();
+    }
+
+    @Override
+    public Promise<List<SourceEstimation>> resolve() {
+        return resourceManager.resolve(this);
     }
 
     /** {@inheritDoc} */

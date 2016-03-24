@@ -13,12 +13,12 @@ package org.eclipse.che.ide.api.resources;
 import com.google.common.annotations.Beta;
 
 import org.eclipse.che.api.core.model.project.ProjectConfig;
-import org.eclipse.che.api.core.model.project.SourceStorage;
+import org.eclipse.che.api.project.shared.dto.SourceEstimation;
+import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.ide.api.resources.marker.AbstractMarker;
 import org.eclipse.che.ide.api.workspace.Workspace;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * An object that represents client side project.
@@ -47,24 +47,24 @@ public interface Project extends Container, ProjectConfig {
      * <p/>
      * Example of usage:
      * <pre>
+     *     ProjectConfig config = ... ;
      *     Project project = ... ;
      *
      *     Project.UpdateRequest updateRequest = project.update()
-     *                                                  .setType("blank")
-     *                                                  .setDescription("New description");
+     *                                                  .withBody(config);
      *
      *     Promise<Project> updatedProject = updateRequest.send();
      * </pre>
      * <p/>
      * Note. Calling this method doesn't update the project immediately. To complete request
-     * method {@link UpdateRequest#send()} should be called.
+     * method {@link ProjectRequest#send()} should be called.
      *
      * @return the request to update the project
-     * @see UpdateRequest
-     * @see UpdateRequest#send()
+     * @see ProjectRequest
+     * @see ProjectRequest#send()
      * @since 4.0.0-RC14
      */
-    UpdateRequest update();
+    ProjectRequest update();
 
     /**
      * Check whether current project has problems. Problem project calculates in a runtime, so it is not affects stored
@@ -85,6 +85,8 @@ public interface Project extends Container, ProjectConfig {
      * @since 4.0.0-RC14
      */
     boolean isProblem();
+
+    Promise<List<SourceEstimation>> resolve();
 
     /**
      * Marker that describe problematic project.
@@ -110,238 +112,17 @@ public interface Project extends Container, ProjectConfig {
     }
 
     /**
-     * Base interface for project create operation.
-     *
-     * @see Container#newProject()
-     * @since 4.0.0-RC14
-     */
-    @Beta
-    interface CreateRequest extends Resource.Request<Project> {
-        /**
-         * Returns the project name.
-         *
-         * @return the project name
-         * @see ProjectConfig#getName()
-         * @since 4.0.0-RC14
-         */
-        String getName();
-
-        /**
-         * Sets the name for the project.
-         *
-         * @param name
-         *         the project name
-         * @see #getName() ()
-         * @since 4.0.0-RC14
-         */
-        void setName(String name);
-
-        /**
-         * Returns the project description.
-         *
-         * @return the project description
-         * @see ProjectConfig#getDescription()
-         * @since 4.0.0-RC14
-         */
-        String getDescription();
-
-        /**
-         * Sets the description for the project.
-         *
-         * @param description
-         *         the project description
-         * @see #getDescription()
-         * @since 4.0.0-RC14
-         */
-        void setDescription(String description);
-
-        /**
-         * Returns the project type.
-         *
-         * @return the project type
-         * @see ProjectConfig#getType()
-         * @since 4.0.0-RC14
-         */
-        String getType();
-
-        /**
-         * Sets the project type.
-         *
-         * @param type
-         *         the project type
-         * @see #getType()
-         * @since 4.0.0-RC14
-         */
-        void setType(String type);
-
-        /**
-         * Returns the project mixins.
-         *
-         * @return the project mixins
-         * @see ProjectConfig#getMixins()
-         * @since 4.0.0-RC14
-         */
-        List<String> getMixins();
-
-        /**
-         * Sets the project mixins.
-         *
-         * @param mixins
-         *         the project mixins
-         * @see #getMixins()
-         * @since 4.0.0-RC14
-         */
-        void setMixins(List<String> mixins);
-
-        /**
-         * Returns the project attributes.
-         *
-         * @return the project attributes
-         * @see ProjectConfig#getAttributes()
-         * @since 4.0.0-RC14
-         */
-        Map<String, List<String>> getAttributes();
-
-        /**
-         * Sets the project attributes.
-         *
-         * @param attributes
-         *         the project attributes
-         * @see #getAttributes()
-         * @since 4.0.0-RC14
-         */
-        void setAttributes(Map<String, List<String>> attributes);
-    }
-
-    /**
      * Base interface for project update operation.
      *
      * @see Project#update()
      * @since 4.0.0-RC14
      */
     @Beta
-    interface UpdateRequest extends Resource.Request<Project> {
-        /**
-         * Returns the project description.
-         *
-         * @return the project description
-         * @see ProjectConfig#getDescription()
-         * @since 4.0.0-RC14
-         */
-        String getDescription();
+    interface ProjectRequest extends Resource.Request<Project, ProjectConfig> {
+        @Override
+        Request<Project, ProjectConfig> withBody(ProjectConfig object);
 
-        /**
-         * Sets the description for the project.
-         *
-         * @param description
-         *         the project description
-         * @see #getDescription()
-         * @since 4.0.0-RC14
-         */
-        void setDescription(String description);
-
-        /**
-         * Returns the project type.
-         *
-         * @return the project type
-         * @see ProjectConfig#getType()
-         * @since 4.0.0-RC14
-         */
-        String getType();
-
-        /**
-         * Sets the project type.
-         *
-         * @param type
-         *         the project type
-         * @see #getType()
-         * @since 4.0.0-RC14
-         */
-        void setType(String type);
-
-        /**
-         * Returns the project mixins.
-         *
-         * @return the project mixins
-         * @see ProjectConfig#getMixins()
-         * @since 4.0.0-RC14
-         */
-        List<String> getMixins();
-
-        /**
-         * Sets the project mixins.
-         *
-         * @param mixins
-         *         the project mixins
-         * @see #getMixins()
-         * @since 4.0.0-RC14
-         */
-        void setMixins(List<String> mixins);
-
-        /**
-         * Returns the project attributes.
-         *
-         * @return the project attributes
-         * @see ProjectConfig#getAttributes()
-         * @since 4.0.0-RC14
-         */
-        Map<String, List<String>> getAttributes();
-
-        /**
-         * Sets the project attributes.
-         *
-         * @param attributes
-         *         the project attributes
-         * @see #getAttributes()
-         * @since 4.0.0-RC14
-         */
-        void setAttributes(Map<String, List<String>> attributes);
-    }
-
-    /**
-     * Base interface for project import operation.
-     *
-     * @see Container#importProject()
-     * @since 4.0.0-RC14
-     */
-    @Beta
-    interface ImportRequest extends Resource.Request<Project> {
-        /**
-         * Returns the project name.
-         *
-         * @return the project name
-         * @see ProjectConfig#getName()
-         * @since 4.0.0-RC14
-         */
-        String getName();
-
-        /**
-         * Sets the name for the project.
-         *
-         * @param name
-         *         the project name
-         * @see #getName() ()
-         * @since 4.0.0-RC14
-         */
-        void setName(String name);
-
-        /**
-         * Returns the source storage.
-         *
-         * @return the source storage
-         * @see ProjectConfig#getSource()
-         * @since 4.0.0-RC14
-         */
-        SourceStorage getSourceStorage();
-
-        /**
-         * Sets the project source storage.
-         *
-         * @param sourceStorage
-         *         the project source storage
-         * @see #getSourceStorage()
-         * @since 4.0.0-RC14
-         */
-        void setSourceStorage(SourceStorage sourceStorage);
+        @Override
+        ProjectConfig getBody();
     }
 }

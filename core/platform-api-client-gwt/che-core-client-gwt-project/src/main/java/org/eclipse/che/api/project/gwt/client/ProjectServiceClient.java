@@ -239,7 +239,7 @@ public interface ProjectServiceClient {
      * @return a promise that will provide a list of {@code SourceEstimation} for the given {@code workspaceId} and {@code path},
      * or rejects with on error
      */
-    Promise<List<SourceEstimation>> resolveSources(String workspaceId, String path);
+    Promise<List<SourceEstimation>> resolveSources(String workspaceId, Path path);
 
     /**
      * Update project.

@@ -14,6 +14,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 
 import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.ide.api.resources.Project.ProjectRequest;
 import org.eclipse.che.ide.api.resources.marker.Marker;
 import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.resource.Path;
@@ -422,20 +423,47 @@ public interface Resource extends Comparable<Resource> {
     /**
      * Base interface for resource modification request.
      *
-     * @param <R> the resource type, should extends {@link Resource}
+     * @param <R>
+     *         the resource type, should extends {@link Resource}
+     * @param <O>
+     *         the body which is used to construct the request
+     * @see ProjectRequest
+     * @since 4.0.0-RC14
      */
     @Beta
-    interface Request<R extends Resource> {
+    interface Request<R extends Resource, O> {
+
+        /**
+         * The body which is used to transform input data into request which is responsible for resource modification.
+         *
+         * @param object
+         *         the request body
+         * @return instance of current {@link Request}
+         * @see #getBody()
+         * @since 4.0.0-RC14
+         */
+        Request<R, O> withBody(O object);
+
+        /**
+         * Returns the body which is used to transform input data into request.
+         *
+         * @return the request body
+         * @see #withBody(Object)
+         * @since 4.0.0-RC14
+         */
+        O getBody();
+
         /**
          * Sends the request to server and returns the {@link Promise} with new instance of {@link R} which belongs
          * to provided request configuration.
-         *
+         * <p/>
          * Uses to modify state of concrete resource.
          *
          * @return the {@link Promise} with new instance {@link R}
          * @see Container#newProject()
          * @see Container#importProject()
          * @see Project#update()
+         * @since 4.0.0-RC14
          */
         Promise<R> send();
     }
