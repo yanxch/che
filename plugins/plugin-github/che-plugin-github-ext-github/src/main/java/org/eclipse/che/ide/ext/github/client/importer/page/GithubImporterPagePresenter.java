@@ -185,12 +185,10 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<MutableProje
     public void keepDirectoryNameChanged(@NotNull String directoryName) {
         if (view.keepDirectory()) {
             projectParameters().put("keepDirectory", directoryName);
-            dataObject.setPath(view.getDirectoryName());
             dataObject.setType("blank");
             view.highlightDirectoryNameField(!NameUtils.checkProjectName(view.getDirectoryName()));
         } else {
             projectParameters().remove("keepDirectory");
-            dataObject.setPath(null);
             dataObject.setType(null);
             view.highlightDirectoryNameField(false);
         }
