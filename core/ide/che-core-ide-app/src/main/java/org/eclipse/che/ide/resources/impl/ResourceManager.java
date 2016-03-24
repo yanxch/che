@@ -599,7 +599,7 @@ public final class ResourceManager {
                             resourceStore.dispose(optionalCachedResource.get(), force);
                         }
 
-                        progressLoader.setMessage("Registering " + resource.getName() + "...");
+                        progressLoader.setMessage("Caching " + resource.getLocation() + "...");
                         resourceStore.init(resource);
 
                         if (resource.getResourceType() == PROJECT) {
@@ -943,7 +943,7 @@ public final class ResourceManager {
 //            final Path parent = resource.getLocation().parent();
 //            internalCacheV2.put(parent, resource, Collections.<Marker>emptySet());
 
-            internalCache.put(resource, Collections.<Marker>emptySet());
+            internalCache.put(resource, Sets.<Marker>newHashSet());
         }
 
         public void dispose(Resource resource, boolean disposeChildren) {
