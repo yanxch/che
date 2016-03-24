@@ -403,7 +403,7 @@ public class GithubImporterPagePresenterTest {
         presenter.keepDirectorySelected(true);
 
         assertEquals("directory", parameters.get("keepDirectory"));
-        verify(dataObject).withType("blank");
+        verify(dataObject).setType("blank");
         verify(view).highlightDirectoryNameField(eq(false));
         verify(view).focusDirectoryNameFiend();
     }
@@ -417,7 +417,7 @@ public class GithubImporterPagePresenterTest {
         presenter.keepDirectorySelected(false);
 
         assertTrue(parameters.isEmpty());
-        verify(dataObject).withType(eq(null));
+        verify(dataObject).setType(eq(null));
         verify(view).highlightDirectoryNameField(eq(false));
     }
 
@@ -432,7 +432,7 @@ public class GithubImporterPagePresenterTest {
 
         assertEquals("directory", parameters.get("keepDirectory"));
         verify(dataObject, never()).setPath(any());
-        verify(dataObject).withType(eq("blank"));
+        verify(dataObject).setType(eq("blank"));
         verify(view).highlightDirectoryNameField(eq(false));
     }
 
@@ -447,7 +447,7 @@ public class GithubImporterPagePresenterTest {
 
         assertTrue(parameters.isEmpty());
         verify(dataObject, never()).setPath(any());
-        verify(dataObject).withType(eq(null));
+        verify(dataObject).setType(eq(null));
         verify(view).highlightDirectoryNameField(eq(false));
     }
 
