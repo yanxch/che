@@ -505,9 +505,9 @@ export class CreateProjectCtrl {
                   let resultEstimate = this.cheAPI.getProject().getEstimate(workspaceId, projectName, type);
                   // add attributes
                   // there is a matching estimate
-                  if (Object.keys(resultEstimate).length > 0 && 'java' !== type && !firstMatchingType) {
+                  if (Object.keys(resultEstimate.attributes).length > 0 && 'java' !== type && !firstMatchingType) {
                     firstMatchingType = type;
-                    firstMatchingResult = resultEstimate;
+                    firstMatchingResult = resultEstimate.attributes;
                   }
                 });
 
@@ -1152,6 +1152,10 @@ export class CreateProjectCtrl {
   }
 
   downloadLogs() {
-    window.open('data:text/csv,' + encodeURIComponent(this.getCreationSteps()[this.getCurrentProgressStep()].logs));
+    let logs = '';
+    this.getCreationSteps().forEach((step) => {
+      logs += step.logs + '\n';
+    });
+    window.open('data:text/csv,' + encodeURIComponent(logs));
   }
 }

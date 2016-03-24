@@ -16,11 +16,11 @@
     <parent>
         <artifactId>maven-depmgt-pom</artifactId>
         <groupId>org.eclipse.che.depmgt</groupId>
-        <version>4.0.0-RC14-SNAPSHOT</version>
+        <version>4.0.0-GA-SNAPSHOT</version>
     </parent>
     <groupId>org.eclipse.che</groupId>
     <artifactId>che-parent</artifactId>
-    <version>4.0.0-RC14-SNAPSHOT</version>
+    <version>4.0.0-GA-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Che Parent</name>
     <modules>
@@ -36,9 +36,9 @@
         <url>https://github.com/codenvy/che-core</url>
     </scm>
     <properties>
-        <che.lib.version>4.0.0-RC14-SNAPSHOT</che.lib.version>
-        <che.plugin.openshift.version>4.0.0-RC14-SNAPSHOT</che.plugin.openshift.version>
+        <che.lib.version>4.0.0-GA-SNAPSHOT</che.lib.version>
         <specification.version>1.0-beta2</specification.version>
+        <che.plugin.openshift.version>4.0.0-GA-SNAPSHOT</che.plugin.openshift.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -73,11 +73,6 @@
             <dependency>
                 <groupId>org.eclipse.che.core</groupId>
                 <artifactId>che-core-api-account</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.che.core</groupId>
-                <artifactId>che-core-api-analytics</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -148,22 +143,12 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.core</groupId>
-                <artifactId>che-core-api-vfs</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.che.core</groupId>
                 <artifactId>che-core-api-workspace</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.core</groupId>
                 <artifactId>che-core-client-gwt-account</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.che.core</groupId>
-                <artifactId>che-core-client-gwt-analytics</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -204,11 +189,6 @@
             <dependency>
                 <groupId>org.eclipse.che.core</groupId>
                 <artifactId>che-core-client-gwt-user</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.che.core</groupId>
-                <artifactId>che-core-client-gwt-vfs</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -294,11 +274,6 @@
             <dependency>
                 <groupId>org.eclipse.che.core</groupId>
                 <artifactId>che-core-ide-ui</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.che.core</groupId>
-                <artifactId>che-core-vfs-impl</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
