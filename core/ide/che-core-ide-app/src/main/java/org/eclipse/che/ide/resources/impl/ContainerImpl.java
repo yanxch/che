@@ -23,13 +23,11 @@ import org.eclipse.che.ide.api.resources.File;
 import org.eclipse.che.ide.api.resources.Folder;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
-import org.eclipse.che.ide.api.resources.ResourcePathComparator;
 import org.eclipse.che.ide.resource.Path;
 
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.Arrays.sort;
 
 /**
  * Default implementation of the {@code Container}.
@@ -65,17 +63,15 @@ abstract class ContainerImpl extends ResourceImpl implements Container {
     /** {@inheritDoc} */
     @Override
     public Promise<Resource[]> getChildren(final boolean forceUpdate) {
-        return resourceManager.childrenOf(this, forceUpdate).thenPromise(new Function<Set<Resource>, Promise<Resource[]>>() {
+        return resourceManager.childrenOf(this, forceUpdate).thenPromise(new Function<Resource[], Promise<Resource[]>>() {
             /** {@inheritDoc} */
             @Override
-            public Promise<Resource[]> apply(Set<Resource> children) throws FunctionException {
-                if (children.isEmpty() && !forceUpdate) {
+            public Promise<Resource[]> apply(Resource[] children) throws FunctionException {
+                if (children.length == 0 && !forceUpdate) {
                     return getChildren(true);
                 }
 
-                Resource[] resources = children.toArray(new Resource[children.size()]);
-                sort(resources, ResourcePathComparator.getInstance());
-                return promiseProvider.resolve(resources);
+                return promiseProvider.resolve(children);
             }
         });
     }

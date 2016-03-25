@@ -106,6 +106,6 @@ public class ProjectAction extends Action implements ResourceChangedHandler {
 
     @Override
     public void onResourceChanged(ResourceChangedEvent event) {
-        Log.info(this.getClass(), "onResourceChanged():202: " + event.getDelta());
+//        Log.info(this.getClass(), "onResourceChanged():202: " + event.getDelta());
     }
 }

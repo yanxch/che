@@ -48,8 +48,6 @@ import org.eclipse.che.ide.api.resources.Project.ProjectRequest;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.resources.ResourceChangedEvent;
 import org.eclipse.che.ide.api.resources.marker.Marker;
-import org.eclipse.che.ide.api.resources.marker.event.MarkerCreatedEvent;
-import org.eclipse.che.ide.api.resources.marker.event.MarkerDeletedEvent;
 import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationChangedEvent;
 import org.eclipse.che.ide.dto.DtoFactory;
@@ -61,16 +59,13 @@ import org.eclipse.che.ide.workspace.WorkspaceImpl;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.common.collect.Iterables.removeIf;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Iterables.tryFind;
 import static com.google.common.collect.Maps.uniqueIndex;
@@ -136,6 +131,8 @@ public final class ResourceManager {
      */
     private static final Project[] NO_PROJECTS = new Project[0];
 
+    private static final Resource[] NO_RESOURCES = new Resource[0];
+
     private final ProjectServiceClient ps;
     private final EventBus             eventBus;
     private final ResourceFactory      resourceFactory;
@@ -154,7 +151,7 @@ public final class ResourceManager {
     /**
      * Internal store, which caches requested resources from the server.
      */
-    private ResourceStore resourceStore;
+    private ResourceStore store;
 
     /**
      * Cached dto project configuration.
@@ -180,7 +177,7 @@ public final class ResourceManager {
         this.typeRegistry = typeRegistry;
         this.wsAgentPath = wsAgentPath;
         this.loaderFactory = loaderFactory;
-        this.resourceStore = new ResourceStore();
+        this.store = new InMemoryResourceStore();
 
         this.workspaceRoot = resourceFactory.newFolderImpl(Path.ROOT, this);
     }
@@ -197,7 +194,7 @@ public final class ResourceManager {
             @Override
             public Project[] apply(List<ProjectConfigDto> dtoConfigs) throws FunctionException {
                 cachedDtoConfigs.clear();
-                resourceStore.truncate();
+                store.clear();
 
                 if (dtoConfigs.isEmpty()) {
                     return NO_PROJECTS;
@@ -218,7 +215,7 @@ public final class ResourceManager {
 
                 for (ProjectConfigDto dto : rootProjectDtos) {
                     final ProjectImpl newProject = resourceFactory.newProjectImpl(dto, ResourceManager.this);
-                    resourceStore.init(newProject);
+                    store.register(Path.ROOT, newProject);
                     projects.add(newProject);
 
                     eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newProject, LOADED_INTO_CACHE)));
@@ -282,25 +279,26 @@ public final class ResourceManager {
 
                 final int readDepth[] = new int[1];
 
-                resourceStore.traverse(new ResourceVisitor() {
-                    @Override
-                    public void visit(Resource resource) {
-                        final Path seekPath = resource.getLocation();
+                final Optional<Resource[]> optAll = store.getAll(path);
 
-                        if (path.isPrefixOf(seekPath) && seekPath.segmentCount() > readDepth[0]) {
-                            readDepth[0] = seekPath.segmentCount();
+                if (optAll.isPresent()) {
+                    for (Resource resource : optAll.get()) {
+                        final int cnt = resource.getLocation().segmentCount();
+
+                        if (cnt > readDepth[0]) {
+                            readDepth[0] = cnt;
                         }
                     }
-                });
+                }
 
                 //dispose outdated resource
-                final Optional<Resource> optOutdatedResource = resourceStore.get(path);
+                final Optional<Resource> optOutdatedResource = store.getResource(path);
                 checkState(optOutdatedResource.isPresent(), "Resource '" + path + "' doesn't exists");
-                resourceStore.dispose(optOutdatedResource.get(), false);
+                store.dispose(optOutdatedResource.get().getLocation(), false);
 
                 //register new one
                 final ProjectImpl updatedResource = resourceFactory.newProjectImpl(reference, ResourceManager.this);
-                resourceStore.init(updatedResource);
+                store.register(updatedResource.getLocation().parent(), updatedResource);
 
                 //fetch updated configuration from the server
                 return ps.getProjects(wsId).then(new Function<List<ProjectConfigDto>, Project>() {
@@ -339,7 +337,7 @@ public final class ResourceManager {
                     public Folder apply(ItemReference reference) throws FunctionException {
                         final FolderImpl newResource =
                                 resourceFactory.newFolderImpl(Path.valueOf(reference.getPath()), ResourceManager.this);
-                        resourceStore.init(newResource);
+                        store.register(newResource.getLocation().parent(), newResource);
 
                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, CREATED)));
 
@@ -366,7 +364,7 @@ public final class ResourceManager {
                         final FileImpl newResource = resourceFactory.newFileImpl(Path.valueOf(reference.getPath()),
                                                                                  contentUrl.getHref(),
                                                                                  ResourceManager.this);
-                        resourceStore.init(newResource);
+                        store.register(newResource.getLocation().parent(), newResource);
 
                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, CREATED)));
 
@@ -399,7 +397,7 @@ public final class ResourceManager {
                     @Override
                     public Project apply(ProjectConfigDto config) throws FunctionException {
                         final ProjectImpl newResource = resourceFactory.newProjectImpl(config, ResourceManager.this);
-                        resourceStore.init(newResource);
+                        store.register(newResource.getLocation().parent(), newResource);
 
                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, CREATED)));
 
@@ -435,7 +433,7 @@ public final class ResourceManager {
                                      @Override
                                      public Project apply(ProjectConfigDto config) throws FunctionException {
                                          final ProjectImpl newResource = resourceFactory.newProjectImpl(config, ResourceManager.this);
-                                         resourceStore.init(newResource);
+                                         store.register(newResource.getLocation().parent(), newResource);
 
                                          eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, CREATED)));
 
@@ -465,25 +463,24 @@ public final class ResourceManager {
                                      public Promise<Resource> apply(ItemReference reference) throws FunctionException {
 
                                          final Resource movedResource = newResourceFrom(reference);
-                                         resourceStore.init(movedResource);
+                                         store.register(movedResource.getLocation().parent(), movedResource);
 
                                          if (source instanceof Container) {
                                              final int readDepth[] = new int[1];
 
-                                             resourceStore.traverse(new ResourceVisitor() {
-                                                 final Path originPath = source.getLocation();
+                                             final Optional<Resource[]> optAll = store.getAll(source.getLocation());
 
-                                                 @Override
-                                                 public void visit(Resource resource) {
-                                                     final Path seekPath = resource.getLocation();
+                                             if (optAll.isPresent()) {
+                                                 for (Resource tmpResource : optAll.get()) {
+                                                     final int cnt = tmpResource.getLocation().segmentCount();
 
-                                                     if (originPath.isPrefixOf(seekPath) && seekPath.segmentCount() > readDepth[0]) {
-                                                         readDepth[0] = seekPath.segmentCount();
+                                                     if (cnt > readDepth[0]) {
+                                                         readDepth[0] = cnt;
                                                      }
                                                  }
-                                             });
+                                             }
 
-                                             resourceStore.dispose(source, true);
+                                             store.dispose(source.getLocation(), true);
 
                                              return getRemoteResources((Container)movedResource, readDepth[0], true, false)
                                                      .then(new Function<Set<Resource>, Resource>() {
@@ -497,7 +494,7 @@ public final class ResourceManager {
                                                          }
                                                      });
                                          } else {
-                                             resourceStore.dispose(source, false);
+                                             store.dispose(source.getLocation(), false);
                                              eventBus.fireEvent(new ResourceChangedEvent(
                                                      new ResourceDeltaImpl(movedResource, source, CREATED | MOVED_FROM | MOVED_TO)));
                                          }
@@ -529,7 +526,7 @@ public final class ResourceManager {
                                      public Resource apply(ItemReference reference) throws FunctionException {
                                          final Resource copiedResource = newResourceFrom(reference);
 
-                                         resourceStore.init(copiedResource);
+                                         store.register(copiedResource.getLocation().parent(), copiedResource);
                                          eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(source, CREATED)));
 
                                          return copiedResource;
@@ -547,7 +544,7 @@ public final class ResourceManager {
         return ps.delete(wsId, resource.getLocation()).then(new Function<Void, Void>() {
             @Override
             public Void apply(Void ignored) throws FunctionException {
-                resourceStore.dispose(resource, true);
+                store.dispose(resource.getLocation(), true);
                 eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, REMOVED)));
 
                 return null;
@@ -592,15 +589,15 @@ public final class ResourceManager {
                     @Override
                     public void visit(Resource resource) {
                         progressLoader.setMessage("Processing " + resource.getName() + "...");
-                        final Optional<Resource> optionalCachedResource = resourceStore.get(resource.getLocation());
+                        final Optional<Resource> optionalCachedResource = store.getResource(resource.getLocation());
                         final boolean isPresent = optionalCachedResource.isPresent();
 
                         if (isPresent) {
-                            resourceStore.dispose(optionalCachedResource.get(), force);
+                            store.dispose(optionalCachedResource.get().getLocation(), force);
                         }
 
                         progressLoader.setMessage("Caching " + resource.getLocation() + "...");
-                        resourceStore.init(resource);
+                        store.register(resource.getLocation().parent(), resource);
 
                         if (resource.getResourceType() == PROJECT) {
                             final Optional<ProjectConfigDto> optionalConfig = findProjectConfigDto(resource.getLocation());
@@ -665,7 +662,7 @@ public final class ResourceManager {
 
     protected Optional<Container> parentOf(Resource resource) {
         final Path parentLocation = resource.getLocation().parent();
-        final Optional<Resource> optionalParent = resourceStore.get(parentLocation);
+        final Optional<Resource> optionalParent = store.getResource(parentLocation);
 
         if (!optionalParent.isPresent()) {
             return Optional.absent();
@@ -680,42 +677,36 @@ public final class ResourceManager {
         throw new IllegalStateException("Failed to locate parent for the '" + resource.getLocation() + "'");
     }
 
-    protected Promise<Set<Resource>> childrenOf(final Container container, boolean forceUpdate) {
+    protected Promise<Resource[]> childrenOf(final Container container, boolean forceUpdate) {
         if (forceUpdate) {
-            return getRemoteResources(container, DEPTH_ONE, true, true).then(new Function<Set<Resource>, Set<Resource>>() {
+            return getRemoteResources(container, DEPTH_ONE, true, true).then(new Function<Set<Resource>, Resource[]>() {
                 @Override
-                public Set<Resource> apply(Set<Resource> resources) throws FunctionException {
-                    return resources;
+                public Resource[] apply(Set<Resource> resources) throws FunctionException {
+                    return resources.toArray(new Resource[resources.size()]);
                 }
             });
         }
 
-        final Set<Resource> resources = newHashSet();
+        final Optional<Resource[]> optChildren = store.get(container.getLocation());
 
-        resourceStore.traverse(new ResourceVisitor() {
-            @Override
-            public void visit(Resource resource) {
-                final Optional<Container> optionalParent = resource.getParent();
-                if (optionalParent.isPresent() && optionalParent.get().equals(container)) {
-                    resources.add(resource);
-                }
-            }
-        });
-
-        return promise.resolve(unmodifiableSet(resources));
+        if (optChildren.isPresent()) {
+            return promise.resolve(optChildren.get());
+        } else {
+            return promise.resolve(NO_RESOURCES);
+        }
     }
 
     protected Promise<Optional<Resource>> findResource(final Path absolutePath, boolean quiet) {
 
         //search resource in local cache
-        final Optional<Resource> optionalCachedResource = resourceStore.get(absolutePath);
+        final Optional<Resource> optionalCachedResource = store.getResource(absolutePath);
         if (optionalCachedResource.isPresent()) {
             return promise.resolve(optionalCachedResource);
         }
 
         //request from server
         final Path projectPath = Path.valueOf(absolutePath.segment(0)).makeAbsolute();
-        final Optional<Resource> optionalResource = resourceStore.get(projectPath);
+        final Optional<Resource> optionalResource = store.getResource(projectPath);
         final boolean isPresent = optionalResource.isPresent();
 
         checkState(isPresent || quiet, "Resource with path '" + projectPath + "' doesn't exists");
@@ -815,19 +806,18 @@ public final class ResourceManager {
     }
 
     protected Promise<Set<Resource>> synchronize(final Container container) {
-        final Path path = container.getLocation();
         final int maxDepth[] = new int[1];
 
-        resourceStore.traverse(new ResourceVisitor() {
-            @Override
-            public void visit(Resource resource) {
-                final Path seekPath = resource.getLocation();
+        final Optional<Resource[]> optAll = store.getAll(container.getLocation());
 
-                if (path.isPrefixOf(seekPath) && seekPath.segmentCount() > maxDepth[0]) {
-                    maxDepth[0] = seekPath.segmentCount();
+        if (optAll.isPresent()) {
+            for (Resource resource : optAll.get()) {
+                final int cnt = resource.getLocation().segmentCount();
+                if (cnt > maxDepth[0]) {
+                    maxDepth[0] = cnt;
                 }
             }
-        });
+        }
 
         return ps.getProjects(wsId).thenPromise(new Function<List<ProjectConfigDto>, Promise<Set<Resource>>>() {
             @Override
@@ -897,19 +887,22 @@ public final class ResourceManager {
     }
 
     protected Optional<Marker> getMarker(Resource resource, String type) {
-        return resourceStore.getMarker(resource, type);
+//        return resourceStoreOld.getMarker(resource, type);
+        return Optional.absent();
     }
 
     protected Marker[] getMarkers(Resource resource) {
-        return resourceStore.getMarkers(resource);
+//        return resourceStoreOld.getMarkers(resource);
+        return new Marker[0];
     }
 
     protected void addMarker(Resource resource, Marker marker) {
-        resourceStore.addMarker(resource, marker);
+//        resourceStoreOld.addMarker(resource, marker);
     }
 
     protected boolean deleteMarker(Resource resource, String type) {
-        return resourceStore.deleteMarker(resource, type);
+//        return resourceStoreOld.deleteMarker(resource, type);
+        return false;
     }
 
     protected String getUrl(Resource resource) {
@@ -926,112 +919,6 @@ public final class ResourceManager {
 
     public Promise<List<SourceEstimation>> resolve(Project project) {
         return ps.resolveSources(wsId, project.getLocation());
-    }
-
-    protected class ResourceStore {
-
-//        Table<Path, Resource, Set<Marker>> internalCacheV2 = HashBasedTable.create();
-
-        private Map<Resource, Set<Marker>> internalCache = new HashMap<>();
-
-        public void init(Resource resource) {
-            checkNotNull(resource, "Null resource occurred");
-            checkArgument(!internalCache.containsKey(resource), "Store record for '" + resource.getLocation() + "' already exists");
-
-            //construct markers
-
-//            final Path parent = resource.getLocation().parent();
-//            internalCacheV2.put(parent, resource, Collections.<Marker>emptySet());
-
-            internalCache.put(resource, Sets.<Marker>newHashSet());
-        }
-
-        public void dispose(Resource resource, boolean disposeChildren) {
-            checkNotNull(resource, "Null resource occurred");
-            checkArgument(internalCache.containsKey(resource), "Store record for '" + resource.getLocation() + "' not found");
-
-            //dispose the entry from the cache
-            boolean disposeSuccess = internalCache.keySet().remove(resource);
-            checkState(disposeSuccess, "Failed to dispose record for '" + resource.getLocation() + "'");
-
-            if (resource instanceof Container && disposeChildren) {
-                //dispose nested descendants from the cache
-                final Path disposedLocation = resource.getLocation();
-
-                removeIf(internalCache.keySet(), new Predicate<Resource>() {
-                    @Override
-                    public boolean apply(@Nullable Resource input) {
-                        checkNotNull(input, "Null resource occurred");
-
-                        final Path locationToCheck = input.getLocation();
-
-                        return disposedLocation.isPrefixOf(locationToCheck);
-                    }
-                });
-            }
-        }
-
-        public Optional<Resource> get(final Path path) {
-            checkArgument(!path.isEmpty(), "Empty path occurred");
-
-            return tryFind(internalCache.keySet(), new Predicate<Resource>() {
-                @Override
-                public boolean apply(@Nullable Resource input) {
-                    checkNotNull(input, "Null resource occurred");
-
-                    return input.getLocation().equals(path);
-                }
-            });
-        }
-
-        public void traverse(ResourceVisitor visitor) {
-            for (Resource resource : internalCache.keySet()) {
-                visitor.visit(resource);
-            }
-        }
-
-        public void truncate() {
-            internalCache.clear();
-        }
-
-        public Optional<Marker> getMarker(Resource resource, final String type) {
-            return tryFind(internalCache.get(resource), new Predicate<Marker>() {
-                @Override
-                public boolean apply(@Nullable Marker input) {
-                    checkNotNull(input, "Null marker occurred");
-
-                    return input.getType().equals(type);
-                }
-            });
-        }
-
-        public Marker[] getMarkers(Resource resource) {
-            Set<Marker> markers = internalCache.get(resource);
-            return markers.toArray(new Marker[markers.size()]);
-        }
-
-        public void addMarker(Resource resource, Marker marker) {
-            internalCache.get(resource).add(marker);
-
-            eventBus.fireEvent(new MarkerCreatedEvent(resource, marker));
-        }
-
-        public boolean deleteMarker(Resource resource, final String type) {
-            final Optional<Marker> optionalMarker = getMarker(resource, type);
-
-            if (!optionalMarker.isPresent()) {
-                return false;
-            }
-
-            final Marker marker = optionalMarker.get();
-            final boolean success = internalCache.get(resource).remove(marker);
-
-            if (success) {
-                eventBus.fireEvent(new MarkerDeletedEvent(resource, marker));
-            }
-
-            return success;
-        }
     }
 
     protected interface ResourceVisitor {

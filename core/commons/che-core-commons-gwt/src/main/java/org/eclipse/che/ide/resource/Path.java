@@ -11,6 +11,7 @@
 package org.eclipse.che.ide.resource;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Objects;
 
 import java.util.Arrays;
 
@@ -578,7 +579,7 @@ public final class Path {
      * Computes the hash code for this object.
      */
     public int hashCode() {
-        return separators & HASH_MASK;
+        return Objects.hashCode(segments);
     }
 
     /**
