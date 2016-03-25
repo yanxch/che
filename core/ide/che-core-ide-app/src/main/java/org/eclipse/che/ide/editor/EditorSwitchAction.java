@@ -20,6 +20,7 @@ import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
@@ -44,6 +45,8 @@ abstract class EditorSwitchAction extends AbstractPerspectiveAction {
     }
 
     protected EditorPartPresenter getPreviousEditorBaseOn(EditorPartPresenter editor) {
+        checkArgument(editor != null);
+
         final List<EditorPartPresenter> openedEditors = editorAgent.getOpenedEditors();
 
         checkState(openedEditors != null && !openedEditors.isEmpty());
@@ -58,6 +61,8 @@ abstract class EditorSwitchAction extends AbstractPerspectiveAction {
     }
 
     protected EditorPartPresenter getNextEditorBaseOn(EditorPartPresenter editor) {
+        checkArgument(editor != null);
+
         final List<EditorPartPresenter> openedEditors = editorAgent.getOpenedEditors();
 
         checkState(openedEditors != null && !openedEditors.isEmpty());
