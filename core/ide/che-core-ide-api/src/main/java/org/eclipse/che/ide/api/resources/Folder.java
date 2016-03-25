@@ -14,6 +14,7 @@ import com.google.common.annotations.Beta;
 
 import org.eclipse.che.ide.api.resources.Project.ProjectRequest;
 import org.eclipse.che.ide.resource.Path;
+import org.eclipse.che.ide.util.NameUtils;
 
 /**
  * Folders may be leaf or non-leaf resources and may contain files and/or other folders. A folder resource is stored as
@@ -28,5 +29,43 @@ import org.eclipse.che.ide.resource.Path;
  */
 @Beta
 public interface Folder extends Container {
+
+    /**
+     * Transforms current folder into {@link Project}.
+     * <p/>
+     * Calling current method doesn't create configuration immediately. To complete configuration creating method
+     * {@link ProjectRequest#send()} should be called. This is immutable operation which produce new {@link Project}.
+     * <p/>
+     * Example of usage:
+     * <pre>
+     *     Folder folder = ... ;
+     *     ProjectConfig configuration = ... ;
+     *
+     *     Promise<Project> projectPromise = folder.toProject().withBody(configuration).send();
+     *
+     *     projectPromise.then(new Operation<Project>() {
+     *         public void apply(Project newProject) throws OperationException {
+     *              //do something with new project
+     *         }
+     *     });
+     * </pre>
+     *
+     * @return the create project request
+     * @throws IllegalArgumentException
+     *         if arguments is not a valid. Reasons include:
+     *         <ul>
+     *         <li>Invalid project name</li>
+     *         <li>Invalid project type</li>
+     *         </ul>
+     * @throws IllegalStateException
+     *         if creation was failed. Reasons include:
+     *         <ul>
+     *         <li>Resource already exists</li>
+     *         </ul>
+     * @see NameUtils#checkProjectName(String)
+     * @see ProjectRequest
+     * @see ProjectRequest#send()
+     * @since 4.0.0-RC14
+     */
     ProjectRequest toProject();
 }

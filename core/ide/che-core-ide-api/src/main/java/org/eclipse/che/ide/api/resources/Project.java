@@ -50,8 +50,8 @@ public interface Project extends Container, ProjectConfig {
      *     ProjectConfig config = ... ;
      *     Project project = ... ;
      *
-     *     Project.UpdateRequest updateRequest = project.update()
-     *                                                  .withBody(config);
+     *     Project.ProjectRequest updateRequest = project.update()
+     *                                                   .withBody(config);
      *
      *     Promise<Project> updatedProject = updateRequest.send();
      * </pre>
@@ -86,6 +86,17 @@ public interface Project extends Container, ProjectConfig {
      */
     boolean isProblem();
 
+    /**
+     * Resolve possible project types for current {@link Project}.
+     * <p/>
+     * These source estimations may be useful for automatically project type detection.
+     * <p/>
+     * Source estimation provides possible project type and attributes that this project type can provide.
+     * Based on this information, current project may be configured in correct way.
+     *
+     * @return the {@link Promise} with source estimations
+     * @since 4.0.0-RC14
+     */
     Promise<List<SourceEstimation>> resolve();
 
     /**
