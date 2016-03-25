@@ -64,7 +64,7 @@ abstract class EditorSwitchAction extends AbstractPerspectiveAction {
 
         final int index = openedEditors.indexOf(editor);
         if (index == openedEditors.size() - 1) {
-            //return the last editor
+            //return the first editor
             return openedEditors.get(0);
         }
 
