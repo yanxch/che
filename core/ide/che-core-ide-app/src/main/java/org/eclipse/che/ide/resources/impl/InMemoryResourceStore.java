@@ -63,7 +63,7 @@ class InMemoryResourceStore implements ResourceStore {
 
                 return false;
             } else { //such resource doesn't exists, then simply add it
-                final int posIndex = -index - 1;
+                final int posIndex = -index - 1; //negate inverted index into positive one
                 final int size = container.length;
                 final Resource[] tmpContainer = copyOf(container, size + 1);
                 arraycopy(tmpContainer, posIndex, tmpContainer, posIndex + 1, size - posIndex); //prepare cell to insert
