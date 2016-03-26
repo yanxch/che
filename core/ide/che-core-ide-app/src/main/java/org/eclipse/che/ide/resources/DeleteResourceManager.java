@@ -20,10 +20,12 @@ import org.eclipse.che.api.promises.client.FunctionException;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper.RequestCall;
 import org.eclipse.che.api.promises.client.js.JsPromiseError;
 import org.eclipse.che.ide.CoreLocalizationConstant;
+import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.resources.Folder;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.ui.dialogs.CancelCallback;
@@ -38,6 +40,7 @@ import java.util.Map;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper.createFromAsyncRequest;
+import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.api.resources.Resource.FILE;
 import static org.eclipse.che.ide.api.resources.Resource.FOLDER;
 import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
@@ -53,14 +56,17 @@ public class DeleteResourceManager {
     private final CoreLocalizationConstant localization;
     private final DialogFactory            dialogFactory;
     private final PromiseProvider          promiseProvider;
+    private final NotificationManager notificationManager;
 
     @Inject
     public DeleteResourceManager(CoreLocalizationConstant localization,
                                  DialogFactory dialogFactory,
-                                 PromiseProvider promiseProvider) {
+                                 PromiseProvider promiseProvider,
+                                 NotificationManager notificationManager) {
         this.localization = localization;
         this.dialogFactory = dialogFactory;
         this.promiseProvider = promiseProvider;
+        this.notificationManager = notificationManager;
     }
 
     /**
@@ -258,7 +264,14 @@ public class DeleteResourceManager {
             public void accepted() {
                 Promise<?>[] deleteAll = new Promise<?>[resources.length];
                 for (int i = 0; i < resources.length; i++) {
-                    deleteAll[i] = resources[i].delete();
+                    final Resource resource = resources[i];
+                    deleteAll[i] = resource.delete().catchError(new Operation<PromiseError>() {
+                        @Override
+                        public void apply(PromiseError error) throws OperationException {
+                            notificationManager.notify("Failed to delete '" + resource.getName() + "'",
+                                                       error.getMessage(), FAIL, true);
+                        }
+                    });
                 }
 
                 promiseProvider.all(deleteAll).then(new Operation<JsArrayMixed>() {
