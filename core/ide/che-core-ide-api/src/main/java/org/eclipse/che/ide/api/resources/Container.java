@@ -88,6 +88,8 @@ public interface Container extends Resource {
      * Note, that if the result array is empty, then method thinks that children may not be loaded from the server and send
      * a request ot the server to load the children.
      *
+     * Method guarantees that resources will be sorted by their {@link #getLocation()} in ascending order.
+     *
      * @return the {@code Promise} with array of members of this resource
      * @see #getChildren()
      * @since 4.0.0-RC14
@@ -102,6 +104,8 @@ public interface Container extends Resource {
      * <p/>
      * Note, that if supplied argument {@code force} is set to {@code false} and result array is empty, then method thinks
      * that children may not be loaded from the server and send a request ot the server to load the children.
+     *
+     * Method guarantees that resources will be sorted by their {@link #getLocation()} in ascending order.
      *
      * @return the {@code Promise} with array of members of this resource
      * @see #getChildren()

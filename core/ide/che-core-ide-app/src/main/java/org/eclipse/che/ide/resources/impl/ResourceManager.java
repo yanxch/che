@@ -34,6 +34,7 @@ import org.eclipse.che.api.promises.client.FunctionException;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectProblemDto;
@@ -271,24 +272,22 @@ public final class ResourceManager {
             @Override
             public Promise<Project> apply(ProjectConfigDto reference) throws FunctionException {
 
+                final MessageLoader progressLoader = loaderFactory.newLoader("Refreshing structure...");
+                progressLoader.show();
+
                 /* Note: After update, project may become to be other type,
                    e.g. blank -> java or maven, or ant, or etc. And this may
                    cause sub-project creations. Simultaneously on the client
                    side there is outdated information about sub-projects, so
                    we need to get updated project list. */
 
-                final int readDepth[] = new int[1];
+                final int maxDepth[] = new int[1]; //describes maximum cached depth
 
-                final Optional<Resource[]> optAll = store.getAll(path);
+                final Optional<Resource[]> descendants = store.getAll(path);
 
-                if (optAll.isPresent()) {
-                    for (Resource resource : optAll.get()) {
-                        final int cnt = resource.getLocation().segmentCount();
-
-                        if (cnt > readDepth[0]) {
-                            readDepth[0] = cnt;
-                        }
-                    }
+                if (descendants.isPresent()) {
+                    final Resource[] resources = descendants.get();
+                    maxDepth[0] = resources[resources.length - 1].getLocation().segmentCount();
                 }
 
                 //dispose outdated resource
@@ -296,27 +295,38 @@ public final class ResourceManager {
                 checkState(optOutdatedResource.isPresent(), "Resource '" + path + "' doesn't exists");
                 store.dispose(optOutdatedResource.get().getLocation(), false);
 
+                progressLoader.setMessage("Updating " + path + "...");
+
                 //register new one
-                final ProjectImpl updatedResource = resourceFactory.newProjectImpl(reference, ResourceManager.this);
-                store.register(updatedResource.getLocation().parent(), updatedResource);
+                final Project updProject = resourceFactory.newProjectImpl(reference, ResourceManager.this);
+                store.register(updProject.getLocation().parent(), updProject);
+
+                progressLoader.setMessage("Reindexing structure...");
 
                 //fetch updated configuration from the server
-                return ps.getProjects(wsId).then(new Function<List<ProjectConfigDto>, Project>() {
+                return ps.getProjects(wsId).thenPromise(new Function<List<ProjectConfigDto>, Promise<Project>>() {
                     @Override
-                    public Project apply(List<ProjectConfigDto> updatedConfiguration) throws FunctionException {
+                    public Promise<Project> apply(List<ProjectConfigDto> updatedConfiguration) throws FunctionException {
 
                         //store
                         cachedDtoConfigs.clear();
                         cachedDtoConfigs.addAll(updatedConfiguration);
 
-                        getRemoteResources(updatedResource, readDepth[0], true, false).then(new Operation<Set<Resource>>() {
-                            @Override
-                            public void apply(Set<Resource> ignored) throws OperationException {
-                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(updatedResource, CHANGED)));
-                            }
-                        });
-
-                        return updatedResource;
+                        return getRemoteResources(updProject, maxDepth[0], true, false)
+                                .then(new Function<Set<Resource>, Project>() {
+                                    @Override
+                                    public Project apply(Set<Resource> ignored) throws FunctionException {
+                                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(updProject, CHANGED)));
+                                        progressLoader.hide();
+                                        return updProject;
+                                    }
+                                });
+                    }
+                }).catchError(new Operation<PromiseError>() {
+                    @Override
+                    public void apply(PromiseError error) throws OperationException {
+                        progressLoader.hide();
+                        throw new OperationException(error.getCause());
                     }
                 });
             }
@@ -466,23 +476,18 @@ public final class ResourceManager {
                                          store.register(movedResource.getLocation().parent(), movedResource);
 
                                          if (source instanceof Container) {
-                                             final int readDepth[] = new int[1];
+                                             int maxDepth = 0;
 
-                                             final Optional<Resource[]> optAll = store.getAll(source.getLocation());
+                                             final Optional<Resource[]> descendants = store.getAll(source.getLocation());
 
-                                             if (optAll.isPresent()) {
-                                                 for (Resource tmpResource : optAll.get()) {
-                                                     final int cnt = tmpResource.getLocation().segmentCount();
-
-                                                     if (cnt > readDepth[0]) {
-                                                         readDepth[0] = cnt;
-                                                     }
-                                                 }
+                                             if (descendants.isPresent()) {
+                                                 final Resource[] resources = descendants.get();
+                                                 maxDepth = resources[resources.length - 1].getLocation().segmentCount();
                                              }
 
                                              store.dispose(source.getLocation(), true);
 
-                                             return getRemoteResources((Container)movedResource, readDepth[0], true, false)
+                                             return getRemoteResources((Container)movedResource, maxDepth, true, false)
                                                      .then(new Function<Set<Resource>, Resource>() {
                                                          @Override
                                                          public Resource apply(Set<Resource> ignored) throws FunctionException {
@@ -806,26 +811,22 @@ public final class ResourceManager {
     }
 
     protected Promise<Set<Resource>> synchronize(final Container container) {
-        final int maxDepth[] = new int[1];
-
-        final Optional<Resource[]> optAll = store.getAll(container.getLocation());
-
-        if (optAll.isPresent()) {
-            for (Resource resource : optAll.get()) {
-                final int cnt = resource.getLocation().segmentCount();
-                if (cnt > maxDepth[0]) {
-                    maxDepth[0] = cnt;
-                }
-            }
-        }
-
         return ps.getProjects(wsId).thenPromise(new Function<List<ProjectConfigDto>, Promise<Set<Resource>>>() {
             @Override
             public Promise<Set<Resource>> apply(List<ProjectConfigDto> updatedConfiguration) throws FunctionException {
                 cachedDtoConfigs.clear();
                 cachedDtoConfigs.addAll(updatedConfiguration);
 
-                return getRemoteResources(container, maxDepth[0], true, false);
+                int maxDepth = 0;
+
+                final Optional<Resource[]> descendants = store.getAll(container.getLocation());
+
+                if (descendants.isPresent()) {
+                    final Resource[] resources = descendants.get();
+                    maxDepth = resources[resources.length - 1].getLocation().segmentCount();
+                }
+
+                return getRemoteResources(container, maxDepth, true, false);
             }
         });
     }

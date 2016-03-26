@@ -6,14 +6,18 @@ import com.google.common.collect.Maps;
 
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.resources.ResourcePathComparator;
 import org.eclipse.che.ide.resource.Path;
 
 import java.util.Map;
-import java.util.Set;
 
 import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.of;
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.Sets.newHashSet;
+import static java.lang.System.arraycopy;
+import static java.util.Arrays.binarySearch;
+import static java.util.Arrays.copyOf;
+import static java.util.Arrays.sort;
 
 /**
  * In memory implementation of {@link ResourceStore}.
@@ -25,7 +29,9 @@ import static com.google.common.collect.Sets.newHashSet;
 @Beta
 class InMemoryResourceStore implements ResourceStore {
 
-    Map<Path, Set<Resource>> memoryCache;
+    Map<Path, Resource[]> memoryCache;
+
+    private static final Resource[] EMPTY_RESOURCES = new Resource[0];
 
     public InMemoryResourceStore() {
         memoryCache = Maps.newHashMap();
@@ -37,16 +43,28 @@ class InMemoryResourceStore implements ResourceStore {
         checkArgument(parent != null, "Null parent occurred");
         checkArgument(resource != null, "Null resource occurred");
 
-        final Set<Resource> container;
-
         if (!memoryCache.containsKey(parent)) {
-            container = newHashSet();
-            memoryCache.put(parent, container);
-        } else {
-            container = memoryCache.get(parent);
-        }
+            memoryCache.put(parent, new Resource[]{resource});
 
-        return container.add(resource);
+            return true;
+        } else {
+            Resource[] container = memoryCache.get(parent);
+
+            final int index = binarySearch(container, resource, ResourcePathComparator.getInstance());
+
+            if (index >= 0) { //update existing resource with new one
+                container[index] = resource;
+
+                return false;
+            } else { //such resource doesn't exists, then simply add it
+                final Resource[] newContainer = copyOf(container, container.length + 1);
+                newContainer[container.length] = resource;
+                sort(newContainer, ResourcePathComparator.getInstance()); //sort before the put back
+                memoryCache.put(parent, newContainer);
+
+                return true;
+            }
+        }
     }
 
     /** {@inheritDoc} */
@@ -58,7 +76,7 @@ class InMemoryResourceStore implements ResourceStore {
             return;
         }
 
-        final Set<Resource> container = memoryCache.remove(path);
+        final Resource[] container = memoryCache.remove(path);
 
         if (withChildren) {
             for (Resource resource : container) {
@@ -80,7 +98,11 @@ class InMemoryResourceStore implements ResourceStore {
             return absent();
         }
 
-        final Set<Resource> container = memoryCache.get(parent);
+        final Resource[] container = memoryCache.get(parent);
+
+        if (container == null) {
+            return absent();
+        }
 
         for (Resource resource : container) {
             if (resource.getLocation().equals(path)) {
@@ -100,9 +122,7 @@ class InMemoryResourceStore implements ResourceStore {
             return absent();
         }
 
-        final Set<Resource> container = memoryCache.get(parent);
-
-        return Optional.of(container.toArray(new Resource[container.size()]));
+        return of(memoryCache.get(parent));
     }
 
     /** {@inheritDoc} */
@@ -114,17 +134,34 @@ class InMemoryResourceStore implements ResourceStore {
             return absent();
         }
 
-        Set<Resource> all = newHashSet();
+        Resource[] all = new Resource[0];
 
-        for (Map.Entry<Path, Set<Resource>> setEntry : memoryCache.entrySet()) {
-            if (!parent.isPrefixOf(setEntry.getKey())) {
+        for (Map.Entry<Path, Resource[]> setEntry : memoryCache.entrySet()) {
+
+            /* There is no need to check compared path if its segment count is less then given one. */
+
+            final Path comparedPath = setEntry.getKey();
+
+            if (parent.segmentCount() > comparedPath.segmentCount() && !parent.isPrefixOf(comparedPath)) {
                 continue;
             }
 
-            all.addAll(setEntry.getValue());
+            final Resource[] resources = setEntry.getValue();
+
+            if (resources == null || resources.length == 0) {
+                continue;
+            }
+
+            final Resource[] tmpResourcesArr = copyOf(all, all.length + resources.length);
+            arraycopy(resources, 0, tmpResourcesArr, all.length, resources.length);
+            all = tmpResourcesArr;
         }
 
-        return Optional.of(all.toArray(new Resource[all.size()]));
+        if (all.length == 0) {
+            return of(EMPTY_RESOURCES);
+        }
+
+        return of(all);
     }
 
     /** {@inheritDoc} */
