@@ -571,10 +571,6 @@ public final class ResourceManager {
     protected Promise<Resource[]> getRemoteResources(final Container container, int depth, boolean includeFiles, final boolean force) {
         checkArgument(depth > -1, "Invalid depth");
 
-//        final Set<Resource> resources = newHashSet();
-
-
-
         if (depth == DEPTH_ZERO) {
             return promise.resolve(NO_RESOURCES);
         }
@@ -585,6 +581,9 @@ public final class ResourceManager {
 
                 class Visitor implements ResourceVisitor {
                     Resource[] resources;
+
+                    int size = 0; //size of total items
+                    int incStep = 50; //step to increase resource array
 
                     public Visitor() {
                         this.resources = NO_RESOURCES;
@@ -617,9 +616,11 @@ public final class ResourceManager {
 
                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, status)));
 
-                        Resource[] tmpResources = copyOf(resources, resources.length + 1);
-                        tmpResources[resources.length] = resource;
-                        resources = tmpResources;
+                        if (size > resources.length - 1) { //check load factor and increase resource array
+                            resources = copyOf(resources, resources.length + incStep);
+                        }
+
+                        resources[size++] = resource;
                     }
 
                 }
@@ -627,7 +628,7 @@ public final class ResourceManager {
                 final Visitor visitor = new Visitor();
                 traverse(tree, visitor);
 
-                return visitor.resources;
+                return copyOf(visitor.resources, visitor.size);
             }
         });
     }

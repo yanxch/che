@@ -17,7 +17,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.System.arraycopy;
 import static java.util.Arrays.binarySearch;
 import static java.util.Arrays.copyOf;
-import static java.util.Arrays.sort;
 
 /**
  * In memory implementation of {@link ResourceStore}.
@@ -64,10 +63,14 @@ class InMemoryResourceStore implements ResourceStore {
 
                 return false;
             } else { //such resource doesn't exists, then simply add it
-                final Resource[] newContainer = copyOf(container, container.length + 1);
-                newContainer[container.length] = resource;
-                sort(newContainer, NAME_COMPARATOR); //sort before the put back
-                memoryCache.put(parent, newContainer);
+                final int posIndex = -index - 1;
+                final int size = container.length;
+                final Resource[] tmpContainer = copyOf(container, size + 1);
+                arraycopy(tmpContainer, posIndex, tmpContainer, posIndex + 1, size - posIndex); //prepare cell to insert
+                tmpContainer[posIndex] = resource;
+                container = tmpContainer;
+
+                memoryCache.put(parent, container);
 
                 return true;
             }
