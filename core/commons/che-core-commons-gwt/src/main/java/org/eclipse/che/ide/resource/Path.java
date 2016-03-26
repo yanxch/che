@@ -408,10 +408,11 @@ public final class Path {
     private int computeHashCode() {
         int hash = device == null ? 17 : device.hashCode();
         int segmentCount = segments.length;
-        for (String segment : segments) {
+        for (int i = 0; i < segmentCount; i++) {
             //this function tends to given a fairly even distribution
-            hash = hash * 37 + segment.hashCode();
+            hash = hash * 37 + segments[i].hashCode();
         }
+
         return hash;
     }
 

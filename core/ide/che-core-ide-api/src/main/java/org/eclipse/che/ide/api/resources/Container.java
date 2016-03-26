@@ -4,9 +4,9 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * <p/>
  * Contributors:
- *   Codenvy, S.A. - initial API and implementation
+ * Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
 package org.eclipse.che.ide.api.resources;
 
@@ -310,6 +310,8 @@ public interface Container extends Resource {
      * Fires following events:
      * {@link ResourceChangedEvent} when the synchronized resource has changed.
      *
+     * Method doesn't guarantees the sorted order of the returned resources.
+     *
      * @return the array of resource which where affected by synchronize operation
      * @since 4.0.0-RC14
      */
@@ -323,6 +325,8 @@ public interface Container extends Resource {
      * <li>{@code *} - which matches any character sequence (including the empty one)</li>
      * <li>{@code ?} - which matches any single character</li>
      * </ul>
+     *
+     * Method doesn't guarantees the sorted order of the returned resources.
      *
      * @param fileMask
      *         the file name mask

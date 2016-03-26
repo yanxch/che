@@ -6,9 +6,9 @@ import com.google.common.collect.Maps;
 
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.Resource;
-import org.eclipse.che.ide.api.resources.ResourcePathComparator;
 import org.eclipse.che.ide.resource.Path;
 
+import java.util.Comparator;
 import java.util.Map;
 
 import static com.google.common.base.Optional.absent;
@@ -33,6 +33,13 @@ class InMemoryResourceStore implements ResourceStore {
 
     private static final Resource[] EMPTY_RESOURCES = new Resource[0];
 
+    private static final Comparator<Resource> NAME_COMPARATOR = new Comparator<Resource>() {
+        @Override
+        public int compare(Resource o1, Resource o2) {
+            return o1.getName().compareTo(o2.getName());
+        }
+    };
+
     public InMemoryResourceStore() {
         memoryCache = Maps.newHashMap();
     }
@@ -50,7 +57,7 @@ class InMemoryResourceStore implements ResourceStore {
         } else {
             Resource[] container = memoryCache.get(parent);
 
-            final int index = binarySearch(container, resource, ResourcePathComparator.getInstance());
+            final int index = binarySearch(container, resource, NAME_COMPARATOR);
 
             if (index >= 0) { //update existing resource with new one
                 container[index] = resource;
@@ -59,7 +66,7 @@ class InMemoryResourceStore implements ResourceStore {
             } else { //such resource doesn't exists, then simply add it
                 final Resource[] newContainer = copyOf(container, container.length + 1);
                 newContainer[container.length] = resource;
-                sort(newContainer, ResourcePathComparator.getInstance()); //sort before the put back
+                sort(newContainer, NAME_COMPARATOR); //sort before the put back
                 memoryCache.put(parent, newContainer);
 
                 return true;

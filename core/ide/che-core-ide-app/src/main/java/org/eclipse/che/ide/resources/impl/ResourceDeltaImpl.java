@@ -104,7 +104,7 @@ class ResourceDeltaImpl implements ResourceDelta {
             case CHANGED:
                 sb.append("changed");
                 break;
-            case LOADED_INTO_CACHE:
+            case LOADED:
                 sb.append("loaded");
                 break;
             case UNLOADED_FROM_CACHE:

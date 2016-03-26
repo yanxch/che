@@ -200,7 +200,7 @@ public interface ProjectServiceClient {
      *         {@link SourceStorageDto}
      * @return a promise that will resolve when the project has been imported, or rejects with an error
      */
-    Promise<Void> importProject(String workspaceId, String name, boolean force, SourceStorageDto sourceStorage);
+    Promise<Void> importProject(String workspaceId, String name, SourceStorageDto sourceStorage);
 
     /**
      * Sends the request to the server to read resource tree.

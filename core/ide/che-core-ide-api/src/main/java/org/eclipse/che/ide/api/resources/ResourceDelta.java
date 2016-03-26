@@ -55,7 +55,7 @@ public interface ResourceDelta {
      * @see ResourceDelta#getKind()
      * @since 4.0.0-RC14
      */
-    int LOADED_INTO_CACHE = 0x8;
+    int LOADED = 0x8;
 
     /**
      * Delta kind constant (bit mask) indicating that the resource has been unloaded from client side cache.
@@ -104,7 +104,7 @@ public interface ResourceDelta {
 
     /**
      * Returns the kind of this resource delta. Normally, one of {@code CREATED}, {@code REMOVED}, {@code CHANGED},
-     * {@code LOADED_INTO_CACHE}, {@code UNLOADED_FROM_CACHE}.
+     * {@code LOADED}, {@code UNLOADED_FROM_CACHE}.
      *
      * @return the kind of this resource delta.
      * @see #CREATED

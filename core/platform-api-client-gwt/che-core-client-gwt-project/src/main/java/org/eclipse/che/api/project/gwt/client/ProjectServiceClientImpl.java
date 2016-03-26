@@ -336,16 +336,12 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
     @Override
     public Promise<Void> importProject(final String workspaceId,
                                        final String path,
-                                       final boolean force,
                                        final SourceStorageDto sourceStorage) {
         return PromiseHelper.newPromise(new AsyncPromiseHelper.RequestCall<Void>() {
             @Override
             public void makeCall(final AsyncCallback<Void> callback) {
                 final StringBuilder requestUrl = new StringBuilder("/project/" + workspaceId);
                 requestUrl.append("/import").append(normalizePath(path));
-                if (force) {
-                    requestUrl.append("?force=true");
-                }
 
                 MessageBuilder builder = new MessageBuilder(POST, requestUrl.toString());
                 builder.data(dtoFactory.toJson(sourceStorage)).header(CONTENTTYPE, APPLICATION_JSON);

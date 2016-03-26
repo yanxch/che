@@ -151,23 +151,12 @@ abstract class ContainerImpl extends ResourceImpl implements Container {
     /** {@inheritDoc} */
     @Override
     public Promise<Resource[]> synchronize() {
-        return resourceManager.synchronize(this).then(new Function<Set<Resource>, Resource[]>() {
-            /** {@inheritDoc} */
-            @Override
-            public Resource[] apply(Set<Resource> affectedResources) throws FunctionException {
-                return affectedResources.toArray(new Resource[affectedResources.size()]);
-            }
-        });
+        return resourceManager.synchronize(this);
     }
 
     /** {@inheritDoc} */
     @Override
     public Promise<Resource[]> search(String fileMask, String contentMask) {
-        return resourceManager.search(this, fileMask, contentMask).then(new Function<Set<Resource>, Resource[]>() {
-            @Override
-            public Resource[] apply(Set<Resource> foundResult) throws FunctionException {
-                return foundResult.toArray(new Resource[foundResult.size()]);
-            }
-        });
+        return resourceManager.search(this, fileMask, contentMask);
     }
 }
