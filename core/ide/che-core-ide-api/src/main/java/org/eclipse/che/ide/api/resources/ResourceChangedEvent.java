@@ -11,7 +11,6 @@
 package org.eclipse.che.ide.api.resources;
 
 import com.google.common.annotations.Beta;
-import com.google.common.base.Preconditions;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 
@@ -41,8 +40,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *                 //handle resource removal
  *             }
  *
- *             if (delta.getKind() == ResourceDelta.CHANGED) {
- *                 //handle resource creation
+ *             if (delta.getKind() == ResourceDelta.UPDATED) {
+ *                 //handle resource update
  *             }
  *         }
  *     });

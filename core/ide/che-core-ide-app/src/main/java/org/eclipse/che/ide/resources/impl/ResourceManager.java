@@ -64,7 +64,7 @@ import static com.google.common.collect.Iterables.transform;
 import static java.util.Arrays.copyOf;
 import static org.eclipse.che.ide.api.resources.Resource.FILE;
 import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
-import static org.eclipse.che.ide.api.resources.ResourceDelta.CHANGED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.CONTENT;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.CREATED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.LOADED;
@@ -292,7 +292,7 @@ public final class ResourceManager {
                         return getRemoteResources(newResource, maxDepth[0], true, false).then(new Function<Resource[], Project>() {
                             @Override
                             public Project apply(Resource[] ignored) throws FunctionException {
-                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, CHANGED)));
+                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, UPDATED)));
 
                                 return newResource;
                             }
@@ -557,7 +557,7 @@ public final class ResourceManager {
         return ps.writeFile(wsId, file.getLocation(), content).then(new Function<Void, Void>() {
             @Override
             public Void apply(Void ignored) throws FunctionException {
-                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(file, CHANGED | CONTENT)));
+                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(file, UPDATED | CONTENT)));
 
                 return null;
             }
@@ -612,7 +612,7 @@ public final class ResourceManager {
                             }
                         }
 
-                        int status = isPresent ? CHANGED : LOADED;
+                        int status = isPresent ? UPDATED : LOADED;
 
                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, status)));
 

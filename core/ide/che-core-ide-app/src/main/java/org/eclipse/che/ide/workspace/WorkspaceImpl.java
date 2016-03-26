@@ -42,7 +42,7 @@ import static java.util.Arrays.binarySearch;
 import static java.util.Arrays.copyOf;
 import static java.util.Arrays.sort;
 import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
-import static org.eclipse.che.ide.api.resources.ResourceDelta.CHANGED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.CREATED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
@@ -183,7 +183,7 @@ public final class WorkspaceImpl implements Workspace, WorkspaceConfigurationCha
                 System.arraycopy(projects, index + 1, projects, index, numMoved);
             }
             projects = copyOf(projects, --size);
-        } else if (delta.getKind() == CHANGED) {
+        } else if (delta.getKind() == UPDATED) {
             int index = -1;
 
             // Project may be moved to another location, so we need to remove previous one and store new project in cache.

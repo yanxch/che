@@ -42,12 +42,12 @@ public interface ResourceDelta {
     int REMOVED = 0x2;
 
     /**
-     * Delta kind constant (bit mask) indicating that the resource has been changed.
+     * Delta kind constant (bit mask) indicating that the resource has been updated.
      *
      * @see ResourceDelta#getKind()
      * @since 4.0.0-RC14
      */
-    int CHANGED = 0x4;
+    int UPDATED = 0x4;
 
     /**
      * Delta kind constant (bit mask) indicating that the resource has been loaded into client side cache.
@@ -63,7 +63,7 @@ public interface ResourceDelta {
      * @see ResourceDelta#getKind()
      * @since 4.0.0-RC14
      */
-    int UNLOADED_FROM_CACHE = 0x10;
+    int UNLOADED = 0x10;
 
     /* -- Constants which describe resource changes -- */
 
@@ -103,13 +103,13 @@ public interface ResourceDelta {
     int COPIED_FROM = 0x800;
 
     /**
-     * Returns the kind of this resource delta. Normally, one of {@code CREATED}, {@code REMOVED}, {@code CHANGED},
-     * {@code LOADED}, {@code UNLOADED_FROM_CACHE}.
+     * Returns the kind of this resource delta. Normally, one of {@code CREATED}, {@code REMOVED}, {@code UPDATED},
+     * {@code LOADED}, {@code UNLOADED}.
      *
      * @return the kind of this resource delta.
      * @see #CREATED
      * @see #REMOVED
-     * @see #CHANGED
+     * @see #UPDATED
      * @since 4.0.0-RC14
      */
     int getKind();
@@ -117,7 +117,7 @@ public interface ResourceDelta {
     /**
      * Returns flags which describe in more detail how a resource has been affected.
      * <p/>
-     * The following codes (bit masks) are used when kind is {@code CHANGED}, and also when the resource is involved in a move:
+     * The following codes (bit masks) are used when kind is {@code UPDATED}, and also when the resource is involved in a move:
      * <ul>
      * <li>{@code CONTENT} - The bytes contained by the resource have been altered, or <code>IResource.touch</code> has been
      * called on the resource.</li>

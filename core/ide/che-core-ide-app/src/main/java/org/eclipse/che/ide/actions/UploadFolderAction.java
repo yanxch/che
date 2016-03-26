@@ -24,6 +24,7 @@ import org.eclipse.che.ide.upload.folder.UploadFolderFromZipPresenter;
 
 import javax.validation.constraints.NotNull;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
@@ -57,7 +58,11 @@ public class UploadFolderAction extends AbstractPerspectiveAction {
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        presenter.showDialog();
+        final Resource[] resources = appContext.getResources();
+
+        checkState(resources != null && resources.length == 1 && resources[0] instanceof Container);
+
+        presenter.showDialog((Container)resources[0]);
     }
 
     /** {@inheritDoc} */
