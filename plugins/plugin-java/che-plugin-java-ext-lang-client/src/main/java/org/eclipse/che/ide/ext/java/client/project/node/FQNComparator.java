@@ -11,12 +11,12 @@
 package org.eclipse.che.ide.ext.java.client.project.node;
 
 import org.eclipse.che.ide.api.data.tree.Node;
-import org.eclipse.che.ide.part.explorer.project.FoldersOnTopFilter;
+import org.eclipse.che.ide.part.explorer.project.NodeTypeComparator;
 
 /**
  * @author Vlad Zhukovskiy
  */
-public class FQNComparator extends FoldersOnTopFilter {
+public class FQNComparator extends NodeTypeComparator {
 
     @Override
     public int compare(Node o1, Node o2) {

@@ -90,6 +90,8 @@ import org.eclipse.che.ide.api.project.wizard.ImportProjectNotificationSubscribe
 import org.eclipse.che.ide.api.project.wizard.ImportWizardRegistrar;
 import org.eclipse.che.ide.api.project.wizard.ImportWizardRegistry;
 import org.eclipse.che.ide.api.project.wizard.ProjectNotificationSubscriber;
+import org.eclipse.che.ide.api.resources.modification.ClipboardManager;
+import org.eclipse.che.ide.resources.impl.ClipboardManagerImpl;
 import org.eclipse.che.ide.resources.impl.ResourceManager;
 import org.eclipse.che.ide.api.reference.FqnProvider;
 import org.eclipse.che.ide.api.selection.SelectionAgent;
@@ -294,6 +296,8 @@ public class CoreGinModule extends AbstractGinModule {
                                              .implement(WorkspaceWidget.class, WorkspaceWidgetImpl.class)
                                              .build(WorkspaceWidgetFactory.class));
         bind(StartUpActionsProcessor.class).in(Singleton.class);
+
+        bind(ClipboardManager.class).to(ClipboardManagerImpl.class);
     }
 
     private void configureComponents() {

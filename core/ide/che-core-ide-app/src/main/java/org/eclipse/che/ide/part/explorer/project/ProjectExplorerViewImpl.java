@@ -95,7 +95,7 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
     private final Provider<EditorAgent> editorAgentProvider;
     private final EventBus              eventBus;
     private final Tree                  tree;
-    private StoreSortInfo foldersOnTopSort = new StoreSortInfo(new FoldersOnTopFilter(), SortDir.ASC);
+    private StoreSortInfo foldersOnTopSort = new StoreSortInfo(new NodeTypeComparator(), SortDir.ASC);
 
     private ToolButton              goBackButton;
     private ToolButton              scrollFromSourceButton;

@@ -11,23 +11,30 @@
 package org.eclipse.che.ide.part.explorer.project;
 
 import org.eclipse.che.ide.api.data.tree.Node;
-import org.eclipse.che.ide.project.node.FileReferenceNode;
-import org.eclipse.che.ide.project.node.FolderReferenceNode;
 import org.eclipse.che.ide.project.node.SyntheticBasedNode;
+import org.eclipse.che.ide.resources.tree.ResourceNode;
 
 import java.util.Comparator;
 
+import static org.eclipse.che.ide.api.resources.Resource.FILE;
+import static org.eclipse.che.ide.api.resources.Resource.FOLDER;
+import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
+
 /**
+ * Compares node by their type.
+ * By design folders should be on top, then files and finally synthetic based nodes.
+ *
  * @author Vlad Zhukovskiy
  */
-public class FoldersOnTopFilter implements Comparator<Node> {
+public class NodeTypeComparator implements Comparator<Node> {
 
     private int getClassIndex(Node node) {
-        if (node instanceof FolderReferenceNode) {
+        if (node instanceof ResourceNode && (((ResourceNode)node).getData().getResourceType() == FOLDER
+                                             || ((ResourceNode)node).getData().getResourceType() == PROJECT)) {
             return 1;
         }
 
-        if (node instanceof FileReferenceNode) {
+        if (node instanceof ResourceNode && ((ResourceNode)node).getData().getResourceType() == FILE) {
             return 2;
         }
 

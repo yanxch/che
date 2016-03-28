@@ -456,7 +456,7 @@ public final class ResourceManager {
         return findResource(destination, true).thenPromise(new Function<Optional<Resource>, Promise<Resource>>() {
             @Override
             public Promise<Resource> apply(Optional<Resource> resource) throws FunctionException {
-                checkState(!resource.isPresent(), "Resource already exists");
+                checkState(!resource.isPresent() || force, "Cannot create '" + destination.toString() + "'. Resource already exists.");
 
                 return ps.move(wsId, source.getLocation(), destination.parent(), destination.lastSegment(), force)
                          .thenPromise(new Function<Void, Promise<Resource>>() {
@@ -513,7 +513,7 @@ public final class ResourceManager {
         return findResource(destination, true).thenPromise(new Function<Optional<Resource>, Promise<Resource>>() {
             @Override
             public Promise<Resource> apply(Optional<Resource> resource) throws FunctionException {
-                checkState(!resource.isPresent(), "Resource already exists");
+                checkState(!resource.isPresent() || force, "Cannot create '" + destination.toString() + "'. Resource already exists.");
 
                 return ps.copy(wsId, source.getLocation(), destination.parent(), destination.lastSegment(), force)
                          .thenPromise(new Function<Void, Promise<Resource>>() {
