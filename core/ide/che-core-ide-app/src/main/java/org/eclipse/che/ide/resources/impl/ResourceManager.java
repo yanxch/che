@@ -64,10 +64,10 @@ import static com.google.common.collect.Iterables.transform;
 import static java.util.Arrays.copyOf;
 import static org.eclipse.che.ide.api.resources.Resource.FILE;
 import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.COPIED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.CONTENT;
-import static org.eclipse.che.ide.api.resources.ResourceDelta.CREATED;
-import static org.eclipse.che.ide.api.resources.ResourceDelta.LOADED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.ADDED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
@@ -200,7 +200,7 @@ public final class ResourceManager {
                         tmpProjects[projects.length] = project;
                         projects = tmpProjects;
 
-                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(project, LOADED)));
+                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(project, ADDED)));
                     }
                 }
 
@@ -318,8 +318,7 @@ public final class ResourceManager {
                         final Folder newResource = resourceFactory.newFolderImpl(Path.valueOf(reference.getPath()), ResourceManager.this);
                         store.register(newResource.getLocation().parent(), newResource);
 
-                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, CREATED)));
-                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, LOADED)));
+                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED)));
 
                         return newResource;
                     }
@@ -346,8 +345,7 @@ public final class ResourceManager {
                                                                              ResourceManager.this);
                         store.register(newResource.getLocation().parent(), newResource);
 
-                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, CREATED)));
-                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, LOADED)));
+                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED)));
 
                         return newResource;
                     }
@@ -387,8 +385,7 @@ public final class ResourceManager {
                                 //cache new configs
                                 cachedConfigs = updatedConfiguration.toArray(new ProjectConfigDto[updatedConfiguration.size()]);
 
-                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, CREATED)));
-                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, LOADED)));
+                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED)));
 
                                 return newResource;
                             }
@@ -438,8 +435,7 @@ public final class ResourceManager {
 
                                 checkState(newResource != null, "Failed to locate imported project's configuration");
 
-                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, CREATED)));
-                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, LOADED)));
+                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED)));
 
                                 return newResource;
                             }
@@ -480,6 +476,7 @@ public final class ResourceManager {
                                              }
 
                                              store.dispose(source.getLocation(), true);
+                                             eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(source, REMOVED)));
 
                                              return getRemoteResources((Container)movedResource, maxDepth, true, false)
                                                      .then(new Function<Resource[], Resource>() {
@@ -487,15 +484,17 @@ public final class ResourceManager {
                                                          public Resource apply(Resource[] ignored) throws FunctionException {
                                                              eventBus.fireEvent(new ResourceChangedEvent(
                                                                      new ResourceDeltaImpl(movedResource, source,
-                                                                                           CREATED | MOVED_FROM | MOVED_TO)));
+                                                                                           ADDED | MOVED_FROM | MOVED_TO)));
 
                                                              return movedResource;
                                                          }
                                                      });
                                          } else {
                                              store.dispose(source.getLocation(), false);
+                                             eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(source, REMOVED)));
+
                                              eventBus.fireEvent(new ResourceChangedEvent(
-                                                     new ResourceDeltaImpl(movedResource, source, CREATED | MOVED_FROM | MOVED_TO)));
+                                                     new ResourceDeltaImpl(movedResource, source, ADDED | MOVED_FROM | MOVED_TO)));
                                          }
 
                                          return promise.resolve(movedResource);
@@ -526,7 +525,8 @@ public final class ResourceManager {
                                          final Resource copiedResource = newResourceFrom(reference);
 
                                          store.register(copiedResource.getLocation().parent(), copiedResource);
-                                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(source, CREATED)));
+                                         eventBus.fireEvent(new ResourceChangedEvent(
+                                                 new ResourceDeltaImpl(copiedResource, source, ADDED | COPIED_FROM)));
 
                                          return copiedResource;
                                      }
@@ -582,7 +582,7 @@ public final class ResourceManager {
                 class Visitor implements ResourceVisitor {
                     Resource[] resources;
 
-                    int size = 0; //size of total items
+                    int size    = 0; //size of total items
                     int incStep = 50; //step to increase resource array
 
                     public Visitor() {
@@ -595,7 +595,11 @@ public final class ResourceManager {
                         final boolean isPresent = optionalCachedResource.isPresent();
 
                         if (isPresent) {
-                            store.dispose(optionalCachedResource.get().getLocation(), force);
+                            final Resource cachedResource = optionalCachedResource.get();
+                            store.dispose(cachedResource.getLocation(), force);
+                            if (force) {
+                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(cachedResource, REMOVED)));
+                            }
                         }
 
                         store.register(resource.getLocation().parent(), resource);
@@ -612,7 +616,7 @@ public final class ResourceManager {
                             }
                         }
 
-                        int status = isPresent ? UPDATED : LOADED;
+                        int status = isPresent ? UPDATED : ADDED;
 
                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, status)));
 

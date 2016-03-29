@@ -26,15 +26,15 @@ public interface ResourceDelta {
     /* -- Delta kind -- */
 
     /**
-     * Delta kind constant (bit mask) indicating that the resource has been physically created in its parent.
+     * Delta kind constant (bit mask) indicating that the resource has been added to its its parent.
      *
      * @see ResourceDelta#getKind()
      * @since 4.0.0-RC14
      */
-    int CREATED = 0x1;
+    int ADDED = 0x1;
 
     /**
-     * Delta kind constant (bit mask) indicating that the resource has been physically removed from its parent.
+     * Delta kind constant (bit mask) indicating that the resource has been removed from its parent.
      *
      * @see ResourceDelta#getKind()
      * @since 4.0.0-RC14
@@ -48,22 +48,6 @@ public interface ResourceDelta {
      * @since 4.0.0-RC14
      */
     int UPDATED = 0x4;
-
-    /**
-     * Delta kind constant (bit mask) indicating that the resource has been loaded into client side cache.
-     *
-     * @see ResourceDelta#getKind()
-     * @since 4.0.0-RC14
-     */
-    int LOADED = 0x8;
-
-    /**
-     * Delta kind constant (bit mask) indicating that the resource has been unloaded from client side cache.
-     *
-     * @see ResourceDelta#getKind()
-     * @since 4.0.0-RC14
-     */
-    int UNLOADED = 0x10;
 
     /* -- Constants which describe resource changes -- */
 
@@ -103,11 +87,11 @@ public interface ResourceDelta {
     int COPIED_FROM = 0x800;
 
     /**
-     * Returns the kind of this resource delta. Normally, one of {@code CREATED}, {@code REMOVED}, {@code UPDATED},
+     * Returns the kind of this resource delta. Normally, one of {@code ADDED}, {@code REMOVED}, {@code UPDATED},
      * {@code LOADED}, {@code UNLOADED}.
      *
      * @return the kind of this resource delta.
-     * @see #CREATED
+     * @see #ADDED
      * @see #REMOVED
      * @see #UPDATED
      * @since 4.0.0-RC14

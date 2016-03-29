@@ -49,6 +49,10 @@ public interface Folder extends Container {
      *         }
      *     });
      * </pre>
+     * <p/>
+     * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#UPDATED}.
+     * Updated resource (instance of {@link Project}) provided by {@link ResourceDelta#getResource()}
      *
      * @return the create project request
      * @throws IllegalArgumentException

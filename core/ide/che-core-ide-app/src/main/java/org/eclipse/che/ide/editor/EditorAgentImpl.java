@@ -58,7 +58,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.eclipse.che.ide.api.parts.PartStackType.EDITING;
 import static org.eclipse.che.ide.api.resources.Resource.FILE;
-import static org.eclipse.che.ide.api.resources.ResourceDelta.CREATED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.ADDED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
@@ -154,7 +154,7 @@ public class EditorAgentImpl implements EditorAgent,
         final Resource resource = delta.getResource();
 
         switch (delta.getKind()) {
-            case CREATED:
+            case ADDED:
                 onResourceCreated(delta);
                 break;
             case REMOVED:

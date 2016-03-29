@@ -103,6 +103,12 @@ public interface Resource extends Comparable<Resource> {
      *          }
      *     })
      * </pre>
+     * <p/>
+     * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#ADDED}.
+     * Copied resource provided by {@link ResourceDelta#getResource()}.
+     * Contains flags {@link ResourceDelta#COPIED_FROM}.
+     * Source resource is accessible by calling {@link ResourceDelta#getFromPath()}.
      *
      * @param destination
      *         the destination path
@@ -147,6 +153,12 @@ public interface Resource extends Comparable<Resource> {
      *          }
      *     })
      * </pre>
+     * <p/>
+     * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#ADDED}.
+     * Copied resource provided by {@link ResourceDelta#getResource()}.
+     * Contains flags {@link ResourceDelta#COPIED_FROM}.
+     * Source resource is accessible by calling {@link ResourceDelta#getFromPath()}.
      *
      * @param destination
      *         the destination path
@@ -193,6 +205,17 @@ public interface Resource extends Comparable<Resource> {
      *          }
      *     })
      * </pre>
+     * <p/>
+     * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#REMOVED}.
+     * Removed resource is provided by {@link ResourceDelta#getResource()}.
+     * <p/>
+     * Also fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#ADDED}.
+     * Moved resource provided by {@link ResourceDelta#getResource()}.
+     * Contains flags {@link ResourceDelta#MOVED_FROM} and {@link ResourceDelta#MOVED_TO}.
+     * Source resource is accessible by calling {@link ResourceDelta#getFromPath()}.
+     * Moved resource (or new resource) is accessible by calling {@link ResourceDelta#getToPath()}.
      *
      * @param destination
      *         the destination path
@@ -239,6 +262,17 @@ public interface Resource extends Comparable<Resource> {
      *          }
      *     })
      * </pre>
+     * <p/>
+     * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#REMOVED}.
+     * Removed resource is provided by {@link ResourceDelta#getResource()}.
+     * <p/>
+     * Also fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#ADDED}.
+     * Moved resource provided by {@link ResourceDelta#getResource()}.
+     * Contains flags {@link ResourceDelta#MOVED_FROM} and {@link ResourceDelta#MOVED_TO}.
+     * Source resource is accessible by calling {@link ResourceDelta#getFromPath()}.
+     * Moved resource (or new resource) is accessible by calling {@link ResourceDelta#getToPath()}.
      *
      * @param destination
      *         the destination path
@@ -278,6 +312,10 @@ public interface Resource extends Comparable<Resource> {
      *         }
      *     })
      * </pre>
+     *
+     * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#REMOVED}.
+     * Removed resource provided by {@link ResourceDelta#getResource()}
      *
      * @return {@code Promise} with {@code void}
      * @throws IllegalArgumentException

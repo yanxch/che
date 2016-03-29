@@ -43,7 +43,7 @@ import static java.util.Arrays.copyOf;
 import static java.util.Arrays.sort;
 import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
-import static org.eclipse.che.ide.api.resources.ResourceDelta.CREATED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.ADDED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
 
@@ -170,7 +170,7 @@ public final class WorkspaceImpl implements Workspace, WorkspaceConfigurationCha
             return; //Normal situation, workspace config updated and project has not been loaded fully. Just skip this situation.
         }
 
-        if (delta.getKind() == CREATED) {
+        if (delta.getKind() == ADDED) {
             Project[] newProjects = copyOf(projects, projects.length + 1);
             newProjects[projects.length] = (Project)resource;
             projects = newProjects;

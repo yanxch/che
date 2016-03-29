@@ -56,6 +56,10 @@ public interface Project extends Container, ProjectConfig {
      *     Promise<Project> updatedProject = updateRequest.send();
      * </pre>
      * <p/>
+     * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#UPDATED}.
+     * Updated resource provided by {@link ResourceDelta#getResource()}
+     * <p/>
      * Note. Calling this method doesn't update the project immediately. To complete request
      * method {@link ProjectRequest#send()} should be called.
      *

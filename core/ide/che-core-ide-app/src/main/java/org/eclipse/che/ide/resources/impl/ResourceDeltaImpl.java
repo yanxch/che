@@ -59,7 +59,7 @@ class ResourceDeltaImpl implements ResourceDelta {
     /** {@inheritDoc} */
     @Override
     public Path getFromPath() {
-        if ((status & MOVED_FROM) != 0) {
+        if ((status & MOVED_FROM) != 0 || (status & COPIED_FROM) != 0) {
             return oldResource.getLocation();
         }
 
@@ -95,7 +95,7 @@ class ResourceDeltaImpl implements ResourceDelta {
         sb.append('[');
 
         switch (getKind()) {
-            case CREATED:
+            case ADDED:
                 sb.append("created");
                 break;
             case REMOVED:
@@ -103,12 +103,6 @@ class ResourceDeltaImpl implements ResourceDelta {
                 break;
             case UPDATED:
                 sb.append("updated");
-                break;
-            case LOADED:
-                sb.append("loaded");
-                break;
-            case UNLOADED:
-                sb.append("unloaded");
                 break;
             default:
                 sb.append('?');

@@ -90,6 +90,15 @@ public interface Container extends Resource {
      *
      * Method guarantees that resources will be sorted by their {@link #getLocation()} in ascending order.
      *
+     * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#ADDED}.
+     * Cached and loaded resource provided by {@link ResourceDelta#getResource()}.
+     *
+     * Or
+     *
+     * Delta kind: {@link ResourceDelta#UPDATED}. When resource was cached previously.
+     * Updated resource provided by {@link ResourceDelta#getResource()}.
+     *
      * @return the {@code Promise} with array of members of this resource
      * @see #getChildren()
      * @since 4.0.0-RC14
@@ -106,6 +115,20 @@ public interface Container extends Resource {
      * that children may not be loaded from the server and send a request ot the server to load the children.
      *
      * Method guarantees that resources will be sorted by their {@link #getLocation()} in ascending order.
+     *
+     * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#ADDED}.
+     * Cached and loaded resource provided by {@link ResourceDelta#getResource()}.
+     *
+     * Or
+     *
+     * Delta kind: {@link ResourceDelta#UPDATED}. When resource was cached previously.
+     * Updated resource provided by {@link ResourceDelta#getResource()}.
+     *
+     * May fire {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#REMOVED}.
+     * Removed resource provided by {@link ResourceDelta#getResource()}.
+     * In case if {@code force} is set in {@code true}.
      *
      * @return the {@code Promise} with array of members of this resource
      * @see #getChildren()
@@ -143,6 +166,10 @@ public interface Container extends Resource {
      *         }
      *     });
      * </pre>
+     *
+     * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#ADDED}.
+     * Created resource (instance of {@link Project}) provided by {@link ResourceDelta#getResource()}
      *
      * @return the create project request
      * @throws IllegalArgumentException
@@ -193,6 +220,10 @@ public interface Container extends Resource {
      *     });
      * </pre>
      *
+     * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#ADDED}.
+     * Created resource (instance of {@link Project}) provided by {@link ResourceDelta#getResource()}
+     *
      * @return the create project request
      * @throws IllegalArgumentException
      *         if arguments is not a valid. Reasons include:
@@ -234,6 +265,10 @@ public interface Container extends Resource {
      *         }
      *     });
      * </pre>
+     *
+     * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#ADDED}.
+     * Created resource (instance of {@link Folder}) provided by {@link ResourceDelta#getResource()}
      *
      * @param name
      *         the name of the folder
@@ -279,6 +314,10 @@ public interface Container extends Resource {
      *         }
      *     });
      * </pre>
+     *
+     * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
+     * Delta kind: {@link ResourceDelta#ADDED}.
+     * Created resource (instance of {@link File}) provided by {@link ResourceDelta#getResource()}
      *
      * @param name
      *         the name of the file
