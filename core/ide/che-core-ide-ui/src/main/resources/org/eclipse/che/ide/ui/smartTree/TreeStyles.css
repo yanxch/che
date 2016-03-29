@@ -140,3 +140,14 @@
 @-moz-keyframes animate-stripes {
     0% {background-position: 0 0;} 100% {background-position: 60px 0;}
 }
+
+.infoTextContainer[warning]::after {
+    content: "\f071";
+    font-family: FontAwesome;
+    font-style: normal;
+    font-weight: normal;
+    text-decoration: inherit;
+    color: #E0B91D;
+    position: absolute;
+    top: 6px;
+}

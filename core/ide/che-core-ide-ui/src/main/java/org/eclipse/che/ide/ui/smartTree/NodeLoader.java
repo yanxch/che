@@ -10,14 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ui.smartTree;
 
-import elemental.dom.Element;
-
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.gwt.dom.client.DivElement;
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -31,9 +26,9 @@ import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.commons.annotation.Nullable;
+import org.eclipse.che.ide.DelayedTask;
 import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.api.data.tree.NodeInterceptor;
-import org.eclipse.che.ide.ui.Tooltip;
 import org.eclipse.che.ide.ui.smartTree.event.BeforeLoadEvent;
 import org.eclipse.che.ide.ui.smartTree.event.CancellableEvent;
 import org.eclipse.che.ide.ui.smartTree.event.LoadEvent;
@@ -55,8 +50,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.eclipse.che.ide.ui.menu.PositionController.HorizontalAlign.RIGHT;
-import static org.eclipse.che.ide.ui.menu.PositionController.VerticalAlign.TOP_TOP;
 
 /**
  * Class that perform loading node children. May transform nodes if ones passed set of node interceptors.
@@ -172,13 +165,14 @@ public class NodeLoader implements LoaderHandler.HasLoaderHandlers {
             requested.setLoading(false);
 
             if (node instanceof HasPresentation) {
-                //add badge which will display error loading status, temporary solution
-                final DivElement errorCaption = Document.get().createDivElement();
-                errorCaption.getStyle().setDisplay(Style.Display.INLINE_BLOCK);
-                errorCaption.appendChild(tree.getTreeStyles().warning().getSvg().getElement());
-                Tooltip.create((Element)errorCaption, TOP_TOP, RIGHT, "Failed to load children for " + node.getName());
-                ((HasPresentation)node).getPresentation(true).setUserElement(errorCaption);
-                tree.refresh(node);
+                tree.getView().getInfoTextContainer(requested).setAttribute("warning", "");
+
+                new DelayedTask() {
+                    @Override
+                    public void onExecute() {
+                        tree.getView().getInfoTextContainer(requested).removeAttribute("warning");
+                    }
+                }.delay(3000);
             }
         }
 

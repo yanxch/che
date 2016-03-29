@@ -41,8 +41,9 @@ public class JsPromise<V> extends JavaScriptObject implements Promise<V> {
             var promiseError = @org.eclipse.che.api.promises.client.js.JsPromiseError::create(Ljava/lang/Throwable;)(reason)
             onRejected.@org.eclipse.che.api.promises.client.Operation::apply(*)(promiseError);
         } else {
-            var promiseError = @org.eclipse.che.api.promises.client.js.JsPromiseError::create(Ljava/lang/Throwable;)(reason)
-            onRejected.@org.eclipse.che.api.promises.client.Operation::apply(*)(promiseError);
+            //var promiseError = @org.eclipse.che.api.promises.client.js.JsPromiseError::create(Ljava/lang/Throwable;)(reason)
+            //onRejected.@org.eclipse.che.api.promises.client.Operation::apply(*)(promiseError);
+            onRejected.@org.eclipse.che.api.promises.client.Operation::apply(*)(reason);
         }
     }-*/;
 
@@ -53,8 +54,9 @@ public class JsPromise<V> extends JavaScriptObject implements Promise<V> {
             var promiseError = @org.eclipse.che.api.promises.client.js.JsPromiseError::create(Ljava/lang/Throwable;)(reason)
             return onRejected.@org.eclipse.che.api.promises.client.Function::apply(*)(promiseError);
         } else {
-            var promiseError = @org.eclipse.che.api.promises.client.js.JsPromiseError::create(Ljava/lang/Throwable;)(reason)
-            onRejected.@org.eclipse.che.api.promises.client.Function::apply(*)(promiseError);
+            //var promiseError = @org.eclipse.che.api.promises.client.js.JsPromiseError::create(Ljava/lang/Throwable;)(reason)
+            //return onRejected.@org.eclipse.che.api.promises.client.Function::apply(*)(promiseError);
+            return onRejected.@org.eclipse.che.api.promises.client.Function::apply(*)(reason);
         }
     }-*/;
 
