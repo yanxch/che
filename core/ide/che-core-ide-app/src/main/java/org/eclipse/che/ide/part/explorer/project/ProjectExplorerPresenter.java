@@ -92,8 +92,8 @@ import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAI
 import static org.eclipse.che.ide.api.resources.Resource.FILE;
 import static org.eclipse.che.ide.api.resources.Resource.FOLDER;
 import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.ADDED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
-import static org.eclipse.che.ide.api.resources.ResourceDelta.CREATED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
 
 /**
@@ -221,7 +221,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         final Resource resource = delta.getResource();
 
         switch (delta.getKind()) {
-            case CREATED:
+            case ADDED:
                 onResourceCreated(delta);
                 break;
             case REMOVED:
