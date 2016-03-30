@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
+import org.eclipse.che.api.project.shared.dto.AttributeDto;
 import org.eclipse.che.api.project.shared.dto.ProjectTemplateDescriptor;
 import org.eclipse.che.api.project.shared.dto.ProjectTypeDto;
 import org.eclipse.che.commons.annotation.Nullable;
@@ -28,6 +29,7 @@ import org.eclipse.che.ide.projecttype.wizard.ProjectWizardFactory;
 import org.eclipse.che.ide.projecttype.wizard.categoriespage.CategoriesPagePresenter;
 
 import javax.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -177,7 +179,7 @@ public class ProjectWizardPresenter implements Wizard.UpdateDelegate,
         final MutableProjectConfig prevData = wizard.getDataObject();
         wizard = getWizardForProjectType(projectType, prevData);
         wizard.navigateToFirst();
-        final MutableProjectConfig newProject = wizard.getDataObject();
+        final ProjectConfigDto newProject = wizard.getDataObject();
 
         // some values should be shared between wizards for different project types
         newProject.setPath(prevData.getPath());
@@ -186,6 +188,16 @@ public class ProjectWizardPresenter implements Wizard.UpdateDelegate,
         newProject.setMixins(prevData.getMixins());
         if (wizardMode == UPDATE) {
             newProject.setAttributes(prevData.getAttributes());
+        } else {
+            List<AttributeDto> attributes = projectType.getAttributes();
+            Map<String, List<String>> prevDataAttributes = prevData.getAttributes();
+            Map<String, List<String>> newAttributes = new HashMap<>();
+            for (AttributeDto attribute : attributes) {
+                if(prevDataAttributes.containsKey(attribute.getId())) {
+                    newAttributes.put(attribute.getId(), prevDataAttributes.get(attribute.getId()));
+                }
+            }
+            newProject.setAttributes(newAttributes);
         }
 
         // set dataObject's values from projectType
