@@ -19,9 +19,11 @@ import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.actions.CloseActiveEditor;
 import org.eclipse.che.ide.actions.CollapseAllAction;
 import org.eclipse.che.ide.actions.CompleteAction;
-import org.eclipse.che.ide.resources.action.CopyAction;
-import org.eclipse.che.ide.resources.action.CutAction;
-import org.eclipse.che.ide.resources.action.PasteAction;
+import org.eclipse.che.ide.part.explorer.project.TreeResourceRevealer;
+import org.eclipse.che.ide.resources.action.RevealResourceAction;
+import org.eclipse.che.ide.resources.action.CopyResourceAction;
+import org.eclipse.che.ide.resources.action.CutResourceAction;
+import org.eclipse.che.ide.resources.action.PasteResourceAction;
 import org.eclipse.che.ide.actions.RedirectToDashboardProjectsAction;
 import org.eclipse.che.ide.actions.RedirectToDashboardWorkspacesAction;
 import org.eclipse.che.ide.actions.ShowReferenceAction;
@@ -75,7 +77,6 @@ import org.eclipse.che.ide.part.editor.actions.CloseOtherAction;
 import org.eclipse.che.ide.part.editor.actions.PinEditorTabAction;
 import org.eclipse.che.ide.part.editor.actions.ReopenClosedFileAction;
 import org.eclipse.che.ide.part.editor.recent.OpenRecentFilesAction;
-import org.eclipse.che.ide.resources.ProjectAction;
 import org.eclipse.che.ide.ui.loaders.request.MessageLoaderResources;
 import org.eclipse.che.ide.ui.toolbar.MainToolbar;
 import org.eclipse.che.ide.ui.toolbar.ToolbarPresenter;
@@ -139,13 +140,13 @@ public class StandardComponentInitializer {
     private ToolbarPresenter toolbarPresenter;
 
     @Inject
-    private CutAction cutAction;
+    private CutResourceAction cutResourceAction;
 
     @Inject
-    private CopyAction copyAction;
+    private CopyResourceAction copyResourceAction;
 
     @Inject
-    private PasteAction pasteAction;
+    private PasteResourceAction pasteResourceAction;
 
     @Inject
     private DeleteResourceAction deleteResourceAction;
@@ -256,9 +257,6 @@ public class StandardComponentInitializer {
     private CloseActiveEditor closeActiveEditor;
 
     @Inject
-    private ProjectAction projectAction;
-
-    @Inject
     private MessageLoaderResources messageLoaderResources;
 
     @Inject
@@ -269,6 +267,9 @@ public class StandardComponentInitializer {
 
     @Inject
     private RedirectToDashboardWorkspacesAction redirectToDashboardWorkspacesAction;
+
+    @Inject
+    private RevealResourceAction revealResourceAction;
 
     @Inject
     @Named("XMLFileType")
@@ -320,6 +321,9 @@ public class StandardComponentInitializer {
 
     @Inject
     private WsConnectionListener wsConnectionListener;
+
+    @Inject
+    private TreeResourceRevealer treeResourceRevealer; //just to work with it
 
 
     /** Instantiates {@link StandardComponentInitializer} an creates standard content. */
@@ -438,14 +442,14 @@ public class StandardComponentInitializer {
         actionManager.registerAction("redo", redoAction);
         editGroup.add(redoAction);
 
-        actionManager.registerAction("cut", cutAction);
-        editGroup.add(cutAction);
+        actionManager.registerAction("cut", cutResourceAction);
+        editGroup.add(cutResourceAction);
 
-        actionManager.registerAction("copy", copyAction);
-        editGroup.add(copyAction);
+        actionManager.registerAction("copy", copyResourceAction);
+        editGroup.add(copyResourceAction);
 
-        actionManager.registerAction("paste", pasteAction);
-        editGroup.add(pasteAction);
+        actionManager.registerAction("paste", pasteResourceAction);
+        editGroup.add(pasteResourceAction);
 
         actionManager.registerAction("renameResource", renameItemAction);
         editGroup.add(renameItemAction);
@@ -459,6 +463,9 @@ public class StandardComponentInitializer {
         editGroup.addSeparator();
         editGroup.add(switchPreviousEditorAction);
         editGroup.add(switchNextEditorAction);
+
+        editGroup.addSeparator();
+        editGroup.add(revealResourceAction);
 
         // Assistant (New Menu)
         DefaultActionGroup assistantGroup = (DefaultActionGroup)actionManager.getAction(IdeActions.GROUP_ASSISTANT);
@@ -502,9 +509,6 @@ public class StandardComponentInitializer {
         DefaultActionGroup helpGroup = (DefaultActionGroup) actionManager.getAction(IdeActions.GROUP_HELP);
         helpGroup.addSeparator();
 
-        actionManager.registerAction("fire", projectAction);
-        helpGroup.add(projectAction);
-
         // Compose main context menu
         DefaultActionGroup resourceOperation = new DefaultActionGroup(actionManager);
         actionManager.registerAction("resourceOperation", resourceOperation);
@@ -513,9 +517,9 @@ public class StandardComponentInitializer {
         resourceOperation.add(goIntoAction);
         resourceOperation.add(editFileAction);
 
-        resourceOperation.add(cutAction);
-        resourceOperation.add(copyAction);
-        resourceOperation.add(pasteAction);
+        resourceOperation.add(cutResourceAction);
+        resourceOperation.add(copyResourceAction);
+        resourceOperation.add(pasteResourceAction);
         resourceOperation.add(renameItemAction);
         resourceOperation.add(deleteResourceAction);
         resourceOperation.addSeparator();
@@ -544,10 +548,11 @@ public class StandardComponentInitializer {
         actionManager.registerAction("openFile", openFileAction);
         actionManager.registerAction("switchLeftTab", switchPreviousEditorAction);
         actionManager.registerAction("switchRightTab", switchNextEditorAction);
+        actionManager.registerAction("scrollFromSource", revealResourceAction);
 
-        changeResourceGroup.add(cutAction);
-        changeResourceGroup.add(copyAction);
-        changeResourceGroup.add(pasteAction);
+        changeResourceGroup.add(cutResourceAction);
+        changeResourceGroup.add(copyResourceAction);
+        changeResourceGroup.add(pasteResourceAction);
         changeResourceGroup.add(deleteResourceAction);
 
         DefaultActionGroup mainToolbarGroup = (DefaultActionGroup)actionManager.getAction(IdeActions.GROUP_MAIN_TOOLBAR);
@@ -598,6 +603,8 @@ public class StandardComponentInitializer {
         keyBinding.getGlobal().addKey(new KeyBuilder().alt().charCode(KeyCodeMap.ARROW_RIGHT).build(), "switchRightTab");
         keyBinding.getGlobal().addKey(new KeyBuilder().action().charCode('e').build(), "openRecentFiles");
         keyBinding.getGlobal().addKey(new KeyBuilder().action().charCode('s').build(), "noOpAction");
+        keyBinding.getGlobal().addKey(new KeyBuilder().charCode(KeyCodeMap.F4).build(), "scrollFromSource");
+        keyBinding.getGlobal().addKey(new KeyBuilder().charCode(KeyCodeMap.DELETE).build(), "deleteItem");
 
         if (UserAgent.isMac()) {
             keyBinding.getGlobal().addKey(new KeyBuilder().control().charCode('w').build(), "closeCurrentFile");

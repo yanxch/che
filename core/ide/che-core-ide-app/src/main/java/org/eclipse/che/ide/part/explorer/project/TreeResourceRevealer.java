@@ -10,12 +10,21 @@
  *******************************************************************************/
 package org.eclipse.che.ide.part.explorer.project;
 
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.web.bindery.event.shared.EventBus;
 
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper;
 import org.eclipse.che.ide.api.data.tree.Node;
+import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.resource.Path;
+import org.eclipse.che.ide.resources.reveal.RevealResourceEvent;
+import org.eclipse.che.ide.resources.reveal.RevealResourceEvent.RevealResourceHandler;
 import org.eclipse.che.ide.resources.tree.ResourceNode;
 import org.eclipse.che.ide.ui.smartTree.Tree;
 import org.eclipse.che.ide.ui.smartTree.event.BeforeExpandNodeEvent;
@@ -35,28 +44,56 @@ import java.util.List;
  * opened root nodes and if it contains project node with path "/project" then it will
  * search children by path "path/to/file".
  *
+ * TODO need implement reveal queue
+ *
  * @author Vlad Zhukovskiy
  */
-public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHandler, NodeAddedEventHandler, PostLoadHandler {
+@Singleton
+public class TreeResourceRevealer implements ExpandNodeHandler,
+                                             BeforeExpandNodeHandler,
+                                             NodeAddedEventHandler,
+                                             PostLoadHandler,
+                                             RevealResourceHandler {
 
     private Tree tree;
 
-    private boolean inSearchMode = false;
+    private boolean busy = false;
 
     private Path path;
 
     private AsyncCallback<Node> callback;
 
-    private boolean forceUpdate = false;
-    private boolean closeMissingFiles = true;
-
-    public SearchNodeHandler(Tree tree) {
-        this.tree = tree;
+    @Inject
+    public TreeResourceRevealer(ProjectExplorerPresenter projectExplorer,
+                                EventBus eventBus) {
+        this.tree = projectExplorer.getTree();
 
         tree.addExpandHandler(this);
         tree.addBeforeExpandHandler(this);
         tree.addNodeAddedHandler(this);
         tree.getNodeLoader().addPostLoadHandler(this);
+
+        eventBus.addHandler(RevealResourceEvent.getType(), this);
+    }
+
+    @Override
+    public void onRevealResource(RevealResourceEvent event) {
+        final Resource resource = event.getResource();
+
+        reveal(resource.getLocation()).then(new Operation<Node>() {
+            @Override
+            public void apply(final Node node) throws OperationException {
+
+                //allow DOM to be fully rendered
+                Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+                    @Override
+                    public void execute() {
+                        tree.getSelectionModel().select(node, false);
+                        tree.scrollIntoView(node);
+                    }
+                });
+            }
+        });
     }
 
     /**
@@ -64,46 +101,40 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
      *
      * @param path
      *         path to node
-     * @param forceUpdate
-     *         force children reload
-     * @param closeMissingFiles
-     *         allow editor to close removed files if they were opened
      * @return promise object with found node or promise error if node wasn't found
      */
-    public Promise<Node> getNodeByPath(final Path path, boolean forceUpdate, boolean closeMissingFiles) {
-        this.forceUpdate = forceUpdate;
-        this.closeMissingFiles = closeMissingFiles;
+    public Promise<Node> reveal(final Path path) {
         return AsyncPromiseHelper.createFromAsyncRequest(new AsyncPromiseHelper.RequestCall<Node>() {
             @Override
             public void makeCall(AsyncCallback<Node> callback) {
-                getNodeByPath(path, callback);
+                reveal(path, callback);
             }
         });
     }
 
-    protected void getNodeByPath(Path path, AsyncCallback<Node> callback) {
+    protected void reveal(Path path, AsyncCallback<Node> callback) {
         if (path == null) {
             callback.onFailure(new IllegalArgumentException("Invalid search path"));
         }
 
-        if (inSearchMode) {
+        if (busy) {
             callback.onFailure(new IllegalStateException("Project explorer has been already activated in search mode"));
         }
 
         this.callback = callback;
         this.path = path;
-        this.inSearchMode = true;
+        this.busy = true;
 
         ResourceNode rootNode = getRootNode(path);
 
         if (rootNode == null) {
-            inSearchMode = false;
+            busy = false;
             return;
         }
 
         if (rootNode.getData().getLocation().equals(path)) {
             //maybe we searched root node, so just return it back
-            inSearchMode = false;
+            busy = false;
             callback.onSuccess(rootNode);
             return;
         }
@@ -113,46 +144,48 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
 
     @Override
     public void onBeforeExpand(BeforeExpandNodeEvent event) {
-        if (!isInSearchMode()) {
+        if (!isBusy()) {
             return;
         }
 
-        Node node = event.getNode();
+        final Node node = event.getNode();
 
         if (tree.isExpanded(node)) {
 
-            if (forceUpdate) {
-                tree.getNodeLoader().loadChildren(node);
-                return;
-            }
-
-            List<Node> children = tree.getNodeStorage().getChildren(node);
-
-            for (Node child : children) {
-                if (!(child instanceof ResourceNode)) {
-                    continue;
-                }
-
-//                String childPath = ((HasStorablePath)child).getStorablePath();
-                if (path.equals(((ResourceNode)child).getData().getLocation())) {
-                    callback.onSuccess(child);
-                    inSearchMode = false;
-                    return;
-                } else if (((ResourceNode)child).getData().getLocation().isPrefixOf(path)/*path.getStorablePath().startsWith(childPath + (child.isLeaf() ? "" : "/"))*/) {
-                    event.setCancelled(true); //disallow to continue expanding current node
-                    tree.setExpanded(child, true);
-                    return;
-                }
-            }
-
-            //node wasn't found, try to make request to load the same children, may be there is a new nodes on server were created
             tree.getNodeLoader().loadChildren(node);
+
+//            if (forceUpdate) {
+//                tree.getNodeLoader().loadChildren(node);
+//                return;
+//            }
+//
+//            List<Node> children = tree.getNodeStorage().getChildren(node);
+//
+//            for (Node child : children) {
+//                if (!(child instanceof ResourceNode)) {
+//                    continue;
+//                }
+//
+////                String childPath = ((HasStorablePath)child).getStorablePath();
+//                if (path.equals(((ResourceNode)child).getData().getLocation())) {
+//                    callback.onSuccess(child);
+//                    busy = false;
+//                    return;
+//                } else if (((ResourceNode)child).getData().getLocation().isPrefixOf(path)/*path.getStorablePath().startsWith(childPath + (child.isLeaf() ? "" : "/"))*/) {
+//                    event.setCancelled(true); //disallow to continue expanding current node
+//                    tree.setExpanded(child, true);
+//                    return;
+//                }
+//            }
+//
+//            //node wasn't found, try to make request to load the same children, may be there is a new nodes on server were created
+//            tree.getNodeLoader().loadChildren(node);
         }
     }
 
     @Override
     public void onExpand(ExpandNodeEvent event) {
-        if (!isInSearchMode()) {
+        if (!isBusy()) {
             return;
         }
 
@@ -166,7 +199,7 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
 //            String childPath = ((HasStorablePath)child).getStorablePath();
             if (path.equals(((ResourceNode)child).getData().getLocation())) {
                 callback.onSuccess(child);
-                inSearchMode = false;
+                busy = false;
                 return;
             } else if (((ResourceNode)child).getData().getLocation().isPrefixOf(path)/*path.getStorablePath().startsWith(childPath + (child.isLeaf() ? "" : "/"))*/) {
                 tree.setExpanded(child, true);
@@ -180,7 +213,7 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
 
     @Override
     public void onNodeAdded(NodeAddedEvent event) {
-        if (!isInSearchMode()) {
+        if (!isBusy()) {
             return;
         }
 
@@ -195,7 +228,7 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
 
             if (path.equals(((ResourceNode)node).getData().getLocation())) {
                 callback.onSuccess(node);
-                inSearchMode = false;
+                busy = false;
                 break;
             } else if (((ResourceNode)node).getData().getLocation().isPrefixOf(path)/*path.getStorablePath().startsWith(childPath + (node.isLeaf() ? "" : "/"))*/) {
                 tree.setExpanded(node, true);
@@ -206,7 +239,7 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
 
     @Override
     public void onPostLoad(PostLoadEvent event) {
-        if (!isInSearchMode()) {
+        if (!isBusy()) {
             return;
         }
 
@@ -220,7 +253,7 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
 //            String childPath = ((HasStorablePath)receivedNode).getStorablePath();
             if (path.equals(((ResourceNode)receivedNode).getData().getLocation())) {
                 callback.onSuccess(receivedNode);
-                inSearchMode = false;
+                busy = false;
                 return;
             } else if (((ResourceNode)receivedNode).getData().getLocation().isPrefixOf(path)/*path.getStorablePath().startsWith(childPath + (receivedNode.isLeaf() ? "" : "/"))*/) {
                 tree.setExpanded(receivedNode, true);
@@ -229,21 +262,11 @@ public class SearchNodeHandler implements ExpandNodeHandler, BeforeExpandNodeHan
         }
 
         callback.onFailure(new IllegalStateException("Node '" + path + "' not found"));
-        inSearchMode = false;
+        busy = false;
     }
 
-    public boolean isInSearchMode() {
-        return inSearchMode;
-    }
-
-    /**
-     * Indicates that during node search removed nodes need to be checked
-     * if they were opened in editor parts and need to be closed.
-     *
-     * @return true if opened nodes in editor part should be closed
-     */
-    public boolean isCloseMissingFiles() {
-        return closeMissingFiles;
+    public boolean isBusy() {
+        return busy;
     }
 
     private ResourceNode getRootNode(Path path) {

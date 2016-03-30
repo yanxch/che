@@ -38,7 +38,7 @@ import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.preferences.PreferencesManager;
 import org.eclipse.che.ide.api.workspace.Workspace;
-import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationChangedEvent;
+import org.eclipse.che.ide.api.workspace.WorkspaceConfigChangedEvent;
 import org.eclipse.che.ide.context.BrowserQueryFieldRenderer;
 import org.eclipse.che.ide.api.component.Component;
 import org.eclipse.che.ide.dto.DtoFactory;
@@ -169,7 +169,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
     public void setCurrentWorkspace(UsersWorkspaceDto workspace) {
         appContext.setWorkspace(workspace); //TODO remove it in nearest future
 
-        eventBus.fireEvent(new WorkspaceConfigurationChangedEvent(workspace.getId(), workspace.getConfig(), workspace.isTemporary()));
+        eventBus.fireEvent(new WorkspaceConfigChangedEvent(workspace.getId(), workspace.getConfig(), workspace.isTemporary()));
 
         if (needToReloadComponents) {
             callback.onSuccess(WorkspaceComponent.this);

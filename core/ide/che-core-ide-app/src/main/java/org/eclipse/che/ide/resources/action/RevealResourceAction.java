@@ -10,15 +10,16 @@
  *******************************************************************************/
 package org.eclipse.che.ide.resources.action;
 
+import com.google.common.annotations.Beta;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.ide.CoreLocalizationConstant;
-import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.resources.modification.ClipboardManager;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.resources.reveal.RevealResourceEvent;
 
 import javax.validation.constraints.NotNull;
 
@@ -27,46 +28,42 @@ import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
- * Cut resources action.
- * Move selected resources from the application context into clipboard manager.
+ * Scrolls from resource in the context to the stored location in the Project View.
  *
  * @author Vlad Zhukovskiy
- * @see ClipboardManager
- * @see ClipboardManager#getCutProvider()
  * @since 4.0.0-RC14
  */
+@Beta
 @Singleton
-public class CutAction extends AbstractPerspectiveAction {
+public class RevealResourceAction extends AbstractPerspectiveAction {
 
-    private final ClipboardManager clipboardManager;
-    private final AppContext       appContext;
+    private final AppContext               appContext;
+    private final EventBus eventBus;
 
     @Inject
-    public CutAction(CoreLocalizationConstant localization,
-                     Resources resources,
-                     ClipboardManager clipboardManager,
-                     AppContext appContext) {
-        super(singletonList(PROJECT_PERSPECTIVE_ID),
-              localization.cutItemsActionText(),
-              localization.cutItemsActionDescription(),
-              null,
-              resources.cut());
-        this.clipboardManager = clipboardManager;
+    public RevealResourceAction(AppContext appContext,
+                                EventBus eventBus) {
+        super(singletonList(PROJECT_PERSPECTIVE_ID), "Reveal Resource", null, null, null);
         this.appContext = appContext;
+        this.eventBus = eventBus;
     }
 
     /** {@inheritDoc} */
     @Override
     public void updateInPerspective(@NotNull ActionEvent event) {
+        final Resource[] resources = appContext.getResources();
+
         event.getPresentation().setVisible(true);
-        event.getPresentation().setEnabled(clipboardManager.getCutProvider().isCutEnable(appContext));
+        event.getPresentation().setEnabled(resources != null && resources.length == 1);
     }
 
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        checkState(clipboardManager.getCutProvider().isCutEnable(appContext), "Cut is not enabled");
+        final Resource[] resources = appContext.getResources();
 
-        clipboardManager.getCutProvider().performCut(appContext);
+        checkState(resources != null && resources.length == 1);
+
+        eventBus.fireEvent(new RevealResourceEvent(resources[0]));
     }
 }

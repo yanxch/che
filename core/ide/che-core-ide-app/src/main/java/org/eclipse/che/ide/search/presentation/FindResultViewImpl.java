@@ -76,4 +76,9 @@ class FindResultViewImpl extends BaseView<FindResultView.ActionDelegate> impleme
         tree.getSelectionModel().select(tree.getRootNodes().get(0), false);
         focusView();
     }
+
+    @Override
+    public Tree getTree() {
+        return tree;
+    }
 }

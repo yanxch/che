@@ -17,6 +17,8 @@ import com.google.web.bindery.event.shared.EventBus;
 import org.eclipse.che.api.core.model.machine.Command;
 import org.eclipse.che.api.core.model.workspace.Environment;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
+import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateEvent;
+import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateHandler;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.ide.api.resources.Container;
@@ -27,9 +29,10 @@ import org.eclipse.che.ide.api.resources.ResourceChangedEvent.ResourceChangedHan
 import org.eclipse.che.ide.api.resources.ResourceDelta;
 import org.eclipse.che.ide.api.resources.ResourcePathComparator;
 import org.eclipse.che.ide.api.workspace.Workspace;
-import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationAppliedEvent;
-import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationChangedEvent;
-import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationChangedEvent.WorkspaceConfigurationChangedHandler;
+import org.eclipse.che.ide.api.workspace.WorkspaceConfigStoredEvent;
+import org.eclipse.che.ide.api.workspace.WorkspaceConfigChangedEvent;
+import org.eclipse.che.ide.api.workspace.WorkspaceConfigChangedEvent.WorkspaceConfigChangedHandler;
+import org.eclipse.che.ide.resources.impl.ResourceDeltaImpl;
 import org.eclipse.che.ide.resources.impl.ResourceManager;
 import org.eclipse.che.ide.resources.impl.ResourceManager.ResourceManagerFactory;
 
@@ -55,7 +58,10 @@ import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
  * @since 4.0.0-RC14
  */
 @Singleton
-public final class WorkspaceImpl implements Workspace, WorkspaceConfigurationChangedHandler, ResourceChangedHandler {
+public final class WorkspaceImpl implements Workspace,
+                                            WorkspaceConfigChangedHandler,
+                                            ResourceChangedHandler,
+                                            WsAgentStateHandler {
 
     private final EventBus               eventBus;
     private final ResourceManagerFactory resourceManagerFactory;
@@ -72,7 +78,7 @@ public final class WorkspaceImpl implements Workspace, WorkspaceConfigurationCha
         this.eventBus = eventBus;
         this.resourceManagerFactory = resourceManagerFactory;
 
-        eventBus.addHandler(WorkspaceConfigurationChangedEvent.getType(), this);
+        eventBus.addHandler(WorkspaceConfigChangedEvent.getType(), this);
         eventBus.addHandler(ResourceChangedEvent.getType(), this);
     }
 
@@ -137,7 +143,7 @@ public final class WorkspaceImpl implements Workspace, WorkspaceConfigurationCha
 
     /** {@inheritDoc} */
     @Override
-    public void onConfigurationChanged(final WorkspaceConfigurationChangedEvent event) {
+    public void onConfigChanged(final WorkspaceConfigChangedEvent event) {
         this.wsConfiguration = event.getConfiguration();
         this.wsId = event.getID();
         this.temporary = event.isTemporary();
@@ -148,7 +154,7 @@ public final class WorkspaceImpl implements Workspace, WorkspaceConfigurationCha
             public void apply(Project[] projects) throws OperationException {
                 WorkspaceImpl.this.projects = projects;
                 Arrays.sort(WorkspaceImpl.this.projects, ResourcePathComparator.getInstance());
-                eventBus.fireEvent(new WorkspaceConfigurationAppliedEvent(projects));
+                eventBus.fireEvent(new WorkspaceConfigStoredEvent(projects));
             }
         });
     }
@@ -205,5 +211,22 @@ public final class WorkspaceImpl implements Workspace, WorkspaceConfigurationCha
 
             sort(projects, ResourcePathComparator.getInstance());
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void onWsAgentStarted(WsAgentStateEvent event) {
+        //stub
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void onWsAgentStopped(WsAgentStateEvent event) {
+        for (Project project : projects) {
+            eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(project, REMOVED)));
+        }
+
+        projects = null;
+        resourceManager = null;
     }
 }

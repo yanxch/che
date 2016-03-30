@@ -27,30 +27,30 @@ import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
- * Paste resources action.
- * Move selected resources from the clipboard manager to file system.
+ * Cut resources action.
+ * Move selected resources from the application context into clipboard manager.
  *
  * @author Vlad Zhukovskiy
  * @see ClipboardManager
- * @see ClipboardManager#getPasteProvider()
+ * @see ClipboardManager#getCutProvider()
  * @since 4.0.0-RC14
  */
 @Singleton
-public class PasteAction extends AbstractPerspectiveAction {
+public class CutResourceAction extends AbstractPerspectiveAction {
 
     private final ClipboardManager clipboardManager;
     private final AppContext       appContext;
 
     @Inject
-    public PasteAction(CoreLocalizationConstant localization,
-                       Resources resources,
-                       ClipboardManager clipboardManager,
-                       AppContext appContext) {
+    public CutResourceAction(CoreLocalizationConstant localization,
+                             Resources resources,
+                             ClipboardManager clipboardManager,
+                             AppContext appContext) {
         super(singletonList(PROJECT_PERSPECTIVE_ID),
-              localization.pasteItemsActionText(),
-              localization.pasteItemsActionDescription(),
+              localization.cutItemsActionText(),
+              localization.cutItemsActionDescription(),
               null,
-              resources.paste());
+              resources.cut());
         this.clipboardManager = clipboardManager;
         this.appContext = appContext;
     }
@@ -59,14 +59,14 @@ public class PasteAction extends AbstractPerspectiveAction {
     @Override
     public void updateInPerspective(@NotNull ActionEvent event) {
         event.getPresentation().setVisible(true);
-        event.getPresentation().setEnabled(clipboardManager.getPasteProvider().isPastePossible(appContext));
+        event.getPresentation().setEnabled(clipboardManager.getCutProvider().isCutEnable(appContext));
     }
 
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        checkState(clipboardManager.getPasteProvider().isPastePossible(appContext), "Paste is not possible");
+        checkState(clipboardManager.getCutProvider().isCutEnable(appContext), "Cut is not enabled");
 
-        clipboardManager.getPasteProvider().performPaste(appContext);
+        clipboardManager.getCutProvider().performCut(appContext);
     }
 }

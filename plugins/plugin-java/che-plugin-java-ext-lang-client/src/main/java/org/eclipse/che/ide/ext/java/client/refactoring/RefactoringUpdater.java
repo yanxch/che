@@ -211,7 +211,7 @@ public class RefactoringUpdater {
         for (Object proceedItem : proceedItems) {
             if (proceedItem instanceof FileReferenceNode
                 && ((FileReferenceNode)proceedItem).getStorablePath().equals(changeInfo.getOldPath())) {
-                projectExplorer.removeNode((FileReferenceNode)proceedItem, false);
+//                projectExplorer.removeNode((FileReferenceNode)proceedItem, false);
             }
         }
     }
@@ -237,16 +237,16 @@ public class RefactoringUpdater {
             public Promise<Void> apply(Void arg) throws FunctionException {
                 //according to Rename package action it can be enabled if we have only one selected Package in selection agent
                 Object refItem = refactorInfo.getSelectedItems().get(0);
-                final boolean wasPackageExpanded = refItem instanceof PackageNode && projectExplorer.isExpanded((Node)refItem);
+//                final boolean wasPackageExpanded = refItem instanceof PackageNode && projectExplorer.isExpanded((Node)refItem);
 
                 return projectExplorer.getNodeByPath(new StorablePath(changeInfo.getPath()), true, false)
                                       .thenPromise(new Function<Node, Promise<Void>>() {
                                           @Override
                                           public Promise<Void> apply(Node node) throws FunctionException {
                                               //restore expand state
-                                              if (wasPackageExpanded) {
-                                                  projectExplorer.setExpanded(node, true);
-                                              }
+//                                              if (wasPackageExpanded) {
+//                                                  projectExplorer.setExpanded(node, true);
+//                                              }
 
                                               return resolve(null);
                                           }

@@ -87,6 +87,14 @@ public interface ResourceDelta {
     int COPIED_FROM = 0x800;
 
     /**
+     * Change constant (bit mask) indicating that the resource was generated after user actions, not automatically.
+     *
+     * @see ResourceDelta#getFlags()
+     * @since 4.0.0-RC14
+     */
+    int DERIVED = 0x1000;
+
+    /**
      * Returns the kind of this resource delta. Normally, one of {@code ADDED}, {@code REMOVED}, {@code UPDATED},
      * {@code LOADED}, {@code UNLOADED}.
      *
@@ -121,6 +129,7 @@ public interface ResourceDelta {
      * @see #MOVED_FROM
      * @see #MOVED_TO
      * @see #COPIED_FROM
+     * @see #DERIVED
      * @see #getKind()
      * @see #getFromPath()
      * @see #getToPath()

@@ -12,6 +12,7 @@ package org.eclipse.che.ide.search.presentation;
 
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.gwtmockito.GwtMockitoTestRunner;
+import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
@@ -44,6 +45,8 @@ public class FindResultPresenterTest {
     private WorkspaceAgent           workspaceAgent;
     @Mock
     private Resources                resources;
+    @Mock
+    private EventBus                 eventBus;
 
     @InjectMocks
     FindResultPresenter findResultPresenter;

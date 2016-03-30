@@ -29,7 +29,7 @@ import org.eclipse.che.ide.api.resources.Project;
  * @since 4.0.0-RC14
  */
 @Beta
-public class WorkspaceConfigurationAppliedEvent extends GwtEvent<WorkspaceConfigurationAppliedEvent.WorkspaceConfigurationAppliedHandler> {
+public class WorkspaceConfigStoredEvent extends GwtEvent<WorkspaceConfigStoredEvent.WorkspaceConfigurationAppliedHandler> {
 
     /**
      * A workspace change listener is notified of projects loading.
@@ -41,11 +41,11 @@ public class WorkspaceConfigurationAppliedEvent extends GwtEvent<WorkspaceConfig
          * Notifies the listener that some workspace configuration changes are happening. The supplied event dives details.
          *
          * @param event
-         *         instance of {@link WorkspaceConfigurationAppliedEvent}
-         * @see WorkspaceConfigurationAppliedEvent
+         *         instance of {@link WorkspaceConfigStoredEvent}
+         * @see WorkspaceConfigStoredEvent
          * @since 4.0.0-RC14
          */
-        void onConfigurationApplied(WorkspaceConfigurationAppliedEvent event);
+        void onConfigStored(WorkspaceConfigStoredEvent event);
     }
 
     private static Type<WorkspaceConfigurationAppliedHandler> TYPE;
@@ -59,7 +59,7 @@ public class WorkspaceConfigurationAppliedEvent extends GwtEvent<WorkspaceConfig
 
     private final Project[] projects;
 
-    public WorkspaceConfigurationAppliedEvent(Project[] projects) {
+    public WorkspaceConfigStoredEvent(Project[] projects) {
         this.projects = projects;
     }
 
@@ -83,6 +83,6 @@ public class WorkspaceConfigurationAppliedEvent extends GwtEvent<WorkspaceConfig
     /** {@inheritDoc} */
     @Override
     protected void dispatch(WorkspaceConfigurationAppliedHandler handler) {
-        handler.onConfigurationApplied(this);
+        handler.onConfigStored(this);
     }
 }

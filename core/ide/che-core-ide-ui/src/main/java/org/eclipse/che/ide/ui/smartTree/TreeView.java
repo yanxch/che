@@ -291,6 +291,10 @@ public class TreeView {
     }
 
     private void setClassName(Element element, String cls, boolean add) {
+        if (element == null) {
+            return;
+        }
+
         if (add) {
             element.addClassName(cls);
         } else {

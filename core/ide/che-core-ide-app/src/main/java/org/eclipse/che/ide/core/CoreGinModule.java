@@ -91,6 +91,7 @@ import org.eclipse.che.ide.api.project.wizard.ImportWizardRegistrar;
 import org.eclipse.che.ide.api.project.wizard.ImportWizardRegistry;
 import org.eclipse.che.ide.api.project.wizard.ProjectNotificationSubscriber;
 import org.eclipse.che.ide.api.resources.modification.ClipboardManager;
+import org.eclipse.che.ide.part.explorer.project.TreeResourceRevealer;
 import org.eclipse.che.ide.resources.impl.ClipboardManagerImpl;
 import org.eclipse.che.ide.resources.impl.ResourceManager;
 import org.eclipse.che.ide.api.reference.FqnProvider;
@@ -130,7 +131,6 @@ import org.eclipse.che.ide.part.editor.recent.RecentFileActionFactory;
 import org.eclipse.che.ide.part.editor.recent.RecentFileList;
 import org.eclipse.che.ide.part.editor.recent.RecentFileStore;
 import org.eclipse.che.ide.part.explorer.project.DefaultNodeInterceptor;
-import org.eclipse.che.ide.part.explorer.project.ProjectConfigEnforcer;
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerView;
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerViewImpl;
@@ -365,7 +365,6 @@ public class CoreGinModule extends AbstractGinModule {
 
         GinMultibinder<NodeInterceptor> nodeInterceptors = GinMultibinder.newSetBinder(binder(), NodeInterceptor.class);
         nodeInterceptors.addBinding().to(DefaultNodeInterceptor.class);
-        nodeInterceptors.addBinding().to(ProjectConfigEnforcer.class);
     }
 
     /** Configure Core UI components, resources and views */
@@ -455,6 +454,7 @@ public class CoreGinModule extends AbstractGinModule {
         GinMultibinder<NodeIconProvider> themeBinder = GinMultibinder.newSetBinder(binder(), NodeIconProvider.class);
         themeBinder.addBinding().to(FileIconProvider.class);
         themeBinder.addBinding().to(DockerfileIconProvider.class);
+        bind(TreeResourceRevealer.class);
     }
 
     @Provides

@@ -273,6 +273,8 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
 
     private boolean focusConstrainScheduled = false;
 
+    private boolean focused = false;
+
     @UiConstructor
     public Tree(NodeStorage nodeStorage, NodeLoader nodeLoader) {
         this(nodeStorage, nodeLoader, GWT.<TreeStyles>create(TreeStyles.class));
@@ -1436,7 +1438,7 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
                     setExpanded(descriptor.getNode(), false);
                 }
                 moveFocus(nodeDescriptor.getRootContainer());
-                if (autoSelect) {
+                if (autoSelect && focused) {
                     selectionModel.select(parent, true);
                 }
             }
@@ -1482,10 +1484,12 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
 
     private void onFocus(Event event) {
         fireEvent(new FocusEvent());
+        focused = true;
     }
 
     private void onBlur(Event event) {
         fireEvent(new BlurEvent());
+        focused = false;
     }
 
     private void onScroll(Event event) {

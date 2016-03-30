@@ -13,6 +13,7 @@ package org.eclipse.che.ide.newresource;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 
 import com.google.inject.Inject;
@@ -31,9 +32,10 @@ public class NewFileAction extends AbstractNewResourceAction {
                          Resources resources,
                          DialogFactory dialogFactory,
                          EventBus eventBus,
-                         AppContext appContext) {
+                         AppContext appContext,
+                         NotificationManager notificationManager) {
         super(localizationConstant.actionNewFileTitle(),
               localizationConstant.actionNewFileDescription(),
-              resources.defaultFile(), dialogFactory, localizationConstant, eventBus, appContext);
+              resources.defaultFile(), dialogFactory, localizationConstant, eventBus, appContext, notificationManager);
     }
 }

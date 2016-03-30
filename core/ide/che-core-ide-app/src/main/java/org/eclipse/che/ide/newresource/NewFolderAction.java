@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.newresource;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
@@ -19,6 +20,7 @@ import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
@@ -45,10 +47,11 @@ public class NewFolderAction extends AbstractNewResourceAction {
                            Resources resources,
                            DialogFactory dialogFactory,
                            EventBus eventBus,
-                           AppContext appContext) {
+                           AppContext appContext,
+                           NotificationManager notificationManager) {
         super(localizationConstant.actionNewFolderTitle(),
               localizationConstant.actionNewFolderDescription(),
-              resources.defaultFolder(), dialogFactory, localizationConstant, eventBus, appContext);
+              resources.defaultFolder(), dialogFactory, localizationConstant, eventBus, appContext, notificationManager);
         this.folderNameValidator = new FolderNameValidator();
     }
 
@@ -69,9 +72,15 @@ public class NewFolderAction extends AbstractNewResourceAction {
     }
 
     private void onAccepted(String value) {
-        final Resource resource = appContext.getResource();
+        Resource resource = appContext.getResource();
 
-        checkState(resource instanceof Container, "Parent should be a container");
+        if (!(resource instanceof Container)) {
+            final Optional<Container> parent = resource.getParent();
+
+            checkState(!parent.isPresent(), "Parent should be a container");
+
+            resource = parent.get();
+        }
 
         ((Container)resource).newFolder(value);
     }

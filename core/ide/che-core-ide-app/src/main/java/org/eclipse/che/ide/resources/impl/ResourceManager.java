@@ -44,7 +44,7 @@ import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.resources.ResourceChangedEvent;
 import org.eclipse.che.ide.api.resources.marker.Marker;
 import org.eclipse.che.ide.api.workspace.Workspace;
-import org.eclipse.che.ide.api.workspace.WorkspaceConfigurationChangedEvent;
+import org.eclipse.che.ide.api.workspace.WorkspaceConfigChangedEvent;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.workspace.WorkspaceComponent;
@@ -65,6 +65,7 @@ import static java.util.Arrays.copyOf;
 import static org.eclipse.che.ide.api.resources.Resource.FILE;
 import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.COPIED_FROM;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.DERIVED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.CONTENT;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.ADDED;
@@ -81,7 +82,7 @@ import static org.eclipse.che.ide.util.NameUtils.checkProjectName;
  * the interfaces.
  * <p/>
  * Each instance of {@link ResourceManager} is bound to own workspace id. So, when {@link WorkspaceComponent}
- * starts, it handles workspace configuration and sends {@link WorkspaceConfigurationChangedEvent}
+ * starts, it handles workspace configuration and sends {@link WorkspaceConfigChangedEvent}
  * event which implementation of {@link Workspace} handles. Based on this configuration it creates
  * new instance of {@link ResourceManager} and requests project lists from the server by calling
  * {@link #getWorkspaceProjects()} and storing received project lists in workspace context.
@@ -200,7 +201,7 @@ public final class ResourceManager {
                         tmpProjects[projects.length] = project;
                         projects = tmpProjects;
 
-                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(project, ADDED)));
+                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(project, ADDED | DERIVED)));
                     }
                 }
 
@@ -292,7 +293,7 @@ public final class ResourceManager {
                         return getRemoteResources(newResource, maxDepth[0], true, false).then(new Function<Resource[], Project>() {
                             @Override
                             public Project apply(Resource[] ignored) throws FunctionException {
-                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, UPDATED)));
+                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, UPDATED | DERIVED)));
 
                                 return newResource;
                             }
@@ -318,7 +319,7 @@ public final class ResourceManager {
                         final Folder newResource = resourceFactory.newFolderImpl(Path.valueOf(reference.getPath()), ResourceManager.this);
                         store.register(newResource.getLocation().parent(), newResource);
 
-                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED)));
+                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED | DERIVED)));
 
                         return newResource;
                     }
@@ -345,7 +346,7 @@ public final class ResourceManager {
                                                                              ResourceManager.this);
                         store.register(newResource.getLocation().parent(), newResource);
 
-                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED)));
+                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED | DERIVED)));
 
                         return newResource;
                     }
@@ -385,7 +386,7 @@ public final class ResourceManager {
                                 //cache new configs
                                 cachedConfigs = updatedConfiguration.toArray(new ProjectConfigDto[updatedConfiguration.size()]);
 
-                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED)));
+                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED | DERIVED)));
 
                                 return newResource;
                             }
@@ -435,7 +436,7 @@ public final class ResourceManager {
 
                                 checkState(newResource != null, "Failed to locate imported project's configuration");
 
-                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED)));
+                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED | DERIVED)));
 
                                 return newResource;
                             }
@@ -484,7 +485,7 @@ public final class ResourceManager {
                                                          public Resource apply(Resource[] ignored) throws FunctionException {
                                                              eventBus.fireEvent(new ResourceChangedEvent(
                                                                      new ResourceDeltaImpl(movedResource, source,
-                                                                                           ADDED | MOVED_FROM | MOVED_TO)));
+                                                                                           ADDED | MOVED_FROM | MOVED_TO | DERIVED)));
 
                                                              return movedResource;
                                                          }
@@ -494,7 +495,7 @@ public final class ResourceManager {
                                              eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(source, REMOVED)));
 
                                              eventBus.fireEvent(new ResourceChangedEvent(
-                                                     new ResourceDeltaImpl(movedResource, source, ADDED | MOVED_FROM | MOVED_TO)));
+                                                     new ResourceDeltaImpl(movedResource, source, ADDED | MOVED_FROM | MOVED_TO | DERIVED)));
                                          }
 
                                          return promise.resolve(movedResource);
@@ -526,7 +527,7 @@ public final class ResourceManager {
 
                                          store.register(copiedResource.getLocation().parent(), copiedResource);
                                          eventBus.fireEvent(new ResourceChangedEvent(
-                                                 new ResourceDeltaImpl(copiedResource, source, ADDED | COPIED_FROM)));
+                                                 new ResourceDeltaImpl(copiedResource, source, ADDED | COPIED_FROM | DERIVED)));
 
                                          return copiedResource;
                                      }
@@ -928,6 +929,10 @@ public final class ResourceManager {
 
     public Promise<List<SourceEstimation>> resolve(Project project) {
         return ps.resolveSources(wsId, project.getLocation());
+    }
+
+    public void teardown() {
+
     }
 
     protected interface ResourceVisitor {

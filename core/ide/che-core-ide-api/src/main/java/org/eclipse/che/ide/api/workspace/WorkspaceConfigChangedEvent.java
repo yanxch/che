@@ -30,28 +30,28 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 4.0.0-RC14
  */
 @Beta
-public class WorkspaceConfigurationChangedEvent extends GwtEvent<WorkspaceConfigurationChangedEvent.WorkspaceConfigurationChangedHandler> {
+public class WorkspaceConfigChangedEvent extends GwtEvent<WorkspaceConfigChangedEvent.WorkspaceConfigChangedHandler> {
 
     /**
      * A workspace configuration change listener is notified of changes to workspace configuration.
      * <p/>
      * Third party components may implement this interface to handle workspace configuration changes event.
      */
-    public interface WorkspaceConfigurationChangedHandler extends EventHandler {
+    public interface WorkspaceConfigChangedHandler extends EventHandler {
         /**
          * Notifies the listener that some workspace configuration changes are happening. The supplied event dives details.
          *
          * @param event
-         *         instance of {@link WorkspaceConfigurationChangedEvent}
-         * @see WorkspaceConfigurationChangedEvent
+         *         instance of {@link WorkspaceConfigChangedEvent}
+         * @see WorkspaceConfigChangedEvent
          * @since 4.0.0-RC14
          */
-        void onConfigurationChanged(WorkspaceConfigurationChangedEvent event);
+        void onConfigChanged(WorkspaceConfigChangedEvent event);
     }
 
-    private static Type<WorkspaceConfigurationChangedHandler> TYPE;
+    private static Type<WorkspaceConfigChangedHandler> TYPE;
 
-    public static Type<WorkspaceConfigurationChangedHandler> getType() {
+    public static Type<WorkspaceConfigChangedHandler> getType() {
         if (TYPE == null) {
             TYPE = new Type<>();
         }
@@ -62,7 +62,7 @@ public class WorkspaceConfigurationChangedEvent extends GwtEvent<WorkspaceConfig
     private final WorkspaceConfig configuration;
     private final boolean         temporary;
 
-    public WorkspaceConfigurationChangedEvent(String wsId, WorkspaceConfig configuration, boolean temporary) {
+    public WorkspaceConfigChangedEvent(String wsId, WorkspaceConfig configuration, boolean temporary) {
         this.wsId = checkNotNull(wsId, "Workspace identifier should not be null");
         this.configuration = checkNotNull(configuration, "Workspace configuration should not ba null");
         this.temporary = temporary;
@@ -102,13 +102,13 @@ public class WorkspaceConfigurationChangedEvent extends GwtEvent<WorkspaceConfig
 
     /** {@inheritDoc} */
     @Override
-    public Type<WorkspaceConfigurationChangedHandler> getAssociatedType() {
+    public Type<WorkspaceConfigChangedHandler> getAssociatedType() {
         return TYPE;
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void dispatch(WorkspaceConfigurationChangedHandler handler) {
-        handler.onConfigurationChanged(this);
+    protected void dispatch(WorkspaceConfigChangedHandler handler) {
+        handler.onConfigChanged(this);
     }
 }

@@ -12,6 +12,7 @@ package org.eclipse.che.ide.ext.web.html;
 
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.ext.web.WebLocalizationConstant;
 import org.eclipse.che.ide.newresource.AbstractNewResourceAction;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
@@ -43,10 +44,11 @@ public class NewHtmlFileAction extends AbstractNewResourceAction {
                              DialogFactory dialogFactory,
                              CoreLocalizationConstant coreLocalizationConstant,
                              EventBus eventBus,
-                             AppContext appContext) {
+                             AppContext appContext,
+                             NotificationManager notificationManager) {
         super(localizationConstant.newHtmlFileActionTitle(),
               localizationConstant.newHtmlFileActionDescription(),
-              null, dialogFactory, coreLocalizationConstant, eventBus, appContext);
+              null, dialogFactory, coreLocalizationConstant, eventBus, appContext, notificationManager);
     }
 
     @Override

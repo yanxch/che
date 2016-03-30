@@ -10,10 +10,12 @@
  *******************************************************************************/
 package org.eclipse.che.ide.newresource;
 
+import com.google.common.base.Optional;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
@@ -21,6 +23,7 @@ import org.eclipse.che.ide.api.action.Action;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.event.FileEvent;
+import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.File;
 import org.eclipse.che.ide.api.resources.Resource;
@@ -36,6 +39,7 @@ import javax.validation.constraints.NotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.OPEN;
+import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
@@ -54,6 +58,7 @@ public abstract class AbstractNewResourceAction extends AbstractPerspectiveActio
     protected final CoreLocalizationConstant coreLocalizationConstant;
     protected final EventBus                 eventBus;
     protected final AppContext               appContext;
+    private final   NotificationManager      notificationManager;
 
     public AbstractNewResourceAction(String title,
                                      String description,
@@ -61,12 +66,14 @@ public abstract class AbstractNewResourceAction extends AbstractPerspectiveActio
                                      DialogFactory dialogFactory,
                                      CoreLocalizationConstant coreLocalizationConstant,
                                      EventBus eventBus,
-                                     AppContext appContext) {
+                                     AppContext appContext,
+                                     NotificationManager notificationManager) {
         super(singletonList(PROJECT_PERSPECTIVE_ID), title, description, null, svgIcon);
         this.dialogFactory = dialogFactory;
         this.coreLocalizationConstant = coreLocalizationConstant;
         this.eventBus = eventBus;
         this.appContext = appContext;
+        this.notificationManager = notificationManager;
         this.fileNameValidator = new FileNameValidator();
         this.title = title;
     }
@@ -88,14 +95,25 @@ public abstract class AbstractNewResourceAction extends AbstractPerspectiveActio
     private void onAccepted(String value) {
         final String name = getExtension().isEmpty() ? value : value + '.' + getExtension();
 
-        final Resource resource = appContext.getResource();
+        Resource resource = appContext.getResource();
 
-        checkState(resource instanceof Container, "Parent should be a container");
+        if (!(resource instanceof Container)) {
+            final Optional<Container> parent = resource.getParent();
+
+            checkState(!parent.isPresent(), "Parent should be a container");
+
+            resource = parent.get();
+        }
 
         ((Container)resource).newFile(name, getDefaultContent()).then(new Operation<File>() {
             @Override
             public void apply(File newFile) throws OperationException {
                 eventBus.fireEvent(new FileEvent(newFile, OPEN));
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError error) throws OperationException {
+                notificationManager.notify("Failed to create resource", error.getMessage(), FAIL, true);
             }
         });
     }
@@ -106,7 +124,19 @@ public abstract class AbstractNewResourceAction extends AbstractPerspectiveActio
 
         final Resource[] resources = appContext.getResources();
 
-        e.getPresentation().setEnabled(resources != null && resources.length == 1 && resources[0] instanceof Container);
+        if (resources != null && resources.length == 1) {
+            final Resource resource = resources[0];
+
+            if (resource instanceof Container) {
+                e.getPresentation().setEnabled(true);
+            } else {
+                e.getPresentation().setEnabled(resource.getParent().isPresent());
+            }
+
+        } else {
+            e.getPresentation().setEnabled(false);
+        }
+
     }
 
     /**

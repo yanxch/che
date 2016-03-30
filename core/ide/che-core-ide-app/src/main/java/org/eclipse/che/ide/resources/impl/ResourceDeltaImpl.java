@@ -26,7 +26,7 @@ import org.eclipse.che.ide.resource.Path;
  * @since 4.0.0-RC14
  */
 @Beta
-class ResourceDeltaImpl implements ResourceDelta {
+public class ResourceDeltaImpl implements ResourceDelta {
 
     private Resource newResource;
     private Resource oldResource;
@@ -34,11 +34,11 @@ class ResourceDeltaImpl implements ResourceDelta {
     protected static int KIND_MASK = 0xF;
     protected int status;
 
-    protected ResourceDeltaImpl(Resource resource, int status) {
+    public ResourceDeltaImpl(Resource resource, int status) {
         this(resource, null, status);
     }
 
-    protected ResourceDeltaImpl(Resource newResource, Resource oldResource, int status) {
+    public ResourceDeltaImpl(Resource newResource, Resource oldResource, int status) {
         this.newResource = Preconditions.checkNotNull(newResource, "Null resource occurred");
         this.oldResource = oldResource;
         this.status = status;

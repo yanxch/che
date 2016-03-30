@@ -36,16 +36,16 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
  * @since 4.0.0-RC14
  */
 @Singleton
-public class CopyAction extends AbstractPerspectiveAction {
+public class CopyResourceAction extends AbstractPerspectiveAction {
 
     private final ClipboardManager clipboardManager;
     private final AppContext       appContext;
 
     @Inject
-    public CopyAction(CoreLocalizationConstant localization,
-                      Resources resources,
-                      ClipboardManager clipboardManager,
-                      AppContext appContext) {
+    public CopyResourceAction(CoreLocalizationConstant localization,
+                              Resources resources,
+                              ClipboardManager clipboardManager,
+                              AppContext appContext) {
         super(singletonList(PROJECT_PERSPECTIVE_ID),
               localization.copyItemsActionText(),
               localization.copyItemsActionDescription(),

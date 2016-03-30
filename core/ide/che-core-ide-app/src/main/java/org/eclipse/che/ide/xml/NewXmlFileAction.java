@@ -13,6 +13,7 @@ package org.eclipse.che.ide.xml;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.newresource.AbstractNewResourceAction;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 
@@ -36,10 +37,11 @@ public class NewXmlFileAction extends AbstractNewResourceAction {
                             DialogFactory dialogFactory,
                             CoreLocalizationConstant coreLocalizationConstant,
                             EventBus eventBus,
-                            AppContext appContext) {
+                            AppContext appContext,
+                            NotificationManager notificationManager) {
         super(localizationConstant.actionNewXmlFileTitle(),
               localizationConstant.actionNewXmlFileDescription(),
-              resources.defaultFile(), dialogFactory, coreLocalizationConstant, eventBus, appContext);
+              resources.defaultFile(), dialogFactory, coreLocalizationConstant, eventBus, appContext, notificationManager);
     }
 
     @Override

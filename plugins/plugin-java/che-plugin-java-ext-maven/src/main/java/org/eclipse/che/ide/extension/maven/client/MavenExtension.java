@@ -77,15 +77,15 @@ public class MavenExtension {
                             final DependenciesUpdater dependenciesUpdater,
                             final ProjectExplorerPresenter projectExplorerPresenter) {
 
-        projectExplorerPresenter.addBeforeNodeLoadHandler(new BeforeLoadEvent.BeforeLoadHandler() {
-            @Override
-            public void onBeforeLoad(BeforeLoadEvent event) {
-                Node node = event.getRequestedNode();
-                if (!projectExplorerPresenter.isLoaded(node) && JavaNodeManager.isJavaProject(node) && isValid(node)) {
-                    dependenciesUpdater.updateDependencies(((HasProjectConfig)node).getProjectConfig());
-                }
-            }
-        });
+//        projectExplorerPresenter.addBeforeNodeLoadHandler(new BeforeLoadEvent.BeforeLoadHandler() {
+//            @Override
+//            public void onBeforeLoad(BeforeLoadEvent event) {
+//                Node node = event.getRequestedNode();
+//                if (!projectExplorerPresenter.isLoaded(node) && JavaNodeManager.isJavaProject(node) && isValid(node)) {
+//                    dependenciesUpdater.updateDependencies(((HasProjectConfig)node).getProjectConfig());
+//                }
+//            }
+//        });
 
         eventBus.addHandler(ProjectReadyEvent.TYPE, new ProjectReadyHandler() {
             @Override
