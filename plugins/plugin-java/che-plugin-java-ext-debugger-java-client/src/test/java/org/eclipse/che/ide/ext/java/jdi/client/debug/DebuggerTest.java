@@ -96,8 +96,6 @@ public class DebuggerTest extends BaseTest {
     @Mock
     private EventBus                      eventBus;
     @Mock
-    private VirtualFile                         file;
-    @Mock
     private AppContext                    appContext;
     @Mock
     private JavaDebuggerFileHandler       javaDebuggerFileHandler;

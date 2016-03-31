@@ -179,7 +179,7 @@ public class ProjectWizardPresenter implements Wizard.UpdateDelegate,
         final MutableProjectConfig prevData = wizard.getDataObject();
         wizard = getWizardForProjectType(projectType, prevData);
         wizard.navigateToFirst();
-        final ProjectConfigDto newProject = wizard.getDataObject();
+        final MutableProjectConfig newProject = wizard.getDataObject();
 
         // some values should be shared between wizards for different project types
         newProject.setPath(prevData.getPath());
