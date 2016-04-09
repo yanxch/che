@@ -791,4 +791,13 @@ public interface CoreLocalizationConstant extends Messages {
 
     @Key("path.label")
     String pathLabel();
+
+    @Key("parent.directory")
+    String projectRoot();
+
+    @Key("action.convert.folder.to.project")
+    String actionConvertFolderToProject();
+
+    @Key("action.convert.folder.to.project.description")
+    String actionConvertFolderToProjectDescription();
 }

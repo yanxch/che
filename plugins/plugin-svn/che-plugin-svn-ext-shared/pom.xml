@@ -16,7 +16,7 @@
     <parent>
         <artifactId>che-plugin-svn-parent</artifactId>
         <groupId>org.eclipse.che.plugin</groupId>
-        <version>4.1.0-RC1-SNAPSHOT</version>
+        <version>4.2.0-RC1-SNAPSHOT</version>
     </parent>
     <artifactId>che-plugin-svn-ext-shared</artifactId>
     <packaging>jar</packaging>
@@ -113,6 +113,7 @@
             <plugin>
                 <groupId>org.eclipse.che.core</groupId>
                 <artifactId>che-core-api-dto-maven-plugin</artifactId>
+                <version>${project.version}</version>
                 <executions>
                     <execution>
                         <id>generate-client-dto</id>

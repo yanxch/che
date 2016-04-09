@@ -42,6 +42,8 @@ import org.eclipse.che.ide.actions.NavigateToFileAction;
 import org.eclipse.che.ide.actions.OpenFileAction;
 import org.eclipse.che.ide.actions.EditFileAction;
 import org.eclipse.che.ide.actions.ProjectConfigurationAction;
+import org.eclipse.che.ide.actions.RedirectToDashboardProjectsAction;
+import org.eclipse.che.ide.actions.RedirectToDashboardWorkspacesAction;
 import org.eclipse.che.ide.actions.RedoAction;
 import org.eclipse.che.ide.actions.RenameItemAction;
 import org.eclipse.che.ide.actions.SaveAction;
@@ -50,6 +52,7 @@ import org.eclipse.che.ide.actions.ShowHiddenFilesAction;
 import org.eclipse.che.ide.actions.ShowPreferencesAction;
 import org.eclipse.che.ide.editor.SwitchPreviousEditorAction;
 import org.eclipse.che.ide.editor.SwitchNextEditorAction;
+import org.eclipse.che.ide.actions.ShowReferenceAction;
 import org.eclipse.che.ide.actions.UndoAction;
 import org.eclipse.che.ide.actions.UploadFileAction;
 import org.eclipse.che.ide.actions.UploadFolderAction;
@@ -495,7 +498,7 @@ public class StandardComponentInitializer {
         saveGroup.add(saveAllAction);
 
         //Compose Profile menu
-        DefaultActionGroup profileGroup = (DefaultActionGroup) actionManager.getAction(IdeActions.GROUP_PROFILE);
+        DefaultActionGroup profileGroup = (DefaultActionGroup)actionManager.getAction(IdeActions.GROUP_PROFILE);
         actionManager.registerAction("redirectToDashboardProjectsAction", redirectToDashboardProjectsAction);
         actionManager.registerAction("redirectToDashboardWorkspacesAction", redirectToDashboardWorkspacesAction);
         actionManager.registerAction("showPreferences", showPreferencesAction);
@@ -506,7 +509,7 @@ public class StandardComponentInitializer {
         profileGroup.add(showPreferencesAction);
 
         // Compose Help menu
-        DefaultActionGroup helpGroup = (DefaultActionGroup) actionManager.getAction(IdeActions.GROUP_HELP);
+        DefaultActionGroup helpGroup = (DefaultActionGroup)actionManager.getAction(IdeActions.GROUP_HELP);
         helpGroup.addSeparator();
 
         // Compose main context menu

@@ -48,7 +48,7 @@ public class StopWorkspaceActionTest {
     private NotificationManager      notificationManager;
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
-    private ActionEvent       actionEvent;
+    private ActionEvent   actionEvent;
     @Mock
     private Promise<Void>     voidPromise;
 

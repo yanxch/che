@@ -72,7 +72,7 @@ public class MavenPagePresenter extends AbstractWizardPage<MutableProjectConfig>
         this.projectServiceClient = projectServiceClient;
         this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
         view.setDelegate(this);
-        
+
         this.appContext = appContext;
     }
 

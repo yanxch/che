@@ -17,6 +17,7 @@ import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.workspace.Workspace;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 
 import java.util.List;
 
@@ -34,11 +35,11 @@ public interface AppContext {
 
     /** @deprecated use {@link Workspace} */
     @Deprecated
-    UsersWorkspaceDto getWorkspace();
+    WorkspaceDto getWorkspace();
 
     /** @deprecated use {@link Workspace} */
     @Deprecated
-    void setWorkspace(UsersWorkspaceDto workspace);
+    void setWorkspace(WorkspaceDto workspace);
 
     /**
      * Returns id of current workspace of throws IllegalArgumentException if workspace is null.
