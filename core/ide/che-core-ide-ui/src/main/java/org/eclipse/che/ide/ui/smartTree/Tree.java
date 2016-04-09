@@ -762,7 +762,6 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
             Map<String, NodeDescriptor> nodeMap = getNodeStorage().getNodeMap();
             for (NodeDescriptor nodeDescriptor : nodeMap.values()) {
                 nodeDescriptor.clearElements();
-                nodeDescriptor.reset();
             }
 
             nodesByDom.clear();

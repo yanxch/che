@@ -92,16 +92,42 @@ class InMemoryResourceStore implements ResourceStore {
     public void dispose(Path path, boolean withChildren) {
         checkArgument(path != null, "Null path occurred");
 
-        if (!memoryCache.containsKey(path)) {
-            return;
+
+        final Path parent = path.parent();
+
+        Resource[] container = memoryCache.get(parent);
+
+        if (container != null) {
+            int index = -1;
+
+            for (int i = 0; i < container.length; i++) {
+                if (container[i].getName().equals(path.lastSegment())) {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index != -1) {
+                int size = container.length;
+                int numMoved = container.length - index - 1;
+                if (numMoved > 0) {
+                    System.arraycopy(container, index + 1, container, index, numMoved);
+                }
+                container = copyOf(container, --size);
+
+                memoryCache.put(parent, container);
+            }
         }
 
-        final Resource[] container = memoryCache.remove(path);
 
-        if (withChildren) {
-            for (Resource resource : container) {
-                if (resource instanceof Container) {
-                    dispose(resource.getLocation(), true);
+        if (memoryCache.containsKey(path)) {
+            container = memoryCache.remove(path);
+
+            if (container != null && withChildren) {
+                for (Resource resource : container) {
+                    if (resource instanceof Container) {
+                        dispose(resource.getLocation(), true);
+                    }
                 }
             }
         }

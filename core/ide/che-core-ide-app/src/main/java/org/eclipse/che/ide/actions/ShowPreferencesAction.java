@@ -47,7 +47,6 @@ public class ShowPreferencesAction extends Action {
 
     @Override
     public void update(ActionEvent e) {
-        e.getPresentation().setVisible(true);
-        e.getPresentation().setEnabled(appContext.getRootProject() != null);
+        e.getPresentation().setEnabledAndVisible(true);
     }
 }

@@ -27,16 +27,16 @@ public abstract class ResourceBasedNode<DataObject> extends AbstractProjectBased
                                                                                                             SupportDelete<DataObject>*/ {
 
     protected EventBus    eventBus;
-    protected NodeManager nodeManager;
+//    protected NodeManager nodeManager;
 
     public ResourceBasedNode(@NotNull DataObject dataObject,
                              @NotNull ProjectConfigDto projectConfig,
                              @NotNull NodeSettings nodeSettings,
-                             @NotNull EventBus eventBus,
-                             @NotNull NodeManager nodeManager) {
+                             @NotNull EventBus eventBus/*,
+                             @NotNull NodeManager nodeManager*/) {
         super(dataObject, projectConfig, nodeSettings);
         this.eventBus = eventBus;
-        this.nodeManager = nodeManager;
+//        this.nodeManager = nodeManager;
     }
 
 //    @Override

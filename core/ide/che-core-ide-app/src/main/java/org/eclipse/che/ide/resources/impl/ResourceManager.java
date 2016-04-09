@@ -42,7 +42,10 @@ import org.eclipse.che.ide.api.resources.Project.ProblemProjectMarker;
 import org.eclipse.che.ide.api.resources.Project.ProjectRequest;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.resources.ResourceChangedEvent;
+import org.eclipse.che.ide.api.resources.ResourceDelta;
+import org.eclipse.che.ide.api.resources.ResourceInterceptor;
 import org.eclipse.che.ide.api.resources.marker.Marker;
+import org.eclipse.che.ide.api.resources.marker.MarkerChangedEvent;
 import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.api.workspace.WorkspaceConfigChangedEvent;
 import org.eclipse.che.ide.dto.DtoFactory;
@@ -53,6 +56,7 @@ import org.eclipse.che.ide.workspace.WorkspaceImpl;
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.of;
@@ -124,14 +128,15 @@ public final class ResourceManager {
 
     private static final Resource[] NO_RESOURCES = new Resource[0];
 
-    private final ProjectServiceClient ps;
-    private final EventBus             eventBus;
-    private final ResourceFactory      resourceFactory;
-    private final PromiseProvider      promise;
-    private final DtoFactory           dtoFactory;
-    private final ProjectTypeRegistry  typeRegistry;
-    private final String               wsAgentPath;
-    private final String               wsId;
+    private final ProjectServiceClient     ps;
+    private final EventBus                 eventBus;
+    private final ResourceFactory          resourceFactory;
+    private final PromiseProvider          promises;
+    private final DtoFactory               dtoFactory;
+    private final ProjectTypeRegistry      typeRegistry;
+    private final Set<ResourceInterceptor> resourceInterceptors;
+    private final String                   wsAgentPath;
+    private final String                   wsId;
 
     /**
      * Link to the workspace content root. Immutable among the workspace life.
@@ -153,17 +158,19 @@ public final class ResourceManager {
                            ProjectServiceClient ps,
                            EventBus eventBus,
                            ResourceFactory resourceFactory,
-                           PromiseProvider promise,
+                           PromiseProvider promises,
                            DtoFactory dtoFactory,
                            ProjectTypeRegistry typeRegistry,
+                           Set<ResourceInterceptor> resourceInterceptors,
                            @Named("cheExtensionPath") String wsAgentPath) {
         this.wsId = wsId;
         this.ps = ps;
         this.eventBus = eventBus;
         this.resourceFactory = resourceFactory;
-        this.promise = promise;
+        this.promises = promises;
         this.dtoFactory = dtoFactory;
         this.typeRegistry = typeRegistry;
+        this.resourceInterceptors = resourceInterceptors;
         this.wsAgentPath = wsAgentPath;
         this.store = new InMemoryResourceStore();
 
@@ -201,7 +208,12 @@ public final class ResourceManager {
                         tmpProjects[projects.length] = project;
                         projects = tmpProjects;
 
-                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(project, ADDED | DERIVED)));
+                        Resource resource = project;
+                        for (ResourceInterceptor interceptor : resourceInterceptors) {
+                            resource = interceptor.intercept(resource);
+                        }
+
+                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, ADDED | DERIVED)));
                     }
                 }
 
@@ -245,6 +257,7 @@ public final class ResourceManager {
     protected Promise<Project> update(final Path path, final ProjectRequest request) {
 
         final ProjectConfigDto dto = dtoFactory.createDto(ProjectConfigDto.class)
+                                               .withName(path.lastSegment())
                                                .withPath(path.toString())
                                                .withDescription(request.getBody().getDescription())
                                                .withType(request.getBody().getType())
@@ -305,23 +318,54 @@ public final class ResourceManager {
     }
 
     protected Promise<Folder> createFolder(final Container parent, final String name) {
-        checkArgument(checkFolderName(name), "Invalid folder name");
+        final Path path = Path.valueOf(name);
 
-        return findResource(parent.getLocation().append(name), true).thenPromise(new Function<Optional<Resource>, Promise<Folder>>() {
+        if (path.segmentCount() == 1) {
+            checkArgument(checkFolderName(name), "Invalid folder name");
+        }
+
+        return findResource(parent.getLocation().append(path), true).thenPromise(new Function<Optional<Resource>, Promise<Folder>>() {
             @Override
             public Promise<Folder> apply(Optional<Resource> resource) throws FunctionException {
                 checkState(!resource.isPresent(), "Resource already exists");
                 checkArgument(!parent.getLocation().isRoot(), "Failed to create folder in workspace root");
 
-                return ps.createFolder(wsId, parent.getLocation().append(name)).then(new Function<ItemReference, Folder>() {
+                return ps.createFolder(wsId, parent.getLocation().append(name)).thenPromise(new Function<ItemReference, Promise<Folder>>() {
                     @Override
-                    public Folder apply(ItemReference reference) throws FunctionException {
-                        final Folder newResource = resourceFactory.newFolderImpl(Path.valueOf(reference.getPath()), ResourceManager.this);
-                        store.register(newResource.getLocation().parent(), newResource);
+                    public Promise<Folder> apply(final ItemReference reference) throws FunctionException {
 
-                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED | DERIVED)));
+                        if (path.segmentCount() == 1) {
+                            Resource newResource = resourceFactory.newFolderImpl(Path.valueOf(reference.getPath()), ResourceManager.this);
 
-                        return newResource;
+                            store.register(newResource.getLocation().parent(), newResource);
+
+                            for (ResourceInterceptor interceptor : resourceInterceptors) {
+                                newResource = interceptor.intercept(newResource);
+                            }
+
+                            eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED | DERIVED)));
+
+                            return promises.resolve((Folder)newResource);
+                        } else {
+                            return getRemoteResources(parent, path.segmentCount(), true, false).then(new Function<Resource[], Folder>() {
+                                @Override
+                                public Folder apply(Resource[] descendants) throws FunctionException {
+
+                                    final Path referencePath = Path.valueOf(reference.getPath());
+
+                                    for (Resource descendant : descendants) {
+                                        if (descendant.getLocation().equals(referencePath)) {
+                                            eventBus.fireEvent(
+                                                    new ResourceChangedEvent(new ResourceDeltaImpl(descendant, ADDED | DERIVED)));
+
+                                            return (Folder)descendant;
+                                        }
+                                    }
+
+                                    throw new IllegalArgumentException("Failed to locate created folder");
+                                }
+                            });
+                        }
                     }
                 });
             }
@@ -341,14 +385,19 @@ public final class ResourceManager {
                     @Override
                     public File apply(ItemReference reference) throws FunctionException {
                         final Link contentUrl = reference.getLink(GET_CONTENT_REL);
-                        final File newResource = resourceFactory.newFileImpl(Path.valueOf(reference.getPath()),
-                                                                             contentUrl.getHref(),
-                                                                             ResourceManager.this);
+                        Resource newResource = resourceFactory.newFileImpl(Path.valueOf(reference.getPath()),
+                                                                           contentUrl.getHref(),
+                                                                           ResourceManager.this);
+
                         store.register(newResource.getLocation().parent(), newResource);
+
+                        for (ResourceInterceptor interceptor : resourceInterceptors) {
+                            newResource = interceptor.intercept(newResource);
+                        }
 
                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED | DERIVED)));
 
-                        return newResource;
+                        return (File)newResource;
                     }
                 });
             }
@@ -386,7 +435,12 @@ public final class ResourceManager {
                                 //cache new configs
                                 cachedConfigs = updatedConfiguration.toArray(new ProjectConfigDto[updatedConfiguration.size()]);
 
-                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED | DERIVED)));
+                                Resource intercepted = null;
+                                for (ResourceInterceptor interceptor : resourceInterceptors) {
+                                    intercepted = interceptor.intercept(newResource);
+                                }
+
+                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(intercepted, ADDED | DERIVED)));
 
                                 return newResource;
                             }
@@ -463,7 +517,14 @@ public final class ResourceManager {
                                      @Override
                                      public Promise<Resource> apply(ItemReference reference) throws FunctionException {
 
-                                         final Resource movedResource = newResourceFrom(reference);
+                                         Resource intercepted = newResourceFrom(reference);
+
+                                         for (ResourceInterceptor interceptor : resourceInterceptors) {
+                                             intercepted = interceptor.intercept(intercepted);
+                                         }
+
+                                         final Resource movedResource = intercepted;
+
                                          store.register(movedResource.getLocation().parent(), movedResource);
 
                                          if (source instanceof Container) {
@@ -477,7 +538,6 @@ public final class ResourceManager {
                                              }
 
                                              store.dispose(source.getLocation(), true);
-                                             eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(source, REMOVED)));
 
                                              return getRemoteResources((Container)movedResource, maxDepth, true, false)
                                                      .then(new Function<Resource[], Resource>() {
@@ -492,13 +552,13 @@ public final class ResourceManager {
                                                      });
                                          } else {
                                              store.dispose(source.getLocation(), false);
-                                             eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(source, REMOVED)));
 
                                              eventBus.fireEvent(new ResourceChangedEvent(
-                                                     new ResourceDeltaImpl(movedResource, source, ADDED | MOVED_FROM | MOVED_TO | DERIVED)));
+                                                     new ResourceDeltaImpl(movedResource, source,
+                                                                           ADDED | MOVED_FROM | MOVED_TO | DERIVED)));
                                          }
 
-                                         return promise.resolve(movedResource);
+                                         return promises.resolve(movedResource);
                                      }
                                  });
                              }
@@ -523,7 +583,11 @@ public final class ResourceManager {
                                  return ps.getItem(wsId, destination).then(new Function<ItemReference, Resource>() {
                                      @Override
                                      public Resource apply(ItemReference reference) throws FunctionException {
-                                         final Resource copiedResource = newResourceFrom(reference);
+                                         Resource copiedResource = newResourceFrom(reference);
+
+                                         for (ResourceInterceptor interceptor : resourceInterceptors) {
+                                             copiedResource = interceptor.intercept(copiedResource);
+                                         }
 
                                          store.register(copiedResource.getLocation().parent(), copiedResource);
                                          eventBus.fireEvent(new ResourceChangedEvent(
@@ -573,7 +637,7 @@ public final class ResourceManager {
         checkArgument(depth > -1, "Invalid depth");
 
         if (depth == DEPTH_ZERO) {
-            return promise.resolve(NO_RESOURCES);
+            return promises.resolve(NO_RESOURCES);
         }
 
         return ps.getTree(wsId, container.getLocation(), depth, includeFiles).then(new Function<TreeElement, Resource[]>() {
@@ -604,6 +668,10 @@ public final class ResourceManager {
                         }
 
                         store.register(resource.getLocation().parent(), resource);
+
+                        for (ResourceInterceptor interceptor : resourceInterceptors) {
+                            resource = interceptor.intercept(resource);
+                        }
 
                         if (resource.getResourceType() == PROJECT) {
                             final Optional<ProjectConfigDto> optionalConfig = findProjectConfigDto(resource.getLocation());
@@ -693,9 +761,9 @@ public final class ResourceManager {
         final Optional<Resource[]> optChildren = store.get(container.getLocation());
 
         if (optChildren.isPresent()) {
-            return promise.resolve(optChildren.get());
+            return promises.resolve(optChildren.get());
         } else {
-            return promise.resolve(NO_RESOURCES);
+            return promises.resolve(NO_RESOURCES);
         }
     }
 
@@ -704,7 +772,7 @@ public final class ResourceManager {
         //search resource in local cache
         final Optional<Resource> optionalCachedResource = store.getResource(absolutePath);
         if (optionalCachedResource.isPresent()) {
-            return promise.resolve(optionalCachedResource);
+            return promises.resolve(optionalCachedResource);
         }
 
         //request from server
@@ -715,7 +783,7 @@ public final class ResourceManager {
         checkState(isPresent || quiet, "Resource with path '" + projectPath + "' doesn't exists");
 
         if (!isPresent) {
-            return promise.resolve(Optional.<Resource>absent());
+            return promises.resolve(Optional.<Resource>absent());
         }
 
         final Resource project = optProject.get();
@@ -736,6 +804,7 @@ public final class ResourceManager {
             }
         });
     }
+
 
     protected void traverse(TreeElement tree, ResourceVisitor visitor) {
         for (final TreeElement element : tree.getChildren()) {
@@ -799,8 +868,6 @@ public final class ResourceManager {
         }));
 
         final ProblemProjectMarker problemMarker = new ProblemProjectMarker();
-        problemMarker.setAttribute(Marker.SEVERITY, Marker.SEVERITY_WARNING);
-        problemMarker.setAttribute(Marker.MESSAGE, warnings);
 
         return of(problemMarker);
     }
@@ -820,7 +887,130 @@ public final class ResourceManager {
                     maxDepth = resources[resources.length - 1].getLocation().segmentCount();
                 }
 
-                return getRemoteResources(container, maxDepth, true, false);
+                return getRemoteResources(container, maxDepth, true, true);
+            }
+        });
+    }
+
+    protected Promise<ResourceDelta[]> synchronize(final ResourceDelta[] deltas) {
+
+        Promise<Void> promise = promises.resolve(null);
+
+        for (final ResourceDelta delta : deltas) {
+            if (delta.getKind() == ADDED) {
+                if (delta.getFlags() == (MOVED_FROM | MOVED_TO)) {
+
+                    promise.thenPromise(new Function<Void, Promise<Void>>() {
+                        @Override
+                        public Promise<Void> apply(Void ignored) throws FunctionException {
+                            return onExternalDeltaMoved(delta);
+                        }
+                    });
+
+                } else {
+
+                    promise.thenPromise(new Function<Void, Promise<Void>>() {
+                        @Override
+                        public Promise<Void> apply(Void ignored) throws FunctionException {
+                            return onExternalDeltaAdded(delta);
+                        }
+                    });
+
+                }
+            } else if (delta.getKind() == REMOVED) {
+
+                promise.thenPromise(new Function<Void, Promise<Void>>() {
+                    @Override
+                    public Promise<Void> apply(Void ignored) throws FunctionException {
+                        return onExternalDeltaRemoved(delta);
+                    }
+                });
+
+            } else if (delta.getKind() == UPDATED) {
+
+                promise.thenPromise(new Function<Void, Promise<Void>>() {
+                    @Override
+                    public Promise<Void> apply(Void ignored) throws FunctionException {
+                        return onExternalDeltaUpdated(delta);
+                    }
+                });
+
+            }
+        }
+
+        return promise.then(new Function<Void, ResourceDelta[]>() {
+            @Override
+            public ResourceDelta[] apply(Void ignored) throws FunctionException {
+                return deltas;
+            }
+        });
+    }
+
+    protected Promise<Void> onExternalDeltaMoved(final ResourceDelta delta) {
+        //search resource to remove at first
+        return findResource(delta.getFromPath(), true).thenPromise(new Function<Optional<Resource>, Promise<Void>>() {
+            @Override
+            public Promise<Void> apply(final Optional<Resource> toRemove) throws FunctionException {
+                if (!toRemove.isPresent()) {
+                    return promises.resolve(null);
+                }
+
+                store.dispose(delta.getFromPath(), true);
+
+                return findResource(delta.getToPath(), true).then(new Function<Optional<Resource>, Void>() {
+                    @Override
+                    public Void apply(final Optional<Resource> resource) throws FunctionException {
+
+                        if (resource.isPresent()) {
+                            eventBus.fireEvent(new ResourceChangedEvent(
+                                    new ResourceDeltaImpl(resource.get(), toRemove.get(), ADDED | MOVED_FROM | MOVED_TO | DERIVED)));
+                        }
+
+                        return null;
+                    }
+                });
+            }
+        });
+    }
+
+    protected Promise<Void> onExternalDeltaAdded(final ResourceDelta delta) {
+        return findResource(delta.getToPath(), true).then(new Function<Optional<Resource>, Void>() {
+            @Override
+            public Void apply(final Optional<Resource> resource) throws FunctionException {
+                if (resource.isPresent()) {
+                    eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource.get(), ADDED)));
+                }
+
+                return null;
+            }
+        });
+    }
+
+    protected Promise<Void> onExternalDeltaUpdated(final ResourceDelta delta) {
+        return findResource(delta.getToPath(), true).then(new Function<Optional<Resource>, Void>() {
+            @Override
+            public Void apply(Optional<Resource> resource) throws FunctionException {
+
+                if (resource.isPresent()) {
+                    eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource.get(), UPDATED)));
+                }
+
+                return null;
+            }
+        });
+    }
+
+    protected Promise<Void> onExternalDeltaRemoved(final ResourceDelta delta) {
+        return findResource(delta.getFromPath(), true).then(new Function<Optional<Resource>, Void>() {
+            @Override
+            public Void apply(Optional<Resource> resource) throws FunctionException {
+
+                if (resource.isPresent()) {
+                    store.dispose(resource.get().getLocation(), true);
+                    eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource.get(), REMOVED)));
+                }
+
+                return null;
             }
         });
     }
@@ -839,7 +1029,7 @@ public final class ResourceManager {
             @Override
             public Promise<Resource[]> apply(final List<ItemReference> references) throws FunctionException {
                 if (references.isEmpty()) {
-                    return promise.resolve(NO_RESOURCES);
+                    return promises.resolve(NO_RESOURCES);
                 }
 
                 int maxDepth = 0;
@@ -896,23 +1086,9 @@ public final class ResourceManager {
         });
     }
 
-    protected Optional<Marker> getMarker(Resource resource, String type) {
-//        return resourceStoreOld.getMarker(resource, type);
-        return absent();
-    }
-
-    protected Marker[] getMarkers(Resource resource) {
-//        return resourceStoreOld.getMarkers(resource);
-        return new Marker[0];
-    }
-
-    protected void addMarker(Resource resource, Marker marker) {
-//        resourceStoreOld.addMarker(resource, marker);
-    }
-
-    protected boolean deleteMarker(Resource resource, String type) {
-//        return resourceStoreOld.deleteMarker(resource, type);
-        return false;
+    protected void notifyMarkerChanged(Resource resource, Marker marker, int status) {
+        eventBus.fireEvent(new MarkerChangedEvent(resource, marker, status));
+        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, UPDATED)));
     }
 
     protected String getUrl(Resource resource) {
@@ -929,10 +1105,6 @@ public final class ResourceManager {
 
     public Promise<List<SourceEstimation>> resolve(Project project) {
         return ps.resolveSources(wsId, project.getLocation());
-    }
-
-    public void teardown() {
-
     }
 
     protected interface ResourceVisitor {

@@ -13,6 +13,8 @@ package org.eclipse.che.ide.resources.tree;
 import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.promises.client.Function;
 import org.eclipse.che.api.promises.client.FunctionException;
@@ -24,13 +26,21 @@ import org.eclipse.che.ide.api.data.tree.settings.HasSettings;
 import org.eclipse.che.ide.api.data.tree.settings.NodeSettings;
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.resources.marker.MarkerChangedEvent;
+import org.eclipse.che.ide.api.resources.marker.PresentableTextMarker;
+import org.eclipse.che.ide.api.resources.marker.Marker;
+import org.eclipse.che.ide.api.resources.modification.CutResourceMarker;
+import org.eclipse.che.ide.project.node.icon.NodeIconProvider;
 import org.eclipse.che.ide.project.shared.NodesResources;
 import org.eclipse.che.ide.ui.smartTree.presentation.HasPresentation;
 import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
+import org.vectomatic.dom.svg.ui.SVGResource;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -45,29 +55,47 @@ import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
  * Abstract based implementation for all resource based nodes in the IDE.
  *
  * @author Vlad Zhukovskiy
+ * @see Resource
+ * @see ContainerNode
+ * @see FileNode
  * @since 4.0.0-RC14
  */
 @Beta
-public abstract class ResourceNode<R extends Resource> extends AbstractTreeNode implements HasDataObject<R>, HasPresentation, HasSettings {
-
-    public static final String CUSTOM_BACKGROUND_FILL = "background";
+public abstract class ResourceNode<R extends Resource> extends AbstractTreeNode implements HasDataObject<R>,
+                                                                                           HasPresentation,
+                                                                                           HasSettings,
+                                                                                           Comparable<ResourceNode> {
 
     private static final List<Node> NO_CHILDREN = emptyList();
 
-    private       R                resource;
-    private       NodeSettings     nodeSettings;
-    private       NodePresentation nodePresentation;
-    private final NodeFactory      nodeFactory;
-    protected final NodesResources nodesResources;
+    private         R                     resource;
+    private         NodeSettings          nodeSettings;
+    private         NodePresentation      nodePresentation;
+    private         boolean               resourceIsCut;
+    private final   NodeFactory           nodeFactory;
+    protected final NodesResources        nodesResources;
+    private final   Set<NodeIconProvider> nodeIconProviders;
 
     protected ResourceNode(R resource,
                            NodeSettings nodeSettings,
+                           NodesResources nodesResources,
                            NodeFactory nodeFactory,
-                           NodesResources nodesResources) {
+                           EventBus eventBus,
+                           Set<NodeIconProvider> nodeIconProviders) {
         this.resource = resource;
         this.nodeSettings = nodeSettings;
         this.nodeFactory = nodeFactory;
         this.nodesResources = nodesResources;
+        this.nodeIconProviders = nodeIconProviders;
+
+        eventBus.addHandler(MarkerChangedEvent.getType(), new MarkerChangedEvent.MarkerChangedHandler() {
+            @Override
+            public void onMarkerChanged(MarkerChangedEvent event) {
+                if (event.getMarker().getType().equals(CutResourceMarker.ID) && getData().equals(event.getResource())) {
+                    resourceIsCut = event.getStatus() != Marker.REMOVED;
+                }
+            }
+        });
     }
 
     @Override
@@ -111,18 +139,63 @@ public abstract class ResourceNode<R extends Resource> extends AbstractTreeNode 
     public final NodePresentation getPresentation(boolean update) {
         if (nodePresentation == null) {
             nodePresentation = new NodePresentation();
-            updatePresentation(nodePresentation);
         }
 
-        if (update) {
-            updatePresentation(nodePresentation);
-        }
+        updatePresentation(nodePresentation);
+
         return nodePresentation;
     }
 
     @Override
     public void updatePresentation(@NotNull NodePresentation presentation) {
-        presentation.setPresentableText(getData().getName());
+
+        final StringBuilder cssBuilder = new StringBuilder();
+
+        final Optional<Marker> presentableTextMarker = getData().getMarker(PresentableTextMarker.ID);
+        if (presentableTextMarker.isPresent()) {
+            if (getData() instanceof Container) {
+                presentation.setPresentableText(getData().getName());
+                presentation.setInfoText(((PresentableTextMarker)presentableTextMarker.get()).getPresentableText());
+            } else {
+                presentation.setPresentableText(((PresentableTextMarker)presentableTextMarker.get()).getPresentableText());
+            }
+        } else {
+            presentation.setPresentableText(getData().getName());
+        }
+
+        if (resourceIsCut) {
+            cssBuilder.append("opacity:0.5;");
+        } else {
+            cssBuilder.append("opacity:1;");
+        }
+
+        SVGResource icon = null;
+
+        for (NodeIconProvider iconProvider : nodeIconProviders) {
+            icon = iconProvider.getIcon(getData());
+
+            if (icon != null) {
+                break;
+            }
+        }
+
+        if (icon != null) {
+            presentation.setPresentableIcon(icon);
+        } else {
+            if (getData().getResourceType() == FOLDER) {
+                presentation.setPresentableIcon(getData().getName().startsWith(".") ? nodesResources.hiddenSimpleFolder()
+                                                                                    : nodesResources.simpleFolder());
+            } else if (getData().getResourceType() == PROJECT) {
+                presentation.setPresentableIcon(((Project)getData()).isProblem() ? nodesResources.notValidProjectFolder()
+                                                                                 : nodesResources.projectFolder());
+                cssBuilder.append("font-weight:bold;");
+
+            } else if (getData().getResourceType() == FILE) {
+                presentation.setPresentableIcon(nodesResources.file());
+            }
+        }
+
+        presentation.setPresentableTextCss(cssBuilder.toString());
     }
 
     @Override
@@ -151,6 +224,11 @@ public abstract class ResourceNode<R extends Resource> extends AbstractTreeNode 
     @Override
     public int hashCode() {
         return Objects.hashCode(resource);
+    }
+
+    @Override
+    public int compareTo(ResourceNode o) {
+        return getData().compareTo(o.getData());
     }
 
     @Override

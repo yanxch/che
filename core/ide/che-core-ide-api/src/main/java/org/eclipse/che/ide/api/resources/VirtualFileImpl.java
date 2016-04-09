@@ -19,6 +19,7 @@ import org.eclipse.che.ide.resource.Path;
  * Implementation of {@link VirtualFile}. Keeps only necessary information.
  *
  * @author Valeriy Svydenko
+ * @deprecated use {@link SyntheticFile}
  */
 @Deprecated
 public class VirtualFileImpl implements VirtualFile {

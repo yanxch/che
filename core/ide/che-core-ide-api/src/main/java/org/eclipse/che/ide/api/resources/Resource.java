@@ -16,6 +16,7 @@ import com.google.common.base.Optional;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.ide.api.resources.Project.ProjectRequest;
 import org.eclipse.che.ide.api.resources.marker.Marker;
+import org.eclipse.che.ide.api.resources.marker.MarkerChangedEvent;
 import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.resource.Path;
 
@@ -312,7 +313,7 @@ public interface Resource extends Comparable<Resource> {
      *         }
      *     })
      * </pre>
-     *
+     * <p/>
      * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
      * Delta kind: {@link ResourceDelta#REMOVED}.
      * Removed resource provided by {@link ResourceDelta#getResource()}
@@ -414,6 +415,11 @@ public interface Resource extends Comparable<Resource> {
      * @param type
      *         the known marker type
      * @return the {@link Optional} with specified registered marker
+     * @throws IllegalArgumentException
+     *         in case if given marker type is invalid (null or empty). Reasons include:
+     *         <ul>
+     *         <li>Invalid marker type occurred</li>
+     *         </ul>
      * @see Marker#getType()
      * @see #getMarkers()
      * @since 4.0.0-RC14
@@ -432,23 +438,57 @@ public interface Resource extends Comparable<Resource> {
 
     /**
      * Bound given {@code marker} to current resource. if such marker is already bound to the resource it will be overwritten.
+     * <p/>
+     * Fires following events:
+     * {@link MarkerChangedEvent} with status {@link Marker#UPDATED} when existed marker has been replaced with new one.
+     * {@link MarkerChangedEvent} with status {@link Marker#CREATED} when marker has been added to the current resource.
      *
      * @param marker
      *         the resource marker
+     * @throws IllegalArgumentException
+     *         in case if given marker is invalid. Reasons include:
+     *         <ul>
+     *         <li>Null marker occurred</li>
+     *         </ul>
+     * @see MarkerChangedEvent
      * @since 4.0.0-RC14
      */
     void addMarker(Marker marker);
 
     /**
      * Delete specified marker with given {@code type}.
+     * <p/>
+     * Fires following event:
+     * {@link MarkerChangedEvent} with status {@link Marker#REMOVED} when given marker has been removed from current resource.
      *
      * @param type
      *         the marker type
      * @return true if specified marker removed
+     * @throws IllegalArgumentException
+     *         in case if given marker type is invalid (null or empty). Reasons include:
+     *         <ul>
+     *         <li>Invalid marker type occurred</li>
+     *         </ul>
      * @see Marker#getType()
+     * @see MarkerChangedEvent
      * @since 4.0.0-RC14
      */
     boolean deleteMarker(String type);
+
+    /**
+     * Returns the nearest parent resource which has given marker {@code type}.
+     *
+     * @param type
+     *         the marker type
+     * @return the {@link Optional} with specified registered marker
+     * @throws IllegalArgumentException
+     *         in case if given marker type is invalid (null or empty). Reasons include:
+     *         <ul>
+     *         <li>Invalid marker type occurred</li>
+     *         </ul>
+     * @since 4.1.0-RC1
+     */
+    Optional<Resource> getParentWithMarker(String type);
 
     /** {@inheritDoc} */
     @Override

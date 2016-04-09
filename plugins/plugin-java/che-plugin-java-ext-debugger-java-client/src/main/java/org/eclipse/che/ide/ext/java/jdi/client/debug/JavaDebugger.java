@@ -26,8 +26,9 @@ import org.eclipse.che.api.promises.client.js.JsPromise;
 import org.eclipse.che.api.promises.client.js.JsPromiseError;
 import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.app.CurrentProject;
 import org.eclipse.che.ide.api.filetypes.FileTypeRegistry;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.debug.Breakpoint;
 import org.eclipse.che.ide.debug.Debugger;
@@ -296,15 +297,23 @@ public class JavaDebugger implements Debugger, DebuggerObservable {
      */
     @NotNull
     private List<String> resolveFilePathByLocation(@NotNull Location location) {
-        CurrentProject currentProject = appContext.getCurrentProject();
+//        CurrentProject currentProject = appContext.getCurrentProject();
 
-        if (currentProject == null) {
+        final Resource resource = appContext.getResource();
+
+        if (resource == null) {
+            return Collections.emptyList();
+        }
+
+        final Project project = resource.getRelatedProject();
+
+        if (project == null) {
             return Collections.emptyList();
         }
 
         String pathSuffix = location.getClassName().replace(".", "/") + ".java";
 
-        List<String> sourceFolders = JavaSourceFolderUtil.getSourceFolders(currentProject);
+        List<String> sourceFolders = JavaSourceFolderUtil.getSourceFolders(project);
         List<String> filePaths = new ArrayList<>(sourceFolders.size() + 1);
 
         for (String sourceFolder : sourceFolders) {

@@ -90,6 +90,7 @@ import org.eclipse.che.ide.api.project.wizard.ImportProjectNotificationSubscribe
 import org.eclipse.che.ide.api.project.wizard.ImportWizardRegistrar;
 import org.eclipse.che.ide.api.project.wizard.ImportWizardRegistry;
 import org.eclipse.che.ide.api.project.wizard.ProjectNotificationSubscriber;
+import org.eclipse.che.ide.api.resources.ResourceInterceptor;
 import org.eclipse.che.ide.api.resources.modification.ClipboardManager;
 import org.eclipse.che.ide.part.explorer.project.TreeResourceRevealer;
 import org.eclipse.che.ide.resources.impl.ClipboardManagerImpl;
@@ -144,7 +145,6 @@ import org.eclipse.che.ide.preferences.pages.appearance.AppearanceViewImpl;
 import org.eclipse.che.ide.preferences.pages.extensions.ExtensionManagerPresenter;
 import org.eclipse.che.ide.preferences.pages.extensions.ExtensionManagerView;
 import org.eclipse.che.ide.preferences.pages.extensions.ExtensionManagerViewImpl;
-import org.eclipse.che.ide.project.node.NodeManager;
 import org.eclipse.che.ide.project.node.factory.NodeFactory;
 import org.eclipse.che.ide.project.node.icon.DockerfileIconProvider;
 import org.eclipse.che.ide.project.node.icon.FileIconProvider;
@@ -298,6 +298,8 @@ public class CoreGinModule extends AbstractGinModule {
         bind(StartUpActionsProcessor.class).in(Singleton.class);
 
         bind(ClipboardManager.class).to(ClipboardManagerImpl.class);
+
+        GinMultibinder.newSetBinder(binder(), ResourceInterceptor.class).addBinding().to(ResourceInterceptor.NoOpInterceptor.class);
     }
 
     private void configureComponents() {
@@ -447,7 +449,7 @@ public class CoreGinModule extends AbstractGinModule {
     private void configureProjectTree() {
         install(new GinFactoryModuleBuilder().build(NodeFactory.class));
         bind(SettingsProvider.class).to(DummySettingsProvider.class).in(Singleton.class);
-        bind(NodeManager.class);
+//        bind(NodeManager.class);
         bind(ProjectExplorerView.class).to(ProjectExplorerViewImpl.class).in(Singleton.class);
         bind(ProjectExplorerPart.class).to(ProjectExplorerPresenter.class).in(Singleton.class);
 

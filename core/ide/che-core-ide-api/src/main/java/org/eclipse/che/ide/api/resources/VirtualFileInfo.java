@@ -17,6 +17,7 @@ import org.eclipse.che.ide.api.project.HasProjectConfig;
  * Information about custom virtual file.
  *
  * @author Valeriy Svydenko
+ * @deprecated use {@link SyntheticFile}
  */
 @Deprecated
 public class VirtualFileInfo {

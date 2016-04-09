@@ -262,6 +262,11 @@ public class DeleteResourceManager {
         return new ConfirmCallback() {
             @Override
             public void accepted() {
+                if (resources == null) { //sometimes we may occur NPE here while reading length
+                    callback.onFailure(new IllegalStateException());
+                    return;
+                }
+
                 Promise<?>[] deleteAll = new Promise<?>[resources.length];
                 for (int i = 0; i < resources.length; i++) {
                     final Resource resource = resources[i];

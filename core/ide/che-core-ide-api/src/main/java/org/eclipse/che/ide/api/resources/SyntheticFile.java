@@ -44,7 +44,7 @@ public class SyntheticFile implements VirtualFile {
 
     @Override
     public String getPath() {
-        throw new UnsupportedOperationException("Synthetic file doesn't have a path");
+        return name;
     }
 
     @Override
@@ -74,7 +74,7 @@ public class SyntheticFile implements VirtualFile {
 
     @Override
     public HasProjectConfig getProject() {
-        throw new UnsupportedOperationException("Synthetic file doesn't have a bound project");
+        return null;
     }
 
     @Override

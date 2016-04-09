@@ -10,18 +10,16 @@
  *******************************************************************************/
 package org.eclipse.che.ide.part.explorer.project;
 
-import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.common.base.Optional;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
-import org.eclipse.che.ide.api.data.HasStorablePath;
 import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.api.data.tree.settings.NodeSettings;
 import org.eclipse.che.ide.api.data.tree.settings.SettingsProvider;
@@ -30,20 +28,20 @@ import org.eclipse.che.ide.api.parts.HasView;
 import org.eclipse.che.ide.api.parts.ProjectExplorerPart;
 import org.eclipse.che.ide.api.parts.base.BasePresenter;
 import org.eclipse.che.ide.api.resources.Container;
-import org.eclipse.che.ide.api.resources.File;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.resources.ResourceChangedEvent;
 import org.eclipse.che.ide.api.resources.ResourceChangedEvent.ResourceChangedHandler;
 import org.eclipse.che.ide.api.resources.ResourceDelta;
+import org.eclipse.che.ide.api.resources.marker.MarkerChangedEvent;
 import org.eclipse.che.ide.api.selection.Selection;
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerView.ActionDelegate;
-import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.resources.reveal.RevealResourceEvent;
 import org.eclipse.che.ide.resources.tree.ContainerNode;
 import org.eclipse.che.ide.resources.tree.ResourceNode;
 import org.eclipse.che.ide.ui.smartTree.Tree;
 import org.eclipse.che.ide.ui.smartTree.event.SelectionChangedEvent;
 import org.eclipse.che.ide.ui.smartTree.event.SelectionChangedEvent.SelectionChangedHandler;
+import org.eclipse.che.ide.ui.smartTree.event.StoreRemoveEvent;
 import org.vectomatic.dom.svg.ui.SVGResource;
 
 import javax.validation.constraints.NotNull;
@@ -67,15 +65,16 @@ import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
 public class ProjectExplorerPresenter extends BasePresenter implements ActionDelegate,
                                                                        ProjectExplorerPart,
                                                                        HasView,
-                                                                       ResourceChangedHandler {
-    private final ProjectExplorerView          view;
-    private final EventBus                     eventBus;
+                                                                       ResourceChangedHandler,
+                                                                       MarkerChangedEvent.MarkerChangedHandler {
+    private final ProjectExplorerView      view;
+    private final EventBus                 eventBus;
     private final ResourceNode.NodeFactory nodeFactory;
-    private final SettingsProvider             settingsProvider;
-    private final CoreLocalizationConstant     locale;
-    private final Resources                    resources;
+    private final SettingsProvider         settingsProvider;
+    private final CoreLocalizationConstant locale;
+    private final Resources                resources;
 
-    public static final int PART_SIZE = 250;
+    public static final int PART_SIZE = 500;
 
     private boolean hiddenFilesAreShown;
 
@@ -95,6 +94,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         this.view.setDelegate(this);
 
         eventBus.addHandler(ResourceChangedEvent.getType(), this);
+        eventBus.addHandler(MarkerChangedEvent.getType(), this);
 
         view.getTree().getSelectionModel().addSelectionChangedHandler(new SelectionChangedHandler() {
             @Override
@@ -149,49 +149,99 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
             }
         }
 
-        //process generic resource
-        final Path parent = resource.getLocation().parent();
-
-        for (Node checkNode : tree.getNodeStorage().getAll()) {
-
-            if (checkNode instanceof ResourceNode && ((ResourceNode)checkNode).getData().getLocation().equals(parent)) {
-
-                if (!tree.getNodeDescriptor(checkNode).isLoaded()) {
-                    eventBus.fireEvent(new RevealResourceEvent(resource));
-                    return;
-                }
-
-                final Node node;
-                if (resource instanceof Container) {
-                    node = nodeFactory.newContainerNode((Container)resource, nodeSettings);
-                } else {
-                    node = nodeFactory.newFileNode((File)resource, nodeSettings);
-                }
-
-                tree.getNodeStorage().add(checkNode, node);
-
-                Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-                    @Override
-                    public void execute() {
-                        tree.getSelectionModel().select(node, false);
-                    }
-                });
-
-                return;
-            }
-        }
+        eventBus.fireEvent(new RevealResourceEvent(resource));
     }
 
     @SuppressWarnings("unchecked")
-    protected void onResourceRemoved(ResourceDelta delta) {
-        final Tree tree = view.getTree();
+    protected void onResourceRemoved(final ResourceDelta delta) {
 
-        for (Node node : tree.getNodeStorage().getAll()) {
-            if (node instanceof ResourceNode && ((ResourceNode)node).getData().getLocation().equals(delta.getResource().getLocation())) {
-                tree.getNodeStorage().remove(node);
-                return;
+        final Tree tree = view.getTree();
+        final Node[] node = new Node[1];
+
+        //look for removed node from existing
+        for (final Node exist : tree.getNodeStorage().getAll()) {
+            if (isNodeServesResource(exist, delta.getResource())) {
+                node[0] = exist;
+                break;
             }
         }
+
+        final HandlerRegistration[] handler = new HandlerRegistration[1];
+
+        if (node[0] == null) {
+            return;
+        }
+
+        //handle node removal and reveal to sibling node or parent
+        handler[0] = tree.getNodeStorage().addStoreRemoveHandler(new StoreRemoveEvent.StoreRemoveHandler() {
+            @Override
+            public void onRemove(final StoreRemoveEvent event) {
+                //filter only our removed node
+                if (!event.getNode().equals(node[0])) {
+                    return;
+                }
+
+                //if found, de-register handler
+                if (handler[0] != null) {
+                    handler[0].removeHandler();
+                }
+
+                //if "/a/b/c" - removed node, we should get "/a/b" - parent
+                final Node nodeParent = node[0].getParent();
+
+                if (nodeParent == null) {
+                    return;
+                }
+
+                if (nodeParent instanceof ResourceNode) {
+                    final Optional<Container> resourceParent = delta.getResource().getParent(); //resource's, not node
+
+                    //resource's parent may differs from node's parent
+                    if (resourceParent.isPresent() &&
+                        !((ResourceNode)nodeParent).getData().getLocation().equals(resourceParent.get().getLocation())) {
+                        eventBus.fireEvent(new RevealResourceEvent((resourceParent.get())));
+                    } else {
+
+                        ResourceNode siblingToReveal = null;
+
+                        final List<Node> siblingNodes = tree.getNodeStorage().getChildren(nodeParent);
+
+                        if (siblingNodes != null && !siblingNodes.isEmpty()) {
+                            if (event.getIndex() == 0) {
+                                //if removed first node, then select first resource based
+                                for (int i = 0; i < siblingNodes.size(); i++) {
+                                    if (siblingNodes.get(i) instanceof ResourceNode) {
+                                        siblingToReveal = (ResourceNode)siblingNodes.get(i);
+                                        break;
+                                    }
+                                }
+                            } else {
+                                //or first previous resource based
+                                for (int i = event.getIndex() - 1; i >= 0; i--) {
+                                    if (siblingNodes.get(i) instanceof ResourceNode) {
+                                        siblingToReveal = (ResourceNode)siblingNodes.get(i);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (siblingToReveal != null) {
+                                eventBus.fireEvent(new RevealResourceEvent(siblingToReveal.getData()));
+                                return;
+                            }
+                        }
+
+                        eventBus.fireEvent(new RevealResourceEvent(((ResourceNode)nodeParent).getData()));
+                    }
+                }
+            }
+        });
+
+        tree.getNodeStorage().remove(node[0]);
+    }
+
+    protected boolean isNodeServesResource(Node node, Resource resource) {
+        return node instanceof ResourceNode && ((ResourceNode)node).getData().getLocation().equals(resource.getLocation());
     }
 
     @SuppressWarnings("unchecked")
@@ -205,6 +255,11 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
                 return;
             }
         }
+    }
+
+    @Override
+    public void onMarkerChanged(MarkerChangedEvent event) {
+
     }
 
     public Tree getTree() {
@@ -279,7 +334,7 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
 
     /**
      * Reload children by node type.
-     * Useful method if you want to reload specified nodes, e.g. External Liraries.
+     * Useful method if you want to reload specified nodes, e.g. External Libraries.
      *
      * @param type
      *         node type to update
@@ -329,71 +384,4 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         return hiddenFilesAreShown;
     }
 
-    /**
-     * Search node in the project explorer tree by storable path.
-     *
-     * @param path
-     *         path to node
-     * @return promise object with found node or promise error if node wasn't found
-     */
-    @Deprecated
-    public Promise<Node> getNodeByPath(HasStorablePath path) {
-        return view.getNodeByPath(path, false, true);
-    }
-
-    /**
-     * Search node in the project explorer tree by storable path.
-     *
-     * @param path
-     *         path to node
-     * @param forceUpdate
-     *         force children reload
-     * @return promise object with found node or promise error if node wasn't found
-     */
-    @Deprecated
-    public Promise<Node> getNodeByPath(HasStorablePath path, boolean forceUpdate) {
-        return view.getNodeByPath(path, forceUpdate, true);
-    }
-
-    /**
-     * Search node in the project explorer tree by storable path.
-     *
-     * @param path
-     *         path to node
-     * @param forceUpdate
-     *         force children reload
-     * @param closeMissingFiles
-     *         allow editor to close removed files if they were opened
-     * @return promise object with found node or promise error if node wasn't found
-     */
-    @Deprecated
-    public Promise<Node> getNodeByPath(HasStorablePath path, boolean forceUpdate, boolean closeMissingFiles) {
-        return view.getNodeByPath(path, forceUpdate, closeMissingFiles);
-    }
-
-    /**
-     * Set selection on node in project tree.
-     *
-     * @param item
-     *         node which should be selected
-     * @param keepExisting
-     *         keep current selection or reset it
-     */
-    @Deprecated
-    public void select(Node item, boolean keepExisting) {
-        view.select(item, keepExisting);
-    }
-
-    /**
-     * Set selection on nodes in project tree.
-     *
-     * @param items
-     *         nodes which should be selected
-     * @param keepExisting
-     *         keep current selection or reset it
-     */
-    @Deprecated
-    public void select(List<Node> items, boolean keepExisting) {
-        view.select(items, keepExisting);
-    }
 }

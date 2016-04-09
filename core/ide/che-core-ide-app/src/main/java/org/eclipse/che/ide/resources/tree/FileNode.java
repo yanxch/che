@@ -21,24 +21,21 @@ import org.eclipse.che.ide.api.event.FileEvent;
 import org.eclipse.che.ide.api.resources.File;
 import org.eclipse.che.ide.project.node.icon.NodeIconProvider;
 import org.eclipse.che.ide.project.shared.NodesResources;
-import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
-import org.vectomatic.dom.svg.ui.SVGResource;
 
-import javax.validation.constraints.NotNull;
 import java.util.Set;
 
 import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.OPEN;
 
 /**
+ * Node that represents file node in the project tree.
+ *
  * @author Vlad Zhukovskiy
+ * @see File
+ * @see ResourceNode
+ * @since 4.1.0-RC1
  */
 @Beta
 public class FileNode extends ResourceNode<File> implements HasAction {
-    /**
-     * If you want to display another name different from origin, just set into attributes of this node this parameter.
-     */
-    public static final String DISPLAY_NAME_ATTR = "display";
-
     protected final EventBus              eventBus;
     protected final Set<NodeIconProvider> nodeIconProvider;
 
@@ -49,30 +46,14 @@ public class FileNode extends ResourceNode<File> implements HasAction {
                     NodesResources nodesResources,
                     EventBus eventBus,
                     Set<NodeIconProvider> nodeIconProvider) {
-        super(resource, nodeSettings, nodeFactory, nodesResources);
+        super(resource, nodeSettings, nodesResources, nodeFactory, eventBus, nodeIconProvider);
         this.eventBus = eventBus;
         this.nodeIconProvider = nodeIconProvider;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void actionPerformed() {
         eventBus.fireEvent(new FileEvent(getData(), OPEN));
-    }
-
-    @Override
-    public void updatePresentation(@NotNull NodePresentation presentation) {
-        super.updatePresentation(presentation);
-
-        SVGResource icon = null;
-
-        for (NodeIconProvider iconProvider : nodeIconProvider) {
-            icon = iconProvider.getIcon(getData().getName());
-
-            if (icon != null) {
-                break;
-            }
-        }
-
-        presentation.setPresentableIcon(icon != null ? icon : nodesResources.file());
     }
 }

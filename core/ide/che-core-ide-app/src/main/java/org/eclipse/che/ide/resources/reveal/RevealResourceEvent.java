@@ -15,6 +15,7 @@ import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 
 import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.resource.Path;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -56,20 +57,24 @@ public class RevealResourceEvent extends GwtEvent<RevealResourceEvent.RevealReso
         return TYPE;
     }
 
-    private Resource resource;
+    private Path location;
 
     public RevealResourceEvent(Resource resource) {
-        this.resource = checkNotNull(resource, "Resource should not be a null");
+        this.location = checkNotNull(resource, "Resource should not be a null").getLocation();
+    }
+
+    public RevealResourceEvent(Path location) {
+        this.location = checkNotNull(location, "Path should not be a null");
     }
 
     /**
-     * Returns the resource which should be revealed.
+     * Returns the resource path which should be revealed.
      *
-     * @return the resource
+     * @return the resource path
      * @since 4.0.0-RC14
      */
-    public Resource getResource() {
-        return resource;
+    public Path getLocation() {
+        return location;
     }
 
     /** {@inheritDoc} */

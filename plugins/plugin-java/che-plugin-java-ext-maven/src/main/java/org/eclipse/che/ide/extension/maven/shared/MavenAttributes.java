@@ -46,4 +46,6 @@ public interface MavenAttributes {
     String DEFAULT_TEST_RESOURCES_FOLDER = "src/test/resources";
     String DEFAULT_VERSION               = "1.0-SNAPSHOT";
     String DEFAULT_PACKAGING             = "jar";
+
+    String POM_XML = "pom.xml";
 }

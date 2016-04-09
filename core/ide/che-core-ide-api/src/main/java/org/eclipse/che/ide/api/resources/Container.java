@@ -60,6 +60,26 @@ public interface Container extends Resource {
     Promise<Optional<File>> getFile(Path relativePath);
 
     /**
+     * Returns the {@code Promise} with handle to the file resource identified by the given path in this container.
+     * <p/>
+     * The supplied path should represent relative path to file in this container.
+     *
+     * @param relativePath
+     *         the path of the member file
+     * @return the {@code Promise} with the handle of the member file
+     * @throws IllegalStateException
+     *         if during resource search failed has been occurred. Reasons include:
+     *         <ul>
+     *         <li>Resource with path '/project_path' doesn't exists</li>
+     *         <li>Resource with path '/project_path' isn't a project</li>
+     *         <li>Not a file</li>
+     *         </ul>
+     * @see #getContainer(Path)
+     * @since 4.0.0-RC14
+     */
+    Promise<Optional<File>> getFile(String relativePath);
+
+    /**
      * Returns the {@code Promise} with handle to the container identified by the given path in this container.
      * <p/>
      * The supplied path should represent relative path to folder.
@@ -80,6 +100,26 @@ public interface Container extends Resource {
     Promise<Optional<Container>> getContainer(Path relativePath);
 
     /**
+     * Returns the {@code Promise} with handle to the container identified by the given path in this container.
+     * <p/>
+     * The supplied path should represent relative path to folder.
+     *
+     * @param relativePath
+     *         the path of the member container
+     * @return the {@code Promise} with the handle of the member container
+     * @throws IllegalStateException
+     *         if during resource search failed has been occurred. Reasons include:
+     *         <ul>
+     *         <li>Resource with path '/project_path' doesn't exists</li>
+     *         <li>Resource with path '/project_path' isn't a project</li>
+     *         <li>Not a container</li>
+     *         </ul>
+     * @see #getFile(Path)
+     * @since 4.0.0-RC14
+     */
+    Promise<Optional<Container>> getContainer(String relativePath);
+
+    /**
      * Returns the {@code Promise} with array of existing member resources (projects, folders and files) in this resource,
      * in particular order. Order is organized by alphabetic resource name ignoring case.
      * <p/>
@@ -87,15 +127,15 @@ public interface Container extends Resource {
      * <p/>
      * Note, that if the result array is empty, then method thinks that children may not be loaded from the server and send
      * a request ot the server to load the children.
-     *
+     * <p/>
      * Method guarantees that resources will be sorted by their {@link #getLocation()} in ascending order.
-     *
+     * <p/>
      * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
      * Delta kind: {@link ResourceDelta#ADDED}.
      * Cached and loaded resource provided by {@link ResourceDelta#getResource()}.
-     *
+     * <p/>
      * Or
-     *
+     * <p/>
      * Delta kind: {@link ResourceDelta#UPDATED}. When resource was cached previously.
      * Updated resource provided by {@link ResourceDelta#getResource()}.
      *
@@ -113,18 +153,18 @@ public interface Container extends Resource {
      * <p/>
      * Note, that if supplied argument {@code force} is set to {@code false} and result array is empty, then method thinks
      * that children may not be loaded from the server and send a request ot the server to load the children.
-     *
+     * <p/>
      * Method guarantees that resources will be sorted by their {@link #getLocation()} in ascending order.
-     *
+     * <p/>
      * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
      * Delta kind: {@link ResourceDelta#ADDED}.
      * Cached and loaded resource provided by {@link ResourceDelta#getResource()}.
-     *
+     * <p/>
      * Or
-     *
+     * <p/>
      * Delta kind: {@link ResourceDelta#UPDATED}. When resource was cached previously.
      * Updated resource provided by {@link ResourceDelta#getResource()}.
-     *
+     * <p/>
      * May fire {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
      * Delta kind: {@link ResourceDelta#REMOVED}.
      * Removed resource provided by {@link ResourceDelta#getResource()}.
@@ -166,7 +206,7 @@ public interface Container extends Resource {
      *         }
      *     });
      * </pre>
-     *
+     * <p/>
      * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
      * Delta kind: {@link ResourceDelta#ADDED}.
      * Created resource (instance of {@link Project}) provided by {@link ResourceDelta#getResource()}
@@ -219,7 +259,7 @@ public interface Container extends Resource {
      *         }
      *     });
      * </pre>
-     *
+     * <p/>
      * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
      * Delta kind: {@link ResourceDelta#ADDED}.
      * Created resource (instance of {@link Project}) provided by {@link ResourceDelta#getResource()}
@@ -265,7 +305,7 @@ public interface Container extends Resource {
      *         }
      *     });
      * </pre>
-     *
+     * <p/>
      * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
      * Delta kind: {@link ResourceDelta#ADDED}.
      * Created resource (instance of {@link Folder}) provided by {@link ResourceDelta#getResource()}
@@ -314,7 +354,7 @@ public interface Container extends Resource {
      *         }
      *     });
      * </pre>
-     *
+     * <p/>
      * Fires {@link ResourceChangedEvent} with the following {@link ResourceDelta}:
      * Delta kind: {@link ResourceDelta#ADDED}.
      * Created resource (instance of {@link File}) provided by {@link ResourceDelta#getResource()}
@@ -348,13 +388,33 @@ public interface Container extends Resource {
      * <p/>
      * Fires following events:
      * {@link ResourceChangedEvent} when the synchronized resource has changed.
-     *
+     * <p/>
      * Method doesn't guarantees the sorted order of the returned resources.
      *
      * @return the array of resource which where affected by synchronize operation
      * @since 4.0.0-RC14
      */
     Promise<Resource[]> synchronize();
+
+    /**
+     * Synchronizes the given {@code deltas} with already cached resources.
+     * Method is useful for third-party components which performs changes with resources outside of client side resource management.
+     * <p/>
+     * Method should be called on the workspace root {@link Workspace#getWorkspaceRoot()}.
+     *
+     * @param deltas
+     *         the deltas which should be resolved
+     * @return the {@link Promise} with resolved deltas
+     * @throws IllegalStateException
+     *         in case if method has been called outside of workspace root. Reasons include:
+     *         <ul>
+     *         <li>External deltas should be applied on the workspace root</li>
+     *         </ul>
+     * @see ExternalResourceDelta
+     * @see ResourceDelta
+     * @since 4.1.0-RC1
+     */
+    Promise<ResourceDelta[]> synchronize(ResourceDelta... deltas);
 
     /**
      * Searches the all possible files which matches given file or content mask.
@@ -364,7 +424,7 @@ public interface Container extends Resource {
      * <li>{@code *} - which matches any character sequence (including the empty one)</li>
      * <li>{@code ?} - which matches any single character</li>
      * </ul>
-     *
+     * <p/>
      * Method doesn't guarantees the sorted order of the returned resources.
      *
      * @param fileMask

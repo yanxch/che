@@ -12,12 +12,15 @@ package org.eclipse.che.ide.resources.impl;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.ide.api.project.HasProjectConfig;
 import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.resources.marker.Marker;
+import org.eclipse.che.ide.api.resources.marker.PresentableTextMarker;
 import org.eclipse.che.ide.resource.Path;
 
 /**
@@ -75,7 +78,15 @@ class FileImpl extends ResourceImpl implements File {
     /** {@inheritDoc} */
     @Override
     public String getDisplayName() {
-        return getName();
+        final Optional<Marker> optMarker = getMarker(PresentableTextMarker.ID);
+
+        if (optMarker.isPresent()) {
+            final PresentableTextMarker marker = (PresentableTextMarker)optMarker.get();
+
+            return marker.getPresentableText();
+        } else {
+            return getName();
+        }
     }
 
     /** {@inheritDoc} */

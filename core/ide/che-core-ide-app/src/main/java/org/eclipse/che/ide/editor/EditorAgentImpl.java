@@ -31,6 +31,7 @@ import org.eclipse.che.ide.api.editor.EditorRegistry;
 import org.eclipse.che.ide.api.editor.OpenEditorCallbackImpl;
 import org.eclipse.che.ide.api.event.ActivePartChangedEvent;
 import org.eclipse.che.ide.api.event.ActivePartChangedHandler;
+import org.eclipse.che.ide.api.event.FileContentUpdateEvent;
 import org.eclipse.che.ide.api.event.FileEvent;
 import org.eclipse.che.ide.api.event.FileEventHandler;
 import org.eclipse.che.ide.api.event.WindowActionEvent;
@@ -187,6 +188,7 @@ public class EditorAgentImpl implements EditorAgent,
             if (editor != null) {
                 editor.getEditorInput().setFile((File)resource);
                 editor.onFileChanged();
+                eventBus.fireEvent(new FileContentUpdateEvent(resource.getLocation().toString()));
             }
         } else {
             List<EditorPartPresenter> outdatedEditors = newArrayList();
@@ -209,6 +211,7 @@ public class EditorAgentImpl implements EditorAgent,
                         if (newFile.isPresent()) {
                             editor.getEditorInput().setFile(newFile.get());
                             editor.onFileChanged();
+                            eventBus.fireEvent(new FileContentUpdateEvent(newFile.get().getLocation().toString()));
                         }
                     }
                 });

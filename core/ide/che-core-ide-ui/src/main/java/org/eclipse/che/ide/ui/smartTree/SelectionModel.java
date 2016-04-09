@@ -636,6 +636,11 @@ public class SelectionModel implements HasSelectionHandlers<Node>, HasBeforeSele
         }
 
         for (Node node : nodes) {
+
+            if (tree.getNodeDescriptor(node) == null) {
+                continue;
+            }
+
             boolean isSelected = isSelected(node);
             if (!suppressEvent && !isSelected) {
                 BeforeSelectionEvent<Node> evt = BeforeSelectionEvent.fire(this, node);

@@ -30,6 +30,7 @@ import org.eclipse.che.ide.api.resources.ResourceChangedEvent;
 import org.eclipse.che.ide.api.resources.ResourceChangedEvent.ResourceChangedHandler;
 import org.eclipse.che.ide.api.resources.ResourceDelta;
 import org.eclipse.che.ide.api.resources.modification.ClipboardManager;
+import org.eclipse.che.ide.api.resources.modification.CutResourceMarker;
 import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.ui.dialogs.CancelCallback;
 import org.eclipse.che.ide.ui.dialogs.ConfirmCallback;
@@ -77,8 +78,20 @@ class CopyPasteManager implements ResourceChangedHandler {
     }
 
     protected void setResources(Resource[] resources, boolean move) {
+        if (this.resources != null) {
+            for (Resource resource : this.resources) {
+                resource.deleteMarker(CutResourceMarker.ID);
+            }
+        }
+
         this.resources = resources;
         this.move = move;
+
+        if (move) {
+            for (Resource resource : resources) {
+                resource.addMarker(new CutResourceMarker());
+            }
+        }
     }
 
     protected void paste(Path destination) {

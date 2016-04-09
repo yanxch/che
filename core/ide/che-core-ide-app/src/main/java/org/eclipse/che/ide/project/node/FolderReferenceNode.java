@@ -30,16 +30,16 @@ public class FolderReferenceNode extends ItemReferenceBasedNode {
     public FolderReferenceNode(@Assisted ItemReference itemReference,
                                @Assisted ProjectConfigDto projectConfig,
                                @Assisted NodeSettings nodeSettings,
-                               @NotNull EventBus eventBus,
-                               @NotNull NodeManager nodeManager) {
-        super(itemReference, projectConfig, nodeSettings, eventBus, nodeManager);
+                               @NotNull EventBus eventBus/*,
+                               @NotNull NodeManager nodeManager*/) {
+        super(itemReference, projectConfig, nodeSettings, eventBus, null);
     }
 
     @Override
     public void updatePresentation(@NotNull NodePresentation presentation) {
         presentation.setPresentableText(getData().getName());
-        presentation.setPresentableIcon(getData().getName().startsWith(".") ? nodeManager.getNodesResources().hiddenSimpleFolder()
-                                                                            : nodeManager.getNodesResources().simpleFolder());
+//        presentation.setPresentableIcon(getData().getName().startsWith(".") ? nodeManager.getNodesResources().hiddenSimpleFolder()
+//                                                                            : nodeManager.getNodesResources().simpleFolder());
     }
 
     @Override

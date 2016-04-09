@@ -20,7 +20,7 @@ import org.eclipse.che.api.promises.client.FunctionException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper;
 import org.eclipse.che.ide.MimeType;
-import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.ext.java.shared.dto.Change;
 import org.eclipse.che.ide.ext.java.shared.dto.ConflictImportDTO;
 import org.eclipse.che.ide.ext.java.shared.dto.Problem;
@@ -55,11 +55,11 @@ public class JavaCodeAssistClient {
     @Inject
     public JavaCodeAssistClient(@Named("cheExtensionPath") String machineExtPath,
                                 DtoUnmarshallerFactory unmarshallerFactory,
-                                AppContext appContext,
+                                Workspace workspace,
                                 LoaderFactory loaderFactory,
                                 AsyncRequestFactory asyncRequestFactory) {
         this.machineExtPath = machineExtPath;
-        this.workspaceId = appContext.getWorkspace().getId();
+        this.workspaceId = workspace.getId();
         this.unmarshallerFactory = unmarshallerFactory;
         this.loader = loaderFactory.newLoader();
         this.asyncRequestFactory = asyncRequestFactory;

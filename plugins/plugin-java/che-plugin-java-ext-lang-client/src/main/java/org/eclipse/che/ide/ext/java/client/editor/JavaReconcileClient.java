@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.ext.java.shared.dto.ReconcileResult;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.AsyncRequestFactory;
@@ -35,9 +35,9 @@ public class JavaReconcileClient {
     @Inject
     public JavaReconcileClient(@Named("cheExtensionPath") String javaCAPath,
                                DtoUnmarshallerFactory dtoUnmarshallerFactory,
-                               AppContext appContext,
+                               Workspace workspace,
                                AsyncRequestFactory asyncRequestFactory) {
-        this.workspaceId = appContext.getWorkspace().getId();
+        this.workspaceId = workspace.getId();
         this.javaCAPath = javaCAPath;
         this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
         this.asyncRequestFactory = asyncRequestFactory;

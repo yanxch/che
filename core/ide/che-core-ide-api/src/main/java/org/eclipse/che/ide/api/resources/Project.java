@@ -15,7 +15,7 @@ import com.google.common.annotations.Beta;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.project.shared.dto.SourceEstimation;
 import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.ide.api.resources.marker.AbstractMarker;
+import org.eclipse.che.ide.api.resources.marker.Marker;
 import org.eclipse.che.ide.api.workspace.Workspace;
 
 import java.util.List;
@@ -110,14 +110,14 @@ public interface Project extends Container, ProjectConfig {
      * @since 4.0.0-RC14
      */
     @Beta
-    class ProblemProjectMarker extends AbstractMarker {
+    class ProblemProjectMarker implements Marker {
 
         /**
          * Marker type, which should be used when marker requests.
          *
          * @see Resource#getMarker(String)
          */
-        public static final String PROBLEM_PROJECT = "problem.project.marker";
+        public static final String PROBLEM_PROJECT = "problemProjectMarker";
 
         /** {@inheritDoc} */
         @Override

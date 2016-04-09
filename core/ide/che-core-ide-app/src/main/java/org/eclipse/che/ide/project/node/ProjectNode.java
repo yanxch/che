@@ -37,22 +37,22 @@ public class ProjectNode extends ResourceBasedNode<ProjectConfigDto> implements 
     @Inject
     public ProjectNode(@Assisted ProjectConfigDto projectConfig,
                        @Assisted NodeSettings nodeSettings,
-                       EventBus eventBus,
-                       NodeManager nodeManager) {
-        super(projectConfig, projectConfig, nodeSettings, eventBus, nodeManager);
+                       EventBus eventBus/*,
+                       NodeManager nodeManager*/) {
+        super(projectConfig, projectConfig, nodeSettings, eventBus);
     }
 
     @NotNull
     @Override
     protected Promise<List<Node>> getChildrenImpl() {
-        return nodeManager.getChildren(getData(), getSettings());
+        return null/*nodeManager.getChildren(getData(), getSettings())*/;
     }
 
     @Override
     public void updatePresentation(@NotNull NodePresentation presentation) {
         presentation.setPresentableText(Path.valueOf(getData().getPath()).lastSegment());
-        presentation.setPresentableIcon(isValid(getData()) ? nodeManager.getNodesResources().projectFolder()
-                                                           : nodeManager.getNodesResources().notValidProjectFolder());
+//        presentation.setPresentableIcon(isValid(getData()) ? nodeManager.getNodesResources().projectFolder()
+//                                                           : nodeManager.getNodesResources().notValidProjectFolder());
         presentation.setPresentableTextCss("font-weight:bold");
     }
 

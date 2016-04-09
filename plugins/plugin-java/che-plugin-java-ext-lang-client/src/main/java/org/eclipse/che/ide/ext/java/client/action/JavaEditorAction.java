@@ -10,9 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.java.client.action;
 
-import com.google.api.client.util.Collections2;
-import com.google.common.collect.Lists;
-
 import org.eclipse.che.ide.MimeType;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.action.ProjectAction;

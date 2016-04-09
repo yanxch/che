@@ -24,9 +24,11 @@ import org.eclipse.che.ide.ext.java.shared.OpenDeclarationDescriptor;
 import org.eclipse.che.ide.ext.java.shared.dto.ImplementationsDescriptorDTO;
 import org.eclipse.che.ide.ext.java.shared.dto.model.CompilationUnit;
 import org.eclipse.che.ide.ext.java.shared.dto.model.JavaProject;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.AsyncRequestFactory;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
+import org.eclipse.che.ide.rest.StringUnmarshaller;
 import org.eclipse.che.ide.ui.loaders.request.LoaderFactory;
 
 import java.util.List;
@@ -68,15 +70,36 @@ public class JavaNavigationServiceImpl implements JavaNavigationService {
         requestFactory.createGetRequest(url).send(callback);
     }
 
+    @Override
+    public Promise<OpenDeclarationDescriptor> findDeclaration(Path project, String fqn, int offset) {
+        String url = restContext + "/jdt/" + workspaceId + "/navigation/find-declaration?projectpath=" + project + "&fqn=" + fqn +
+                     "&offset=" + offset;
+        return requestFactory.createGetRequest(url).send(unmarshallerFactory.newUnmarshaller(OpenDeclarationDescriptor.class));
+    }
+
     public void getExternalLibraries(String projectPath, AsyncRequestCallback<List<Jar>> callback) {
         String url = restContext + "/jdt/" + workspaceId + "/navigation/libraries?projectpath=" + projectPath;
         requestFactory.createGetRequest(url).send(callback);
     }
 
     @Override
+    public Promise<List<Jar>> getExternalLibraries(Path project) {
+        String url = restContext + "/jdt/" + workspaceId + "/navigation/libraries?projectpath=" + project.toString();
+
+        return requestFactory.createGetRequest(url).send(unmarshallerFactory.newListUnmarshaller(Jar.class));
+    }
+
+    @Override
     public void getLibraryChildren(String projectPath, int libId, AsyncRequestCallback<List<JarEntry>> callback) {
         String url = restContext + "/jdt/" + workspaceId + "/navigation/lib/children?projectpath=" + projectPath + "&root=" + libId;
         requestFactory.createGetRequest(url).send(callback);
+    }
+
+    @Override
+    public Promise<List<JarEntry>> getLibraryChildren(Path project, int libId) {
+        String url = restContext + "/jdt/" + workspaceId + "/navigation/lib/children?projectpath=" + project.toString() + "&root=" + libId;
+
+        return requestFactory.createGetRequest(url).send(unmarshallerFactory.newListUnmarshaller(JarEntry.class));
     }
 
     @Override
@@ -87,10 +110,24 @@ public class JavaNavigationServiceImpl implements JavaNavigationService {
     }
 
     @Override
+    public Promise<List<JarEntry>> getChildren(Path project, int libId, Path path) {
+        String url = restContext + "/jdt/" + workspaceId + "/navigation/children?projectpath=" + project + "&root=" + libId +
+                     "&path=" + path;
+        return requestFactory.createGetRequest(url).send(unmarshallerFactory.newListUnmarshaller(JarEntry.class));
+    }
+
+    @Override
     public void getEntry(String projectPath, int libId, String path, AsyncRequestCallback<JarEntry> callback) {
         String url =
                 restContext + "/jdt/" + workspaceId + "/navigation/entry?projectpath=" + projectPath + "&root=" + libId + "&path=" + path;
         requestFactory.createGetRequest(url).send(callback);
+    }
+
+    @Override
+    public Promise<JarEntry> getEntry(Path project, int libId, String path) {
+        String url =
+                restContext + "/jdt/" + workspaceId + "/navigation/entry?projectpath=" + project + "&root=" + libId + "&path=" + path;
+        return requestFactory.createGetRequest(url).send(unmarshallerFactory.newUnmarshaller(JarEntry.class));
     }
 
     @Override
@@ -101,30 +138,39 @@ public class JavaNavigationServiceImpl implements JavaNavigationService {
     }
 
     @Override
+    public Promise<String> getContent(Path project, int libId, Path path) {
+        String url = getContentUrl(project.toString(), libId, path.toString());
+
+        return requestFactory.createGetRequest(url).send(new StringUnmarshaller());
+    }
+
+    @Override
     public void getContent(String projectPath, String fqn, AsyncRequestCallback<String> callback) {
         String url = restContext + "/jdt/" + workspaceId + "/navigation/contentbyfqn?projectpath=" + projectPath + "&fqn=" + fqn;
         requestFactory.createGetRequest(url).send(callback);
     }
 
+    @Override
+    public Promise<String> getContent(Path project, String fqn) {
+        String url = restContext + "/jdt/" + workspaceId + "/navigation/contentbyfqn?projectpath=" + project.toString() + "&fqn=" + fqn;
+
+        return requestFactory.createGetRequest(url).send(new StringUnmarshaller());
+    }
+
     /** {@inheritDoc} */
     @Override
-    public Promise<CompilationUnit> getCompilationUnit(String projectPath, String fqn, boolean showInherited) {
-        final String url = restContext + "/jdt/" + workspaceId + "/navigation/compilation-unit?projectpath=" + projectPath + "&fqn=" + fqn +
+    public Promise<CompilationUnit> getCompilationUnit(Path project, String fqn, boolean showInherited) {
+        final String url = restContext + "/jdt/" + workspaceId + "/navigation/compilation-unit?projectpath=" + project + "&fqn=" + fqn +
                            "&showinherited=" + showInherited;
 
-        return newPromise(new AsyncPromiseHelper.RequestCall<CompilationUnit>() {
-            @Override
-            public void makeCall(AsyncCallback<CompilationUnit> callback) {
-                requestFactory.createGetRequest(url)
-                              .header(ACCEPT, APPLICATION_JSON)
-                              .send(newCallback(callback, unmarshallerFactory.newUnmarshaller(CompilationUnit.class)));
-            }
-        });
+        return requestFactory.createGetRequest(url)
+                             .header(ACCEPT, APPLICATION_JSON)
+                             .send(unmarshallerFactory.newUnmarshaller(CompilationUnit.class));
     }
 
     @Override
-    public Promise<ImplementationsDescriptorDTO> getImplementations(String projectPath, String fqn, int offset) {
-        final String url = restContext + "/jdt/" + workspaceId + "/navigation/implementations?projectpath=" + projectPath + "&fqn=" + fqn +
+    public Promise<ImplementationsDescriptorDTO> getImplementations(Path project, String fqn, int offset) {
+        final String url = restContext + "/jdt/" + workspaceId + "/navigation/implementations?projectpath=" + project + "&fqn=" + fqn +
                            "&offset=" + offset;
 
         return requestFactory.createGetRequest(url)

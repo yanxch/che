@@ -24,6 +24,7 @@ import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.ext.java.client.JavaLocalizationConstant;
 import org.eclipse.che.ide.ext.java.client.JavaResources;
 import org.eclipse.che.ide.ext.java.client.JavaUtils;
+import org.eclipse.che.ide.ext.java.client.resource.JavaSourceFolderMarker;
 import org.eclipse.che.ide.newresource.AbstractNewResourceAction;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 import org.eclipse.che.ide.ui.dialogs.InputCallback;
@@ -33,6 +34,7 @@ import org.eclipse.che.ide.ui.dialogs.input.InputValidator;
 import javax.validation.constraints.NotNull;
 
 import static com.google.common.base.Preconditions.checkState;
+import static org.eclipse.che.ide.ext.java.client.util.JavaUtil.isJavaProject;
 
 /**
  * Action to create new Java package.
@@ -60,13 +62,14 @@ public class NewPackageAction extends AbstractNewResourceAction {
 
     @Override
     public void updateInPerspective(@NotNull ActionEvent e) {
-        e.getPresentation().setEnabledAndVisible(false);
+        final Resource[] resources = appContext.getResources();
+        final boolean inJavaProject = resources != null && resources.length == 1 && isJavaProject(resources[0].getRelatedProject());
+
+        e.getPresentation().setEnabledAndVisible(inJavaProject && resources[0].getParentWithMarker(JavaSourceFolderMarker.ID).isPresent());
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-
-
         InputDialog inputDialog = dialogFactory.createInputDialog("New " + title, "Name:", new InputCallback() {
             @Override
             public void accepted(String value) {
@@ -77,7 +80,6 @@ public class NewPackageAction extends AbstractNewResourceAction {
     }
 
     private void onAccepted(String value) {
-
         final Resource resource = appContext.getResource();
 
         checkState(resource instanceof Container, "Parent should be a container");

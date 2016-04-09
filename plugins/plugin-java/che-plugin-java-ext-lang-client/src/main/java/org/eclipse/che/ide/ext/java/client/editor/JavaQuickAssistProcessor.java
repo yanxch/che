@@ -11,13 +11,14 @@
 package org.eclipse.che.ide.ext.java.client.editor;
 
 import org.eclipse.che.ide.api.editor.EditorAgent;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.api.text.Position;
 import org.eclipse.che.ide.api.text.annotation.Annotation;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.ext.java.client.JavaResources;
 import org.eclipse.che.ide.ext.java.client.action.ProposalAction;
-import org.eclipse.che.ide.ext.java.client.projecttree.JavaSourceFolderUtil;
 import org.eclipse.che.ide.ext.java.client.refactoring.RefactoringUpdater;
 import org.eclipse.che.ide.ext.java.shared.dto.Problem;
 import org.eclipse.che.ide.ext.java.shared.dto.ProposalPresentation;
@@ -44,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.eclipse.che.ide.ext.java.client.editor.JavaCodeAssistProcessor.insertStyle;
+import static org.eclipse.che.ide.ext.java.client.util.JavaUtil.resolveFQN;
 
 /**
  * {@link QuickAssistProcessor} for java files.
@@ -154,20 +156,24 @@ public class JavaQuickAssistProcessor implements QuickAssistProcessor {
                                 final int offset,
                                 final List<Problem> annotations) {
         final VirtualFile file = textEditor.getEditorInput().getFile();
-        final String projectPath = file.getProject().getProjectConfig().getPath();
-        String fqn = JavaSourceFolderUtil.getFQNForFile(file);
-        Unmarshallable<Proposals> unmarshaller = unmarshallerFactory.newUnmarshaller(Proposals.class);
-        client.computeAssistProposals(projectPath, fqn, offset, annotations, new AsyncRequestCallback<Proposals>(unmarshaller) {
-            @Override
-            protected void onSuccess(Proposals proposals) {
-                showProposals(callback, proposals, textEditor);
-            }
 
-            @Override
-            protected void onFailure(Throwable throwable) {
-                Log.error(JavaCodeAssistProcessor.class, throwable);
-            }
-        });
+        if (file instanceof Resource) {
+            final Project project = ((Resource)file).getRelatedProject();
+
+            Unmarshallable<Proposals> unmarshaller = unmarshallerFactory.newUnmarshaller(Proposals.class);
+            client.computeAssistProposals(project.getLocation().toString(), resolveFQN(file), offset, annotations,
+                                          new AsyncRequestCallback<Proposals>(unmarshaller) {
+                                              @Override
+                                              protected void onSuccess(Proposals proposals) {
+                                                  showProposals(callback, proposals, textEditor);
+                                              }
+
+                                              @Override
+                                              protected void onFailure(Throwable throwable) {
+                                                  Log.error(JavaCodeAssistProcessor.class, throwable);
+                                              }
+                                          });
+        }
     }
 
     private int collectQuickFixableAnnotations(final LinearRange lineRange,

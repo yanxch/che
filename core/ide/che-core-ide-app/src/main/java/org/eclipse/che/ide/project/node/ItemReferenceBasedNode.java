@@ -32,8 +32,8 @@ public abstract class ItemReferenceBasedNode extends ResourceBasedNode<ItemRefer
                                   @NotNull ProjectConfigDto projectConfig,
                                   @NotNull NodeSettings nodeSettings,
                                   @NotNull EventBus eventBus,
-                                  @NotNull NodeManager nodeManager) {
-        super(itemReference, projectConfig, nodeSettings, eventBus, nodeManager);
+                                  @NotNull Object nodeManager) {
+        super(itemReference, projectConfig, nodeSettings, eventBus);
     }
 
 //    @Nullable
@@ -62,7 +62,7 @@ public abstract class ItemReferenceBasedNode extends ResourceBasedNode<ItemRefer
     @NotNull
     @Override
     protected Promise<List<Node>> getChildrenImpl() {
-        return nodeManager.getChildren(getStorablePath(), getProjectConfig(), getSettings());
+        return /*nodeManager.getChildren(getStorablePath(), getProjectConfig(), getSettings())*/null;
     }
 
     @NotNull

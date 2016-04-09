@@ -23,11 +23,11 @@ import org.eclipse.che.ide.api.resources.File;
 import org.eclipse.che.ide.api.resources.Folder;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.resources.ResourceDelta;
 import org.eclipse.che.ide.resource.Path;
 
-import java.util.Set;
-
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Default implementation of the {@code Container}.
@@ -56,7 +56,19 @@ abstract class ContainerImpl extends ResourceImpl implements Container {
 
     /** {@inheritDoc} */
     @Override
+    public Promise<Optional<File>> getFile(String relativePath) {
+        return resourceManager.getFile(getLocation().append(relativePath));
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public Promise<Optional<Container>> getContainer(Path relativePath) {
+        return resourceManager.getContainer(getLocation().append(relativePath));
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Promise<Optional<Container>> getContainer(String relativePath) {
         return resourceManager.getContainer(getLocation().append(relativePath));
     }
 
@@ -152,6 +164,14 @@ abstract class ContainerImpl extends ResourceImpl implements Container {
     @Override
     public Promise<Resource[]> synchronize() {
         return resourceManager.synchronize(this);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Promise<ResourceDelta[]> synchronize(ResourceDelta...deltas) {
+        checkState(getLocation().isRoot(), "External deltas should be applied on the workspace root");
+
+        return resourceManager.synchronize(deltas);
     }
 
     /** {@inheritDoc} */

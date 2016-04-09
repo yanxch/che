@@ -17,12 +17,21 @@ import com.google.common.base.Optional;
 
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.ide.api.resources.Container;
-import org.eclipse.che.ide.api.resources.marker.Marker;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.resources.marker.Marker;
 import org.eclipse.che.ide.resource.Path;
 
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.of;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.lang.System.arraycopy;
+import static java.util.Arrays.copyOf;
+import static org.eclipse.che.ide.api.resources.marker.Marker.CREATED;
+import static org.eclipse.che.ide.api.resources.marker.Marker.REMOVED;
+import static org.eclipse.che.ide.api.resources.marker.Marker.UPDATED;
 
 /**
  * Default implementation of the {@code Resource}.
@@ -34,8 +43,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Beta
 abstract class ResourceImpl implements Resource {
 
-    protected ResourceManager resourceManager;
-    protected Path            path;
+    protected final ResourceManager resourceManager;
+    protected final Path            path;
+
+    protected Project project;
+
+    protected Marker[] markers = new Marker[0];
 
     protected ResourceImpl(Path path, ResourceManager resourceManager) {
         this.path = checkNotNull(path.removeTrailingSeparator(), "Null path occurred");
@@ -91,6 +104,10 @@ abstract class ResourceImpl implements Resource {
             return (Project)this;
         }
 
+        if (project != null) {
+            return project;
+        }
+
         Optional<Container> optionalParent = getParent();
 
         if (!optionalParent.isPresent()) {
@@ -109,7 +126,10 @@ abstract class ResourceImpl implements Resource {
             parent = optionalParent.get();
         }
 
-        return (Project)parent;
+        //caching related project
+        project = (Project)parent;
+
+        return project;
     }
 
     /** {@inheritDoc} */
@@ -131,25 +151,98 @@ abstract class ResourceImpl implements Resource {
     /** {@inheritDoc} */
     @Override
     public Optional<Marker> getMarker(String type) {
-        return resourceManager.getMarker(this, type);
+        checkArgument(!isNullOrEmpty(type), "Invalid marker type occurred");
+
+        if (markers.length == 0) {
+            return absent();
+        }
+
+        for (Marker marker : markers) {
+            if (marker.getType().equals(type)) {
+                return of(marker);
+            }
+        }
+
+        return absent();
     }
 
     /** {@inheritDoc} */
     @Override
     public Marker[] getMarkers() {
-        return resourceManager.getMarkers(this);
+        return markers;
     }
 
     /** {@inheritDoc} */
     @Override
     public void addMarker(Marker marker) {
-        resourceManager.addMarker(this, marker);
+        checkArgument(marker != null, "Null marker occurred");
+
+        for (int i = 0; i < markers.length; i++) {
+            if (markers[i].getType().equals(marker.getType())) {
+                markers[i] = marker;
+                resourceManager.notifyMarkerChanged(this, marker, UPDATED);
+                return;
+            }
+        }
+
+        final int index = markers.length;
+        markers = copyOf(markers, index + 1);
+        markers[index] = marker;
+        resourceManager.notifyMarkerChanged(this, marker, CREATED);
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean deleteMarker(String type) {
-        return resourceManager.deleteMarker(this, type);
+        checkArgument(!isNullOrEmpty(type), "Invalid marker type occurred");
+
+        int size = markers.length;
+        int index = -1;
+
+        for (int i = 0; i < markers.length; i++) {
+            if (markers[i].getType().equals(type)) {
+                index = i;
+                resourceManager.notifyMarkerChanged(this, markers[i], REMOVED);
+                break;
+            }
+        }
+
+        if (index == -1) {
+            return false;
+        }
+
+        final int numMoved = markers.length - index - 1;
+        if (numMoved > 0) {
+            arraycopy(markers, index + 1, markers, index, numMoved);
+        }
+        markers = copyOf(markers, --size);
+
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Optional<Resource> getParentWithMarker(String type) {
+        checkArgument(!isNullOrEmpty(type), "Invalid marker type occurred");
+
+        if (getMarker(type).isPresent()) {
+            return Optional.<Resource>of(this);
+        }
+
+        Optional<Container> optParent = getParent();
+
+        while (optParent.isPresent()) {
+            Container parent = optParent.get();
+
+            final Optional<Marker> marker = parent.getMarker(type);
+            if (marker.isPresent()) {
+                return Optional.<Resource>of(parent);
+            }
+
+            optParent = parent.getParent();
+        }
+
+        return absent();
     }
 
     /** {@inheritDoc} */

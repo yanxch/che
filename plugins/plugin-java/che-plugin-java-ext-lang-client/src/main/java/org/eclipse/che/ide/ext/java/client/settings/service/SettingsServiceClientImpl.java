@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.dto.JsonSerializable;
 import org.eclipse.che.ide.json.JsonHelper;
 import org.eclipse.che.ide.rest.AsyncRequestFactory;
@@ -37,11 +37,11 @@ public class SettingsServiceClientImpl implements SettingsServiceClient {
     private final String              workspaceId;
 
     @Inject
-    public SettingsServiceClientImpl(AppContext appContext,
+    public SettingsServiceClientImpl(Workspace workspace,
                                      AsyncRequestFactory asyncRequestFactory,
                                      @Named("cheExtensionPath") String extPath) {
         this.extPath = extPath;
-        this.workspaceId = appContext.getWorkspace().getId();
+        this.workspaceId = workspace.getId();
         this.asyncRequestFactory = asyncRequestFactory;
     }
 

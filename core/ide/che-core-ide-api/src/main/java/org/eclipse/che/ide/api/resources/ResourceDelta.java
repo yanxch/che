@@ -19,6 +19,7 @@ import org.eclipse.che.ide.resource.Path;
  *
  * @author Vlad Zhukovskiy
  * @since 4.0.0-RC14
+ * @see ExternalResourceDelta
  */
 @Beta
 public interface ResourceDelta {

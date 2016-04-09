@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.java.jdi.client.debug;
 
+import com.google.common.base.Optional;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
@@ -18,23 +19,24 @@ import com.google.web.bindery.event.shared.EventBus;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
+import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.data.HasStorablePath;
-import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.event.FileEvent;
+import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.resources.SyntheticFile;
 import org.eclipse.che.ide.api.resources.VirtualFile;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.debug.DebuggerManager;
 import org.eclipse.che.ide.dto.DtoFactory;
-import org.eclipse.che.ide.ext.java.client.project.node.JavaNodeManager;
-import org.eclipse.che.ide.ext.java.client.project.node.jar.JarFileNode;
+import org.eclipse.che.ide.ext.java.client.navigation.service.JavaNavigationService;
 import org.eclipse.che.ide.ext.java.shared.JarEntry;
 import org.eclipse.che.ide.jseditor.client.document.Document;
 import org.eclipse.che.ide.jseditor.client.text.TextPosition;
 import org.eclipse.che.ide.jseditor.client.texteditor.EmbeddedTextEditorPresenter;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
-import org.eclipse.che.ide.project.node.FileReferenceNode;
 import org.eclipse.che.ide.util.loging.Log;
 
 import javax.validation.constraints.NotNull;
@@ -52,26 +54,29 @@ public class JavaDebuggerFileHandler {
     private final DebuggerManager          debuggerManager;
     private final EditorAgent              editorAgent;
     private final DtoFactory               dtoFactory;
-    private final AppContext               appContext;
     private final EventBus                 eventBus;
-    private final JavaNodeManager          javaNodeManager;
-    private final ProjectExplorerPresenter projectExplorer;
+    private final Workspace workspace;
+    private final JavaNavigationService service;
+    private final AppContext appContext;
+    private final PromiseProvider promises;
 
     @Inject
     public JavaDebuggerFileHandler(DebuggerManager debuggerManager,
                                    EditorAgent editorAgent,
                                    DtoFactory dtoFactory,
-                                   AppContext appContext,
                                    EventBus eventBus,
-                                   JavaNodeManager javaNodeManager,
-                                   ProjectExplorerPresenter projectExplorer) {
+                                   Workspace workspace,
+                                   JavaNavigationService service,
+                                   AppContext appContext,
+                                   PromiseProvider promises) {
         this.debuggerManager = debuggerManager;
         this.editorAgent = editorAgent;
         this.dtoFactory = dtoFactory;
-        this.appContext = appContext;
         this.eventBus = eventBus;
-        this.javaNodeManager = javaNodeManager;
-        this.projectExplorer = projectExplorer;
+        this.workspace = workspace;
+        this.service = service;
+        this.appContext = appContext;
+        this.promises = promises;
     }
 
     public void openFile(final List<String> filePaths,
@@ -89,7 +94,7 @@ public class JavaDebuggerFileHandler {
             activeFile = activeEditor.getEditorInput().getFile();
         }
 
-        if (activeFile == null || !filePaths.contains(activeFile.getPath())) {
+        if (activeFile == null || !filePaths.contains(activeFile.getLocation().toString())) {
             openFile(className, filePaths, 0, new AsyncCallback<VirtualFile>() {
                 @Override
                 public void onSuccess(VirtualFile result) {
@@ -128,15 +133,13 @@ public class JavaDebuggerFileHandler {
             return;
         }
 
-        projectExplorer.getNodeByPath(new HasStorablePath.StorablePath(filePath)).then(new Operation<Node>() {
+        workspace.getWorkspaceRoot().getFile(filePath).then(new Operation<Optional<File>>() {
             @Override
-            public void apply(final Node node) throws OperationException {
-                if (!(node instanceof FileReferenceNode)) {
-                    return;
+            public void apply(Optional<File> file) throws OperationException {
+                if (file.isPresent()) {
+                    handleActivateFile(file.get(), callback);
+                    eventBus.fireEvent(new FileEvent(file.get(), OPEN));
                 }
-
-                handleActivateFile((VirtualFile)node, callback);
-                eventBus.fireEvent(new FileEvent((VirtualFile)node, OPEN));
             }
         }).catchError(new Operation<PromiseError>() {
             @Override
@@ -147,20 +150,30 @@ public class JavaDebuggerFileHandler {
         });
     }
 
-    private void openExternalResource(String className, final AsyncCallback<VirtualFile> callback) {
+    private void openExternalResource(final String className, final AsyncCallback<VirtualFile> callback) {
         JarEntry jarEntry = dtoFactory.createDto(JarEntry.class);
         jarEntry.setPath(className);
         jarEntry.setName(className.substring(className.lastIndexOf(".") + 1) + ".class");
         jarEntry.setType(JarEntry.JarEntryType.CLASS_FILE);
 
-        final JarFileNode jarFileNode = javaNodeManager.getJavaNodeFactory()
-                                                       .newJarFileNode(jarEntry,
-                                                                       null,
-                                                                       appContext.getCurrentProject().getProjectConfig(),
-                                                                       javaNodeManager.getJavaSettingsProvider().getSettings());
+        final Resource resource = appContext.getResource();
 
-        handleActivateFile(jarFileNode, callback);
-        eventBus.fireEvent(new FileEvent(jarFileNode, OPEN));
+        if (resource == null) {
+            callback.onFailure(new IllegalStateException());
+            return;
+        }
+
+        final Project project = resource.getRelatedProject();
+
+        service.getContent(project.getLocation(), className).then(new Operation<String>() {
+            @Override
+            public void apply(String content) throws OperationException {
+                VirtualFile file = new SyntheticFile(className.substring(className.lastIndexOf(".") + 1) + ".class", content, promises);
+
+                handleActivateFile(file, callback);
+                eventBus.fireEvent(new FileEvent(file, OPEN));
+            }
+        });
     }
 
     public void handleActivateFile(final VirtualFile virtualFile, final AsyncCallback<VirtualFile> callback) {

@@ -22,20 +22,17 @@ import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.event.FileEvent;
 import org.eclipse.che.ide.api.data.tree.HasAction;
-import org.eclipse.che.ide.api.project.HasProjectConfig;
 import org.eclipse.che.ide.api.data.tree.settings.NodeSettings;
+import org.eclipse.che.ide.api.event.FileEvent;
+import org.eclipse.che.ide.api.project.HasProjectConfig;
 import org.eclipse.che.ide.api.resources.VirtualFile;
-import org.eclipse.che.ide.project.node.icon.NodeIconProvider;
 import org.eclipse.che.ide.resource.Path;
-import org.eclipse.che.ide.rest.StringUnmarshaller;
 import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
 import org.vectomatic.dom.svg.ui.SVGResource;
 
 import javax.validation.constraints.NotNull;
 
-import static org.eclipse.che.api.promises.client.callback.PromiseHelper.newCallback;
 import static org.eclipse.che.api.promises.client.callback.PromiseHelper.newPromise;
 
 /**
@@ -58,9 +55,9 @@ public class FileReferenceNode extends ItemReferenceBasedNode implements Virtual
                              @Assisted ProjectConfigDto projectConfig,
                              @Assisted NodeSettings nodeSettings,
                              EventBus eventBus,
-                             AppContext appContext,
-                             NodeManager nodeManager) {
-        super(itemReference, projectConfig, nodeSettings, eventBus, nodeManager);
+                             AppContext appContext/*,
+                             NodeManager nodeManager*/) {
+        super(itemReference, projectConfig, nodeSettings, eventBus, null);
         
         this.workspaceId = appContext.getWorkspace().getId();
     }
@@ -71,15 +68,15 @@ public class FileReferenceNode extends ItemReferenceBasedNode implements Virtual
 
         SVGResource icon = null;
 
-        for (NodeIconProvider iconProvider : nodeManager.getNodeIconProvider()) {
-            icon = iconProvider.getIcon(getData().getName());
-
-            if (icon != null) {
-                break;
-            }
-        }
-
-        presentation.setPresentableIcon(icon != null ? icon : nodeManager.getNodesResources().file());
+//        for (NodeIconProvider iconProvider : nodeManager.getNodeIconProvider()) {
+//            icon = iconProvider.getIcon(getData().getName());
+//
+//            if (icon != null) {
+//                break;
+//            }
+//        }
+//
+//        presentation.setPresentableIcon(icon != null ? icon : nodeManager.getNodesResources().file());
     }
 
     @NotNull
@@ -125,7 +122,7 @@ public class FileReferenceNode extends ItemReferenceBasedNode implements Virtual
         return newPromise(new AsyncPromiseHelper.RequestCall<Void>() {
             @Override
             public void makeCall(AsyncCallback<Void> callback) {
-                nodeManager.projectService.updateFile(workspaceId, getStorablePath(), content, newCallback(callback));
+//                nodeManager.projectService.updateFile(workspaceId, getStorablePath(), content, newCallback(callback));
             }
         });
     }
@@ -140,7 +137,7 @@ public class FileReferenceNode extends ItemReferenceBasedNode implements Virtual
         return newPromise(new AsyncPromiseHelper.RequestCall<String>() {
             @Override
             public void makeCall(AsyncCallback<String> callback) {
-                nodeManager.projectService.getFileContent(workspaceId, getStorablePath(), newCallback(callback, new StringUnmarshaller()));
+//                nodeManager.projectService.getFileContent(workspaceId, getStorablePath(), newCallback(callback, new StringUnmarshaller()));
             }
         });
     }

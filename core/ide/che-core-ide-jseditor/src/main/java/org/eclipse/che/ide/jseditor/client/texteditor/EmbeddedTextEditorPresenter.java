@@ -75,6 +75,7 @@ import org.eclipse.che.ide.jseditor.client.text.TextPosition;
 import org.eclipse.che.ide.jseditor.client.text.TextRange;
 import org.eclipse.che.ide.jseditor.client.texteditor.EditorWidget.WidgetInitializedCallback;
 import org.eclipse.che.ide.jseditor.client.texteditor.EmbeddedTextEditorPartView.Delegate;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.texteditor.selection.CursorModelWithHandler;
 import org.eclipse.che.ide.ui.dialogs.CancelCallback;
 import org.eclipse.che.ide.ui.dialogs.ConfirmCallback;
@@ -247,7 +248,7 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
         this.generalEventBus.addHandler(FileContentUpdateEvent.TYPE, new FileContentUpdateHandler() {
             @Override
             public void onFileContentUpdate(final FileContentUpdateEvent event) {
-                if (event.getFilePath() != null && event.getFilePath().equals(document.getFile().getPath())) {
+                if (event.getFilePath() != null && Path.valueOf(event.getFilePath()).equals(getEditorInput().getFile().getLocation())) {
                     updateContent();
                 }
             }
@@ -262,7 +263,7 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
          * -restore current cursor position
          */
         final TextPosition currentCursor = getCursorPosition();
-        this.documentStorage.getDocument(document.getFile(), new EmbeddedDocumentCallback() {
+        this.documentStorage.getDocument(getEditorInput().getFile(), new EmbeddedDocumentCallback() {
 
             @Override
             public void onDocumentReceived(final String content) {

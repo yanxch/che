@@ -28,8 +28,11 @@ import org.eclipse.che.ide.api.data.tree.NodeInterceptor;
 import org.eclipse.che.ide.api.data.tree.settings.HasSettings;
 import org.eclipse.che.ide.api.parts.base.BaseView;
 import org.eclipse.che.ide.api.parts.base.ToolButton;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.menu.ContextMenu;
-import org.eclipse.che.ide.project.node.SyntheticBasedNode;
+import org.eclipse.che.ide.project.node.SyntheticNode;
+import org.eclipse.che.ide.resources.tree.ResourceNode;
 import org.eclipse.che.ide.ui.FontAwesome;
 import org.eclipse.che.ide.ui.Tooltip;
 import org.eclipse.che.ide.ui.smartTree.NodeDescriptor;
@@ -39,16 +42,16 @@ import org.eclipse.che.ide.ui.smartTree.NodeStorage.StoreSortInfo;
 import org.eclipse.che.ide.ui.smartTree.SortDir;
 import org.eclipse.che.ide.ui.smartTree.Tree;
 import org.eclipse.che.ide.ui.smartTree.TreeStyles;
-import org.eclipse.che.ide.ui.smartTree.compare.NameComparator;
 import org.eclipse.che.ide.ui.smartTree.event.GoIntoStateEvent;
 import org.eclipse.che.ide.ui.smartTree.event.GoIntoStateEvent.GoIntoStateHandler;
 import org.eclipse.che.ide.ui.smartTree.presentation.DefaultPresentationRenderer;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
 import static java.util.Collections.singletonList;
-import static org.eclipse.che.ide.project.node.SyntheticBasedNode.CUSTOM_BACKGROUND_FILL;
+import static org.eclipse.che.ide.project.node.SyntheticNode.CUSTOM_BACKGROUND_FILL;
 import static org.eclipse.che.ide.ui.menu.PositionController.HorizontalAlign.MIDDLE;
 import static org.eclipse.che.ide.ui.menu.PositionController.VerticalAlign.BOTTOM;
 import static org.eclipse.che.ide.ui.smartTree.event.GoIntoStateEvent.State.ACTIVATED;
@@ -93,9 +96,17 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
             }
         });
 
-        StoreSortInfo alphabetical = new StoreSortInfo(new NameComparator(), SortDir.ASC);
         tree.getNodeStorage().addSortInfo(foldersOnTopSort);
-        tree.getNodeStorage().addSortInfo(alphabetical);
+        tree.getNodeStorage().addSortInfo(new StoreSortInfo(new Comparator<Node>() {
+            @Override
+            public int compare(Node o1, Node o2) {
+                if (o1 instanceof ResourceNode && o2 instanceof ResourceNode) {
+                    return ((ResourceNode)o1).compareTo((ResourceNode)o2);
+                }
+
+                return 0;
+            }
+        }, SortDir.ASC));
 
         if (tree.getGoInto() != null) {
             tree.getGoInto().addGoIntoHandler(this);
@@ -104,6 +115,7 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
         tree.setPresentationRenderer(new ProjectExplorerRenderer(tree.getTreeStyles()));
         tree.ensureDebugId(PROJECT_TREE_WIDGET_ID);
         tree.setAutoSelect(true);
+        tree.getNodeLoader().setUseCaching(false);
 
         setContentWidget(tree);
 
@@ -258,6 +270,13 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
 
             element.setAttribute("name", node.getName());
 
+            if (node instanceof ResourceNode) {
+                final Resource resource = ((ResourceNode)node).getData();
+                final Project project = resource.getRelatedProject();
+                element.setAttribute("path", resource.getLocation().toString());
+                element.setAttribute("project", project.getLocation().toString());
+            }
+
 //            if (node instanceof HasStorablePath) {
 //                element.setAttribute("path", ((HasStorablePath)node).getStorablePath());
 //            }
@@ -270,7 +289,7 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
 //                element.setAttribute("project", ((HasProjectConfig)node).getProjectConfig().getPath());
 //            }
 
-            if (node instanceof SyntheticBasedNode<?>) {
+            if (node instanceof SyntheticNode<?>) {
                 element.setAttribute("synthetic", "true");
             }
 

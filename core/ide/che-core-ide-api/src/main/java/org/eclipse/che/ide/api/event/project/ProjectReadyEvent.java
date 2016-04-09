@@ -19,6 +19,7 @@ import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
  *
  * @author Nikolay Zamosenchuk
  */
+@Deprecated
 public class ProjectReadyEvent extends GwtEvent<ProjectReadyHandler> {
 
     /** Type class used to register this event. */

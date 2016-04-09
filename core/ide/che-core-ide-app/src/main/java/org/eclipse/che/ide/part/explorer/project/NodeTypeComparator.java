@@ -11,7 +11,7 @@
 package org.eclipse.che.ide.part.explorer.project;
 
 import org.eclipse.che.ide.api.data.tree.Node;
-import org.eclipse.che.ide.project.node.SyntheticBasedNode;
+import org.eclipse.che.ide.project.node.SyntheticNode;
 import org.eclipse.che.ide.resources.tree.ResourceNode;
 
 import java.util.Comparator;
@@ -38,7 +38,7 @@ public class NodeTypeComparator implements Comparator<Node> {
             return 2;
         }
 
-        if (node instanceof SyntheticBasedNode<?>) {
+        if (node instanceof SyntheticNode<?>) {
             return 3;
         }
 

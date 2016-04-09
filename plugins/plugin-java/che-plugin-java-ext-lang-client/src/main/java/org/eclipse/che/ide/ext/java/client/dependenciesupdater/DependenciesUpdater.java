@@ -21,7 +21,6 @@ import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.ext.java.client.JavaLocalizationConstant;
 import org.eclipse.che.ide.ext.java.client.event.DependencyUpdatedEvent;
-import org.eclipse.che.ide.ext.java.client.project.node.jar.ExternalLibrariesNode;
 import org.eclipse.che.ide.ext.java.shared.dto.ClassPathBuilderResult;
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
@@ -120,7 +119,7 @@ public class DependenciesUpdater {
     private void onUpdated(String channel, StatusNotification notification) {
         notification.setContent(locale.dependenciesSuccessfullyUpdated());
         notification.setStatus(StatusNotification.Status.SUCCESS);
-        projectExplorer.reloadChildrenByType(ExternalLibrariesNode.class);
+//        projectExplorer.reloadChildrenByType(ExternalLibrariesNode.class);
         eventBus.fireEvent(new DependencyUpdatedEvent(channel));
     }
 
