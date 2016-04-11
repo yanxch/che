@@ -14,8 +14,8 @@ import com.google.common.annotations.Beta;
 
 import org.eclipse.che.api.core.model.machine.Command;
 import org.eclipse.che.api.core.model.workspace.Environment;
-import org.eclipse.che.api.core.model.workspace.UsersWorkspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.Project;
 
@@ -61,7 +61,7 @@ public interface Workspace {
      * Returns the workspace identifier.
      *
      * @return the workspace identifier
-     * @see UsersWorkspace#getId()
+     * @see WorkspaceDto#getId()
      * @since 4.0.0-RC14
      */
     String getId();
@@ -116,7 +116,7 @@ public interface Workspace {
      * Returns the persistence status of current workspace.
      *
      * @return the true if workspace is temporary, otherwise returns the false
-     * @see UsersWorkspace#isTemporary()
+     * @see WorkspaceDto#isTemporary()
      * @since 4.0.0-RC14
      */
     boolean isTemporary();

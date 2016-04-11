@@ -89,7 +89,7 @@ public class CategoriesPageViewImpl implements CategoriesPageView {
     private final IconRegistry iconRegistry;
 
     @UiField(provided = true)
-    Style       style;
+    Style       styles;
     @UiField
     SimplePanel categoriesPanel;
     @UiField
@@ -120,12 +120,12 @@ public class CategoriesPageViewImpl implements CategoriesPageView {
                                   ProjectTypeComparator projectTypesComparator,
                                   TemplatesComparator templatesComparator) {
         this.resources = resources;
-        style = wizardResources.mainPageStyle();
+        styles = wizardResources.mainPageStyle();
         this.categoriesComparator = categoriesComparator;
         this.projectTypesComparator = projectTypesComparator;
         this.templatesComparator = templatesComparator;
 
-        style.ensureInjected();
+        styles.ensureInjected();
         this.iconRegistry = iconRegistry;
         rootElement = ourUiBinder.createAndBindUi(this);
         reset();
@@ -240,13 +240,6 @@ public class CategoriesPageViewImpl implements CategoriesPageView {
     }
 
     @Override
-    public void resetName() {
-        projectName.setText("");
-        projectDescription.setText("");
-        changeEnabledState(true);
-    }
-
-    @Override
     public void setName(String name) {
         projectName.setValue(name, true);
     }
@@ -259,12 +252,12 @@ public class CategoriesPageViewImpl implements CategoriesPageView {
 
     @Override
     public void removeNameError() {
-        projectName.removeStyleName(style.inputError());
+        projectName.removeStyleName(styles.inputError());
     }
 
     @Override
     public void showNameError() {
-        projectName.addStyleName(style.inputError());
+        projectName.addStyleName(styles.inputError());
     }
 
     @Override
@@ -368,7 +361,7 @@ public class CategoriesPageViewImpl implements CategoriesPageView {
 
     @Override
     public void reset() {
-        resetName();
+//        resetName();
         categoriesPanel.clear();
         categoriesList = new CategoriesList(resources);
         categoriesPanel.add(categoriesList);

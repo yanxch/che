@@ -14,8 +14,8 @@ import com.google.common.annotations.Beta;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 
-import org.eclipse.che.api.core.model.workspace.UsersWorkspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -93,7 +93,7 @@ public class WorkspaceConfigChangedEvent extends GwtEvent<WorkspaceConfigChanged
      * Returns the persistence status of current workspace.
      *
      * @return the true if workspace is temporary, otherwise returns the false
-     * @see UsersWorkspace#isTemporary()
+     * @see WorkspaceDto#isTemporary()
      * @since 4.0.0-RC14
      */
     public boolean isTemporary() {

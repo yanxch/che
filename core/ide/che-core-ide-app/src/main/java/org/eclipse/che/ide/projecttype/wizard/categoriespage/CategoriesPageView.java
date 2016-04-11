@@ -41,12 +41,6 @@ public interface CategoriesPageView extends View<CategoriesPageView.ActionDelega
 
     void setDescription(String description);
 
-    String getParentDirectory();
-
-    String getName();
-
-    void setParentDirectory(String parentDirectory);
-
     void removeNameError();
 
     void showNameError();
@@ -58,9 +52,6 @@ public interface CategoriesPageView extends View<CategoriesPageView.ActionDelega
     void setNameFieldReadOnly(boolean readOnly);
 
     interface ActionDelegate {
-
-        void onParentDirectoryChanged();
-
         void projectNameChanged(String name);
 
         void projectDescriptionChanged(String projectDescriptionValue);

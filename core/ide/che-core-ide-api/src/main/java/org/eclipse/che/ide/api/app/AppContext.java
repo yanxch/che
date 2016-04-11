@@ -13,7 +13,6 @@ package org.eclipse.che.ide.api.app;
 import com.google.common.annotations.Beta;
 
 import org.eclipse.che.api.factory.shared.dto.Factory;
-import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.workspace.Workspace;

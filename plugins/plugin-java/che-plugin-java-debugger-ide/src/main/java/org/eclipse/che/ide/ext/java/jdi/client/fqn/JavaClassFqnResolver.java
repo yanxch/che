@@ -13,6 +13,7 @@ package org.eclipse.che.ide.ext.java.jdi.client.fqn;
 import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.api.resources.VirtualFile;
+import org.eclipse.che.ide.ext.debugger.client.fqn.FqnResolver;
 
 import javax.validation.constraints.NotNull;
 
@@ -27,6 +28,6 @@ public class JavaClassFqnResolver implements FqnResolver {
     @NotNull
     @Override
     public String resolveFqn(@NotNull final VirtualFile file) {
-        return file.getPath();
+        return file.getLocation().toString();
     }
 }
