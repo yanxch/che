@@ -15,6 +15,7 @@ import com.google.gwt.user.client.Window;
 
 import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.core.model.machine.Server;
+import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.machine.shared.Constants;
 import org.eclipse.che.api.machine.shared.dto.MachineDto;
 import org.eclipse.che.api.machine.shared.dto.ServerDto;
@@ -22,6 +23,7 @@ import org.eclipse.che.ide.util.loging.Log;
 
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,11 +36,8 @@ import java.util.Map;
 public class DevMachine {
 
     private final MachineDto devMachineDescriptor;
-
     private final Map<String, DevMachineServer> servers;
-
     private final Map<String, String> runtimeProperties;
-
     private final Map<String, String> envVariables;
 
     public DevMachine(@NotNull MachineDto devMachineDescriptor) {
@@ -51,7 +50,6 @@ public class DevMachine {
         }
         runtimeProperties = devMachineDescriptor.getRuntime().getProperties();
         envVariables = devMachineDescriptor.getRuntime().getEnvVariables();
-
     }
 
     public Map<String, String> getEnvVariables() {
@@ -97,9 +95,6 @@ public class DevMachine {
     public Map<String, DevMachineServer> getServers() {
         return servers;
     }
-
-
-
 
     public DevMachineServer getServer(String reference) {
         if (!Strings.isNullOrEmpty(reference)) {
