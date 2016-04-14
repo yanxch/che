@@ -196,8 +196,8 @@ import org.eclipse.che.ide.ui.dialogs.message.MessageDialogFooter;
 import org.eclipse.che.ide.ui.dialogs.message.MessageDialogPresenter;
 import org.eclipse.che.ide.ui.dialogs.message.MessageDialogView;
 import org.eclipse.che.ide.ui.dialogs.message.MessageDialogViewImpl;
-import org.eclipse.che.ide.ui.dropdown.DropDownHeaderWidget;
-import org.eclipse.che.ide.ui.dropdown.DropDownHeaderWidgetImpl;
+import org.eclipse.che.ide.ui.dropdown.DropDownWidget;
+import org.eclipse.che.ide.ui.dropdown.DropDownWidgetImpl;
 import org.eclipse.che.ide.ui.dropdown.DropDownListFactory;
 import org.eclipse.che.ide.ui.loaders.initialization.LoaderView;
 import org.eclipse.che.ide.ui.loaders.initialization.LoaderViewImpl;
@@ -391,7 +391,7 @@ public class CoreGinModule extends AbstractGinModule {
         bind(ToolbarPresenter.class).annotatedWith(MainToolbar.class).to(ToolbarPresenter.class).in(Singleton.class);
 
         //configure drop down menu
-        install(new GinFactoryModuleBuilder().implement(DropDownHeaderWidget.class, DropDownHeaderWidgetImpl.class)
+        install(new GinFactoryModuleBuilder().implement(DropDownWidget.class, DropDownWidgetImpl.class)
                                              .build(DropDownListFactory.class));
 
         bind(NotificationManagerView.class).to(NotificationManagerViewImpl.class).in(Singleton.class);

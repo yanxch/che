@@ -56,7 +56,7 @@ import static org.eclipse.che.ide.api.notification.StatusNotification.Status.PRO
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.SUCCESS;
 
 /**
- * The presenter provides debug java application.
+ * The presenter provides debugging applications.
  *
  * @author Vitaly Parfonov
  * @author Artem Zatsarynnyi
@@ -219,7 +219,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
         variables.clear();
         view.setVariables(variables);
         view.setVMName("");
-        view.setExecutionPoint(true, null);
+        view.setExecutionPoint(null);
         selectedVariable = null;
         executionPoint = null;
     }
@@ -229,6 +229,9 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
             view.setVMName("");
         } else {
             view.setVMName(debuggerDescriptor.getInfo());
+        }
+        if (executionPoint != null) {
+            view.setExecutionPoint(executionPoint);
         }
         view.setBreakpoints(breakpointManager.getBreakpointList());
         updateStackFrameDump();
@@ -267,10 +270,6 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
                     List<DebuggerVariable> debuggerVariables = getDebuggerVariables(variables);
 
                     view.setVariables(debuggerVariables);
-                    if (!debuggerVariables.isEmpty()) {
-                        view.setExecutionPoint(variables.get(0).isExistInformation(), executionPoint);
-                    }
-
                     DebuggerPresenter.this.variables = debuggerVariables;
                 }
             }).catchError(new Operation<PromiseError>() {
