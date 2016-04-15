@@ -38,7 +38,7 @@ public class CompareWithRevisionAction extends GitAction {
                                      AppContext appContext,
                                      GitLocalizationConstant locale,
                                      ProjectExplorerPresenter projectExplorer) {
-        super(locale.compareWithRevisionTitle(), locale.compareWithRevisionTitle(), appContext, projectExplorer);
+        super(locale.compareWithRevisionTitle(), locale.compareWithRevisionTitle(), null, appContext);
         this.presenter = presenter;
         this.projectExplorer = projectExplorer;
     }
@@ -51,8 +51,8 @@ public class CompareWithRevisionAction extends GitAction {
 
     @Override
     public void updateInPerspective(@NotNull ActionEvent event) {
-        event.getPresentation().setVisible(getActiveProject() != null);
-        event.getPresentation().setEnabled(isGitRepository() && compareSupported());
+//        event.getPresentation().setVisible(getActiveProject() != null);
+//        event.getPresentation().setEnabled(isGitRepository() && compareSupported());
     }
 
     private boolean compareSupported() {

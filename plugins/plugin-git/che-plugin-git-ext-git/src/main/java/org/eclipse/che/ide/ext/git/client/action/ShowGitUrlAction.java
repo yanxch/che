@@ -30,8 +30,7 @@ public class ShowGitUrlAction extends GitAction {
                             AppContext appContext,
                             GitLocalizationConstant constant,
                             ProjectExplorerPresenter projectExplorer) {
-        super(constant.projectReadOnlyGitUrlPrompt(), constant.projectReadOnlyGitUrlPrompt(), FontAwesome.LINK, appContext,
-              projectExplorer);
+        super(constant.projectReadOnlyGitUrlPrompt(), constant.projectReadOnlyGitUrlPrompt(), FontAwesome.LINK, appContext);
         this.presenter = presenter;
     }
 

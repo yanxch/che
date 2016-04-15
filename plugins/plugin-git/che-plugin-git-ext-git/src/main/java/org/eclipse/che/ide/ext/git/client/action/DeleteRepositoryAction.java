@@ -36,7 +36,7 @@ public class DeleteRepositoryAction extends GitAction {
                                   GitLocalizationConstant constant,
                                   ProjectExplorerPresenter projectExplorer,
                                   DialogFactory dialogFactory) {
-        super(constant.deleteControlTitle(), constant.deleteControlPrompt(), resources.deleteRepo(), appContext, projectExplorer);
+        super(constant.deleteControlTitle(), constant.deleteControlPrompt(), resources.deleteRepo(), appContext);
         this.presenter = presenter;
         this.constant = constant;
         this.dialogFactory = dialogFactory;
@@ -45,13 +45,13 @@ public class DeleteRepositoryAction extends GitAction {
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        dialogFactory.createConfirmDialog(constant.deleteGitRepositoryTitle(),
-                                          constant.deleteGitRepositoryQuestion(getActiveProject().getRootProject().getName()),
-                                          new ConfirmCallback() {
-                                              @Override
-                                              public void accepted() {
-                                                  presenter.deleteRepository();
-                                              }
-                                          }, null).show();
+//        dialogFactory.createConfirmDialog(constant.deleteGitRepositoryTitle(),
+//                                          constant.deleteGitRepositoryQuestion(getActiveProject().getRootProject().getName()),
+//                                          new ConfirmCallback() {
+//                                              @Override
+//                                              public void accepted() {
+//                                                  presenter.deleteRepository();
+//                                              }
+//                                          }, null).show();
     }
 }

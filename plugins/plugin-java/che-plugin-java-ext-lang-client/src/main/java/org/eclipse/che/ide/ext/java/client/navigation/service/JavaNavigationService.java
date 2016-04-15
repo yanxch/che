@@ -123,4 +123,5 @@ public interface JavaNavigationService {
      * @return list of parameters which method or constructor can accept
      */
     Promise<List<MethodParameters>> getMethodParametersHints(String projectPath, String fqn, int offset, int lineStartOffset);
+    Promise<List<MethodParameters>> getMethodParametersHints(Path project, String fqn, int offset, int lineStartOffset);
 }

@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.ide.part.explorer.project;
 
-import com.google.common.base.Optional;
-import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -35,21 +33,19 @@ import org.eclipse.che.ide.api.resources.ResourceDelta;
 import org.eclipse.che.ide.api.resources.marker.MarkerChangedEvent;
 import org.eclipse.che.ide.api.selection.Selection;
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerView.ActionDelegate;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.resources.reveal.RevealResourceEvent;
 import org.eclipse.che.ide.resources.tree.ContainerNode;
 import org.eclipse.che.ide.resources.tree.ResourceNode;
 import org.eclipse.che.ide.ui.smartTree.Tree;
 import org.eclipse.che.ide.ui.smartTree.event.SelectionChangedEvent;
 import org.eclipse.che.ide.ui.smartTree.event.SelectionChangedEvent.SelectionChangedHandler;
-import org.eclipse.che.ide.ui.smartTree.event.StoreRemoveEvent;
 import org.vectomatic.dom.svg.ui.SVGResource;
 
 import javax.validation.constraints.NotNull;
-import java.util.List;
 
 import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.ADDED;
-import static org.eclipse.che.ide.api.resources.ResourceDelta.DERIVED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
@@ -122,11 +118,6 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
 
     @SuppressWarnings("unchecked")
     protected void onResourceAdded(ResourceDelta delta) {
-
-        if ((delta.getFlags() & DERIVED) == 0) {
-            return;
-        }
-
         final Tree tree = view.getTree();
         final NodeSettings nodeSettings = settingsProvider.getSettings();
 
@@ -149,99 +140,35 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
             }
         }
 
-        eventBus.fireEvent(new RevealResourceEvent(resource));
+        final Path parent = resource.getLocation().parent();
+
+        if (parent.isRoot()) {
+            return;
+        }
+
+        for (final Node exist : tree.getNodeStorage().getAll()) {
+            if (isNodeServesLocation(exist, parent) && tree.getNodeDescriptor(exist).isLoaded()) {
+                    eventBus.fireEvent(new RevealResourceEvent(resource));
+            }
+        }
+
     }
 
     @SuppressWarnings("unchecked")
     protected void onResourceRemoved(final ResourceDelta delta) {
-
         final Tree tree = view.getTree();
-        final Node[] node = new Node[1];
 
         //look for removed node from existing
         for (final Node exist : tree.getNodeStorage().getAll()) {
-            if (isNodeServesResource(exist, delta.getResource())) {
-                node[0] = exist;
-                break;
+            if (isNodeServesLocation(exist, delta.getResource().getLocation())) {
+                tree.getNodeStorage().remove(exist);
+                return;
             }
         }
-
-        final HandlerRegistration[] handler = new HandlerRegistration[1];
-
-        if (node[0] == null) {
-            return;
-        }
-
-        //handle node removal and reveal to sibling node or parent
-        handler[0] = tree.getNodeStorage().addStoreRemoveHandler(new StoreRemoveEvent.StoreRemoveHandler() {
-            @Override
-            public void onRemove(final StoreRemoveEvent event) {
-                //filter only our removed node
-                if (!event.getNode().equals(node[0])) {
-                    return;
-                }
-
-                //if found, de-register handler
-                if (handler[0] != null) {
-                    handler[0].removeHandler();
-                }
-
-                //if "/a/b/c" - removed node, we should get "/a/b" - parent
-                final Node nodeParent = node[0].getParent();
-
-                if (nodeParent == null) {
-                    return;
-                }
-
-                if (nodeParent instanceof ResourceNode) {
-                    final Optional<Container> resourceParent = delta.getResource().getParent(); //resource's, not node
-
-                    //resource's parent may differs from node's parent
-                    if (resourceParent.isPresent() &&
-                        !((ResourceNode)nodeParent).getData().getLocation().equals(resourceParent.get().getLocation())) {
-                        eventBus.fireEvent(new RevealResourceEvent((resourceParent.get())));
-                    } else {
-
-                        ResourceNode siblingToReveal = null;
-
-                        final List<Node> siblingNodes = tree.getNodeStorage().getChildren(nodeParent);
-
-                        if (siblingNodes != null && !siblingNodes.isEmpty()) {
-                            if (event.getIndex() == 0) {
-                                //if removed first node, then select first resource based
-                                for (int i = 0; i < siblingNodes.size(); i++) {
-                                    if (siblingNodes.get(i) instanceof ResourceNode) {
-                                        siblingToReveal = (ResourceNode)siblingNodes.get(i);
-                                        break;
-                                    }
-                                }
-                            } else {
-                                //or first previous resource based
-                                for (int i = event.getIndex() - 1; i >= 0; i--) {
-                                    if (siblingNodes.get(i) instanceof ResourceNode) {
-                                        siblingToReveal = (ResourceNode)siblingNodes.get(i);
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (siblingToReveal != null) {
-                                eventBus.fireEvent(new RevealResourceEvent(siblingToReveal.getData()));
-                                return;
-                            }
-                        }
-
-                        eventBus.fireEvent(new RevealResourceEvent(((ResourceNode)nodeParent).getData()));
-                    }
-                }
-            }
-        });
-
-        tree.getNodeStorage().remove(node[0]);
     }
 
-    protected boolean isNodeServesResource(Node node, Resource resource) {
-        return node instanceof ResourceNode && ((ResourceNode)node).getData().getLocation().equals(resource.getLocation());
+    protected boolean isNodeServesLocation(Node node, Path location) {
+        return node instanceof ResourceNode && ((ResourceNode)node).getData().getLocation().equals(location);
     }
 
     @SuppressWarnings("unchecked")
@@ -330,18 +257,6 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
     @Deprecated
     public void reloadChildren(Node node) {
         view.reloadChildren(node);
-    }
-
-    /**
-     * Reload children by node type.
-     * Useful method if you want to reload specified nodes, e.g. External Libraries.
-     *
-     * @param type
-     *         node type to update
-     */
-    @Deprecated
-    public void reloadChildrenByType(Class<?> type) {
-        view.reloadChildrenByType(type);
     }
 
     /**

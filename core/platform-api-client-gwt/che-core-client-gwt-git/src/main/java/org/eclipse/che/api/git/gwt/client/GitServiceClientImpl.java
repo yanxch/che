@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.api.git.gwt.client;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -51,10 +52,12 @@ import org.eclipse.che.api.machine.gwt.client.WsAgentStateController;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper.RequestCall;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.MimeType;
 import org.eclipse.che.ide.dto.DtoFactory;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.AsyncRequestFactory;
 import org.eclipse.che.ide.rest.AsyncRequestLoader;
@@ -68,11 +71,13 @@ import org.eclipse.che.ide.websocket.WebSocketException;
 import org.eclipse.che.ide.websocket.rest.RequestCallback;
 
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static com.google.gwt.http.client.RequestBuilder.POST;
 import static org.eclipse.che.api.git.shared.StatusFormat.PORCELAIN;
+import static org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper.createFromAsyncRequest;
 import static org.eclipse.che.ide.MimeType.APPLICATION_JSON;
 import static org.eclipse.che.ide.MimeType.TEXT_PLAIN;
 import static org.eclipse.che.ide.rest.HTTPHeader.ACCEPT;
@@ -85,7 +90,7 @@ import static org.eclipse.che.ide.rest.HTTPHeader.CONTENTTYPE;
  * @author Valeriy Svydenko
  */
 @Singleton
-public class GitServiceClientImpl implements GitServiceClient{
+public class GitServiceClientImpl implements GitServiceClient {
     public static final String ADD               = "/add";
     public static final String BRANCH_LIST       = "/branch-list";
     public static final String CHECKOUT          = "/checkout";
@@ -138,7 +143,8 @@ public class GitServiceClientImpl implements GitServiceClient{
 
     /** {@inheritDoc} */
     @Override
-    public void init(String workspaceId, ProjectConfigDto project, boolean bare, final RequestCallback<Void> callback) throws WebSocketException {
+    public void init(String workspaceId, ProjectConfigDto project, boolean bare, final RequestCallback<Void> callback)
+            throws WebSocketException {
         InitRequest initRequest = dtoFactory.createDto(InitRequest.class);
         initRequest.setBare(bare);
         initRequest.setWorkingDir(project.getName());
@@ -224,6 +230,45 @@ public class GitServiceClientImpl implements GitServiceClient{
         Message message = builder.build();
 
         sendMessageToWS(message, callback);
+    }
+
+    @Override
+    public Promise<Void> add(final String wsId, final Path project, final boolean update, final Path[] paths) {
+        return createFromAsyncRequest(new RequestCall<Void>() {
+            @Override
+            public void makeCall(final AsyncCallback<Void> callback) {
+                final AddRequest addRequest = dtoFactory.createDto(AddRequest.class).withUpdate(update);
+
+                if (paths == null) {
+                    addRequest.setFilepattern(AddRequest.DEFAULT_PATTERN);
+                } else {
+
+                    final List<String> patterns = new ArrayList<>(); //need for compatible with server side
+                    for (Path path : paths) {
+                        patterns.add(path.toString());
+                    }
+
+                    addRequest.setFilepattern(patterns);
+                }
+
+                final String url = "/git/" + wsId + ADD + "?projectPath=" + project.toString();
+                final Message message = new MessageBuilder(POST, url).data(dtoFactory.toJson(addRequest))
+                                                                     .header(CONTENTTYPE, APPLICATION_JSON)
+                                                                     .build();
+
+                sendMessageToWS(message, new RequestCallback<Void>() {
+                    @Override
+                    protected void onSuccess(Void result) {
+                        callback.onSuccess(result);
+                    }
+
+                    @Override
+                    protected void onFailure(Throwable exception) {
+                        callback.onFailure(exception);
+                    }
+                });
+            }
+        });
     }
 
     /** {@inheritDoc} */
@@ -348,6 +393,17 @@ public class GitServiceClientImpl implements GitServiceClient{
                                   .send(dtoUnmarshallerFactory.newUnmarshaller(Status.class));
     }
 
+    @Override
+    public Promise<Status> getStatus(String wsId, Path project) {
+        final String params = "?projectPath=" + project.toString() + "&format=" + PORCELAIN;
+        final String url = extPath + "/git/" + wsId + STATUS + params;
+        return asyncRequestFactory.createPostRequest(url, null)
+                                  .loader(loader)
+                                  .header(CONTENTTYPE, APPLICATION_JSON)
+                                  .header(ACCEPT, APPLICATION_JSON)
+                                  .send(dtoUnmarshallerFactory.newUnmarshaller(Status.class));
+    }
+
     /** {@inheritDoc} */
     @Override
     public void status(String workspaceId, ProjectConfigDto project, AsyncRequestCallback<Status> callback) {
@@ -387,7 +443,8 @@ public class GitServiceClientImpl implements GitServiceClient{
 
     /** {@inheritDoc} */
     @Override
-    public void branchCreate(String workspaceId, ProjectConfigDto project, String name, String startPoint, AsyncRequestCallback<Branch> callback) {
+    public void branchCreate(String workspaceId, ProjectConfigDto project, String name, String startPoint,
+                             AsyncRequestCallback<Branch> callback) {
         BranchCreateRequest branchCreateRequest = dtoFactory.createDto(BranchCreateRequest.class).withName(name).withStartPoint(startPoint);
         String url = extPath + "/git/" + workspaceId + BRANCH_CREATE + "?projectPath=" + project.getPath();
         asyncRequestFactory.createPostRequest(url, branchCreateRequest).loader(loader).header(ACCEPT, APPLICATION_JSON).send(callback);
@@ -401,6 +458,33 @@ public class GitServiceClientImpl implements GitServiceClient{
                          AsyncRequestCallback<String> callback) {
         String url = extPath + "/git/" + workspaceId + CHECKOUT + "?projectPath=" + project.getPath();
         asyncRequestFactory.createPostRequest(url, checkoutRequest).loader(loader).send(callback);
+    }
+
+    @Override
+    public Promise<Void> checkout(String wsId,
+                                  Path project,
+                                  String branchName,
+                                  String startPoint,
+                                  boolean createNew,
+                                  Path[] paths,
+                                  boolean noTrack) {
+        List<String> files = new ArrayList<>();
+
+        if (paths != null) {
+            for (Path path : paths) {
+                files.add(path.toString());
+            }
+        }
+
+        final String url = extPath + "/git/" + wsId + CHECKOUT + "?projectPath=" + project.toString();
+        return asyncRequestFactory.createPostRequest(url, dtoFactory.createDto(CheckoutRequest.class)
+                                                                    .withName(branchName)
+                                                                    .withStartPoint(startPoint)
+                                                                    .withCreateNew(createNew)
+                                                                    .withFiles(files)
+                                                                    .withNoTrack(noTrack))
+                                  .loader(loader)
+                                  .send();
     }
 
     /** {@inheritDoc} */
@@ -436,7 +520,8 @@ public class GitServiceClientImpl implements GitServiceClient{
 
     /** {@inheritDoc} */
     @Override
-    public void log(String workspaceId, ProjectConfigDto project, List<String> fileFilter, boolean isTextFormat, @NotNull AsyncRequestCallback<LogResponse> callback) {
+    public void log(String workspaceId, ProjectConfigDto project, List<String> fileFilter, boolean isTextFormat,
+                    @NotNull AsyncRequestCallback<LogResponse> callback) {
         LogRequest logRequest = dtoFactory.createDto(LogRequest.class).withFileFilter(fileFilter);
         String url = extPath + "/git/" + workspaceId + LOG + "?projectPath=" + project.getPath();
         if (isTextFormat) {

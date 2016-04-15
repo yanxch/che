@@ -31,7 +31,7 @@ public class CommitAction extends GitAction {
                         GitResources resources,
                         GitLocalizationConstant constant,
                         ProjectExplorerPresenter projectExplorer) {
-        super(constant.commitControlTitle(), constant.commitControlPrompt(), resources.commit(), appContext, projectExplorer);
+        super(constant.commitControlTitle(), constant.commitControlPrompt(), resources.commit(), appContext);
         this.presenter = presenter;
     }
 

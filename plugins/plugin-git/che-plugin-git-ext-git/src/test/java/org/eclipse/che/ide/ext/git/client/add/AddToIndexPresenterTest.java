@@ -74,21 +74,21 @@ public class AddToIndexPresenterTest extends BaseTest {
     @Override
     public void disarm() {
         super.disarm();
-        when(appContext.getWorkspaceId()).thenReturn("id");
-        presenter = new AddToIndexPresenter(view,
-                                            appContext,
-                                            dtoUnmarshallerFactory,
-                                            constant,
-                                            gitOutputConsoleFactory,
-                                            consolesPanelPresenter,
-                                            service,
-                                            notificationManager,
-                                            projectExplorer);
+//        when(appContext.getWorkspaceId()).thenReturn("id");
+//        presenter = new AddToIndexPresenter(view,
+//                                            appContext,
+//                                            dtoUnmarshallerFactory,
+//                                            constant,
+//                                            gitOutputConsoleFactory,
+//                                            consolesPanelPresenter,
+//                                            service,
+//                                            notificationManager,
+//                                            projectExplorer);
     }
 
     @Test
     public void testDialogWillNotBeShownWhenStatusRequestIsFailed() throws Exception {
-        presenter.showDialog();
+//        presenter.showDialog();
 
         verify(service).status(anyString(), eq(rootProjectConfig), asyncRequestCallbackStatusCaptor.capture());
         AsyncRequestCallback<Status> callback = asyncRequestCallbackStatusCaptor.getValue();
@@ -109,7 +109,7 @@ public class AddToIndexPresenterTest extends BaseTest {
     public void testDialogWillNotBeShownWhenNothingAddToIndex() throws Exception {
         when(this.statusResponse.isClean()).thenReturn(true);
 
-        presenter.showDialog();
+//        presenter.showDialog();
 
         verify(service).status(anyString(), eq(rootProjectConfig), asyncRequestCallbackStatusCaptor.capture());
         AsyncRequestCallback<Status> callback = asyncRequestCallbackStatusCaptor.getValue();
@@ -138,7 +138,7 @@ public class AddToIndexPresenterTest extends BaseTest {
         when(constant.addToIndexAllChanges()).thenReturn(MESSAGE);
         when(this.statusResponse.isClean()).thenReturn(false);
 
-        presenter.showDialog();
+//        presenter.showDialog();
 
         verify(service).status(anyString(), eq(rootProjectConfig), asyncRequestCallbackStatusCaptor.capture());
         AsyncRequestCallback<Status> callback = asyncRequestCallbackStatusCaptor.getValue();
@@ -167,7 +167,7 @@ public class AddToIndexPresenterTest extends BaseTest {
         when(constant.addToIndexFolder(anyString())).thenReturn(SAFE_HTML);
         when(this.statusResponse.isClean()).thenReturn(false);
 
-        presenter.showDialog();
+//        presenter.showDialog();
 
         verify(service).status(anyString(), eq(rootProjectConfig), asyncRequestCallbackStatusCaptor.capture());
         AsyncRequestCallback<Status> callback = asyncRequestCallbackStatusCaptor.getValue();
@@ -198,7 +198,7 @@ public class AddToIndexPresenterTest extends BaseTest {
         when(SAFE_HTML.asString()).thenReturn(MESSAGE);
         when(this.statusResponse.isClean()).thenReturn(false);
 
-        presenter.showDialog();
+//        presenter.showDialog();
 
         verify(service).status(anyString(), eq(rootProjectConfig), asyncRequestCallbackStatusCaptor.capture());
         AsyncRequestCallback<Status> callback = asyncRequestCallbackStatusCaptor.getValue();
@@ -242,7 +242,7 @@ public class AddToIndexPresenterTest extends BaseTest {
         when(constant.addToIndexMultiple()).thenReturn(MESSAGE);
         when(this.statusResponse.isClean()).thenReturn(false);
 
-        presenter.showDialog();
+//        presenter.showDialog();
 
         verify(service).status(anyString(), eq(rootProjectConfig), asyncRequestCallbackStatusCaptor.capture());
         final AsyncRequestCallback<Status> callback = asyncRequestCallbackStatusCaptor.getValue();
@@ -265,7 +265,7 @@ public class AddToIndexPresenterTest extends BaseTest {
         when(view.isUpdated()).thenReturn(NEED_UPDATING);
         when(constant.addSuccess()).thenReturn(MESSAGE);
 
-        presenter.showDialog();
+//        presenter.showDialog();
         presenter.onAddClicked();
 
         verify(service)
@@ -293,7 +293,7 @@ public class AddToIndexPresenterTest extends BaseTest {
         when(gitOutputConsoleFactory.create(anyString())).thenReturn(console);
         when(view.isUpdated()).thenReturn(NEED_UPDATING);
 
-        presenter.showDialog();
+//        presenter.showDialog();
         presenter.onAddClicked();
 
         verify(service)
@@ -321,7 +321,7 @@ public class AddToIndexPresenterTest extends BaseTest {
                                          .add(anyString(), anyObject(), anyBoolean(), anyObject(), anyObject());
         when(view.isUpdated()).thenReturn(NEED_UPDATING);
 
-        presenter.showDialog();
+//        presenter.showDialog();
         presenter.onAddClicked();
 
         verify(view).isUpdated();

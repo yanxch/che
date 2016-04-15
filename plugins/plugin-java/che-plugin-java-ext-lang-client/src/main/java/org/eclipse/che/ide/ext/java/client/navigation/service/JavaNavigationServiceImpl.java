@@ -214,4 +214,15 @@ public class JavaNavigationServiceImpl implements JavaNavigationService {
                              .loader(loaderFactory.newLoader("Getting parameters..."))
                              .send(unmarshallerFactory.newListUnmarshaller(MethodParameters.class));
     }
+
+    @Override
+    public Promise<List<MethodParameters>> getMethodParametersHints(Path project, String fqn, int offset, int lineStartOffset) {
+        String url = restContext + "/jdt/" + workspaceId + "/navigation/parameters" +
+                     "?projectpath=" + project + "&fqn=" + fqn + "&offset=" + offset + "&lineStart=" + lineStartOffset;
+
+        return requestFactory.createGetRequest(url)
+                             .header(ACCEPT, MimeType.APPLICATION_JSON)
+                             .loader(loaderFactory.newLoader("Getting parameters..."))
+                             .send(unmarshallerFactory.newListUnmarshaller(MethodParameters.class));
+    }
 }

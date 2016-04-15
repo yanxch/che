@@ -64,7 +64,7 @@ public class CompareWithLatestAction extends GitAction {
                                    GitServiceClient gitService,
                                    GitLocalizationConstant constant,
                                    ProjectExplorerPresenter projectExplorer) {
-        super(constant.compareWithLatestTitle(), constant.compareWithLatestTitle(), appContext, projectExplorer);
+        super(constant.compareWithLatestTitle(), constant.compareWithLatestTitle(), null, appContext);
         this.comparePresenter = presenter;
         this.changedListPresenter = changedListPresenter;
         this.dialogFactory = dialogFactory;
@@ -127,11 +127,11 @@ public class CompareWithLatestAction extends GitAction {
     }
 
     private Selection<ResourceBasedNode<?>> getExplorerSelection() {
-        final Selection<ResourceBasedNode<?>> selection = (Selection<ResourceBasedNode<?>>)projectExplorer.getSelection();
-        if (selection == null || selection.isEmpty() || selection.getHeadElement() instanceof HasStorablePath) {
-            return selection;
-        } else {
+//        final Selection<ResourceBasedNode<?>> selection = (Selection<ResourceBasedNode<?>>)projectExplorer.getSelection();
+//        if (selection == null || selection.isEmpty() || selection.getHeadElement() instanceof HasStorablePath) {
+//            return selection;
+//        } else {
             return null;
-        }
+//        }
     }
 }

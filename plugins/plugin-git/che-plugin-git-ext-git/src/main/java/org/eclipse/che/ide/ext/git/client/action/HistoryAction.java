@@ -31,7 +31,7 @@ public class HistoryAction extends GitAction {
                          AppContext appContext,
                          GitLocalizationConstant constant,
                          ProjectExplorerPresenter projectExplorer) {
-        super(constant.historyControlTitle(), constant.historyControlPrompt(), FontAwesome.HISTORY, appContext, projectExplorer);
+        super(constant.historyControlTitle(), constant.historyControlPrompt(), FontAwesome.HISTORY, appContext);
         this.presenterProvider = presenterProvider;
     }
 

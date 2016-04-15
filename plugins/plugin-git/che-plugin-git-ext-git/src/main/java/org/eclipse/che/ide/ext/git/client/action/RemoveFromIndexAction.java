@@ -30,7 +30,7 @@ public class RemoveFromIndexAction extends GitAction {
                                  AppContext appContext,
                                  GitLocalizationConstant constant,
                                  ProjectExplorerPresenter projectExplorer) {
-        super(constant.removeFromIndexTitle(), constant.removeFromIndexTitle(), FontAwesome.MINUS, appContext, projectExplorer);
+        super(constant.removeFromIndexTitle(), constant.removeFromIndexTitle(), FontAwesome.MINUS, appContext);
         this.presenter = presenter;
     }
 

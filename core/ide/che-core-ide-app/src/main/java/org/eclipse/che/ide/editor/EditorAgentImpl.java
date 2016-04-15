@@ -63,6 +63,7 @@ import static org.eclipse.che.ide.api.resources.ResourceDelta.ADDED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
 
 /**
  * Default implementation of {@link EditorAgent}.
@@ -160,6 +161,9 @@ public class EditorAgentImpl implements EditorAgent,
                 break;
             case REMOVED:
                 onResourceRemoved(resource);
+                break;
+            case UPDATED:
+                onResourceUpdated(resource);
         }
     }
 
@@ -226,9 +230,24 @@ public class EditorAgentImpl implements EditorAgent,
         }
 
         for (EditorPartPresenter editor : getOpenedEditors()) {
-            if (resource.getLocation().isPrefixOf(editor.getEditorInput().getFile().getLocation())) {
+            final Path location = editor.getEditorInput().getFile().getLocation();
+            if (resource.getLocation().equals(location) || resource.getLocation().isPrefixOf(location)) {
                 closeEditorPart(editor);
             }
+        }
+    }
+
+    protected void onResourceUpdated(Resource resource) {
+        if (resource.getResourceType() != FILE) {
+            return;
+        }
+
+        final EditorPartPresenter editor = getOpenedEditor(resource.getLocation());
+
+        if (editor != null) {
+            editor.getEditorInput().setFile((File)resource);
+            editor.onFileChanged();
+            eventBus.fireEvent(new FileContentUpdateEvent(resource.getLocation().toString()));
         }
     }
 

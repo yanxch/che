@@ -16,6 +16,12 @@
     <inherits name='com.google.gwt.user.User'/>
     <inherits name="com.google.gwt.json.JSON"/>
     <inherits name="org.eclipse.che.ide.Commons"/>
+    <inherits name="org.eclipse.che.api.Workspace"/>
+    <inherits name="org.eclipse.che.api.Workspace"/>
+    <inherits name="org.eclipse.che.api.Workspace"/>
+    <inherits name="org.eclipse.che.api.promises.Promises"/>
+    <inherits name="org.eclipse.che.api.promises.Promises"/>
+    <inherits name="org.eclipse.che.api.Workspace"/>
     <source path='git/gwt'/>
     <source path='git/shared'/>
 </module>

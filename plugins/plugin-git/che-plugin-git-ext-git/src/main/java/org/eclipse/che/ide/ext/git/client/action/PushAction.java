@@ -31,7 +31,7 @@ public class PushAction extends GitAction {
                       GitResources resources,
                       GitLocalizationConstant constant,
                       ProjectExplorerPresenter projectExplorer) {
-        super(constant.pushControlTitle(), constant.pushControlPrompt(), resources.push(), appContext, projectExplorer);
+        super(constant.pushControlTitle(), constant.pushControlPrompt(), resources.push(), appContext);
         this.presenter = presenter;
     }
 

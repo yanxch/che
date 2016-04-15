@@ -30,7 +30,7 @@ public class ShowStatusAction extends GitAction {
                             AppContext appContext,
                             GitLocalizationConstant constant,
                             ProjectExplorerPresenter projectExplorer) {
-        super(constant.statusControlTitle(), constant.statusControlPrompt(), FontAwesome.CERTIFICATE, appContext, projectExplorer);
+        super(constant.statusControlTitle(), constant.statusControlPrompt(), FontAwesome.CERTIFICATE, appContext);
         this.presenter = presenter;
     }
 

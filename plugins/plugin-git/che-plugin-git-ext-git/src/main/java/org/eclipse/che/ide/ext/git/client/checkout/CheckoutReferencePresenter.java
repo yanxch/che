@@ -12,28 +12,20 @@ package org.eclipse.che.ide.ext.git.client.checkout;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.git.gwt.client.GitServiceClient;
-import org.eclipse.che.api.git.shared.CheckoutRequest;
-import org.eclipse.che.api.project.gwt.client.ProjectServiceClient;
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.editor.EditorAgent;
-import org.eclipse.che.ide.api.editor.EditorPartPresenter;
-import org.eclipse.che.ide.api.event.FileContentUpdateEvent;
 import org.eclipse.che.ide.api.notification.NotificationManager;
-import org.eclipse.che.ide.api.resources.VirtualFile;
-import org.eclipse.che.ide.dto.DtoFactory;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsole;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsoleFactory;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
-import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
-import org.eclipse.che.ide.rest.Unmarshallable;
-import org.eclipse.che.ide.util.loging.Log;
 
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 
@@ -41,24 +33,22 @@ import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAI
  * Presenter for checkout reference(branch, tag) name or commit hash.
  *
  * @author Roman Nikitenko
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class CheckoutReferencePresenter implements CheckoutReferenceView.ActionDelegate {
     public static final String CHECKOUT_COMMAND_NAME = "Git checkout";
 
-    private final NotificationManager      notificationManager;
-    private final GitServiceClient         service;
-    private final AppContext               appContext;
-    private final GitLocalizationConstant  constant;
-    private final CheckoutReferenceView    view;
-    private final ProjectExplorerPresenter projectExplorer;
-    private final DtoFactory               dtoFactory;
-    private final EditorAgent              editorAgent;
-    private final EventBus                 eventBus;
-    private final ProjectServiceClient     projectService;
-    private final DtoUnmarshallerFactory   dtoUnmarshallerFactory;
-    private final GitOutputConsoleFactory  gitOutputConsoleFactory;
-    private final ConsolesPanelPresenter   consolesPanelPresenter;
+    private final NotificationManager     notificationManager;
+    private final GitServiceClient        service;
+    private final AppContext              appContext;
+    private final GitLocalizationConstant constant;
+    private final CheckoutReferenceView   view;
+    private final Workspace               workspace;
+    private final GitOutputConsoleFactory gitOutputConsoleFactory;
+    private final ConsolesPanelPresenter  consolesPanelPresenter;
+
+    private Project project;
 
     @Inject
     public CheckoutReferencePresenter(CheckoutReferenceView view,
@@ -66,32 +56,23 @@ public class CheckoutReferencePresenter implements CheckoutReferenceView.ActionD
                                       AppContext appContext,
                                       GitLocalizationConstant constant,
                                       NotificationManager notificationManager,
-                                      ProjectExplorerPresenter projectExplorer,
-                                      DtoFactory dtoFactory,
-                                      EditorAgent editorAgent,
-                                      EventBus eventBus,
-                                      ProjectServiceClient projectServiceClient,
-                                      DtoUnmarshallerFactory dtoUnmarshallerFactory,
                                       GitOutputConsoleFactory gitOutputConsoleFactory,
-                                      ConsolesPanelPresenter consolesPanelPresenter) {
+                                      ConsolesPanelPresenter consolesPanelPresenter,
+                                      Workspace workspace) {
         this.view = view;
-        this.projectExplorer = projectExplorer;
-        this.dtoFactory = dtoFactory;
-        this.editorAgent = editorAgent;
-        this.eventBus = eventBus;
+        this.workspace = workspace;
         this.view.setDelegate(this);
         this.service = service;
         this.appContext = appContext;
         this.constant = constant;
         this.notificationManager = notificationManager;
-        this.projectService = projectServiceClient;
-        this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
         this.gitOutputConsoleFactory = gitOutputConsoleFactory;
         this.consolesPanelPresenter = consolesPanelPresenter;
     }
 
     /** Show dialog. */
-    public void showDialog() {
+    public void showDialog(Project project) {
+        this.project = project;
         view.setCheckoutButEnableState(false);
         view.showDialog();
     }
@@ -103,60 +84,28 @@ public class CheckoutReferencePresenter implements CheckoutReferenceView.ActionD
 
     @Override
     public void onCheckoutClicked(final String reference) {
-        view.close();
-        final ProjectConfigDto project = appContext.getCurrentProject().getRootProject();
-        service.checkout(appContext.getWorkspaceId(),
-                         project,
-                         dtoFactory.createDto(CheckoutRequest.class)
-                                   .withName(reference)
-                                   .withCreateNew(false),
-                         new AsyncRequestCallback<String>() {
-                             @Override
-                             protected void onSuccess(String result) {
-                                 //In this case we can have unconfigured state of the project,
-                                 //so we must repeat the logic which is performed when we open a project
-                                 Unmarshallable<ProjectConfigDto> unmarshaller =
-                                         dtoUnmarshallerFactory.newUnmarshaller(ProjectConfigDto.class);
-                                 projectService.getProject(appContext.getWorkspace().getId(), project.getPath(),
-                                                           new AsyncRequestCallback<ProjectConfigDto>(unmarshaller) {
-                                                               @Override
-                                                               protected void onSuccess(final ProjectConfigDto result) {
-                                                                   if (!result.getProblems().isEmpty()) {
-//                                                                       eventBus.fireEvent(new OpenProjectEvent(result));
-                                                                   } else {
-                                                                       projectExplorer.reloadChildren();
-
-                                                                       updateOpenedFiles();
-                                                                   }
-                                                               }
-
-                                                               @Override
-                                                               protected void onFailure(Throwable exception) {
-                                                                   Log.error(getClass(), "Can't get project by path");
-                                                               }
-                                                           });
-                             }
-
-                             @Override
-                             protected void onFailure(Throwable exception) {
-                                 final String errorMessage = (exception.getMessage() != null)
-                                                             ? exception.getMessage()
-                                                             : constant.checkoutFailed();
-                                 GitOutputConsole console = gitOutputConsoleFactory.create(CHECKOUT_COMMAND_NAME);
-                                 console.printError(errorMessage);
-                                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-                                 notificationManager.notify(constant.checkoutFailed(), FAIL, true, project);
-                             }
-                         }
-                        );
-    }
-
-    private void updateOpenedFiles() {
-        for (EditorPartPresenter editorPartPresenter : editorAgent.getOpenedEditors()) {
-            VirtualFile file = editorPartPresenter.getEditorInput().getFile();
-
-            eventBus.fireEvent(new FileContentUpdateEvent(file.getPath()));
-        }
+        service.checkout(workspace.getId(), project.getLocation(), reference, null, false, null, false).then(new Operation<Void>() {
+            @Override
+            public void apply(Void arg) throws OperationException {
+                project.synchronize().then(new Operation<Resource[]>() {
+                    @Override
+                    public void apply(Resource[] arg) throws OperationException {
+                        view.close();
+                    }
+                });
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError error) throws OperationException {
+                final String errorMessage = (error.getMessage() != null)
+                                            ? error.getMessage()
+                                            : constant.checkoutFailed();
+                GitOutputConsole console = gitOutputConsoleFactory.create(CHECKOUT_COMMAND_NAME);
+                console.printError(errorMessage);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                notificationManager.notify(constant.checkoutFailed(), FAIL, true);
+            }
+        });
     }
 
     @Override

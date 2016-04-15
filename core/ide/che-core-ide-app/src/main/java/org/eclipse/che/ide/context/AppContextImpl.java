@@ -260,16 +260,28 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
             return null;
         }
 
-        if (currentResources == null || currentResources.length > 1) {
+        if (currentResources == null) {
             return null;
         }
 
+        Project root = null;
+
         for (Project project : workspace.getProjects()) {
-            if (project.getLocation().isPrefixOf(currentResource.getLocation())) {
-                return project;
+            if (project.getLocation().isPrefixOf(currentResources[0].getLocation())) {
+                root = project;
             }
         }
 
-        return null;
+        if (root == null) {
+            return null;
+        }
+
+        for (int i = 1; i < currentResources.length; i++) {
+            if (!root.getLocation().isPrefixOf(currentResources[i].getLocation())) {
+                return null;
+            }
+        }
+
+        return root;
     }
 }

@@ -31,7 +31,7 @@ public class PullAction extends GitAction {
                       GitResources resources,
                       GitLocalizationConstant constant,
                       ProjectExplorerPresenter projectExplorer) {
-        super(constant.pullControlTitle(), constant.pullControlPrompt(), resources.pull(), appContext, projectExplorer);
+        super(constant.pullControlTitle(), constant.pullControlPrompt(), resources.pull(), appContext);
         this.presenter = presenter;
     }
 

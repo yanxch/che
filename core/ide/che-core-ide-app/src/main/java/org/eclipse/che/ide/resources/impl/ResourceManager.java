@@ -54,7 +54,6 @@ import org.eclipse.che.ide.workspace.WorkspaceComponent;
 import org.eclipse.che.ide.workspace.WorkspaceImpl;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -65,17 +64,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.Iterables.transform;
+import static java.lang.System.arraycopy;
 import static java.util.Arrays.copyOf;
 import static org.eclipse.che.ide.api.resources.Resource.FILE;
 import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.ADDED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.CONTENT;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.COPIED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.DERIVED;
-import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
-import static org.eclipse.che.ide.api.resources.ResourceDelta.CONTENT;
-import static org.eclipse.che.ide.api.resources.ResourceDelta.ADDED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
 import static org.eclipse.che.ide.util.NameUtils.checkFileName;
 import static org.eclipse.che.ide.util.NameUtils.checkFolderName;
 import static org.eclipse.che.ide.util.NameUtils.checkProjectName;
@@ -204,7 +204,7 @@ public final class ResourceManager {
                         final Project project = resourceFactory.newProjectImpl(config, ResourceManager.this);
                         store.register(Path.ROOT, project);
 
-                        Project[] tmpProjects = Arrays.copyOf(projects, projects.length + 1);
+                        Project[] tmpProjects = copyOf(projects, projects.length + 1);
                         tmpProjects[projects.length] = project;
                         projects = tmpProjects;
 
@@ -303,7 +303,7 @@ public final class ResourceManager {
                         //cache new configs
                         cachedConfigs = updatedConfiguration.toArray(new ProjectConfigDto[updatedConfiguration.size()]);
 
-                        return getRemoteResources(newResource, maxDepth[0], true, false).then(new Function<Resource[], Project>() {
+                        return getRemoteResources(newResource, maxDepth[0], true).then(new Function<Resource[], Project>() {
                             @Override
                             public Project apply(Resource[] ignored) throws FunctionException {
                                 eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, UPDATED | DERIVED)));
@@ -347,7 +347,7 @@ public final class ResourceManager {
 
                             return promises.resolve((Folder)newResource);
                         } else {
-                            return getRemoteResources(parent, path.segmentCount(), true, false).then(new Function<Resource[], Folder>() {
+                            return getRemoteResources(parent, path.segmentCount(), true).then(new Function<Resource[], Folder>() {
                                 @Override
                                 public Folder apply(Resource[] descendants) throws FunctionException {
 
@@ -539,7 +539,7 @@ public final class ResourceManager {
 
                                              store.dispose(source.getLocation(), true);
 
-                                             return getRemoteResources((Container)movedResource, maxDepth, true, false)
+                                             return getRemoteResources((Container)movedResource, maxDepth, true)
                                                      .then(new Function<Resource[], Resource>() {
                                                          @Override
                                                          public Resource apply(Resource[] ignored) throws FunctionException {
@@ -633,12 +633,14 @@ public final class ResourceManager {
         return ps.readFile(wsId, file.getLocation());
     }
 
-    protected Promise<Resource[]> getRemoteResources(final Container container, int depth, boolean includeFiles, final boolean force) {
+    protected Promise<Resource[]> getRemoteResources(final Container container, int depth, boolean includeFiles) {
         checkArgument(depth > -1, "Invalid depth");
 
         if (depth == DEPTH_ZERO) {
             return promises.resolve(NO_RESOURCES);
         }
+
+        final Optional<Resource[]> descendants = store.getAll(container.getLocation());
 
         return ps.getTree(wsId, container.getLocation(), depth, includeFiles).then(new Function<TreeElement, Resource[]>() {
             @Override
@@ -656,23 +658,6 @@ public final class ResourceManager {
 
                     @Override
                     public void visit(Resource resource) {
-                        final Optional<Resource> optionalCachedResource = store.getResource(resource.getLocation());
-                        final boolean isPresent = optionalCachedResource.isPresent();
-
-                        if (isPresent) {
-                            final Resource cachedResource = optionalCachedResource.get();
-                            store.dispose(cachedResource.getLocation(), force);
-                            if (force) {
-                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(cachedResource, REMOVED)));
-                            }
-                        }
-
-                        store.register(resource.getLocation().parent(), resource);
-
-                        for (ResourceInterceptor interceptor : resourceInterceptors) {
-                            resource = interceptor.intercept(resource);
-                        }
-
                         if (resource.getResourceType() == PROJECT) {
                             final Optional<ProjectConfigDto> optionalConfig = findProjectConfigDto(resource.getLocation());
 
@@ -684,10 +669,6 @@ public final class ResourceManager {
                                 }
                             }
                         }
-
-                        int status = isPresent ? UPDATED : ADDED;
-
-                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, status)));
 
                         if (size > resources.length - 1) { //check load factor and increase resource array
                             resources = copyOf(resources, resources.length + incStep);
@@ -703,7 +684,99 @@ public final class ResourceManager {
 
                 return copyOf(visitor.resources, visitor.size);
             }
+        }).then(new Function<Resource[], Resource[]>() {
+            @Override
+            public Resource[] apply(Resource[] reloaded) throws FunctionException {
+
+                if (descendants.isPresent()) {
+                    Resource[] outdated = descendants.get();
+
+                    final Resource[] removed = batchRemove(outdated, reloaded, false);
+                    for (Resource resource : removed) {
+                        store.dispose(resource.getLocation(), false);
+                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, REMOVED)));
+                    }
+
+                    final Resource[] added = batchRemove(reloaded, outdated, false);
+                    for (Resource resource : added) {
+                        store.register(resource.getLocation().parent(), resource);
+
+                        for (ResourceInterceptor interceptor : resourceInterceptors) {
+                            resource = interceptor.intercept(resource);
+                        }
+
+                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, ADDED)));
+                    }
+
+                    final Resource[] updated = batchRemove(outdated, reloaded, true);
+                    for (Resource resource : updated) {
+                        store.dispose(resource.getLocation(), false);
+                        store.register(resource.getLocation().parent(), resource);
+
+                        for (ResourceInterceptor interceptor : resourceInterceptors) {
+                            resource = interceptor.intercept(resource);
+                        }
+
+                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, UPDATED)));
+                    }
+                } else {
+                    for (Resource resource : reloaded) {
+                        store.register(resource.getLocation().parent(), resource);
+
+                        for (ResourceInterceptor interceptor : resourceInterceptors) {
+                            resource = interceptor.intercept(resource);
+                        }
+
+                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, ADDED)));
+                    }
+                }
+
+                return reloaded;
+            }
         });
+    }
+
+    protected <T> T[] batchRemove(T[] o1, T[] o2, boolean complement) {
+        checkArgument(o1 != null && o2 != null);
+
+        int r = 0, w = 0;
+
+        T[] o1Copy = copyOf(o1, o1.length);
+        T[] o2Copy = copyOf(o2, o2.length);
+
+        for (; r < o1Copy.length; r++)
+            if ((indexOf(o2Copy, o1Copy[r]) >= 0) == complement)
+                o1Copy[w++] = o1Copy[r];
+
+        if (r != o1Copy.length) {
+            arraycopy(o1Copy, r,
+                      o1Copy, w,
+                      o1Copy.length - r);
+            w += o1Copy.length - r;
+        }
+        if (w != o1Copy.length) {
+            for (int i = w; i < o1Copy.length; i++)
+                o1Copy[i] = null;
+
+            return copyOf(o1Copy, w);
+        } else {
+            return copyOf(o1Copy, o1Copy.length);
+        }
+    }
+
+    protected <T> int indexOf(T[] array, T o) {
+        if (o == null) {
+            for (int i = 0; i < array.length; i++) {
+                if (array[i] == null)
+                    return i;
+            }
+        } else {
+            for (int i = 0; i < array.length; i++) {
+                if (o.equals(array[i]))
+                    return i;
+            }
+        }
+        return -1;
     }
 
     protected Promise<Optional<Container>> getContainer(final Path absolutePath) {
@@ -755,7 +828,7 @@ public final class ResourceManager {
 
     protected Promise<Resource[]> childrenOf(final Container container, boolean forceUpdate) {
         if (forceUpdate) {
-            return getRemoteResources(container, DEPTH_ONE, true, true);
+            return getRemoteResources(container, DEPTH_ONE, true);
         }
 
         final Optional<Resource[]> optChildren = store.get(container.getLocation());
@@ -791,7 +864,7 @@ public final class ResourceManager {
 
         final int seekDepth = absolutePath.segmentCount() - 1;
 
-        return getRemoteResources((Container)project, seekDepth, true, false).then(new Function<Resource[], Optional<Resource>>() {
+        return getRemoteResources((Container)project, seekDepth, true).then(new Function<Resource[], Optional<Resource>>() {
             @Override
             public Optional<Resource> apply(Resource[] resources) throws FunctionException {
                 for (Resource resource : resources) {
@@ -884,10 +957,17 @@ public final class ResourceManager {
 
                 if (descendants.isPresent()) {
                     final Resource[] resources = descendants.get();
-                    maxDepth = resources[resources.length - 1].getLocation().segmentCount();
+
+                    for (Resource resource : resources) {
+                        final int segCount = resource.getLocation().segmentCount();
+
+                        if (segCount > maxDepth) {
+                            maxDepth = segCount;
+                        }
+                    }
                 }
 
-                return getRemoteResources(container, maxDepth, true, true);
+                return getRemoteResources(container, maxDepth - 1, true);
             }
         });
     }
@@ -1045,7 +1125,7 @@ public final class ResourceManager {
                     }
                 }
 
-                return getRemoteResources(container, maxDepth, true, false).then(new Function<Resource[], Resource[]>() {
+                return getRemoteResources(container, maxDepth, true).then(new Function<Resource[], Resource[]>() {
                     @Override
                     public Resource[] apply(Resource[] resources) throws FunctionException {
 
@@ -1070,7 +1150,7 @@ public final class ResourceManager {
                                     int size = mutablePaths.length;
                                     int numMoved = mutablePaths.length - i - 1;
                                     if (numMoved > 0) {
-                                        System.arraycopy(mutablePaths, i + 1, mutablePaths, i, numMoved);
+                                        arraycopy(mutablePaths, i + 1, mutablePaths, i, numMoved);
                                     }
                                     mutablePaths = copyOf(mutablePaths, --size);
 

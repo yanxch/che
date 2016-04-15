@@ -11,7 +11,6 @@
 package org.eclipse.che.ide.part.explorer.project;
 
 import com.google.common.base.Optional;
-import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
@@ -26,6 +25,7 @@ import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper.RequestCall;
+import org.eclipse.che.ide.DelayedTask;
 import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.resources.reveal.RevealResourceEvent;
@@ -34,12 +34,13 @@ import org.eclipse.che.ide.resources.tree.ResourceNode;
 import org.eclipse.che.ide.ui.smartTree.Tree;
 import org.eclipse.che.ide.ui.smartTree.event.PostLoadEvent;
 import org.eclipse.che.ide.ui.smartTree.event.PostLoadEvent.PostLoadHandler;
-import org.eclipse.che.ide.util.loging.Log;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.of;
+import static java.util.Arrays.copyOf;
 import static org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper.createFromAsyncRequest;
 
 /**
@@ -59,6 +60,22 @@ public class TreeResourceRevealer {
 
     private Tree tree;
 
+    private Node[] toSelect = null;
+
+    private DelayedTask selectTask = new DelayedTask() {
+        @Override
+        public void onExecute() {
+            if (toSelect != null) {
+                final Node[] copy = copyOf(toSelect, toSelect.length);
+
+                tree.getSelectionModel().select(Arrays.asList(copy), false);
+                tree.scrollIntoView(copy[copy.length - 1]);
+
+                toSelect = null;
+            }
+        }
+    };
+
     @Inject
     public TreeResourceRevealer(ProjectExplorerView projectExplorer, EventBus eventBus, PromiseProvider promises) {
         this.tree = projectExplorer.getTree();
@@ -71,24 +88,9 @@ public class TreeResourceRevealer {
                 queue.thenPromise(new Function<Void, Promise<Void>>() {
                     @Override
                     public Promise<Void> apply(Void ignored) throws FunctionException {
-                        return reveal(event.getLocation()).then(new Function<Node, Void>() {
-                            @Override
-                            public Void apply(final Node node) throws FunctionException {
-                                //allow DOM to be fully rendered
-                                Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
-                                    @Override
-                                    public void execute() {
-                                        tree.getSelectionModel().select(node, false);
-                                        tree.scrollIntoView(node);
-                                    }
-                                });
-
-                                return null;
-                            }
-                        }).catchError(new Function<PromiseError, Void>() {
+                        return reveal(event.getLocation()).catchError(new Function<PromiseError, Void>() {
                             @Override
                             public Void apply(PromiseError arg) throws FunctionException {
-                                Log.info(this.getClass(), "apply():92: " + arg.getMessage());
                                 return null;
                             }
                         });
@@ -106,10 +108,16 @@ public class TreeResourceRevealer {
      * @return promise object with found node or promise error if node wasn't found
      */
     public Promise<Node> reveal(final Path path) {
-        return createFromAsyncRequest(new RequestCall<Node>() {
+
+        return queue.thenPromise(new Function<Void, Promise<Node>>() {
             @Override
-            public void makeCall(AsyncCallback<Node> callback) {
-                reveal(path, callback);
+            public Promise<Node> apply(Void ignored) throws FunctionException {
+                return createFromAsyncRequest(new RequestCall<Node>() {
+                    @Override
+                    public void makeCall(AsyncCallback<Node> callback) {
+                        reveal(path, callback);
+                    }
+                });
             }
         });
     }
@@ -135,8 +143,8 @@ public class TreeResourceRevealer {
 
         expandToPath(root, path).then(new Operation<ResourceNode>() {
             @Override
-            public void apply(ResourceNode arg) throws OperationException {
-                callback.onSuccess(arg);
+            public void apply(ResourceNode node) throws OperationException {
+                callback.onSuccess(node);
             }
         }).catchError(new Operation<PromiseError>() {
             @Override
@@ -159,13 +167,21 @@ public class TreeResourceRevealer {
     protected void expand(final ResourceNode parent, final Path segment, final AsyncCallback<ResourceNode> callback) {
 
         if (parent.getData().getLocation().equals(segment)) {
+            if (toSelect == null) {
+                toSelect = new Node[]{parent};
+            } else {
+                final int index = toSelect.length;
+                toSelect = copyOf(toSelect, index + 1);
+                toSelect[index] = parent;
+            }
+
+            selectTask.delay(500);
+
             callback.onSuccess(parent);
             return;
         }
 
-        if (!tree.getNodeLoader().loadChildren(parent)) {
-            return;
-        }
+        tree.getNodeLoader().loadChildren(parent);
 
         final HandlerRegistration[] handler = new HandlerRegistration[1];
 

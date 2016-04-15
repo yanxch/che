@@ -31,7 +31,7 @@ public class ShowBranchesAction extends GitAction {
                               GitResources resources,
                               GitLocalizationConstant constant,
                               ProjectExplorerPresenter projectExplorer) {
-        super(constant.branchesControlTitle(), constant.branchesControlPrompt(), resources.branches(), appContext, projectExplorer);
+        super(constant.branchesControlTitle(), constant.branchesControlPrompt(), resources.branches(), appContext);
         this.presenter = presenter;
     }
 

@@ -30,8 +30,7 @@ public class ResetToCommitAction extends GitAction {
                                AppContext appContext,
                                GitLocalizationConstant constant,
                                ProjectExplorerPresenter projectExplorer) {
-        super(constant.resetToCommitControlTitle(), constant.resetToCommitControlPrompt(), FontAwesome.BAN, appContext,
-              projectExplorer);
+        super(constant.resetToCommitControlTitle(), constant.resetToCommitControlPrompt(), FontAwesome.BAN, appContext);
         this.presenter = presenter;
     }
 

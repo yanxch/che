@@ -31,7 +31,7 @@ public class ShowRemoteAction extends GitAction {
                             GitResources resources,
                             GitLocalizationConstant constant,
                             ProjectExplorerPresenter projectExplorer) {
-        super(constant.remotesControlTitle(), constant.remotesControlPrompt(), resources.remotes(), appContext, projectExplorer);
+        super(constant.remotesControlTitle(), constant.remotesControlPrompt(), resources.remotes(), appContext);
         this.presenter = presenter;
     }
 

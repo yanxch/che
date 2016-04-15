@@ -31,7 +31,7 @@ public class FetchAction extends GitAction {
                        GitResources resources,
                        GitLocalizationConstant constant,
                        ProjectExplorerPresenter projectExplorer) {
-        super(constant.fetchControlTitle(), constant.fetchControlPrompt(), resources.fetch(), appContext, projectExplorer);
+        super(constant.fetchControlTitle(), constant.fetchControlPrompt(), resources.fetch(), appContext);
         this.presenter = presenter;
     }
 

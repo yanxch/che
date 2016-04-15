@@ -38,7 +38,7 @@ public class InitRepositoryAction extends GitAction {
                                 AppContext appContext,
                                 ProjectExplorerPresenter projectExplorer,
                                 DialogFactory dialogFactory) {
-        super(constant.initControlTitle(), constant.initControlPrompt(), resources.initRepo(), appContext, projectExplorer);
+        super(constant.initControlTitle(), constant.initControlPrompt(), resources.initRepo(), appContext);
         this.presenter = presenter;
         this.constant = constant;
         this.dialogFactory = dialogFactory;
@@ -61,7 +61,7 @@ public class InitRepositoryAction extends GitAction {
 
     @Override
     public void updateInPerspective(@NotNull ActionEvent event) {
-        event.getPresentation().setVisible(getActiveProject() != null);
-        event.getPresentation().setEnabled(!isGitRepository());
+//        event.getPresentation().setVisible(getActiveProject() != null);
+//        event.getPresentation().setEnabled(!isGitRepository());
     }
 }

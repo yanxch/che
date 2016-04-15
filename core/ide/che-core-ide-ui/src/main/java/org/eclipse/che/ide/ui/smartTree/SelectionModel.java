@@ -782,15 +782,8 @@ public class SelectionModel implements HasSelectionHandlers<Node>, HasBeforeSele
     }
 
     protected void onRemove(Node model) {
-        if (selectionStorage.remove(model)) {
-            if (lastSelectedNode == model) {
-                lastSelectedNode = null;
-            }
-            if (getLastFocused() == model) {
-                setLastFocused(null);
-            }
-            fireSelectionChange();
-        }
+        selectPrevious();
+        selectionStorage.remove(model);
     }
 
     public List<Node> getSelectedNodes() {

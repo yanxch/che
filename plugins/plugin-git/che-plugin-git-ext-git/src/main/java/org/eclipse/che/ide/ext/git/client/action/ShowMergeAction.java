@@ -31,7 +31,7 @@ public class ShowMergeAction extends GitAction {
                            GitResources resources,
                            GitLocalizationConstant constant,
                            ProjectExplorerPresenter projectExplorer) {
-        super(constant.mergeControlTitle(), constant.mergeControlPrompt(), resources.merge(), appContext, projectExplorer);
+        super(constant.mergeControlTitle(), constant.mergeControlPrompt(), resources.merge(), appContext);
         this.presenter = presenter;
     }
 

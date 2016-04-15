@@ -30,7 +30,7 @@ public class ResetFilesAction extends GitAction {
                             AppContext appContext,
                             GitLocalizationConstant constant,
                             ProjectExplorerPresenter projectExplorer) {
-        super(constant.resetFilesControlTitle(), constant.resetFilesControlPrompt(), FontAwesome.UNDO, appContext, projectExplorer);
+        super(constant.resetFilesControlTitle(), constant.resetFilesControlPrompt(), FontAwesome.UNDO, appContext);
         this.presenter = presenter;
     }
 

@@ -29,6 +29,7 @@ import org.eclipse.che.api.git.shared.StatusFormat;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.commons.annotation.Nullable;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.websocket.WebSocketException;
 import org.eclipse.che.ide.websocket.rest.RequestCallback;
@@ -58,12 +59,15 @@ public interface GitServiceClient {
      * @param callback
      *         callback
      * @throws WebSocketException
+     * @deprecated use {@link #add(String, Path, boolean, Path[])}
      */
     void add(String workspaceId,
              ProjectConfigDto projectConfig,
              boolean update,
              List<String> filePattern,
              RequestCallback<Void> callback) throws WebSocketException;
+
+    Promise<Void> add(String wsId, Path project, boolean update, Path[] paths);
 
     /**
      * Fetch changes from remote repository to local one (sends request over WebSocket).
@@ -172,11 +176,15 @@ public interface GitServiceClient {
 
     /**
      * Checkout the branch with pointed name.
+     * @deprecated {@link #checkout(String, Path, String, String, boolean, Path[], boolean)}
      */
+    @Deprecated
     void checkout(String workspaceId,
                   ProjectConfigDto project,
                   CheckoutRequest checkoutRequest,
                   AsyncRequestCallback<String> callback);
+
+    Promise<Void> checkout(String wsId, Path project, String branchName, String startPoint, boolean createNew, Path[] paths, boolean noTrack);
 
     /**
      * Get the list of remote repositories for pointed by {@code projectConfig} parameter one.
@@ -631,8 +639,12 @@ public interface GitServiceClient {
      * @param project
      *         the project.
      * @return the promise which either resolves working tree status or rejects with an error
+     * @deprecated use {@link #getStatus(String, Path)}
      */
+    @Deprecated
     Promise<Status> status(String workspaceId, ProjectConfigDto project);
+
+    Promise<Status> getStatus(String wsId, Path project);
 
     /**
      * Get the Git ReadOnly Url for the pointed item's location.
