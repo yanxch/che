@@ -28,6 +28,7 @@
         <module>che-core-api-machine</module>
         <module>che-core-api-workspace</module>
         <module>che-core-api-user</module>
+        <module>che-core-api-user-impl-jpa</module>
         <module>che-core-api-factory</module>
         <module>che-core-api-ssh</module>
     </modules>

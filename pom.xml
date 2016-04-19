@@ -37,10 +37,17 @@
     </scm>
     <properties>
         <che.lib.version>4.2.0-RC1-SNAPSHOT</che.lib.version>
+        <com.h2database.version>1.4.186</com.h2database.version>
+        <org.eclipse.persistence.version>2.5.0-RC1</org.eclipse.persistence.version>
         <specification.version>1.0-beta2</specification.version>
     </properties>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${com.h2database.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.eclipse.che</groupId>
                 <artifactId>assembly-ide-war</artifactId>
@@ -617,6 +624,17 @@
                 <groupId>org.eclipse.che.plugin</groupId>
                 <artifactId>org.eclipse.ui.ide</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.persistence</groupId>
+                <artifactId>eclipselink</artifactId>
+                <version>${org.eclipse.persistence.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>commonj.sdo</artifactId>
+                        <groupId>org.eclipse.persistence</groupId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.core</groupId>
