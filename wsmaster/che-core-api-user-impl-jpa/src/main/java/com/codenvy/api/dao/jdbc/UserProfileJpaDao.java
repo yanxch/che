@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 public class UserProfileJpaDao implements UserProfileDao {
 
 
+
     private final EntityManagerFactory entityManagerFactory;
 
     @Inject
