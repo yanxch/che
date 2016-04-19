@@ -23,8 +23,6 @@ import java.util.LinkedHashMap;
 
 public class UserProfileJpaDao implements UserProfileDao {
 
-
-
     private final EntityManagerFactory entityManagerFactory;
 
     @Inject
@@ -51,7 +49,6 @@ public class UserProfileJpaDao implements UserProfileDao {
         EntityManager em = entityManagerFactory.createEntityManager();
         try {
             em.getTransaction().begin();
-
             em.merge(profile);
             em.getTransaction().commit();
         } finally {
@@ -82,11 +79,16 @@ public class UserProfileJpaDao implements UserProfileDao {
 
     @Override
     public Profile getById(String id) throws NotFoundException, ServerException {
-        Profile profile = entityManagerFactory.createEntityManager().find(Profile.class, id);
-        if (profile == null) {
-            throw new NotFoundException(String.format("Profile not found %s", id));
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            Profile profile = em.find(Profile.class, id);
+            if (profile == null) {
+                throw new NotFoundException(String.format("Profile not found %s", id));
+            }
+            return new Profile().withId(profile.getId()).withUserId(profile.getUserId())
+                                .withAttributes(new LinkedHashMap<>(profile.getAttributes()));
+        } finally {
+            em.close();
         }
-        return new Profile().withId(profile.getId()).withUserId(profile.getUserId())
-                            .withAttributes(new LinkedHashMap<>(profile.getAttributes()));
     }
 }
