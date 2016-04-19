@@ -15,13 +15,14 @@ import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.core.ErrorCodes;
 import org.eclipse.che.api.git.gwt.client.GitServiceClient;
 import org.eclipse.che.api.git.shared.LogResponse;
 import org.eclipse.che.api.git.shared.Revision;
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.notification.NotificationManager;
@@ -29,27 +30,24 @@ import org.eclipse.che.ide.api.parts.PartPresenter;
 import org.eclipse.che.ide.api.parts.PartStackType;
 import org.eclipse.che.ide.api.parts.WorkspaceAgent;
 import org.eclipse.che.ide.api.parts.base.BasePresenter;
-import org.eclipse.che.ide.api.data.HasStorablePath;
-import org.eclipse.che.ide.api.selection.Selection;
-import org.eclipse.che.ide.api.selection.SelectionAgent;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.ext.git.client.DateTimeFormatter;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.GitResources;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsole;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsoleFactory;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
-import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
-import org.eclipse.che.ide.rest.StringUnmarshaller;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 import org.vectomatic.dom.svg.ui.SVGResource;
 
 import javax.validation.constraints.NotNull;
-
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
+import static java.util.Collections.singletonList;
 import static org.eclipse.che.api.git.shared.DiffRequest.DiffType.RAW;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.util.ExceptionUtils.getErrorCode;
@@ -67,47 +65,46 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
     public static final String LOG_COMMAND_NAME  = "Git log";
     public static final String DIFF_COMMAND_NAME = "Git diff";
 
-    private final DtoUnmarshallerFactory  dtoUnmarshallerFactory;
     private final HistoryView             view;
     private final GitServiceClient        service;
     private final GitLocalizationConstant constant;
     private final GitResources            resources;
     private final AppContext              appContext;
-    private final DialogFactory           dialogFactory;    
+    private final DialogFactory           dialogFactory;
     private final WorkspaceAgent          workspaceAgent;
     private final DateTimeFormatter       dateTimeFormatter;
     private final GitOutputConsoleFactory gitOutputConsoleFactory;
     private final ConsolesPanelPresenter  consolesPanelPresenter;
-    private final String                  workspaceId;
+    private final Workspace               workspace;
     /** If <code>true</code> then show all changes in project, if <code>false</code> then show changes of the selected resource. */
     private       boolean                 showChangesInProject;
     private       DiffWith                diffType;
     private boolean isViewClosed = true;
     private List<Revision>      revisions;
-    private SelectionAgent      selectionAgent;
     private Revision            selectedRevision;
     private NotificationManager notificationManager;
 
+    private Project project;
+
     @Inject
-    public HistoryPresenter(final HistoryView view,
-                            EventBus eventBus,
+    public HistoryPresenter(HistoryView view,
                             GitResources resources,
                             GitServiceClient service,
-                            final WorkspaceAgent workspaceAgent,
+                            WorkspaceAgent workspaceAgent,
                             GitLocalizationConstant constant,
                             AppContext appContext,
                             NotificationManager notificationManager,
                             DialogFactory dialogFactory,
-                            DtoUnmarshallerFactory dtoUnmarshallerFactory,
                             DateTimeFormatter dateTimeFormatter,
-                            SelectionAgent selectionAgent,
                             GitOutputConsoleFactory gitOutputConsoleFactory,
-                            ConsolesPanelPresenter consolesPanelPresenter) {
+                            ConsolesPanelPresenter consolesPanelPresenter,
+                            Workspace workspace) {
         this.view = view;
         this.dialogFactory = dialogFactory;
         this.dateTimeFormatter = dateTimeFormatter;
         this.gitOutputConsoleFactory = gitOutputConsoleFactory;
         this.consolesPanelPresenter = consolesPanelPresenter;
+        this.workspace = workspace;
         this.view.setDelegate(this);
         this.view.setTitle(constant.historyTitle());
         this.resources = resources;
@@ -116,15 +113,11 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
         this.constant = constant;
         this.appContext = appContext;
         this.notificationManager = notificationManager;
-        this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
-        this.selectionAgent = selectionAgent;
-        this.workspaceId = appContext.getWorkspaceId();
     }
 
-    /** Show dialog. */
-    public void showDialog() {
-        ProjectConfigDto project = appContext.getCurrentProject().getRootProject();
-        getCommitsLog(project);
+    public void showDialog(Project project) {
+        this.project = project;
+        getCommitsLog();
         selectedRevision = null;
 
         view.selectProjectChangesButton(true);
@@ -150,34 +143,31 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
     }
 
     /** Get the log of the commits. If successfully received, then display in revision grid, otherwise - show error in output panel. */
-    private void getCommitsLog(final ProjectConfigDto project) {
-        service.log(workspaceId, project, null, false,
-                    new AsyncRequestCallback<LogResponse>(dtoUnmarshallerFactory.newUnmarshaller(LogResponse.class)) {
-                        @Override
-                        protected void onSuccess(LogResponse result) {
-                            revisions = result.getCommits();
-                            view.setRevisions(revisions);
-                        }
-
-                        @Override
-                        protected void onFailure(Throwable exception) {
-                            if (getErrorCode(exception) == ErrorCodes.INIT_COMMIT_WAS_NOT_PERFORMED) {
-                                dialogFactory.createMessageDialog(constant.historyTitle(),
-                                                                  constant.initCommitWasNotPerformed(),
-                                                                  null).show();
-                            } else {
-                                nothingToDisplay(null);
-                                String errorMessage = exception.getMessage() != null ? exception.getMessage() : constant.logFailed();
-                                GitOutputConsole console = gitOutputConsoleFactory.create(LOG_COMMAND_NAME);
-                                console.printError(errorMessage);
-                                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-                                notificationManager.notify(constant.logFailed(), FAIL, true, project);
-                            }
-                            partStack.hidePart(HistoryPresenter.this);
-                            workspaceAgent.removePart(HistoryPresenter.this);
-                            isViewClosed = true;
-                        }
-                    });
+    private void getCommitsLog() {
+        service.log(workspace.getId(), project.getLocation(), null, false).then(new Operation<LogResponse>() {
+            @Override
+            public void apply(LogResponse log) throws OperationException {
+                revisions = log.getCommits();
+                view.setRevisions(revisions);
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError error) throws OperationException {
+                if (getErrorCode(error.getCause()) == ErrorCodes.INIT_COMMIT_WAS_NOT_PERFORMED) {
+                    dialogFactory.createMessageDialog(constant.historyTitle(), constant.initCommitWasNotPerformed(), null).show();
+                } else {
+                    nothingToDisplay(null);
+                    String errorMessage = error.getMessage() != null ? error.getMessage() : constant.logFailed();
+                    GitOutputConsole console = gitOutputConsoleFactory.create(LOG_COMMAND_NAME);
+                    console.printError(errorMessage);
+                    consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                    notificationManager.notify(constant.logFailed(), FAIL, true);
+                }
+                partStack.hidePart(HistoryPresenter.this);
+                workspaceAgent.removePart(HistoryPresenter.this);
+                isViewClosed = true;
+            }
+        });
     }
 
     /**
@@ -229,8 +219,7 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
     /** {@inheritDoc} */
     @Override
     public void onRefreshClicked() {
-        ProjectConfigDto project = appContext.getCurrentProject().getRootProject();
-        getCommitsLog(project);
+        getCommitsLog();
     }
 
     /** {@inheritDoc} */
@@ -306,36 +295,28 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
     /** Update content. */
     private void update() {
         getDiff();
-        ProjectConfigDto project = appContext.getCurrentProject().getRootProject();
-        getCommitsLog(project);
+        getCommitsLog();
     }
 
     /** Get the changes between revisions. On success - display diff in text format, otherwise - show the error message in output panel. */
     private void getDiff() {
-        String pattern = "";
-        ProjectConfigDto project = appContext.getCurrentProject().getRootProject();
-        if (!showChangesInProject && project != null) {
-            String path;
+        Path path = Path.EMPTY;
 
-            Selection<HasStorablePath> selection = (Selection<HasStorablePath>)selectionAgent.getSelection();
+        if (!showChangesInProject) {
+            final Resource resource = appContext.getResource();
 
-            if (selection == null || selection.getHeadElement() == null) {
-                path = project.getPath();
-            } else {
-                path = selection.getHeadElement().getStorablePath();
+            if (resource != null && project.getLocation().isPrefixOf(resource.getLocation())) {
+                path = resource.getLocation().removeFirstSegments(project.getLocation().segmentCount());
             }
-
-            pattern = path.replaceFirst(project.getPath(), "");
-            pattern = (pattern.startsWith("/")) ? pattern.replaceFirst("/", "") : pattern;
         }
 
         if (DiffWith.DIFF_WITH_INDEX.equals(diffType) || DiffWith.DIFF_WITH_WORK_TREE.equals(diffType)) {
             boolean isCached = DiffWith.DIFF_WITH_INDEX.equals(diffType);
-            doDiffWithNotCommitted((pattern.length() > 0) ? new ArrayList<>(Arrays.asList(pattern)) : new ArrayList<String>(),
-                                   selectedRevision, isCached);
+            doDiffWithNotCommitted(path.isEmpty() ? Collections.<String>emptyList()
+                                                  : singletonList(path.toString()), selectedRevision, isCached);
         } else {
-            doDiffWithPrevVersion((pattern.length() > 0) ? new ArrayList<>(Arrays.asList(pattern)) : new ArrayList<String>(),
-                                  selectedRevision);
+            doDiffWithPrevVersion(path.isEmpty() ? Collections.<String>emptyList()
+                                                 : singletonList(path.toString()), selectedRevision);
         }
     }
 
@@ -354,27 +335,27 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
             return;
         }
 
-        final ProjectConfigDto project = appContext.getCurrentProject().getRootProject();
-        service.diff(workspaceId, project, filePatterns, RAW, false, 0, revision.getId(), isCached,
-                     new AsyncRequestCallback<String>(new StringUnmarshaller()) {
-                         @Override
-                         protected void onSuccess(String result) {
-                             view.setDiffContext(result);
-                             String text = isCached ? constant.historyDiffIndexState() : constant.historyDiffTreeState();
-                             displayCommitA(revision);
-                             view.setCompareType(text);
-                         }
-
-                         @Override
-                         protected void onFailure(Throwable exception) {
-                             nothingToDisplay(revision);
-                             String errorMessage = exception.getMessage() != null ? exception.getMessage() : constant.diffFailed();
-                             GitOutputConsole console = gitOutputConsoleFactory.create(DIFF_COMMAND_NAME);
-                             console.printError(errorMessage);
-                             consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-                             notificationManager.notify(constant.diffFailed(), FAIL, true, project);
-                         }
-                     });
+        service.diff(workspace.getId(), project.getLocation(), filePatterns, RAW, false, 0, revision.getId(), isCached)
+               .then(new Operation<String>() {
+                   @Override
+                   public void apply(String diff) throws OperationException {
+                       view.setDiffContext(diff);
+                       String text = isCached ? constant.historyDiffIndexState() : constant.historyDiffTreeState();
+                       displayCommitA(revision);
+                       view.setCompareType(text);
+                   }
+               })
+               .catchError(new Operation<PromiseError>() {
+                   @Override
+                   public void apply(PromiseError error) throws OperationException {
+                       nothingToDisplay(revision);
+                       String errorMessage = error.getMessage() != null ? error.getMessage() : constant.diffFailed();
+                       GitOutputConsole console = gitOutputConsoleFactory.create(DIFF_COMMAND_NAME);
+                       console.printError(errorMessage);
+                       consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                       notificationManager.notify(constant.diffFailed(), FAIL, true);
+                   }
+               });
     }
 
     /**
@@ -393,28 +374,27 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
         int index = revisions.indexOf(revisionB);
         if (index + 1 < revisions.size()) {
             final Revision revisionA = revisions.get(index + 1);
-            final ProjectConfigDto project = appContext.getCurrentProject().getRootProject();
-            service.diff(workspaceId, project, filePatterns, RAW, false, 0, revisionA.getId(),
-                         revisionB.getId(),
-                         new AsyncRequestCallback<String>(new StringUnmarshaller()) {
-                             @Override
-                             protected void onSuccess(String result) {
-                                 view.setDiffContext(result);
-                                 view.setCompareType("");
-                                 displayCommitA(revisionA);
-                                 displayCommitB(revisionB);
-                             }
-
-                             @Override
-                             protected void onFailure(Throwable exception) {
-                                 nothingToDisplay(revisionB);
-                                 String errorMessage = exception.getMessage() != null ? exception.getMessage() : constant.diffFailed();
-                                 GitOutputConsole console = gitOutputConsoleFactory.create(DIFF_COMMAND_NAME);
-                                 console.printError(errorMessage);
-                                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-                                 notificationManager.notify(constant.diffFailed(), FAIL, true, project);
-                             }
-                         });
+            service.diff(workspace.getId(), project.getLocation(), filePatterns, RAW, false, 0, revisionA.getId(), revisionB.getId())
+                   .then(new Operation<String>() {
+                       @Override
+                       public void apply(String diff) throws OperationException {
+                           view.setDiffContext(diff);
+                           view.setCompareType("");
+                           displayCommitA(revisionA);
+                           displayCommitB(revisionB);
+                       }
+                   })
+                   .catchError(new Operation<PromiseError>() {
+                       @Override
+                       public void apply(PromiseError error) throws OperationException {
+                           nothingToDisplay(revisionB);
+                           String errorMessage = error.getMessage() != null ? error.getMessage() : constant.diffFailed();
+                           GitOutputConsole console = gitOutputConsoleFactory.create(DIFF_COMMAND_NAME);
+                           console.printError(errorMessage);
+                           consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                           notificationManager.notify(constant.diffFailed(), FAIL, true);
+                       }
+                   });
         } else {
             nothingToDisplay(revisionB);
         }

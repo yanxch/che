@@ -15,22 +15,26 @@ import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.GitResources;
 import org.eclipse.che.ide.ext.git.client.branch.BranchPresenter;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 
-/** @author Andrey Plotnikov */
+import static com.google.common.base.Preconditions.checkState;
+
+/**
+ * @author Andrey Plotnikov
+ * @author Vlad Zhukovskyi
+ */
 @Singleton
 public class ShowBranchesAction extends GitAction {
-    private final BranchPresenter      presenter;
+    private final BranchPresenter presenter;
 
     @Inject
     public ShowBranchesAction(BranchPresenter presenter,
                               AppContext appContext,
                               GitResources resources,
-                              GitLocalizationConstant constant,
-                              ProjectExplorerPresenter projectExplorer) {
+                              GitLocalizationConstant constant) {
         super(constant.branchesControlTitle(), constant.branchesControlPrompt(), resources.branches(), appContext);
         this.presenter = presenter;
     }
@@ -38,6 +42,10 @@ public class ShowBranchesAction extends GitAction {
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        presenter.showBranches();
+        final Project project = appContext.getRootProject();
+
+        checkState(project != null, "Null project occurred");
+
+        presenter.showBranches(project);
     }
 }

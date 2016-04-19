@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.eclipse.che.api.git.gwt.client.GitServiceClient;
+import org.eclipse.che.api.git.shared.CheckoutRequest;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
@@ -22,6 +23,7 @@ import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.workspace.Workspace;
+import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsole;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsoleFactory;
@@ -45,6 +47,7 @@ public class CheckoutReferencePresenter implements CheckoutReferenceView.ActionD
     private final GitLocalizationConstant constant;
     private final CheckoutReferenceView   view;
     private final Workspace               workspace;
+    private final DtoFactory              dtoFactory;
     private final GitOutputConsoleFactory gitOutputConsoleFactory;
     private final ConsolesPanelPresenter  consolesPanelPresenter;
 
@@ -58,9 +61,11 @@ public class CheckoutReferencePresenter implements CheckoutReferenceView.ActionD
                                       NotificationManager notificationManager,
                                       GitOutputConsoleFactory gitOutputConsoleFactory,
                                       ConsolesPanelPresenter consolesPanelPresenter,
-                                      Workspace workspace) {
+                                      Workspace workspace,
+                                      DtoFactory dtoFactory) {
         this.view = view;
         this.workspace = workspace;
+        this.dtoFactory = dtoFactory;
         this.view.setDelegate(this);
         this.service = service;
         this.appContext = appContext;
@@ -84,28 +89,31 @@ public class CheckoutReferencePresenter implements CheckoutReferenceView.ActionD
 
     @Override
     public void onCheckoutClicked(final String reference) {
-        service.checkout(workspace.getId(), project.getLocation(), reference, null, false, null, false).then(new Operation<Void>() {
-            @Override
-            public void apply(Void arg) throws OperationException {
-                project.synchronize().then(new Operation<Resource[]>() {
-                    @Override
-                    public void apply(Resource[] arg) throws OperationException {
-                        view.close();
-                    }
-                });
-            }
-        }).catchError(new Operation<PromiseError>() {
-            @Override
-            public void apply(PromiseError error) throws OperationException {
-                final String errorMessage = (error.getMessage() != null)
-                                            ? error.getMessage()
-                                            : constant.checkoutFailed();
-                GitOutputConsole console = gitOutputConsoleFactory.create(CHECKOUT_COMMAND_NAME);
-                console.printError(errorMessage);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-                notificationManager.notify(constant.checkoutFailed(), FAIL, true);
-            }
-        });
+
+        service.checkout(workspace.getId(), project.getLocation(), dtoFactory.createDto(CheckoutRequest.class).withName(reference))
+               .then(new Operation<Void>() {
+                   @Override
+                   public void apply(Void arg) throws OperationException {
+                       project.synchronize().then(new Operation<Resource[]>() {
+                           @Override
+                           public void apply(Resource[] arg) throws OperationException {
+                               view.close();
+                           }
+                       });
+                   }
+               })
+               .catchError(new Operation<PromiseError>() {
+                   @Override
+                   public void apply(PromiseError error) throws OperationException {
+                       final String errorMessage = (error.getMessage() != null)
+                                                   ? error.getMessage()
+                                                   : constant.checkoutFailed();
+                       GitOutputConsole console = gitOutputConsoleFactory.create(CHECKOUT_COMMAND_NAME);
+                       console.printError(errorMessage);
+                       consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                       notificationManager.notify(constant.checkoutFailed(), FAIL, true);
+                   }
+               });
     }
 
     @Override

@@ -43,38 +43,6 @@ public abstract class GitAction extends AbstractPerspectiveAction {
         this.appContext = appContext;
     }
 
-//    /**
-//     * Creates an action without Icon.
-//     */
-//    public GitAction(String text,
-//                     String description,
-//                     AppContext appContext) {
-//        super(singletonList(PROJECT_PERSPECTIVE_ID), text, description, null, null);
-//        this.appContext = appContext;
-//    }
-//
-//    /**
-//     * Creates an action using SVG resource for Icon.
-//     */
-//    public GitAction(String text,
-//                     String description,
-//                     SVGResource svgIcon,
-//                     AppContext appContext) {
-//        super(singletonList(PROJECT_PERSPECTIVE_ID), text, description, null, svgIcon);
-//        this.appContext = appContext;
-//    }
-//
-//    /**
-//     * Creates an action using HTML resource for Icon.
-//     */
-//    public GitAction(String text,
-//                     String description,
-//                     String htmlResource,
-//                     AppContext appContext) {
-//        super(singletonList(PROJECT_PERSPECTIVE_ID), text, description, null, null, htmlResource);
-//        this.appContext = appContext;
-//    }
-
     @Override
     public void updateInPerspective(@NotNull ActionEvent event) {
         event.getPresentation().setVisible(true);

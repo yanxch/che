@@ -71,17 +71,17 @@ public class RemotePresenterTest extends BaseTest {
     public void disarm() {
         super.disarm();
 
-        presenter = new RemotePresenter(view,
-                                        service,
-                                        appContext,
-                                        eventBus,
-                                        constant,
-                                        projectService,
-                                        addRemoteRepositoryPresenter,
-                                        notificationManager,
-                                        dtoUnmarshallerFactory,
-                                        gitOutputConsoleFactory,
-                                        consolesPanelPresenter);
+//        presenter = new RemotePresenter(view,
+//                                        service,
+//                                        appContext,
+//                                        eventBus,
+//                                        constant,
+//                                        projectService,
+//                                        addRemoteRepositoryPresenter,
+//                                        notificationManager,
+//                                        dtoUnmarshallerFactory,
+//                                        gitOutputConsoleFactory,
+//                                        consolesPanelPresenter);
 
         when(selectedRemote.getName()).thenReturn(REPOSITORY_NAME);
     }
@@ -103,7 +103,7 @@ public class RemotePresenterTest extends BaseTest {
         }).when(service).remoteList(anyString(), anyObject(), anyString(), anyBoolean(),
                                     (AsyncRequestCallback<List<Remote>>)anyObject());
 
-        presenter.showDialog();
+//        presenter.showDialog();
 
         verify(appContext).getCurrentProject();
         verify(service).remoteList(anyString(), eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
@@ -127,7 +127,7 @@ public class RemotePresenterTest extends BaseTest {
         }).when(service).remoteList(anyString(), anyObject(), anyString(), anyBoolean(),
                                     (AsyncRequestCallback<List<Remote>>)anyObject());
 
-        presenter.showDialog();
+//        presenter.showDialog();
 
         verify(appContext).getCurrentProject();
         verify(service).remoteList(anyString(), eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),

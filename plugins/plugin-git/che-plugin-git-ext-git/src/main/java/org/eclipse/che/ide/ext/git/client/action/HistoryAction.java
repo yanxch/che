@@ -16,12 +16,17 @@ import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.history.HistoryPresenter;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 import org.eclipse.che.ide.ui.FontAwesome;
 
-/** @author Andrey Plotnikov */
+import static com.google.common.base.Preconditions.checkState;
+
+/**
+ * @author Andrey Plotnikov
+ * @author Vlad Zhukovskyi
+ */
 @Singleton
 public class HistoryAction extends GitAction {
     private final Provider<HistoryPresenter> presenterProvider;
@@ -29,8 +34,7 @@ public class HistoryAction extends GitAction {
     @Inject
     public HistoryAction(Provider<HistoryPresenter> presenterProvider,
                          AppContext appContext,
-                         GitLocalizationConstant constant,
-                         ProjectExplorerPresenter projectExplorer) {
+                         GitLocalizationConstant constant) {
         super(constant.historyControlTitle(), constant.historyControlPrompt(), FontAwesome.HISTORY, appContext);
         this.presenterProvider = presenterProvider;
     }
@@ -38,6 +42,10 @@ public class HistoryAction extends GitAction {
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        this.presenterProvider.get().showDialog();
+        final Project project = appContext.getRootProject();
+
+        checkState(project != null, "Null project occurred");
+
+        presenterProvider.get().showDialog(project);
     }
 }

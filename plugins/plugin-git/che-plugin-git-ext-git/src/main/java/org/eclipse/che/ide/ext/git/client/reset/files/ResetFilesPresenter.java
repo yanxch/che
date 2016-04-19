@@ -13,26 +13,27 @@ package org.eclipse.che.ide.ext.git.client.reset.files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.api.git.gwt.client.GitServiceClient;
 import org.eclipse.che.api.git.shared.IndexFile;
 import org.eclipse.che.api.git.shared.Status;
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.app.CurrentProject;
 import org.eclipse.che.ide.api.notification.NotificationManager;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.dto.DtoFactory;
+import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsole;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsoleFactory;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
-import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.eclipse.che.api.git.shared.ResetRequest.ResetType;
 import static org.eclipse.che.ide.ext.git.client.status.StatusCommandPresenter.STATUS_COMMAND_NAME;
+import static org.eclipse.che.ide.util.Arrays.add;
 
 /**
  * Presenter for resetting files from index.
@@ -43,25 +44,25 @@ import static org.eclipse.che.ide.ext.git.client.status.StatusCommandPresenter.S
  * 3. Display files ready for commit in grid. (Checked items will be reseted from index).
  *
  * @author Ann Zhuleva
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
     private static final String RESET_COMMAND_NAME = "Git reset";
 
     private final DtoFactory              dtoFactory;
-    private final DtoUnmarshallerFactory  dtoUnmarshallerFactory;
     private final DialogFactory           dialogFactory;
     private final GitOutputConsoleFactory gitOutputConsoleFactory;
     private final ConsolesPanelPresenter  consolesPanelPresenter;
+    private final Workspace               workspace;
     private final ResetFilesView          view;
     private final GitServiceClient        service;
     private final AppContext              appContext;
     private final GitLocalizationConstant constant;
     private final NotificationManager     notificationManager;
-    private final String                  workspaceId;
 
-    private CurrentProject  project;
-    private List<IndexFile> indexedFiles;
+    private IndexFile[] indexedFiles;
+    private Project     project;
 
     /** Create presenter. */
     @Inject
@@ -71,106 +72,108 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
                                GitLocalizationConstant constant,
                                NotificationManager notificationManager,
                                DtoFactory dtoFactory,
-                               DtoUnmarshallerFactory dtoUnmarshallerFactory,
                                DialogFactory dialogFactory,
                                GitOutputConsoleFactory gitOutputConsoleFactory,
-                               ConsolesPanelPresenter consolesPanelPresenter) {
+                               ConsolesPanelPresenter consolesPanelPresenter,
+                               Workspace workspace) {
         this.view = view;
         this.dtoFactory = dtoFactory;
-        this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
         this.dialogFactory = dialogFactory;
         this.gitOutputConsoleFactory = gitOutputConsoleFactory;
         this.consolesPanelPresenter = consolesPanelPresenter;
+        this.workspace = workspace;
         this.view.setDelegate(this);
         this.service = service;
         this.appContext = appContext;
         this.constant = constant;
         this.notificationManager = notificationManager;
-
-        this.workspaceId = appContext.getWorkspaceId();
     }
 
     /** Show dialog. */
-    public void showDialog() {
-        project = appContext.getCurrentProject();
+    public void showDialog(Project project) {
+        this.project = project;
 
-        service.status(workspaceId, project.getRootProject(),
-                       new AsyncRequestCallback<Status>(dtoUnmarshallerFactory.newUnmarshaller(Status.class)) {
-                           @Override
-                           protected void onSuccess(Status result) {
-                               if (result.isClean()) {
-                                   dialogFactory.createMessageDialog(constant.messagesWarningTitle(), constant.indexIsEmpty(), null).show();
-                                   return;
-                               }
+        service.getStatus(workspace.getId(), project.getLocation()).then(new Operation<Status>() {
+            @Override
+            public void apply(Status status) throws OperationException {
+                if (status.isClean()) {
+                    dialogFactory.createMessageDialog(constant.messagesWarningTitle(), constant.indexIsEmpty(), null).show();
+                    return;
+                }
 
-                               List<IndexFile> values = new ArrayList<>();
-                               List<String> valuesTmp = new ArrayList<>();
+                indexedFiles = new IndexFile[0];
 
-                               valuesTmp.addAll(result.getAdded());
-                               valuesTmp.addAll(result.getChanged());
-                               valuesTmp.addAll(result.getRemoved());
+                for (String path : status.getAdded()) {
+                    indexedFiles = add(indexedFiles, wrap(path));
+                }
 
-                               for (String value : valuesTmp) {
-                                   IndexFile indexFile = dtoFactory.createDto(IndexFile.class);
-                                   indexFile.setPath(value);
-                                   indexFile.setIndexed(true);
-                                   values.add(indexFile);
-                               }
+                for (String path : status.getChanged()) {
+                    indexedFiles = add(indexedFiles, wrap(path));
+                }
 
-                               if (values.isEmpty()) {
-                                   dialogFactory.createMessageDialog(constant.messagesWarningTitle(), constant.indexIsEmpty(), null).show();
-                                   return;
-                               }
+                for (String path : status.getRemoved()) {
+                    indexedFiles = add(indexedFiles, wrap(path));
+                }
 
-                               view.setIndexedFiles(values);
-                               indexedFiles = values;
-                               view.showDialog();
-                           }
+                if (indexedFiles.length == 0) {
+                    dialogFactory.createMessageDialog(constant.messagesWarningTitle(), constant.indexIsEmpty(), null).show();
+                    return;
+                }
 
-                           @Override
-                           protected void onFailure(Throwable exception) {
-                               String errorMassage = exception.getMessage() != null ? exception.getMessage() : constant.statusFailed();
-                               GitOutputConsole console = gitOutputConsoleFactory.create(STATUS_COMMAND_NAME);
-                               console.printError(errorMassage);
-                               consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-                               notificationManager.notify(errorMassage, project.getRootProject());
-                           }
-                       });
+                view.setIndexedFiles(indexedFiles);
+                view.showDialog();
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError error) throws OperationException {
+                String errorMassage = error.getMessage() != null ? error.getMessage() : constant.statusFailed();
+                GitOutputConsole console = gitOutputConsoleFactory.create(STATUS_COMMAND_NAME);
+                console.printError(errorMassage);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                notificationManager.notify(errorMassage);
+            }
+        });
+    }
+
+    protected IndexFile wrap(String path) {
+        return dtoFactory.createDto(IndexFile.class).withPath(path).withIndexed(true);
     }
 
     /** {@inheritDoc} */
     @Override
     public void onResetClicked() {
-        List<String> files = new ArrayList<>();
-        for (IndexFile indexFile : indexedFiles) {
-            if (!indexFile.isIndexed()) {
-                files.add(indexFile.getPath());
+
+        Path[] paths = new Path[0];
+        for (IndexFile file : indexedFiles) {
+            if (!file.isIndexed()) {
+                paths = add(paths, Path.valueOf(file.getPath()));
             }
         }
+
         final GitOutputConsole console = gitOutputConsoleFactory.create(RESET_COMMAND_NAME);
-        if (files.isEmpty()) {
+        if (paths.length == 0) {
             view.close();
             console.print(constant.nothingToReset());
             consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-            notificationManager.notify(constant.nothingToReset(), project.getRootProject());
+            notificationManager.notify(constant.nothingToReset());
             return;
         }
         view.close();
 
-        service.reset(workspaceId, project.getRootProject(), "HEAD", ResetType.MIXED, files, new AsyncRequestCallback<Void>() {
+        service.reset(workspace.getId(), project.getLocation(), "HEAD", ResetType.MIXED, paths).then(new Operation<Void>() {
             @Override
-            protected void onSuccess(Void result) {
+            public void apply(Void ignored) throws OperationException {
                 console.print(constant.resetFilesSuccessfully());
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-                notificationManager.notify(constant.resetFilesSuccessfully(), project.getRootProject());
+                notificationManager.notify(constant.resetFilesSuccessfully());
             }
-
+        }).catchError(new Operation<PromiseError>() {
             @Override
-            protected void onFailure(Throwable exception) {
-                String errorMassage = exception.getMessage() != null ? exception.getMessage() : constant.resetFilesFailed();
+            public void apply(PromiseError error) throws OperationException {
+                String errorMassage = error.getMessage() != null ? error.getMessage() : constant.resetFilesFailed();
                 console.printError(errorMassage);
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-                notificationManager.notify(errorMassage, project.getRootProject());
+                notificationManager.notify(errorMassage);
             }
         });
     }

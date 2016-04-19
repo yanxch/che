@@ -358,7 +358,7 @@ public class CoreGinModule extends AbstractGinModule {
     private void configureApiBinding() {
         // Agents
         bind(KeyBindingAgent.class).to(KeyBindingManager.class).in(Singleton.class);
-        bind(SelectionAgent.class).to(SelectionAgentImpl.class).in(Singleton.class);
+        bind(SelectionAgent.class).to(SelectionAgentImpl.class).asEagerSingleton();
         bind(WorkspaceAgent.class).to(WorkspacePresenter.class).in(Singleton.class);
         bind(IconRegistry.class).to(IconRegistryImpl.class).in(Singleton.class);
         // UI Model

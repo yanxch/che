@@ -15,12 +15,14 @@ import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.GitResources;
 import org.eclipse.che.ide.ext.git.client.delete.DeleteRepositoryPresenter;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 import org.eclipse.che.ide.ui.dialogs.ConfirmCallback;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /** @author Andrey Plotnikov */
 @Singleton
@@ -34,7 +36,6 @@ public class DeleteRepositoryAction extends GitAction {
                                   AppContext appContext,
                                   GitResources resources,
                                   GitLocalizationConstant constant,
-                                  ProjectExplorerPresenter projectExplorer,
                                   DialogFactory dialogFactory) {
         super(constant.deleteControlTitle(), constant.deleteControlPrompt(), resources.deleteRepo(), appContext);
         this.presenter = presenter;
@@ -45,13 +46,17 @@ public class DeleteRepositoryAction extends GitAction {
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-//        dialogFactory.createConfirmDialog(constant.deleteGitRepositoryTitle(),
-//                                          constant.deleteGitRepositoryQuestion(getActiveProject().getRootProject().getName()),
-//                                          new ConfirmCallback() {
-//                                              @Override
-//                                              public void accepted() {
-//                                                  presenter.deleteRepository();
-//                                              }
-//                                          }, null).show();
+        final Project project = appContext.getRootProject();
+
+        checkState(project != null, "Null project occurred");
+
+        dialogFactory.createConfirmDialog(constant.deleteGitRepositoryTitle(),
+                                          constant.deleteGitRepositoryQuestion(project.getName()),
+                                          new ConfirmCallback() {
+                                              @Override
+                                              public void accepted() {
+                                                  presenter.deleteRepository(project);
+                                              }
+                                          }, null).show();
     }
 }

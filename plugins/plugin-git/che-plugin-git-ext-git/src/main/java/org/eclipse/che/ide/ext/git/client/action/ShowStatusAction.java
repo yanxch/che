@@ -15,12 +15,17 @@ import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.status.StatusCommandPresenter;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 import org.eclipse.che.ide.ui.FontAwesome;
 
-/** @author Andrey Plotnikov */
+import static com.google.common.base.Preconditions.checkState;
+
+/**
+ * @author Andrey Plotnikov
+ * @author Vlad Zhukovskyi
+ * */
 @Singleton
 public class ShowStatusAction extends GitAction {
     private final StatusCommandPresenter presenter;
@@ -28,8 +33,7 @@ public class ShowStatusAction extends GitAction {
     @Inject
     public ShowStatusAction(StatusCommandPresenter presenter,
                             AppContext appContext,
-                            GitLocalizationConstant constant,
-                            ProjectExplorerPresenter projectExplorer) {
+                            GitLocalizationConstant constant) {
         super(constant.statusControlTitle(), constant.statusControlPrompt(), FontAwesome.CERTIFICATE, appContext);
         this.presenter = presenter;
     }
@@ -37,6 +41,10 @@ public class ShowStatusAction extends GitAction {
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        presenter.showStatus();
+        final Project project = appContext.getRootProject();
+
+        checkState(project != null, "Null project occurred");
+
+        presenter.showStatus(project);
     }
 }
