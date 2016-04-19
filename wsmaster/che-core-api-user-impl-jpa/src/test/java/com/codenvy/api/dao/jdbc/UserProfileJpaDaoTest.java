@@ -12,10 +12,10 @@ package com.codenvy.api.dao.jdbc;
 
 import com.beust.jcommander.internal.Maps;
 
+import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.user.server.dao.Profile;
 import org.eclipse.che.api.user.server.dao.UserProfileDao;
 import org.eclipse.persistence.config.TargetServer;
-import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -31,17 +31,16 @@ import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_URL;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_USER;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.TARGET_SERVER;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.TRANSACTION_TYPE;
+import static org.testng.Assert.assertEquals;
 
-/**
- * Created by sj on 15.04.16.
- */
-public class UserProfileDaoJdbcDaoTest {
+
+public class UserProfileJpaDaoTest {
 
 
     EntityManagerFactory factory;
 
     @BeforeTest
-    public void setUp(){
+    public void setUp() {
         Map<String, String> properties = new HashMap();
 
         // Ensure RESOURCE_LOCAL transactions is used.
@@ -59,20 +58,65 @@ public class UserProfileDaoJdbcDaoTest {
         properties.put(TARGET_SERVER, TargetServer.None);
         factory = Persistence.createEntityManagerFactory("unitName", properties);
 
-
     }
 
 
-
     @Test
-    public void testCreate() throws Exception {
+    public void shouldBeAbleToSaveAndGet() throws Exception {
         //given
-        Profile expected = new Profile("id2222").withUserId("user234234").withAttributes(Maps.newHashMap("key1", "value2", "key3", "value4"));
-        UserProfileDao dao = new UserProfileDaoJdbcDao(factory);
+        Profile expected =
+                new Profile("id2222").withUserId("user234234").withAttributes(Maps.newHashMap("key1", "value2", "key3", "value4"));
+        UserProfileDao dao = new UserProfileJpaDao(factory);
         //when
         dao.create(expected);
         Profile actual = dao.getById("id2222");
         //then
-        Assert.assertEquals(actual, expected);
+        assertEquals(actual, expected);
+    }
+
+    @Test
+    public void shouldBeAbleToSaveAndGetMultiple() throws Exception {
+        //given
+        Profile p1 = new Profile("id11").withUserId("user1").withAttributes(Maps.newHashMap("key1", "value2", "key3", "value4"));
+        Profile p2 = new Profile("id22").withUserId("user2").withAttributes(Maps.newHashMap("key12", "value22", "key32", "value42"));
+        UserProfileDao dao = new UserProfileJpaDao(factory);
+        //when
+        dao.create(p1);
+        dao.create(p2);
+        Profile ap1 = dao.getById("id11");
+        Profile ap2 = dao.getById("id22");
+        //then
+        assertEquals(ap1, p1);
+        assertEquals(ap2, p2);
+    }
+
+    @Test
+    public void shouldBeAbleToUpdateExisted() throws Exception {
+        //given
+        Profile expected =
+                new Profile("id2222").withUserId("user234234").withAttributes(Maps.newHashMap("key1", "value2", "key3", "value4"));
+        UserProfileDao dao = new UserProfileJpaDao(factory);
+        dao.create(expected);
+        expected = new Profile("id2222").withUserId("user234234").withAttributes(Maps.newHashMap("key1", "v33", "key4", "value5"));
+        //when
+        dao.update(expected);
+        Profile actual = dao.getById("id2222");
+        //then
+        assertEquals(actual, expected);
+    }
+
+
+    @Test(expectedExceptions = NotFoundException.class)
+    public void shouldBeAbleToDeleteExisted() throws Exception {
+        //given
+        Profile expected =
+                new Profile("id2222").withUserId("user234234").withAttributes(Maps.newHashMap("key1", "value2", "key3", "value4"));
+        UserProfileDao dao = new UserProfileJpaDao(factory);
+        dao.create(expected);
+        //when
+        dao.remove("id2222");
+        //then
+        dao.getById("id2222");
+
     }
 }

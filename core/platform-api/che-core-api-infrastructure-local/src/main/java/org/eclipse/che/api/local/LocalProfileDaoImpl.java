@@ -104,7 +104,7 @@ public class LocalProfileDaoImpl implements UserProfileDao {
                 throw new NotFoundException(String.format("Profile not found %s", id));
             }
         } finally {
-            lock.writeLock().unlock();
+            lock.writeLock().unlock();ßßß
         }
     }
 

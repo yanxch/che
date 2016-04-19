@@ -19,17 +19,15 @@ import org.eclipse.che.api.user.server.dao.UserProfileDao;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import java.util.LinkedHashMap;
 
-/**
- * Created by sj on 15.04.16.
- */
-public class UserProfileDaoJdbcDao implements UserProfileDao {
+public class UserProfileJpaDao implements UserProfileDao {
 
 
     private final EntityManagerFactory entityManagerFactory;
 
     @Inject
-    public UserProfileDaoJdbcDao(EntityManagerFactory entityManagerFactory) {
+    public UserProfileJpaDao(EntityManagerFactory entityManagerFactory) {
         this.entityManagerFactory = entityManagerFactory;
     }
 
@@ -41,7 +39,6 @@ public class UserProfileDaoJdbcDao implements UserProfileDao {
             em.persist(profile);
             em.getTransaction().commit();
         } finally {
-            // Close the database connection:
             if (em.getTransaction().isActive())
                 em.getTransaction().rollback();
             em.close();
@@ -53,10 +50,10 @@ public class UserProfileDaoJdbcDao implements UserProfileDao {
         EntityManager em = entityManagerFactory.createEntityManager();
         try {
             em.getTransaction().begin();
-            em.refresh(profile);
+
+            em.merge(profile);
             em.getTransaction().commit();
         } finally {
-            // Close the database connection:
             if (em.getTransaction().isActive())
                 em.getTransaction().rollback();
             em.close();
@@ -70,11 +67,12 @@ public class UserProfileDaoJdbcDao implements UserProfileDao {
             Profile profile = em.find(Profile.class, id);
             if (profile != null) {
                 em.getTransaction().begin();
-                em.remove(id);
+                em.remove(profile);
                 em.getTransaction().commit();
+            } else {
+                throw new NotFoundException(String.format("Profile not found %s", id));
             }
         } finally {
-            // Close the database connection:
             if (em.getTransaction().isActive())
                 em.getTransaction().rollback();
             em.close();
@@ -83,6 +81,11 @@ public class UserProfileDaoJdbcDao implements UserProfileDao {
 
     @Override
     public Profile getById(String id) throws NotFoundException, ServerException {
-        return entityManagerFactory.createEntityManager().find(Profile.class, id);
+        Profile profile = entityManagerFactory.createEntityManager().find(Profile.class, id);
+        if (profile == null) {
+            throw new NotFoundException(String.format("Profile not found %s", id));
+        }
+        return new Profile().withId(profile.getId()).withUserId(profile.getUserId())
+                            .withAttributes(new LinkedHashMap<>(profile.getAttributes()));
     }
 }
