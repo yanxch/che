@@ -23,10 +23,10 @@
 
             <!-- Logging configuration. -->
             <property name="eclipselink.logging.logger" value="DefaultLogger" />
-            <property name="eclipselink.logging.level" value="ALL" />
-            <property name="eclipselink.logging.sql" value="FINEST"/>
+            <property name="eclipselink.logging.level" value="INFO" />
+            <!--property name="eclipselink.logging.sql" value="FINEST"/>
             <property name="eclipselink.logging.level.sql" value="FINEST"/>
-            <property name="eclipselink.logging.parameters" value="true"/>
+            <property name="eclipselink.logging.parameters" value="true"/-->
         </properties>
 
     </persistence-unit>

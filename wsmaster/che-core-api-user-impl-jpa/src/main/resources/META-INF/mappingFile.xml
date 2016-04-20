@@ -23,14 +23,35 @@
         <table name="PROFILE"/>
         <attributes>
             <id name="id"/>
-            <basic name="userId">
-            </basic>
+            <basic name="userId"/>
             <element-collection name="attributes" target-class="java.lang.String">
                 <map-key-class class="java.lang.String"/>
                 <map-key-column name="KEY" nullable="false"/>
                 <column name="VALUE" />
                 <collection-table name="PROFILE_ATTRIBUTES" >
                     <join-column name="PROFILE_ID" />
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+
+    <entity class="org.eclipse.che.api.user.server.dao.User">
+        <table name="USER"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="email">
+                <column name="EMAIL"/>
+            </basic>
+            <basic name="name">
+                <column name="NAME" nullable="false" unique="true"/>
+            </basic>
+            <basic name="password">
+                <column name="PASSWORD" nullable="false"/>
+            </basic>
+            <element-collection name="aliases" target-class="java.lang.String">
+                <column name="ALIAS" nullable="false" unique="true"/>
+                <collection-table name="USER_ALIASES">
+                    <join-column name="USER_ID" />
                 </collection-table>
             </element-collection>
         </attributes>
