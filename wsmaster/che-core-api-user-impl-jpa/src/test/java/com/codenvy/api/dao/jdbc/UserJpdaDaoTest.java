@@ -373,17 +373,17 @@ public class UserJpdaDaoTest {
         assertEquals(user.getPassword(), null);
         assertEquals(user.getAliases(), users[2].getAliases());
     }
-//
-//    @Test
-//    public void shouldBeAbleToGetUserByName() throws Exception {
-//        final User user = userDao.getByName(users[2].getName());
-//
-//        assertEquals(user.getId(), users[2].getId());
-//        assertEquals(user.getEmail(), users[2].getEmail());
-//        assertEquals(user.getName(), users[2].getName());
-//        assertEquals(user.getPassword(), null);
-//        assertEquals(user.getAliases(), users[2].getAliases());
-//    }
+
+    @Test
+    public void shouldBeAbleToGetUserByName() throws Exception {
+        final User user = userDao.getByName(users[2].getName());
+
+        assertEquals(user.getId(), users[2].getId());
+        assertEquals(user.getEmail(), users[2].getEmail());
+        assertEquals(user.getName(), users[2].getName());
+        assertEquals(user.getPassword(), null);
+        assertEquals(user.getAliases(), users[2].getAliases());
+    }
 //
 //    @Test(expectedExceptions = NotFoundException.class)
 //    public void shouldThrowNotFoundExceptionWhenUserWithGivenAliasDoesNotExist() throws Exception {

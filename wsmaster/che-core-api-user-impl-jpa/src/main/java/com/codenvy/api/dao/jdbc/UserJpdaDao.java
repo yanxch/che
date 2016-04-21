@@ -112,7 +112,7 @@ public class UserJpdaDao implements UserDao {
         CriteriaQuery<User> criteriaQuery = builder.createQuery(User.class);
         Root<User> userQuery = criteriaQuery.from(User.class);
         Predicate where = builder.conjunction();
-        where = builder.and(where, userQuery.get("aliases").in(ImmutableList.of(alias)));
+        where = builder.and(where, userQuery.join("aliases").in(ImmutableList.of(alias)));
         criteriaQuery.where(where);
         User user = em.createQuery(criteriaQuery).getSingleResult();
 
@@ -149,6 +149,19 @@ public class UserJpdaDao implements UserDao {
 
     @Override
     public User getByName(String userName) throws NotFoundException, ServerException {
-        return null;
+        EntityManager em = entityManagerFactory.createEntityManager();
+        CriteriaBuilder builder = em.getCriteriaBuilder();
+        CriteriaQuery<User> criteriaQuery = builder.createQuery(User.class);
+        Root<User> userQuery = criteriaQuery.from(User.class);
+        Predicate where = builder.conjunction();
+        where = builder.and(where, builder.equal(userQuery.<String>get("name"), userName));
+        criteriaQuery.where(where);
+        User user = em.createQuery(criteriaQuery).getSingleResult();
+
+        return user == null ? null : new User().withId(user.getId())
+                                               .withName(user.getName())
+                                               .withEmail(user.getEmail())
+                                               .withPassword(null)
+                                               .withAliases(new ArrayList<>(user.getAliases()));
     }
 }
