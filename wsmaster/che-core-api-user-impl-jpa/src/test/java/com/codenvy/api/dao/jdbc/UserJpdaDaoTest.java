@@ -27,6 +27,7 @@ import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_USER
 import static org.eclipse.persistence.config.PersistenceUnitProperties.TARGET_SERVER;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.TRANSACTION_TYPE;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 /**
  * Created by sj on 19.04.16.
@@ -338,45 +339,40 @@ public class UserJpdaDaoTest {
                                         .withEmail("new_email@mail.com")
                                         .withPassword("new secret"));
     }
-//
-//    @Test(expectedExceptions = ConflictException.class,
-//          expectedExceptionsMessageRegExp = "Unable update user .*, alias .* is already in use")
-//    public void shouldThrowConflictExceptionWhenUpdatingUserWithAliasWhichIsReserved() throws Exception {
-//        final User copy = doClone(users[0]);
-//        copy.setEmail("example@mail.com");
-//        copy.setPassword("new_secret");
-//        final String conflictAlias = users[1].getAliases().get(0);
-//        copy.getAliases().add("example@mail.com");
-//        copy.getAliases().add(conflictAlias);
-//
-//        userDao.update(copy);
-//    }
-//
-//    @Test(expectedExceptions = ConflictException.class,
-//          expectedExceptionsMessageRegExp = "Unable update user .*, name .* is already in use")
-//    public void shouldThrowConflictExceptionWhenUpdatingUserWithNameWhichIsReserved() throws Exception {
-//        userDao.update(doClone(users[0]).withEmail("new-email@mail.com")
-//                                        .withPassword("new secret")
-//                                        .withName(users[1].getName()));
-//    }
-//
-//    @Test(expectedExceptions = ServerException.class)
-//    public void shouldWrapAnyNamingExceptionWithServerExceptionWhenUpdatingUser() throws Exception {
-//        when(factory.createContext()).thenThrow(new NamingException());
-//
-//        userDao.update(users[0]);
-//    }
-//
-//    @Test
-//    public void shouldBeAbleToGetUserByAlias() throws Exception {
-//        final User user = userDao.getByAlias(users[2].getAliases().get(0));
-//
-//        assertEquals(user.getId(), users[2].getId());
-//        assertEquals(user.getEmail(), users[2].getEmail());
-//        assertEquals(user.getName(), users[2].getName());
-//        assertEquals(user.getPassword(), null);
-//        assertEquals(user.getAliases(), users[2].getAliases());
-//    }
+
+    @Test(enabled = false, expectedExceptions = ConflictException.class,
+          expectedExceptionsMessageRegExp = "Unable update user .*, alias .* is already in use")
+    public void shouldThrowConflictExceptionWhenUpdatingUserWithAliasWhichIsReserved() throws Exception {
+        final User copy = doClone(users[0]);
+        copy.setEmail("example@mail.com");
+        copy.setPassword("new_secret");
+        final String conflictAlias = users[1].getAliases().get(0);
+        copy.getAliases().add("example@mail.com");
+        copy.getAliases().add(conflictAlias);
+
+        userDao.update(copy);
+    }
+
+    @Test(enabled = false, expectedExceptions = ConflictException.class,
+          expectedExceptionsMessageRegExp = "Unable update user .*, name .* is already in use")
+    public void shouldThrowConflictExceptionWhenUpdatingUserWithNameWhichIsReserved() throws Exception {
+        userDao.update(doClone(users[0]).withEmail("new-email@mail.com")
+                                        .withPassword("new secret")
+                                        .withName(users[1].getName()));
+    }
+
+
+
+    @Test
+    public void shouldBeAbleToGetUserByAlias() throws Exception {
+        final User user = userDao.getByAlias(users[2].getAliases().get(0));
+        assertNotNull(user);
+        assertEquals(user.getId(), users[2].getId());
+        assertEquals(user.getEmail(), users[2].getEmail());
+        assertEquals(user.getName(), users[2].getName());
+        assertEquals(user.getPassword(), null);
+        assertEquals(user.getAliases(), users[2].getAliases());
+    }
 //
 //    @Test
 //    public void shouldBeAbleToGetUserByName() throws Exception {

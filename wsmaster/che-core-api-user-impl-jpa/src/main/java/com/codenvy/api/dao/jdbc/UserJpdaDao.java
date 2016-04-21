@@ -1,5 +1,7 @@
 package com.codenvy.api.dao.jdbc;
 
+import com.google.common.collect.ImmutableList;
+
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
@@ -41,9 +43,9 @@ public class UserJpdaDao implements UserDao {
         } catch (RollbackException e) {
             if (e.getLocalizedMessage().contains("Unique index or primary key violation: \"PRIMARY_KEY_2 ")) {
                 throw new ConflictException(format("Unable create new user '%s'. User already exists", user.getId()));
-            } else  if (e.getLocalizedMessage().contains("Unique index or primary key violation: \"CONSTRAINT_INDEX_A ")) {
+            } else if (e.getLocalizedMessage().contains("Unique index or primary key violation: \"CONSTRAINT_INDEX_A ")) {
                 throw new ConflictException(format("User with alias .* already exists", user.getId()));
-            } else  if (e.getLocalizedMessage().contains("Unique index or primary key violation: \"CONSTRAINT_INDEX_2 ")) {
+            } else if (e.getLocalizedMessage().contains("Unique index or primary key violation: \"CONSTRAINT_INDEX_2 ")) {
                 throw new ConflictException(format("User with name .* already exists", user.getId()));
             }
             throw new ConflictException(e.getLocalizedMessage());
@@ -68,8 +70,8 @@ public class UserJpdaDao implements UserDao {
         } catch (RollbackException e) {
             if (e.getLocalizedMessage().contains("Unique index or primary key violation: \"CONSTRAINT_INDEX_A ")) {
                 throw new NotFoundException(format("User with alias .* doesn't exists", user.getId()));
-            } else  if (e.getLocalizedMessage().contains("Unique index or primary key violation: \"CONSTRAINT_INDEX_2 ")) {
-                throw new NotFoundException(format("User with name .* doesn't exists", user.getId()));
+            } else if (e.getLocalizedMessage().contains("Unique index or primary key violation: \"CONSTRAINT_INDEX_2 ")) {
+                throw new ConflictException(format("Unable update user '%s', alias %s is already in use", user.getId(), user.getAliases()));
             }
             throw new ConflictException(e.getLocalizedMessage());
 
@@ -101,7 +103,16 @@ public class UserJpdaDao implements UserDao {
 
     @Override
     public User getByAlias(String alias) throws NotFoundException, ServerException {
-        return null;
+        EntityManager em = entityManagerFactory.createEntityManager();
+        User user = (User)em.createQuery("SELECT U FROM User U WHERE U.aliases in :alias").setParameter("alias", ImmutableList.of(alias))
+                            .getSingleResult();
+
+        return user == null ? null : new User().withId(user.getId())
+                                               .withName(user.getName())
+                                               .withEmail(user.getEmail())
+                                               .withPassword(null)
+                                               .withAliases(new ArrayList<>(user.getAliases()));
+
     }
 
     @Override
