@@ -15,6 +15,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import java.util.ArrayList;
 
 import static java.lang.String.format;
@@ -104,8 +108,18 @@ public class UserJpdaDao implements UserDao {
     @Override
     public User getByAlias(String alias) throws NotFoundException, ServerException {
         EntityManager em = entityManagerFactory.createEntityManager();
-        User user = (User)em.createQuery("SELECT U FROM User U WHERE U.aliases in :alias").setParameter("alias", ImmutableList.of(alias))
-                            .getSingleResult();
+        CriteriaBuilder builder = em.getCriteriaBuilder();
+        CriteriaQuery<User> criteriaQuery = builder.createQuery(User.class);
+        Root<User> userQuery = criteriaQuery.from(User.class);
+        Predicate where = builder.conjunction();
+        where = builder.and(where, userQuery.get("aliases").in(ImmutableList.of(alias)));
+        criteriaQuery.where(where);
+        User user = em.createQuery(criteriaQuery).getSingleResult();
+
+
+
+//        User user = (User)em.createQuery("SELECT U FROM User U WHERE U.aliases in :alias").setParameter("alias", ImmutableList.of(alias))
+//                            .getSingleResult();
 
         return user == null ? null : new User().withId(user.getId())
                                                .withName(user.getName())
