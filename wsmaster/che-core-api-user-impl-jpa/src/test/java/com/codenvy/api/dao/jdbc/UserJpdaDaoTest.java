@@ -100,7 +100,7 @@ public class UserJpdaDaoTest {
         userDao.create(expected);
         User actual = userDao.getById("id2222");
         //then
-        assertEquals(actual, expected);
+        assertEquals(actual, expected.withPassword(null));
     }
 
 

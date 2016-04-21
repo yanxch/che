@@ -65,6 +65,14 @@ public class UserJpdaDao implements UserDao {
             em.getTransaction().begin();
             em.merge(user);
             em.getTransaction().commit();
+        } catch (RollbackException e) {
+            if (e.getLocalizedMessage().contains("Unique index or primary key violation: \"CONSTRAINT_INDEX_A ")) {
+                throw new NotFoundException(format("User with alias .* doesn't exists", user.getId()));
+            } else  if (e.getLocalizedMessage().contains("Unique index or primary key violation: \"CONSTRAINT_INDEX_2 ")) {
+                throw new NotFoundException(format("User with name .* doesn't exists", user.getId()));
+            }
+            throw new ConflictException(e.getLocalizedMessage());
+
         } finally {
             if (em.getTransaction().isActive())
                 em.getTransaction().rollback();

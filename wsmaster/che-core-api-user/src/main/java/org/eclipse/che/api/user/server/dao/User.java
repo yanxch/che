@@ -93,6 +93,18 @@ public class User {
         return this;
     }
 
+
+    @Override
+    public String toString() {
+        return "User{" +
+               "id='" + id + '\'' +
+               ", email='" + email + '\'' +
+               ", name='" + name + '\'' +
+               ", password='" + password + '\'' +
+               ", aliases=" + aliases +
+               '}';
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
