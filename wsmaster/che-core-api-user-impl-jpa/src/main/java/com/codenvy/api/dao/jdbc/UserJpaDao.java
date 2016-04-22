@@ -21,20 +21,44 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.ArrayList;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
 
-public class UserJpdaDao implements UserDao {
+public class UserJpaDao implements UserDao {
 
     private final EntityManagerFactory entityManagerFactory;
 
     @Inject
-    public UserJpdaDao(EntityManagerFactory entityManagerFactory) {
+    public UserJpaDao(EntityManagerFactory entityManagerFactory) {
         this.entityManagerFactory = entityManagerFactory;
     }
 
     @Override
     public String authenticate(String alias, String password) throws UnauthorizedException, ServerException {
-        return null;
+        if (isNullOrEmpty(alias) || isNullOrEmpty(password)) {
+            throw new UnauthorizedException(
+                    String.format("Can't perform authentication for user '%s'. Username or password is empty", alias));
+        }
+        User user;
+        try {
+            user = getByAlias(alias);
+        } catch (NotFoundException e) {
+            try {
+                user = getByName(alias);
+            } catch (NotFoundException e2) {
+                try {
+                    user = getById(alias);
+                } catch (NotFoundException e3) {
+                    throw new UnauthorizedException(format("Authentication failed for user '%s'", alias));
+                }
+            }
+        }
+
+
+        if (!user.getPassword().equals(password)) {
+            throw new UnauthorizedException(format("Authentication failed for user '%s'", alias));
+        }
+        return user.getId();
     }
 
     @Override
@@ -107,8 +131,8 @@ public class UserJpdaDao implements UserDao {
 
     @Override
     public User getByAlias(String alias) throws NotFoundException, ServerException {
+        EntityManager em = entityManagerFactory.createEntityManager();
         try {
-            EntityManager em = entityManagerFactory.createEntityManager();
             CriteriaBuilder builder = em.getCriteriaBuilder();
             CriteriaQuery<User> criteriaQuery = builder.createQuery(User.class);
             Root<User> userQuery = criteriaQuery.from(User.class);
@@ -117,17 +141,11 @@ public class UserJpdaDao implements UserDao {
             criteriaQuery.where(where);
             User user = em.createQuery(criteriaQuery).getSingleResult();
 
-
-//        User user = (User)em.createQuery("SELECT U FROM User U WHERE U.aliases in :alias").setParameter("alias", ImmutableList.of(alias))
-//                            .getSingleResult();
-
-            return user == null ? null : new User().withId(user.getId())
-                                                   .withName(user.getName())
-                                                   .withEmail(user.getEmail())
-                                                   .withPassword(null)
-                                                   .withAliases(new ArrayList<>(user.getAliases()));
+            return doClone(user);
         } catch (NoResultException e) {
             throw new NotFoundException(format("User with alias %s is not found", alias));
+        } finally {
+            em.close();
         }
 
     }
@@ -138,13 +156,9 @@ public class UserJpdaDao implements UserDao {
         try {
             User user = em.find(User.class, id);
             if (user == null) {
-                throw new NotFoundException(String.format("User not found %s", id));
+                throw new NotFoundException(String.format("User %s is not found ", id));
             }
-            return new User().withId(user.getId())
-                             .withName(user.getName())
-                             .withEmail(user.getEmail())
-                             .withPassword(null)
-                             .withAliases(new ArrayList<>(user.getAliases()));
+            return doClone(user);
         } finally {
             em.close();
         }
@@ -153,18 +167,30 @@ public class UserJpdaDao implements UserDao {
     @Override
     public User getByName(String userName) throws NotFoundException, ServerException {
         EntityManager em = entityManagerFactory.createEntityManager();
-        CriteriaBuilder builder = em.getCriteriaBuilder();
-        CriteriaQuery<User> criteriaQuery = builder.createQuery(User.class);
-        Root<User> userQuery = criteriaQuery.from(User.class);
-        Predicate where = builder.conjunction();
-        where = builder.and(where, builder.equal(userQuery.<String>get("name"), userName));
-        criteriaQuery.where(where);
-        User user = em.createQuery(criteriaQuery).getSingleResult();
+        try {
+            CriteriaBuilder builder = em.getCriteriaBuilder();
+            CriteriaQuery<User> criteriaQuery = builder.createQuery(User.class);
+            Root<User> userQuery = criteriaQuery.from(User.class);
+            Predicate where = builder.conjunction();
+            where = builder.and(where, builder.equal(userQuery.<String>get("name"), userName));
+            criteriaQuery.where(where);
+            User user = em.createQuery(criteriaQuery).getSingleResult();
 
-        return user == null ? null : new User().withId(user.getId())
-                                               .withName(user.getName())
-                                               .withEmail(user.getEmail())
-                                               .withPassword(null)
-                                               .withAliases(new ArrayList<>(user.getAliases()));
+            if (user == null) {
+                throw new NotFoundException(String.format("User %s is not found", userName));
+            }
+
+            return doClone(user);
+        } finally {
+            em.close();
+        }
+    }
+
+    private User doClone(User user) {
+        return new User().withId(user.getId())
+                         .withName(user.getName())
+                         .withEmail(user.getEmail())
+                         .withPassword(user.getPassword())
+                         .withAliases(new ArrayList<>(user.getAliases()));
     }
 }

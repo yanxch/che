@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
+import org.eclipse.che.api.core.UnauthorizedException;
 import org.eclipse.che.api.user.server.dao.User;
 import org.eclipse.che.api.user.server.dao.UserDao;
 import org.eclipse.persistence.config.TargetServer;
@@ -33,7 +34,7 @@ import static org.testng.Assert.assertNotNull;
 /**
  * Created by sj on 19.04.16.
  */
-public class UserJpdaDaoTest {
+public class UserJpaDaoTest {
 
     EntityManagerFactory factory;
 
@@ -59,7 +60,7 @@ public class UserJpdaDaoTest {
         // Ensure that no server-platform is configured
         properties.put(TARGET_SERVER, TargetServer.None);
         factory = Persistence.createEntityManagerFactory("unitName", properties);
-        userDao= new UserJpdaDao(factory);
+        userDao = new UserJpaDao(factory);
 
         users = new User[]{
                 new User().withId("1")
@@ -84,7 +85,7 @@ public class UserJpdaDaoTest {
     }
 
     @AfterMethod
-    public void close(){
+    public void close() {
         factory.close();
     }
 
@@ -105,103 +106,46 @@ public class UserJpdaDaoTest {
         assertEquals(actual, expected.withPassword(null));
     }
 
+    @Test
+    public void shouldAuthenticateUserUsingAliases() throws Exception {
+        assertEquals(userDao.authenticate(users[0].getAliases().get(0), users[0].getPassword()), users[0].getId());
+    }
 
-//    @Mock
-//    UserProfileDao profileDao;
-//    @Mock
-//    AccountDao         accountDao;
-//    @Mock
-//    PreferenceDao  preferenceDao;
-//
-//    UserDaoImpl               userDao;
-//    InitialLdapContextFactory factory;
-//    UserAttributesMapper      mapper;
-//    User[]                    users;
-//
-//    @BeforeMethod
-//    public void setUp() throws Exception {
-//        factory = spy(new InitialLdapContextFactory(embeddedLdapServer.getUrl(),
-//                                                    null,
-//                                                    null,
-//                                                    null,
-//                                                    null,
-//                                                    null,
-//                                                    null,
-//                                                    null,
-//                                                    null));
-//        mapper = spy(new UserAttributesMapper());
-//        userDao = new UserDaoImpl(accountDao,
-//                                  profileDao,
-//                                  preferenceDao,
-//                                  factory,
-//                                  "dc=codenvy;dc=com",
-//                                  "uid",
-//                                  "cn",
-//                                  mapper,
-//                                  new EventService());
-//
-//        users = new User[]{
-//                new User().withId("1")
-//                          .withEmail("user1@mail.com")
-//                          .withName("user1")
-//                          .withPassword("secret")
-//                        .withAliases(singletonList("user1@mail.com")),
-//                new User().withId("2")
-//                          .withName("user2")
-//                          .withEmail("user2@mail.com")
-//                          .withPassword("secret")
-//                        .withAliases(singletonList("user2@mail.com")),
-//                new User().withId("3")
-//                          .withName("user3")
-//                          .withEmail("user3@mail.com")
-//                          .withPassword("secret")
-//                        .withAliases(singletonList("user3@mail.com"))
-//        };
-//        for (User user : users) {
-//            userDao.create(user);
-//        }
-//    }
+    @Test
+    public void shouldAuthenticateUserUsingName() throws Exception {
+        assertEquals(userDao.authenticate(users[0].getName(), users[0].getPassword()), users[0].getId());
+    }
 
-//    @Test
-//    public void shouldAuthenticateUserUsingAliases() throws Exception {
-//        assertEquals(userDao.authenticate(users[0].getAliases().get(0), users[0].getPassword()), users[0].getId());
-//    }
-//
-//    @Test
-//    public void shouldAuthenticateUserUsingName() throws Exception {
-//        assertEquals(userDao.authenticate(users[0].getName(), users[0].getPassword()), users[0].getId());
-//    }
-//
-//    @Test(expectedExceptions = UnauthorizedException.class)
-//    public void shouldNotAuthenticateUserWithWrongPassword() throws Exception {
-//        userDao.authenticate(users[0].getName(), "invalid");
-//    }
-//
-//    @Test(expectedExceptions = UnauthorizedException.class)
-//    public void shouldNotAuthenticateUserWithEmptyAlias() throws Exception {
-//        userDao.authenticate("", "valid");
-//    }
-//
-//    @Test(expectedExceptions = UnauthorizedException.class)
-//    public void shouldNotAuthenticateUserWithEmptyPassword() throws Exception {
-//        userDao.authenticate(users[0].getName(), "");
-//    }
-//
-//    @Test(expectedExceptions = UnauthorizedException.class)
-//    public void shouldNotAuthenticateUserWithNullAlias() throws Exception {
-//        userDao.authenticate(null, "valid");
-//    }
-//
-//    @Test(expectedExceptions = UnauthorizedException.class)
-//    public void shouldNotAuthenticateUserWithNullPassword() throws Exception {
-//        userDao.authenticate(users[0].getName(), null);
-//    }
-//
-//    @Test(expectedExceptions = UnauthorizedException.class)
-//    public void shouldThrowNotFoundExceptionWhenAuthenticatingNotExistingUser() throws Exception {
-//        userDao.authenticate("not_found", "secret");
-//    }
-//
+    @Test(expectedExceptions = UnauthorizedException.class)
+    public void shouldNotAuthenticateUserWithWrongPassword() throws Exception {
+        userDao.authenticate(users[0].getName(), "invalid");
+    }
+
+    @Test(expectedExceptions = UnauthorizedException.class)
+    public void shouldNotAuthenticateUserWithEmptyAlias() throws Exception {
+        userDao.authenticate("", "valid");
+    }
+
+    @Test(expectedExceptions = UnauthorizedException.class)
+    public void shouldNotAuthenticateUserWithEmptyPassword() throws Exception {
+        userDao.authenticate(users[0].getName(), "");
+    }
+
+    @Test(expectedExceptions = UnauthorizedException.class)
+    public void shouldNotAuthenticateUserWithNullAlias() throws Exception {
+        userDao.authenticate(null, "valid");
+    }
+
+    @Test(expectedExceptions = UnauthorizedException.class)
+    public void shouldNotAuthenticateUserWithNullPassword() throws Exception {
+        userDao.authenticate(users[0].getName(), null);
+    }
+
+    @Test(expectedExceptions = UnauthorizedException.class)
+    public void shouldThrowNotFoundExceptionWhenAuthenticatingNotExistingUser() throws Exception {
+        userDao.authenticate("not_found", "secret");
+    }
+
 //    @Test(expectedExceptions = ServerException.class)
 //    public void shouldWrapAnyNamingExceptionWithServerExceptionWhenAuthenticatingUser() throws Exception {
 //        when(factory.createContext()).thenThrow(new NamingException("message"));
@@ -288,7 +232,7 @@ public class UserJpdaDaoTest {
                                         .withPassword("new password"));
     }
 
-//    @Test(expectedExceptions = ConflictException.class,
+    //    @Test(expectedExceptions = ConflictException.class,
 //          expectedExceptionsMessageRegExp = "Unable create new user .*. User already exists")
 //    public void shouldWrapAnyNameAlreadyBoundExceptionWithConflictExceptionWhenCreatingUser() throws Exception {
 //        when(factory.createContext()).thenThrow(new NameAlreadyBoundException());
@@ -341,7 +285,7 @@ public class UserJpdaDaoTest {
                                         .withPassword("new secret"));
     }
 
-    @Test(enabled = false, expectedExceptions = ConflictException.class,
+    @Test(expectedExceptions = ConflictException.class,
           expectedExceptionsMessageRegExp = "Unable update user .*, alias .* is already in use")
     public void shouldThrowConflictExceptionWhenUpdatingUserWithAliasWhichIsReserved() throws Exception {
         final User copy = doClone(users[0]);
@@ -354,14 +298,13 @@ public class UserJpdaDaoTest {
         userDao.update(copy);
     }
 
-    @Test(enabled = false, expectedExceptions = ConflictException.class,
+    @Test(expectedExceptions = ConflictException.class,
           expectedExceptionsMessageRegExp = "Unable update user .*, name .* is already in use")
     public void shouldThrowConflictExceptionWhenUpdatingUserWithNameWhichIsReserved() throws Exception {
         userDao.update(doClone(users[0]).withEmail("new-email@mail.com")
                                         .withPassword("new secret")
                                         .withName(users[1].getName()));
     }
-
 
 
     @Test
@@ -391,7 +334,7 @@ public class UserJpdaDaoTest {
         userDao.getByAlias("invalid");
     }
 
-//    @Test(expectedExceptions = ServerException.class)
+    //    @Test(expectedExceptions = ServerException.class)
 //    public void shouldWrapAnyNamingExceptionWithServerExceptionWhenGettingUserByAlias() throws Exception {
 //        when(factory.createContext()).thenThrow(new NamingException());
 //
@@ -408,7 +351,8 @@ public class UserJpdaDaoTest {
         assertEquals(user.getPassword(), null);
         assertEquals(user.getAliases(), users[1].getAliases());
     }
-//
+
+    //
 //    @Test
 //    public void shouldRenameEntityWhenItIsNotFoundWithNewDn() throws Exception {
 //        final Attributes attributes = mapper.toAttributes(new User().withId("user123")
@@ -432,7 +376,8 @@ public class UserJpdaDaoTest {
     public void shouldThrowNotFoundExceptionWhenUserWithGivenIdDoesNotExist() throws Exception {
         userDao.getById("invalid");
     }
-//
+
+    //
 //    @Test(expectedExceptions = ServerException.class)
 //    public void shouldWrapAnyNamingExceptionWithServerExceptionWhenGettingUserById() throws Exception {
 //        when(factory.createContext()).thenThrow(new NamingException());
@@ -479,19 +424,12 @@ public class UserJpdaDaoTest {
 //        verify(profileDao).remove(testUser.getId());
 //        verify(preferenceDao).remove(testUser.getId());
     }
-//
-//    @Test(expectedExceptions = NotFoundException.class)
-//    public void shouldThrowNotFoundExceptionWhenUserDoesNotExist() throws Exception {
-//        userDao.remove("invalid");
-//    }
-//
-//    private User doClone(User other) {
-//        return new User().withId(other.getId())
-//                         .withName(other.getName())
-//                         .withEmail(other.getEmail())
-//                         .withPassword(other.getPassword())
-//                         .withAliases(new ArrayList<>(other.getAliases()));
-//    }
+
+    //
+    @Test(expectedExceptions = NotFoundException.class)
+    public void shouldThrowNotFoundExceptionWhenUserDoesNotExist() throws Exception {
+        userDao.remove("invalid");
+    }
 
 
     private User doClone(User other) {
