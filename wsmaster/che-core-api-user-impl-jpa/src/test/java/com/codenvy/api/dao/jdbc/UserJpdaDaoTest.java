@@ -8,6 +8,7 @@ import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.user.server.dao.User;
 import org.eclipse.che.api.user.server.dao.UserDao;
 import org.eclipse.persistence.config.TargetServer;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -384,12 +385,12 @@ public class UserJpdaDaoTest {
         assertEquals(user.getPassword(), null);
         assertEquals(user.getAliases(), users[2].getAliases());
     }
-//
-//    @Test(expectedExceptions = NotFoundException.class)
-//    public void shouldThrowNotFoundExceptionWhenUserWithGivenAliasDoesNotExist() throws Exception {
-//        userDao.getByAlias("invalid");
-//    }
-//
+
+    @Test(expectedExceptions = NotFoundException.class)
+    public void shouldThrowNotFoundExceptionWhenUserWithGivenAliasDoesNotExist() throws Exception {
+        userDao.getByAlias("invalid");
+    }
+
 //    @Test(expectedExceptions = ServerException.class)
 //    public void shouldWrapAnyNamingExceptionWithServerExceptionWhenGettingUserByAlias() throws Exception {
 //        when(factory.createContext()).thenThrow(new NamingException());
@@ -397,16 +398,16 @@ public class UserJpdaDaoTest {
 //        userDao.getByAlias("valid");
 //    }
 //
-//    @Test
-//    public void shouldBeAbleToGetUserById() throws Exception {
-//        final User user = userDao.getById(users[1].getId());
-//
-//        assertEquals(user.getId(), users[1].getId());
-//        assertEquals(user.getEmail(), users[1].getEmail());
-//        assertEquals(user.getName(), users[1].getName());
-//        assertEquals(user.getPassword(), null);
-//        assertEquals(user.getAliases(), users[1].getAliases());
-//    }
+    @Test
+    public void shouldBeAbleToGetUserById() throws Exception {
+        final User user = userDao.getById(users[1].getId());
+
+        assertEquals(user.getId(), users[1].getId());
+        assertEquals(user.getEmail(), users[1].getEmail());
+        assertEquals(user.getName(), users[1].getName());
+        assertEquals(user.getPassword(), null);
+        assertEquals(user.getAliases(), users[1].getAliases());
+    }
 //
 //    @Test
 //    public void shouldRenameEntityWhenItIsNotFoundWithNewDn() throws Exception {
@@ -427,10 +428,10 @@ public class UserJpdaDaoTest {
 //        assertNotNull(context.getAttributes("uid=user123,dc=codenvy;dc=com"));
 //    }
 //
-//    @Test(expectedExceptions = NotFoundException.class)
-//    public void shouldThrowNotFoundExceptionWhenUserWithGivenIdDoesNotExist() throws Exception {
-//        userDao.getById("invalid");
-//    }
+    @Test(expectedExceptions = NotFoundException.class)
+    public void shouldThrowNotFoundExceptionWhenUserWithGivenIdDoesNotExist() throws Exception {
+        userDao.getById("invalid");
+    }
 //
 //    @Test(expectedExceptions = ServerException.class)
 //    public void shouldWrapAnyNamingExceptionWithServerExceptionWhenGettingUserById() throws Exception {
@@ -439,12 +440,12 @@ public class UserJpdaDaoTest {
 //        userDao.getById("valid");
 //    }
 //
-//    @Test
-//    public void shouldRemoveUserAndAllDependentEntries() throws Exception {
-//        //given
-//        //prepare user
-//        final User testUser = users[0];
-//
+    @Test
+    public void shouldRemoveUserAndAllDependentEntries() throws Exception {
+        //given
+        //prepare user
+        final User testUser = users[0];
+
 //        //prepare account
 //        final Account testAccount = new Account("account_id");
 //        when(accountDao.getByOwner(testUser.getId())).thenReturn(singletonList(testAccount));
@@ -456,28 +457,28 @@ public class UserJpdaDaoTest {
 //                     .withRoles(singletonList("account/owner"));
 //        when(accountDao.getMembers(testAccount.getId())).thenReturn(singletonList(accountMember));
 //        when(accountDao.getByMember(testUser.getId())).thenReturn(singletonList(accountMember));
-//
-////        prepare workspace members
-////        final Member workspaceMember = new Member().withUserId(testUser.getId())
-////                                                   .withWorkspaceId("test_workspace_id")
-////                                                   .withRoles(singletonList("workspace/developer"));
-////        when(memberDao.getUserRelationships(testUser.getId())).thenReturn(singletonList(workspaceMember));
-//
-//        //when
-//        userDao.remove(testUser.getId());
-//
-//        //then
-//        try {
-//            userDao.getById(testUser.getId());
-//            fail("User was not removed");
-//        } catch (NotFoundException ignored) {
-//            //user was removed successfully
-//        }
+
+//        prepare workspace members
+//        final Member workspaceMember = new Member().withUserId(testUser.getId())
+//                                                   .withWorkspaceId("test_workspace_id")
+//                                                   .withRoles(singletonList("workspace/developer"));
+//        when(memberDao.getUserRelationships(testUser.getId())).thenReturn(singletonList(workspaceMember));
+
+        //when
+        userDao.remove(testUser.getId());
+
+        //then
+        try {
+            userDao.getById(testUser.getId());
+            Assert.fail("User was not removed");
+        } catch (NotFoundException ignored) {
+            //user was removed successfully
+        }
 //        verify(accountDao).remove(testAccount.getId());
 //        verify(accountDao).removeMember(accountMember);
 //        verify(profileDao).remove(testUser.getId());
 //        verify(preferenceDao).remove(testUser.getId());
-//    }
+    }
 //
 //    @Test(expectedExceptions = NotFoundException.class)
 //    public void shouldThrowNotFoundExceptionWhenUserDoesNotExist() throws Exception {

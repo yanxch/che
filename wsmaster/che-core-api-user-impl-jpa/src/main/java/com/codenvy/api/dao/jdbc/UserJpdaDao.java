@@ -6,13 +6,13 @@ import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.UnauthorizedException;
-import org.eclipse.che.api.user.server.dao.Profile;
 import org.eclipse.che.api.user.server.dao.User;
 import org.eclipse.che.api.user.server.dao.UserDao;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -90,7 +90,7 @@ public class UserJpdaDao implements UserDao {
     public void remove(String id) throws NotFoundException, ServerException, ConflictException {
         EntityManager em = entityManagerFactory.createEntityManager();
         try {
-            Profile profile = em.find(Profile.class, id);
+            User profile = em.find(User.class, id);
             if (profile != null) {
                 em.getTransaction().begin();
                 em.remove(profile);
@@ -107,25 +107,28 @@ public class UserJpdaDao implements UserDao {
 
     @Override
     public User getByAlias(String alias) throws NotFoundException, ServerException {
-        EntityManager em = entityManagerFactory.createEntityManager();
-        CriteriaBuilder builder = em.getCriteriaBuilder();
-        CriteriaQuery<User> criteriaQuery = builder.createQuery(User.class);
-        Root<User> userQuery = criteriaQuery.from(User.class);
-        Predicate where = builder.conjunction();
-        where = builder.and(where, userQuery.join("aliases").in(ImmutableList.of(alias)));
-        criteriaQuery.where(where);
-        User user = em.createQuery(criteriaQuery).getSingleResult();
-
+        try {
+            EntityManager em = entityManagerFactory.createEntityManager();
+            CriteriaBuilder builder = em.getCriteriaBuilder();
+            CriteriaQuery<User> criteriaQuery = builder.createQuery(User.class);
+            Root<User> userQuery = criteriaQuery.from(User.class);
+            Predicate where = builder.conjunction();
+            where = builder.and(where, userQuery.join("aliases").in(ImmutableList.of(alias)));
+            criteriaQuery.where(where);
+            User user = em.createQuery(criteriaQuery).getSingleResult();
 
 
 //        User user = (User)em.createQuery("SELECT U FROM User U WHERE U.aliases in :alias").setParameter("alias", ImmutableList.of(alias))
 //                            .getSingleResult();
 
-        return user == null ? null : new User().withId(user.getId())
-                                               .withName(user.getName())
-                                               .withEmail(user.getEmail())
-                                               .withPassword(null)
-                                               .withAliases(new ArrayList<>(user.getAliases()));
+            return user == null ? null : new User().withId(user.getId())
+                                                   .withName(user.getName())
+                                                   .withEmail(user.getEmail())
+                                                   .withPassword(null)
+                                                   .withAliases(new ArrayList<>(user.getAliases()));
+        } catch (NoResultException e) {
+            throw new NotFoundException(format("User with alias %s is not found", alias));
+        }
 
     }
 
