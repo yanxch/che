@@ -57,7 +57,6 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
     private final Workspace               workspace;
     private final ResetFilesView          view;
     private final GitServiceClient        service;
-    private final AppContext              appContext;
     private final GitLocalizationConstant constant;
     private final NotificationManager     notificationManager;
 
@@ -68,7 +67,6 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
     @Inject
     public ResetFilesPresenter(ResetFilesView view,
                                GitServiceClient service,
-                               AppContext appContext,
                                GitLocalizationConstant constant,
                                NotificationManager notificationManager,
                                DtoFactory dtoFactory,
@@ -84,7 +82,6 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
         this.workspace = workspace;
         this.view.setDelegate(this);
         this.service = service;
-        this.appContext = appContext;
         this.constant = constant;
         this.notificationManager = notificationManager;
     }
@@ -129,7 +126,7 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
                 String errorMassage = error.getMessage() != null ? error.getMessage() : constant.statusFailed();
                 GitOutputConsole console = gitOutputConsoleFactory.create(STATUS_COMMAND_NAME);
                 console.printError(errorMassage);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(workspace.getId(), console);
                 notificationManager.notify(errorMassage);
             }
         });
@@ -154,7 +151,7 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
         if (paths.length == 0) {
             view.close();
             console.print(constant.nothingToReset());
-            consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+            consolesPanelPresenter.addCommandOutput(workspace.getId(), console);
             notificationManager.notify(constant.nothingToReset());
             return;
         }
@@ -164,7 +161,7 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
             @Override
             public void apply(Void ignored) throws OperationException {
                 console.print(constant.resetFilesSuccessfully());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(workspace.getId(), console);
                 notificationManager.notify(constant.resetFilesSuccessfully());
             }
         }).catchError(new Operation<PromiseError>() {
@@ -172,7 +169,7 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
             public void apply(PromiseError error) throws OperationException {
                 String errorMassage = error.getMessage() != null ? error.getMessage() : constant.resetFilesFailed();
                 console.printError(errorMassage);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(workspace.getId(), console);
                 notificationManager.notify(errorMassage);
             }
         });

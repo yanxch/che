@@ -178,6 +178,7 @@ public class CommitPresenter implements CommitView.ActionDelegate {
                    @Override
                    public void apply(PromiseError error) throws OperationException {
                        handleError(error.getCause());
+                       view.close();
                    }
                });
     }

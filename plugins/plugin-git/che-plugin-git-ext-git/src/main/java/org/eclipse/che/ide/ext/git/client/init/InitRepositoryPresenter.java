@@ -41,23 +41,20 @@ import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAI
 public class InitRepositoryPresenter {
     public static final String INIT_COMMAND_NAME = "Git init";
 
-    private final GitOutputConsoleFactory  gitOutputConsoleFactory;
-    private final ConsolesPanelPresenter   consolesPanelPresenter;
-    private final GitServiceClient service;
-    private final Workspace workspace;
-    private final AppContext               appContext;
-    private final GitLocalizationConstant  constant;
-    private final NotificationManager      notificationManager;
+    private final GitOutputConsoleFactory gitOutputConsoleFactory;
+    private final ConsolesPanelPresenter  consolesPanelPresenter;
+    private final GitServiceClient        service;
+    private final Workspace               workspace;
+    private final GitLocalizationConstant constant;
+    private final NotificationManager     notificationManager;
 
     @Inject
-    public InitRepositoryPresenter(AppContext appContext,
-                                   GitLocalizationConstant constant,
+    public InitRepositoryPresenter(GitLocalizationConstant constant,
                                    NotificationManager notificationManager,
                                    GitOutputConsoleFactory gitOutputConsoleFactory,
                                    ConsolesPanelPresenter consolesPanelPresenter,
                                    GitServiceClient service,
                                    Workspace workspace) {
-        this.appContext = appContext;
         this.constant = constant;
         this.notificationManager = notificationManager;
         this.gitOutputConsoleFactory = gitOutputConsoleFactory;
@@ -73,7 +70,7 @@ public class InitRepositoryPresenter {
             @Override
             public void apply(Void ignored) throws OperationException {
                 console.print(constant.initSuccess());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(workspace.getId(), console);
                 notificationManager.notify(constant.initSuccess());
 
                 project.synchronize();
@@ -82,7 +79,7 @@ public class InitRepositoryPresenter {
             @Override
             public void apply(PromiseError error) throws OperationException {
                 handleError(error.getCause(), console);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(workspace.getId(), console);
             }
         });
     }
@@ -96,6 +93,6 @@ public class InitRepositoryPresenter {
     private void handleError(@NotNull Throwable e, GitOutputConsole console) {
         String errorMessage = (e.getMessage() != null && !e.getMessage().isEmpty()) ? e.getMessage() : constant.initFailed();
         console.printError(errorMessage);
-        notificationManager.notify(constant.initFailed(), FAIL, true, appContext.getCurrentProject().getRootProject());
+        notificationManager.notify(constant.initFailed(), FAIL, true);
     }
 }

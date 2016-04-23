@@ -112,6 +112,7 @@ public class CheckoutReferencePresenter implements CheckoutReferenceView.ActionD
                        console.printError(errorMessage);
                        consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
                        notificationManager.notify(constant.checkoutFailed(), FAIL, true);
+                       view.close();
                    }
                });
     }

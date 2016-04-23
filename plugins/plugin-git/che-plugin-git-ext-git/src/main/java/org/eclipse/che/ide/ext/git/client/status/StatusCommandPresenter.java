@@ -44,7 +44,6 @@ public class StatusCommandPresenter {
     public static final String STATUS_COMMAND_NAME = "Git status";
 
     private final GitServiceClient        service;
-    private final AppContext              appContext;
     private final GitOutputConsoleFactory gitOutputConsoleFactory;
     private final ConsolesPanelPresenter  consolesPanelPresenter;
     private final GitLocalizationConstant constant;
@@ -56,14 +55,12 @@ public class StatusCommandPresenter {
      */
     @Inject
     public StatusCommandPresenter(GitServiceClient service,
-                                  AppContext appContext,
                                   GitOutputConsoleFactory gitOutputConsoleFactory,
                                   ConsolesPanelPresenter consolesPanelPresenter,
                                   GitLocalizationConstant constant,
                                   NotificationManager notificationManager,
                                   Workspace workspace) {
         this.service = service;
-        this.appContext = appContext;
         this.gitOutputConsoleFactory = gitOutputConsoleFactory;
         this.consolesPanelPresenter = consolesPanelPresenter;
         this.constant = constant;
@@ -113,6 +110,6 @@ public class StatusCommandPresenter {
             console.print(line);
         }
 
-        consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+        consolesPanelPresenter.addCommandOutput(workspace.getId(), console);
     }
 }

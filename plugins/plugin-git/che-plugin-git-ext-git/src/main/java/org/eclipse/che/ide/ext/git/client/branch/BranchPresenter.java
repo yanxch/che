@@ -109,35 +109,34 @@ public class BranchPresenter implements BranchView.ActionDelegate {
     @Override
     public void onRenameClicked() {
         if (selectedBranch.isRemote()) {
-            dialogFactory.createConfirmDialog(constant.branchConfirmRenameTitle(), constant.branchConfirmRenameMessage(),
-                                              getConfirmRenameBranchCallback(), null).show();
+            dialogFactory.createConfirmDialog(constant.branchConfirmRenameTitle(),
+                                              constant.branchConfirmRenameMessage(),
+                                              new ConfirmCallback() {
+                                                  @Override
+                                                  public void accepted() {
+                                                      renameBranch();
+                                                  }
+                                              },
+                                              null).show();
         } else {
             renameBranch();
         }
     }
 
-    private ConfirmCallback getConfirmRenameBranchCallback() {
-        return new ConfirmCallback() {
-            @Override
-            public void accepted() {
-                renameBranch();
-            }
-        };
-    }
-
     private void renameBranch() {
         final String selectedBranchName = getSelectedBranchName();
-        dialogFactory.createInputDialog(constant.branchTitleRename(), constant.branchTypeRename(), selectedBranchName,
-                                        0, selectedBranchName.length(), getNewBranchNameCallback(), null).show();
-    }
-
-    private InputCallback getNewBranchNameCallback() {
-        return new InputCallback() {
-            @Override
-            public void accepted(String newBranchName) {
-                renameBranch(newBranchName);
-            }
-        };
+        dialogFactory.createInputDialog(constant.branchTitleRename(),
+                                        constant.branchTypeRename(),
+                                        selectedBranchName,
+                                        0,
+                                        selectedBranchName.length(),
+                                        new InputCallback() {
+                                            @Override
+                                            public void accepted(String newBranchName) {
+                                                renameBranch(newBranchName);
+                                            }
+                                        },
+                                        null).show();
     }
 
     private void renameBranch(String newName) {
