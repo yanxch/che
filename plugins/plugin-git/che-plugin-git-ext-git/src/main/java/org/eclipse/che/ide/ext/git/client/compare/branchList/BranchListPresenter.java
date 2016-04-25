@@ -111,7 +111,7 @@ public class BranchListPresenter implements BranchListView.ActionDelegate {
     /** {@inheritDoc} */
     @Override
     public void onCompareClicked() {
-        service.diff(workspace.getId(),
+        service.diff(appContext.getDevMachine(),
                      project.getLocation(),
                      Collections.<String>emptyList(),
                      NAME_STATUS,
@@ -175,7 +175,7 @@ public class BranchListPresenter implements BranchListView.ActionDelegate {
 
     /** Get list of branches from selected project. */
     private void getBranches() {
-        service.branchList(workspace.getId(), project.getLocation(), LIST_ALL).then(new Operation<List<Branch>>() {
+        service.branchList(appContext.getDevMachine(), project.getLocation(), LIST_ALL).then(new Operation<List<Branch>>() {
             @Override
             public void apply(List<Branch> branches) throws OperationException {
                 view.setBranches(branches);

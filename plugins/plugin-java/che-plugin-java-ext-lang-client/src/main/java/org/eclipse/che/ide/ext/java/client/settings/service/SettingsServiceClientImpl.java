@@ -11,10 +11,9 @@
 package org.eclipse.che.ide.ext.java.client.settings.service;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.ide.api.workspace.Workspace;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.dto.JsonSerializable;
 import org.eclipse.che.ide.json.JsonHelper;
 import org.eclipse.che.ide.rest.AsyncRequestFactory;
@@ -32,23 +31,20 @@ import static org.eclipse.che.ide.rest.HTTPHeader.CONTENT_TYPE;
  */
 public class SettingsServiceClientImpl implements SettingsServiceClient {
 
-    private final String              extPath;
     private final AsyncRequestFactory asyncRequestFactory;
-    private final String              workspaceId;
+    private final AppContext          appContext;
 
     @Inject
-    public SettingsServiceClientImpl(Workspace workspace,
-                                     AsyncRequestFactory asyncRequestFactory,
-                                     @Named("cheExtensionPath") String extPath) {
-        this.extPath = extPath;
-        this.workspaceId = workspace.getId();
+    public SettingsServiceClientImpl(AppContext appContext,
+                                     AsyncRequestFactory asyncRequestFactory) {
+        this.appContext = appContext;
         this.asyncRequestFactory = asyncRequestFactory;
     }
 
     /** {@inheritDoc} */
     @Override
     public Promise<Void> applyCompileParameters(@NotNull final Map<String, String> parameters) {
-        String url = extPath + "/jdt/" + workspaceId + "/compiler-settings/set";
+        String url = appContext.getDevMachine().getWsAgentBaseUrl() + "/jdt/" + appContext.getWorkspaceId() + "/compiler-settings/set";
 
         JsonSerializable data = new JsonSerializable() {
             @Override
@@ -66,7 +62,7 @@ public class SettingsServiceClientImpl implements SettingsServiceClient {
     /** {@inheritDoc} */
     @Override
     public Promise<Map<String, String>> getCompileParameters() {
-        String url = extPath + "/jdt/" + workspaceId + "/compiler-settings/all";
+        String url = appContext.getDevMachine().getWsAgentBaseUrl() + "/jdt/" + appContext.getWorkspaceId() + "/compiler-settings/all";
 
         return asyncRequestFactory.createGetRequest(url)
                                   .header(ACCEPT, APPLICATION_JSON)

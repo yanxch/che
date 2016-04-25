@@ -85,7 +85,7 @@ public class ResetToCommitPresenter implements ResetToCommitView.ActionDelegate 
     public void showDialog(final Project project) {
         this.project = project;
 
-        service.log(workspace.getId(), project.getLocation(), null, false).then(new Operation<LogResponse>() {
+        service.log(appContext.getDevMachine(), project.getLocation(), null, false).then(new Operation<LogResponse>() {
             @Override
             public void apply(LogResponse log) throws OperationException {
                 view.setRevisions(log.getCommits());
@@ -149,7 +149,7 @@ public class ResetToCommitPresenter implements ResetToCommitView.ActionDelegate 
 
         final GitOutputConsole console = gitOutputConsoleFactory.create(RESET_COMMAND_NAME);
 
-        service.reset(workspace.getId(), project.getLocation(), selectedRevision.getId(), type, null).then(new Operation<Void>() {
+        service.reset(appContext.getDevMachine(), project.getLocation(), selectedRevision.getId(), type, null).then(new Operation<Void>() {
             @Override
             public void apply(Void ignored) throws OperationException {
                 console.print(constant.resetSuccessfully());

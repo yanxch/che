@@ -38,7 +38,7 @@ import org.eclipse.che.ide.extension.machine.client.actions.EditCommandsAction;
 import org.eclipse.che.ide.extension.machine.client.actions.ExecuteSelectedCommandAction;
 import org.eclipse.che.ide.extension.machine.client.actions.RestartMachineAction;
 import org.eclipse.che.ide.extension.machine.client.actions.RunCommandAction;
-import org.eclipse.che.ide.extension.machine.client.actions.SelectCommandComboBoxReady;
+import org.eclipse.che.ide.extension.machine.client.actions.SelectCommandComboBox;
 import org.eclipse.che.ide.extension.machine.client.actions.SwitchPerspectiveAction;
 import org.eclipse.che.ide.extension.machine.client.command.custom.CustomCommandType;
 import org.eclipse.che.ide.extension.machine.client.command.valueproviders.ServerPortProvider;
@@ -89,14 +89,16 @@ public class MachineExtension {
                             CustomCommandType arbitraryCommandType) {
         machineResources.getCss().ensureInjected();
 
-        workspaceAgent.openPart(outputsContainerPresenter, PartStackType.INFORMATION);
-        workspaceAgent.openPart(consolesPanelPresenter, PartStackType.INFORMATION);
-
         eventBus.addHandler(WsAgentStateEvent.TYPE, new WsAgentStateHandler() {
             @Override
             public void onWsAgentStarted(WsAgentStateEvent event) {
                 machinePortProvider.get();
                 perspectiveManager.setPerspectiveId(PROJECT_PERSPECTIVE_ID);
+
+                workspaceAgent.openPart(outputsContainerPresenter, PartStackType.INFORMATION);
+                workspaceAgent.openPart(consolesPanelPresenter, PartStackType.INFORMATION);
+
+                consolesPanelPresenter.newTerminal();
             }
 
             @Override
@@ -112,7 +114,7 @@ public class MachineExtension {
                                 ActionManager actionManager,
                                 KeyBindingAgent keyBinding,
                                 ExecuteSelectedCommandAction executeSelectedCommandAction,
-                                SelectCommandComboBoxReady selectCommandAction,
+                                SelectCommandComboBox selectCommandAction,
                                 EditCommandsAction editCommandsAction,
                                 CreateMachineAction createMachine,
                                 RestartMachineAction restartMachine,
@@ -190,17 +192,10 @@ public class MachineExtension {
         actionManager.registerAction(GROUP_COMMANDS_LIST, commandList);
         commandList.add(editCommandsAction, FIRST);
 
-        final DefaultActionGroup runContextGroup = (DefaultActionGroup)actionManager.getAction(IdeActions.GROUP_RUN_CONTEXT_MENU);
-        runContextGroup.add(machinesList);
-        runContextGroup.add(commandList);
-        runContextGroup.addSeparator();
-
         // Define hot-keys
         keyBinding.getGlobal().addKey(new KeyBuilder().alt().charCode(KeyCodeMap.F12).build(), "newTerminal");
 
-        iconRegistry.registerIcon(new Icon("che.runtime.icon", machineResources.devMachine()));
-        iconRegistry.registerIcon(new Icon("docker.runtime.icon", machineResources.devMachine()));
-        iconRegistry.registerIcon(new Icon("ssh.runtime.icon", machineResources.ssh()));
+        iconRegistry.registerIcon(new Icon("che.machine.icon", machineResources.devMachine()));
     }
 
     @Inject

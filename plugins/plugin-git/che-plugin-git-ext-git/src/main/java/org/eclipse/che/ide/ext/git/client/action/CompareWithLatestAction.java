@@ -84,7 +84,7 @@ public class CompareWithLatestAction extends GitAction {
 
         checkState(project != null, "Null project occurred");
 
-        service.diff(workspace.getId(), project.getLocation(), Collections.<String>emptyList(), NAME_STATUS, false, 0, REVISION, false)
+        service.diff(appContext.getDevMachine(), project.getLocation(), Collections.<String>emptyList(), NAME_STATUS, false, 0, REVISION, false)
                .then(new Operation<String>() {
                    @Override
                    public void apply(String diff) throws OperationException {

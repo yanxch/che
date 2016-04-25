@@ -13,7 +13,6 @@ package org.eclipse.che.ide.ext.java.client.documentation;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
@@ -21,7 +20,6 @@ import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
-import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.ext.java.client.resource.JavaSourceFolderMarker;
 import org.eclipse.che.ide.ext.java.client.util.JavaUtil;
 import org.eclipse.che.ide.jseditor.client.position.PositionConverter;
@@ -34,22 +32,17 @@ import org.eclipse.che.ide.util.loging.Log;
 @Singleton
 public class QuickDocPresenter implements QuickDocumentation, QuickDocView.ActionDelegate {
 
+
     private QuickDocView view;
     private AppContext   appContext;
-    private String       caContext;
-    private String       workspaceId;
-    private EditorAgent  editorAgent;
+    private EditorAgent editorAgent;
 
     @Inject
     public QuickDocPresenter(QuickDocView view,
                              AppContext appContext,
-                             @Named("cheExtensionPath") String caContext,
-                             EditorAgent editorAgent,
-                             Workspace workspace) {
+                             EditorAgent editorAgent) {
         this.view = view;
         this.appContext = appContext;
-        this.caContext = caContext;
-        this.workspaceId = workspace.getId();
         this.editorAgent = editorAgent;
     }
 
@@ -82,7 +75,7 @@ public class QuickDocPresenter implements QuickDocumentation, QuickDocView.Actio
 
             final String fqn = JavaUtil.resolveFQN((Container)srcFolder.get(), resource);
 
-            view.show(caContext + "/jdt/" + workspaceId + "/javadoc/find?fqn=" + fqn + "&projectpath=" +
+            view.show(appContext.getDevMachine().getWsAgentBaseUrl() + "/jdt/" + appContext.getDevMachine().getId() + "/javadoc/find?fqn=" + fqn + "&projectpath=" +
                       project.getLocation() + "&offset=" + offset, coordinates.getX(), coordinates.getY());
         }
 

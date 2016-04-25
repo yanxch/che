@@ -90,7 +90,7 @@ public class RemoveFromIndexPresenter implements RemoveFromIndexView.ActionDeleg
 
         checkState(!isNullOrEmpty(resources));
 
-        service.remove(workspace.getId(), project.getLocation(), toRelativePaths(resources), view.isRemoved()).then(new Operation<Void>() {
+        service.remove(appContext.getDevMachine(), project.getLocation(), toRelativePaths(resources), view.isRemoved()).then(new Operation<Void>() {
             @Override
             public void apply(Void ignored) throws OperationException {
                 console.print(constant.removeFilesSuccessfull());
@@ -133,7 +133,7 @@ public class RemoveFromIndexPresenter implements RemoveFromIndexView.ActionDeleg
     private void handleError(@NotNull Throwable e, GitOutputConsole console) {
         String errorMessage = (e.getMessage() != null && !e.getMessage().isEmpty()) ? e.getMessage() : constant.removeFilesFailed();
         console.printError(errorMessage);
-        consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+        consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
         notificationManager.notify(constant.removeFilesFailed(), FAIL, true);
     }
 

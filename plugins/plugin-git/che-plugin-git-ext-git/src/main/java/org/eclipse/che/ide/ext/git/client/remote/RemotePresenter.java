@@ -93,7 +93,7 @@ public class RemotePresenter implements RemoteView.ActionDelegate {
      * then get the list of branches (remote and local).
      */
     private void getRemotes() {
-        service.remoteList(workspace.getId(), project.getLocation(), null, true).then(new Operation<List<Remote>>() {
+        service.remoteList(appContext.getDevMachine(), project.getLocation(), null, true).then(new Operation<List<Remote>>() {
             @Override
             public void apply(List<Remote> remotes) throws OperationException {
                 view.setEnableDeleteButton(selectedRemote != null);
@@ -137,7 +137,7 @@ public class RemotePresenter implements RemoteView.ActionDelegate {
                 String errorMessage = caught.getMessage() != null ? caught.getMessage() : constant.remoteAddFailed();
                 GitOutputConsole console = gitOutputConsoleFactory.create(REMOTE_REPO_COMMAND_NAME);
                 console.printError(errorMessage);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.remoteAddFailed(), FAIL, true);
             }
         });
@@ -153,7 +153,7 @@ public class RemotePresenter implements RemoteView.ActionDelegate {
             return;
         }
 
-        service.remoteDelete(workspace.getId(), project.getLocation(), selectedRemote.getName()).then(new Operation<Void>() {
+        service.remoteDelete(appContext.getDevMachine(), project.getLocation(), selectedRemote.getName()).then(new Operation<Void>() {
             @Override
             public void apply(Void ignored) throws OperationException {
                 getRemotes();
@@ -166,7 +166,7 @@ public class RemotePresenter implements RemoteView.ActionDelegate {
                 String errorMessage = error.getMessage() != null ? error.getMessage() : constant.remoteDeleteFailed();
                 GitOutputConsole console = gitOutputConsoleFactory.create(REMOTE_REPO_COMMAND_NAME);
                 console.printError(errorMessage);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.remoteDeleteFailed(), FAIL, true);
             }
         });
@@ -184,7 +184,7 @@ public class RemotePresenter implements RemoteView.ActionDelegate {
     private void handleError(@NotNull String errorMessage) {
         GitOutputConsole console = gitOutputConsoleFactory.create(REMOTE_REPO_COMMAND_NAME);
         console.printError(errorMessage);
-        consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+        consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
         notificationManager.notify(errorMessage);
     }
 }

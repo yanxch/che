@@ -16,6 +16,7 @@ import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 
 /**
  * Event that describes the fact that Project Action (opened/closing/closed) has been performed.
+ * Deprecated for now don't use it any more never fire
  *
  * @author Nikolay Zamosenchuk
  */

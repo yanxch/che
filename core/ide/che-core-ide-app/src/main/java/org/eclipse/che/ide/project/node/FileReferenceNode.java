@@ -59,7 +59,7 @@ public class FileReferenceNode extends ItemReferenceBasedNode implements Virtual
                              NodeManager nodeManager*/) {
         super(itemReference, projectConfig, nodeSettings, eventBus, null);
         
-        this.workspaceId = appContext.getWorkspace().getId();
+//        this.workspaceId = appContext.getWorkspace().getId();
     }
 
     @Override

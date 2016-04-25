@@ -57,6 +57,7 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
     private final Workspace               workspace;
     private final ResetFilesView          view;
     private final GitServiceClient        service;
+    private final AppContext              appContext;
     private final GitLocalizationConstant constant;
     private final NotificationManager     notificationManager;
 
@@ -67,6 +68,7 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
     @Inject
     public ResetFilesPresenter(ResetFilesView view,
                                GitServiceClient service,
+                               AppContext appContext,
                                GitLocalizationConstant constant,
                                NotificationManager notificationManager,
                                DtoFactory dtoFactory,
@@ -82,6 +84,7 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
         this.workspace = workspace;
         this.view.setDelegate(this);
         this.service = service;
+        this.appContext = appContext;
         this.constant = constant;
         this.notificationManager = notificationManager;
     }
@@ -90,7 +93,7 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
     public void showDialog(Project project) {
         this.project = project;
 
-        service.getStatus(workspace.getId(), project.getLocation()).then(new Operation<Status>() {
+        service.getStatus(appContext.getDevMachine(), project.getLocation()).then(new Operation<Status>() {
             @Override
             public void apply(Status status) throws OperationException {
                 if (status.isClean()) {
@@ -157,7 +160,7 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
         }
         view.close();
 
-        service.reset(workspace.getId(), project.getLocation(), "HEAD", ResetType.MIXED, paths).then(new Operation<Void>() {
+        service.reset(appContext.getDevMachine(), project.getLocation(), "HEAD", ResetType.MIXED, paths).then(new Operation<Void>() {
             @Override
             public void apply(Void ignored) throws OperationException {
                 console.print(constant.resetFilesSuccessfully());

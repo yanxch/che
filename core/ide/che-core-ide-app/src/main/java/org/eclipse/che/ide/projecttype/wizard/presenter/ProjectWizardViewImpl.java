@@ -40,9 +40,9 @@ public class ProjectWizardViewImpl extends Window implements ProjectWizardView {
     private final CoreLocalizationConstant locale;
     @UiField
     SimplePanel wizardPanel;
-    Button      nextStepButton;
-    Button      previousStepButton;
-    Button      saveButton;
+    Button nextStepButton;
+    Button previousStepButton;
+    Button saveButton;
 
     private boolean        isCreatingNewProject;
     private ActionDelegate delegate;
@@ -149,6 +149,13 @@ public class ProjectWizardViewImpl extends Window implements ProjectWizardView {
     public void close() {
         hide();
         setLoaderVisibility(false);
+    }
+
+    @Override
+    public void closeAndRevertChanges() {
+        close();
+
+        delegate.onChangesRevert();
     }
 
     @Override

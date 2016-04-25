@@ -44,6 +44,7 @@ public class StatusCommandPresenter {
     public static final String STATUS_COMMAND_NAME = "Git status";
 
     private final GitServiceClient        service;
+    private final AppContext              appContext;
     private final GitOutputConsoleFactory gitOutputConsoleFactory;
     private final ConsolesPanelPresenter  consolesPanelPresenter;
     private final GitLocalizationConstant constant;
@@ -55,12 +56,14 @@ public class StatusCommandPresenter {
      */
     @Inject
     public StatusCommandPresenter(GitServiceClient service,
+                                  AppContext appContext,
                                   GitOutputConsoleFactory gitOutputConsoleFactory,
                                   ConsolesPanelPresenter consolesPanelPresenter,
                                   GitLocalizationConstant constant,
                                   NotificationManager notificationManager,
                                   Workspace workspace) {
         this.service = service;
+        this.appContext = appContext;
         this.gitOutputConsoleFactory = gitOutputConsoleFactory;
         this.consolesPanelPresenter = consolesPanelPresenter;
         this.constant = constant;
@@ -70,7 +73,7 @@ public class StatusCommandPresenter {
 
     /** Show status. */
     public void showStatus(Project project) {
-        service.statusText(workspace.getId(), project.getLocation(), LONG).then(new Operation<String>() {
+        service.statusText(appContext.getDevMachine(), project.getLocation(), LONG).then(new Operation<String>() {
             @Override
             public void apply(String status) throws OperationException {
                 printGitStatus(status);

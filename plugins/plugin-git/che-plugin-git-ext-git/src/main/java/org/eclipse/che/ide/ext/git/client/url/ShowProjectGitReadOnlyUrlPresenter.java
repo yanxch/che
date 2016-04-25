@@ -76,7 +76,7 @@ public class ShowProjectGitReadOnlyUrlPresenter implements ShowProjectGitReadOnl
     public void showDialog(Project project) {
         view.showDialog();
 
-        service.remoteList(workspace.getId(), project.getLocation(), null, true).then(new Operation<List<Remote>>() {
+        service.remoteList(appContext.getDevMachine(), project.getLocation(), null, true).then(new Operation<List<Remote>>() {
             @Override
             public void apply(List<Remote> remotes) throws OperationException {
                 view.setRemotes(remotes);
@@ -88,12 +88,12 @@ public class ShowProjectGitReadOnlyUrlPresenter implements ShowProjectGitReadOnl
                 String errorMessage = error.getMessage() != null ? error.getMessage() : constant.remoteListFailed();
                 GitOutputConsole console = gitOutputConsoleFactory.create(REMOTE_REPO_COMMAND_NAME);
                 console.printError(errorMessage);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.remoteListFailed(), FAIL, true);
             }
         });
 
-        service.getGitReadOnlyUrl(workspace.getId(), project.getLocation()).then(new Operation<String>() {
+        service.getGitReadOnlyUrl(appContext.getDevMachine(), project.getLocation()).then(new Operation<String>() {
             @Override
             public void apply(String url) throws OperationException {
                 view.setLocaleUrl(url);
@@ -106,7 +106,7 @@ public class ShowProjectGitReadOnlyUrlPresenter implements ShowProjectGitReadOnl
                 final GitOutputConsole console = gitOutputConsoleFactory.create(READ_ONLY_URL_COMMAND_NAME);
                 console.printError(errorMessage);
                 consolesPanelPresenter
-                        .addCommandOutput(appContext.getDevMachineId(), console);
+                        .addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.initFailed(), FAIL, true);
             }
         });

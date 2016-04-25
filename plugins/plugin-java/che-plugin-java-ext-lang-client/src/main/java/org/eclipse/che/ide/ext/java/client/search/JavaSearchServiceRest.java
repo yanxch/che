@@ -12,9 +12,9 @@ package org.eclipse.che.ide.ext.java.client.search;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.ext.java.shared.dto.search.FindUsagesRequest;
 import org.eclipse.che.ide.ext.java.shared.dto.search.FindUsagesResponse;
@@ -36,6 +36,7 @@ public class JavaSearchServiceRest implements JavaSearchService {
 
     private final AsyncRequestFactory    asyncRequestFactory;
     private final DtoUnmarshallerFactory unmarshallerFactory;
+    private final AppContext appContext;
     private       MessageLoader          loader;
     private final String                 pathToService;
 
@@ -43,12 +44,13 @@ public class JavaSearchServiceRest implements JavaSearchService {
     public JavaSearchServiceRest(AsyncRequestFactory asyncRequestFactory,
                                  DtoUnmarshallerFactory unmarshallerFactory,
                                  LoaderFactory loaderFactory,
-                                 @Named("cheExtensionPath") String extPath,
+                                 AppContext appContext,
                                  Workspace workspace) {
         this.asyncRequestFactory = asyncRequestFactory;
         this.unmarshallerFactory = unmarshallerFactory;
+        this.appContext = appContext;
         this.loader = loaderFactory.newLoader();
-        this.pathToService = extPath + "/jdt/" + workspace.getId() + "/search/";
+        this.pathToService = appContext.getDevMachine().getWsAgentBaseUrl() + "/jdt/" + workspace.getId() + "/search/";
     }
 
     @Override

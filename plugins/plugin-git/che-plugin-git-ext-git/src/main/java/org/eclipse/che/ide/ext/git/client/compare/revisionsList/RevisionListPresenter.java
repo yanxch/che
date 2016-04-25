@@ -18,6 +18,7 @@ import org.eclipse.che.api.core.ErrorCodes;
 import org.eclipse.che.api.git.gwt.client.GitServiceClient;
 import org.eclipse.che.api.git.shared.LogResponse;
 import org.eclipse.che.api.git.shared.Revision;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
@@ -53,6 +54,7 @@ public class RevisionListPresenter implements RevisionListView.ActionDelegate {
     private final RevisionListView        view;
     private final GitServiceClient        service;
     private final GitLocalizationConstant locale;
+    private final AppContext              appContext;
     private final NotificationManager     notificationManager;
 
     private Revision selectedRevision;
@@ -66,12 +68,14 @@ public class RevisionListPresenter implements RevisionListView.ActionDelegate {
                                  GitLocalizationConstant locale,
                                  NotificationManager notificationManager,
                                  DialogFactory dialogFactory,
-                                 Workspace workspace) {
+                                 Workspace workspace,
+                                 AppContext appContext) {
         this.view = view;
         this.comparePresenter = comparePresenter;
         this.dialogFactory = dialogFactory;
         this.service = service;
         this.locale = locale;
+        this.appContext = appContext;
         this.notificationManager = notificationManager;
         this.workspace = workspace;
 
@@ -125,7 +129,7 @@ public class RevisionListPresenter implements RevisionListView.ActionDelegate {
 
     /** Get list of revisions. */
     private void getRevisions() {
-        service.log(workspace.getId(), project.getLocation(), new Path[]{selectedPath}, false).then(new Operation<LogResponse>() {
+        service.log(appContext.getDevMachine(), project.getLocation(), new Path[]{selectedPath}, false).then(new Operation<LogResponse>() {
             @Override
             public void apply(LogResponse log) throws OperationException {
                 view.setRevisions(log.getCommits());
@@ -146,7 +150,7 @@ public class RevisionListPresenter implements RevisionListView.ActionDelegate {
     }
 
     private void compare() {
-        service.diff(workspace.getId(),
+        service.diff(appContext.getDevMachine(),
                      project.getLocation(),
                      singletonList(selectedPath.toString()),
                      NAME_STATUS,

@@ -109,7 +109,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
      * If remote repositories are found, then get the list of branches (remote and local).
      */
     void updateRemotes() {
-        service.remoteList(workspace.getId(), project.getLocation(), null, true).then(new Operation<List<Remote>>() {
+        service.remoteList(appContext.getDevMachine(), project.getLocation(), null, true).then(new Operation<List<Remote>>() {
             @Override
             public void apply(List<Remote> remotes) throws OperationException {
                 updateLocalBranches();
@@ -157,7 +157,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
                 String errorMessage = exception.getMessage() != null ? exception.getMessage() : constant.localBranchesListFailed();
                 GitOutputConsole console = gitOutputConsoleFactory.create(BRANCH_LIST_COMMAND_NAME);
                 console.printError(errorMessage);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.localBranchesListFailed(), FAIL, true);
                 view.setEnablePushButton(false);
             }
@@ -207,7 +207,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
                     public void onFailure(Throwable caught) {
                         GitOutputConsole console = gitOutputConsoleFactory.create(CONFIG_COMMAND_NAME);
                         console.printError(constant.failedGettingConfig());
-                        consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                        consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                         notificationManager.notify(constant.failedGettingConfig(), FAIL, true);
                     }
                 });
@@ -218,7 +218,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
                 String errorMessage = exception.getMessage() != null ? exception.getMessage() : constant.remoteBranchesListFailed();
                 GitOutputConsole console = gitOutputConsoleFactory.create(BRANCH_LIST_COMMAND_NAME);
                 console.printError(errorMessage);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.remoteBranchesListFailed(), FAIL, true);
                 view.setEnablePushButton(false);
             }
@@ -234,7 +234,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
 
         final String configBranchRemote = "branch." + view.getLocalBranch() + ".remote";
         final String configUpstreamBranch = "branch." + view.getLocalBranch() + ".merge";
-        service.config(workspace.getId(), project.getLocation(), Arrays.asList(configUpstreamBranch, configBranchRemote), false)
+        service.config(appContext.getDevMachine()), project.getLocation(), Arrays.asList(configUpstreamBranch, configBranchRemote), false)
                .then(new Operation<Map<String, String>>() {
                    @Override
                    public void apply(Map<String, String> configs) throws OperationException {
@@ -266,7 +266,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
      *         is a remote mode
      */
     void getBranchesForCurrentProject(@NotNull final String remoteMode, final AsyncCallback<List<Branch>> asyncResult) {
-        service.branchList(workspace.getId(), project.getLocation(), remoteMode).then(new Operation<List<Branch>>() {
+        service.branchList(appContext.getDevMachine(), project.getLocation(), remoteMode).then(new Operation<List<Branch>>() {
             @Override
             public void apply(List<Branch> branches) throws OperationException {
                 asyncResult.onSuccess(branches);
@@ -287,7 +287,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
 
         final String repository = view.getRepository();
         final GitOutputConsole console = gitOutputConsoleFactory.create(PUSH_COMMAND_NAME);
-        service.push(workspace.getId(), project.getLocation(), getRefs(), repository, false).then(new Operation<PushResponse>() {
+        service.push(appContext.getDevMachine(), project.getLocation(), getRefs(), repository, false).then(new Operation<PushResponse>() {
             @Override
             public void apply(PushResponse response) throws OperationException {
                 console.print(response.getCommandOutput());

@@ -42,7 +42,6 @@ public class UploadFolderFromZipPresenter implements UploadFolderFromZipView.Act
 
     @Inject
     public UploadFolderFromZipPresenter(UploadFolderFromZipView view,
-                                        @Named("cheExtensionPath") String restContext,
                                         AppContext appContext,
                                         NotificationManager notificationManager,
                                         CoreLocalizationConstant locale) {

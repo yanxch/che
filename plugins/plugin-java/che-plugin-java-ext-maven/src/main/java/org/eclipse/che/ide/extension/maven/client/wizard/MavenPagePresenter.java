@@ -93,8 +93,8 @@ public class MavenPagePresenter extends AbstractWizardPage<MutableProjectConfig>
     }
 
     private void estimateAndSetAttributes() {
-        projectServiceClient.estimateProject(appContext.getWorkspace().getId(),
-                dataObject.getPath(), MAVEN_ID,
+        projectServiceClient.estimateProject(appContext.getDevMachine(),
+                                             dataObject.getPath(), MAVEN_ID,
                 new AsyncRequestCallback<SourceEstimation>(dtoUnmarshallerFactory.newUnmarshaller(SourceEstimation.class)) {
                     @Override
                     protected void onSuccess(SourceEstimation result) {

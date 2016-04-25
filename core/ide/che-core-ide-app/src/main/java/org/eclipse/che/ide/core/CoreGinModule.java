@@ -212,7 +212,6 @@ import org.eclipse.che.ide.upload.file.UploadFileView;
 import org.eclipse.che.ide.upload.file.UploadFileViewImpl;
 import org.eclipse.che.ide.upload.folder.UploadFolderFromZipView;
 import org.eclipse.che.ide.upload.folder.UploadFolderFromZipViewImpl;
-import org.eclipse.che.ide.util.Config;
 import org.eclipse.che.ide.util.executor.UserActivityManager;
 import org.eclipse.che.ide.workspace.PartStackPresenterFactory;
 import org.eclipse.che.ide.workspace.PartStackViewFactory;
@@ -471,12 +470,5 @@ public class CoreGinModule extends AbstractGinModule {
     @Singleton
     protected PartStackEventHandler providePartStackEventHandler(FocusManager partAgentPresenter) {
         return partAgentPresenter.getPartStackHandler();
-    }
-
-    @Provides
-    @Named("cheExtensionPath")
-    @Singleton
-    protected String getJavaCAPath() {
-        return Config.getCheExtensionPath();
     }
 }

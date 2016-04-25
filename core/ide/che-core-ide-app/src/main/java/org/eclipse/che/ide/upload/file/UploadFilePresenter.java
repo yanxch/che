@@ -23,6 +23,7 @@ import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.event.FileEvent;
 import org.eclipse.che.ide.api.notification.Notification;
 import org.eclipse.che.ide.api.notification.NotificationListener;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.resources.Container;
@@ -52,7 +53,7 @@ public class UploadFilePresenter implements UploadFileView.ActionDelegate {
 
     @Inject
     public UploadFilePresenter(UploadFileView view,
-                               @Named("cheExtensionPath") String restContext,
+                               AppContext appContext,
                                EventBus eventBus,
                                NotificationManager notificationManager,
                                CoreLocalizationConstant locale,

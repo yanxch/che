@@ -80,7 +80,7 @@ public class AddToIndexPresenter implements AddToIndexView.ActionDelegate {
 
         final GitOutputConsole console = gitOutputConsoleFactory.create(ADD_TO_INDEX_COMMAND_NAME);
 
-        service.getStatus(workspace.getId(), project.getLocation()).then(new Operation<Status>() {
+        service.getStatus(appContext.getDevMachine(), project.getLocation()).then(new Operation<Status>() {
             @Override
             public void apply(Status status) throws OperationException {
                 if (!status.isClean()) {
@@ -126,7 +126,7 @@ public class AddToIndexPresenter implements AddToIndexView.ActionDelegate {
             paths[i] = tmpPath.isEmpty() ? tmpPath.append(".") : tmpPath;
         }
 
-        service.add(workspace.getId(), project.getLocation(), view.isUpdated(), paths).then(new Operation<Void>() {
+        service.add(appContext.getDevMachine(), project.getLocation(), view.isUpdated(), paths).then(new Operation<Void>() {
             @Override
             public void apply(Void arg) throws OperationException {
                 console.print(constant.addSuccess());

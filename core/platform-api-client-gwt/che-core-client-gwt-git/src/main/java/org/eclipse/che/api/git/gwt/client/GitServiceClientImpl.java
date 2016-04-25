@@ -13,7 +13,6 @@ package org.eclipse.che.api.git.gwt.client;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.api.git.shared.AddRequest;
 import org.eclipse.che.api.git.shared.Branch;
@@ -48,6 +47,7 @@ import org.eclipse.che.api.git.shared.ShowFileContentRequest;
 import org.eclipse.che.api.git.shared.ShowFileContentResponse;
 import org.eclipse.che.api.git.shared.Status;
 import org.eclipse.che.api.git.shared.StatusFormat;
+import org.eclipse.che.api.machine.gwt.client.DevMachine;
 import org.eclipse.che.api.machine.gwt.client.WsAgentStateController;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
@@ -56,6 +56,7 @@ import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper.RequestCa
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.MimeType;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
@@ -127,16 +128,16 @@ public class GitServiceClientImpl implements GitServiceClient {
     private final DtoFactory             dtoFactory;
     private final DtoUnmarshallerFactory dtoUnmarshallerFactory;
     private final AsyncRequestFactory    asyncRequestFactory;
-    private final String                 extPath;
+    private final AppContext             appContext;
 
     @Inject
-    protected GitServiceClientImpl(@Named("cheExtensionPath") String extPath,
-                                   LoaderFactory loaderFactory,
+    protected GitServiceClientImpl(LoaderFactory loaderFactory,
                                    WsAgentStateController wsAgentStateController,
                                    DtoFactory dtoFactory,
                                    AsyncRequestFactory asyncRequestFactory,
-                                   DtoUnmarshallerFactory dtoUnmarshallerFactory) {
-        this.extPath = extPath;
+                                   DtoUnmarshallerFactory dtoUnmarshallerFactory,
+                                   AppContext appContext) {
+        this.appContext = appContext;
         this.loader = loaderFactory.newLoader();
         this.wsAgentStateController = wsAgentStateController;
         this.dtoFactory = dtoFactory;

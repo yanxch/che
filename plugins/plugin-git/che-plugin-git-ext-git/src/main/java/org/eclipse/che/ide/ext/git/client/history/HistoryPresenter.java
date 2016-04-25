@@ -144,7 +144,7 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
 
     /** Get the log of the commits. If successfully received, then display in revision grid, otherwise - show error in output panel. */
     private void getCommitsLog() {
-        service.log(workspace.getId(), project.getLocation(), null, false).then(new Operation<LogResponse>() {
+        service.log(appContext.getDevMachine(), project.getLocation(), null, false).then(new Operation<LogResponse>() {
             @Override
             public void apply(LogResponse log) throws OperationException {
                 revisions = log.getCommits();
@@ -335,7 +335,7 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
             return;
         }
 
-        service.diff(workspace.getId(), project.getLocation(), filePatterns, RAW, false, 0, revision.getId(), isCached)
+        service.diff(appContext.getDevMachine(), project.getLocation(), filePatterns, RAW, false, 0, revision.getId(), isCached)
                .then(new Operation<String>() {
                    @Override
                    public void apply(String diff) throws OperationException {
@@ -374,7 +374,7 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
         int index = revisions.indexOf(revisionB);
         if (index + 1 < revisions.size()) {
             final Revision revisionA = revisions.get(index + 1);
-            service.diff(workspace.getId(), project.getLocation(), filePatterns, RAW, false, 0, revisionA.getId(), revisionB.getId())
+            service.diff(appContext.getDevMachine(), project.getLocation(), filePatterns, RAW, false, 0, revisionA.getId(), revisionB.getId())
                    .then(new Operation<String>() {
                        @Override
                        public void apply(String diff) throws OperationException {

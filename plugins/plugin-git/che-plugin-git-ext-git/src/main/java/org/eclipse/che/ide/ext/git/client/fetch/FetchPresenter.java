@@ -103,7 +103,7 @@ public class FetchPresenter implements FetchView.ActionDelegate {
      * local).
      */
     private void updateRemotes() {
-        service.remoteList(workspace.getId(), project.getLocation(), null, true).then(new Operation<List<Remote>>() {
+        service.remoteList(appContext.getDevMachine(), project.getLocation(), null, true).then(new Operation<List<Remote>>() {
             @Override
             public void apply(List<Remote> remotes) throws OperationException {
                 view.setRepositories(remotes);
@@ -130,7 +130,7 @@ public class FetchPresenter implements FetchView.ActionDelegate {
      *         is a remote mode
      */
     private void updateBranches(@NotNull final String remoteMode) {
-        service.branchList(workspace.getId(), project.getLocation(), remoteMode).then(new Operation<List<Branch>>() {
+        service.branchList(appContext.getDevMachine(), project.getLocation(), remoteMode).then(new Operation<List<Branch>>() {
             @Override
             public void apply(List<Branch> branches) throws OperationException {
                 if (LIST_REMOTE.equals(remoteMode)) {
@@ -167,7 +167,7 @@ public class FetchPresenter implements FetchView.ActionDelegate {
         final StatusNotification notification = notificationManager.notify(constant.fetchProcess(), PROGRESS, true);
         final GitOutputConsole console = gitOutputConsoleFactory.create(FETCH_COMMAND_NAME);
 
-        service.fetch(workspace.getId(), project.getLocation(), view.getRepositoryName(), getRefs(), view.isRemoveDeletedRefs())
+        service.fetch(appContext.getDevMachine(), project.getLocation(), view.getRepositoryName(), getRefs(), view.isRemoveDeletedRefs())
                 .then(new Operation<Void>() {
                     @Override
                     public void apply(Void ignored) throws OperationException {

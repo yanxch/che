@@ -13,6 +13,7 @@ package org.eclipse.che.ide.ext.git.client;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.git.gwt.client.GitServiceClient;
+import org.eclipse.che.api.machine.gwt.client.DevMachine;
 import org.eclipse.che.api.git.shared.Branch;
 import org.eclipse.che.api.git.shared.MergeResult;
 import org.eclipse.che.api.git.shared.Remote;
@@ -79,6 +80,8 @@ public abstract class BaseTest {
     protected Project                 project;
     @Mock
     protected AppContext              appContext;
+    @Mock
+    protected DevMachine               devMachine;
     @Mock
     protected Workspace               workspace;
     @Mock

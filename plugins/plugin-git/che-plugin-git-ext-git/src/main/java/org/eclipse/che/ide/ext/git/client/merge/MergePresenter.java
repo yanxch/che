@@ -98,7 +98,7 @@ public class MergePresenter implements MergeView.ActionDelegate {
         selectedReference = null;
         view.setEnableMergeButton(false);
 
-        service.branchList(workspace.getId(), project.getLocation(), LIST_LOCAL).then(new Operation<List<Branch>>() {
+        service.branchList(appContext.getDevMachine(), project.getLocation(), LIST_LOCAL).then(new Operation<List<Branch>>() {
             @Override
             public void apply(List<Branch> branches) throws OperationException {
                 List<Reference> references = new ArrayList<>();
@@ -119,7 +119,7 @@ public class MergePresenter implements MergeView.ActionDelegate {
             }
         });
 
-        service.branchList(workspace.getId(), project.getLocation(), LIST_REMOTE).then(new Operation<List<Branch>>() {
+        service.branchList(appContext.getDevMachine(), project.getLocation(), LIST_REMOTE).then(new Operation<List<Branch>>() {
             @Override
             public void apply(List<Branch> branches) throws OperationException {
                 List<Reference> references = new ArrayList<>();
@@ -157,7 +157,7 @@ public class MergePresenter implements MergeView.ActionDelegate {
 
         final GitOutputConsole console = gitOutputConsoleFactory.create(MERGE_COMMAND_NAME);
 
-        service.merge(workspace.getId(), project.getLocation(), selectedReference.getDisplayName()).then(new Operation<MergeResult>() {
+        service.merge(appContext.getDevMachine(), project.getLocation(), selectedReference.getDisplayName()).then(new Operation<MergeResult>() {
             @Override
             public void apply(MergeResult result) throws OperationException {
                 console.print(formMergeMessage(result));

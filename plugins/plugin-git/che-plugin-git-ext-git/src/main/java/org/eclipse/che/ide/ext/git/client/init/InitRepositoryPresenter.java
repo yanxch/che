@@ -47,6 +47,7 @@ public class InitRepositoryPresenter {
     private final Workspace               workspace;
     private final GitLocalizationConstant constant;
     private final NotificationManager     notificationManager;
+    private final AppContext               appContext;
 
     @Inject
     public InitRepositoryPresenter(GitLocalizationConstant constant,
@@ -54,19 +55,21 @@ public class InitRepositoryPresenter {
                                    GitOutputConsoleFactory gitOutputConsoleFactory,
                                    ConsolesPanelPresenter consolesPanelPresenter,
                                    GitServiceClient service,
-                                   Workspace workspace) {
+                                   Workspace workspace,
+                                   AppContext appContext) {
         this.constant = constant;
         this.notificationManager = notificationManager;
         this.gitOutputConsoleFactory = gitOutputConsoleFactory;
         this.consolesPanelPresenter = consolesPanelPresenter;
         this.service = service;
         this.workspace = workspace;
+        this.appContext = appContext;
     }
 
     public void initRepository(final Project project) {
         final GitOutputConsole console = gitOutputConsoleFactory.create(INIT_COMMAND_NAME);
 
-        service.init(workspace.getId(), project.getLocation(), false).then(new Operation<Void>() {
+        service.init(appContext.getDevMachine(), project.getLocation(), false).then(new Operation<Void>() {
             @Override
             public void apply(Void ignored) throws OperationException {
                 console.print(constant.initSuccess());

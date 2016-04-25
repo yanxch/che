@@ -90,7 +90,7 @@ public class CheckoutReferencePresenter implements CheckoutReferenceView.ActionD
     @Override
     public void onCheckoutClicked(final String reference) {
 
-        service.checkout(workspace.getId(), project.getLocation(), dtoFactory.createDto(CheckoutRequest.class).withName(reference))
+        service.checkout(appContext.getDevMachine(), project.getLocation(), dtoFactory.createDto(CheckoutRequest.class).withName(reference))
                .then(new Operation<Void>() {
                    @Override
                    public void apply(Void arg) throws OperationException {

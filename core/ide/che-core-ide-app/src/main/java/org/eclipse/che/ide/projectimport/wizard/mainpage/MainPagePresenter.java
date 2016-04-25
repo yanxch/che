@@ -186,7 +186,7 @@ public class MainPagePresenter extends AbstractWizardPage<MutableProjectConfig> 
                     }
                 };
 
-        projectImportersService.getProjectImporters(workspace.getId(), callback);
+        projectImportersService.getProjectImporters(appContext.getDevMachine(), callback);
     }
 
     /** {@inheritDoc} */
