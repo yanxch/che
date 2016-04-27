@@ -116,7 +116,7 @@ public class FetchPresenter implements FetchView.ActionDelegate {
             public void apply(PromiseError error) throws OperationException {
                 GitOutputConsole console = gitOutputConsoleFactory.create(FETCH_COMMAND_NAME);
                 console.printError(constant.remoteListFailed());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.remoteListFailed(), FAIL, true);
                 view.setEnableFetchButton(false);
             }
@@ -152,7 +152,7 @@ public class FetchPresenter implements FetchView.ActionDelegate {
                 final String errorMessage = error.getMessage() != null ? error.getMessage() : constant.branchesListFailed();
                 GitOutputConsole console = gitOutputConsoleFactory.create(FETCH_COMMAND_NAME);
                 console.printError(errorMessage);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.branchesListFailed(), FAIL, true);
                 view.setEnableFetchButton(false);
             }
@@ -172,7 +172,7 @@ public class FetchPresenter implements FetchView.ActionDelegate {
                     @Override
                     public void apply(Void ignored) throws OperationException {
                         console.print(constant.fetchSuccess(remoteUrl));
-                        consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                        consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                         notification.setStatus(SUCCESS);
                         notification.setTitle(constant.fetchSuccess(remoteUrl));
                     }
@@ -181,7 +181,7 @@ public class FetchPresenter implements FetchView.ActionDelegate {
                     @Override
                     public void apply(PromiseError error) throws OperationException {
                         handleError(error.getCause(), remoteUrl, notification, console);
-                        consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                        consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                     }
                 });
         view.close();

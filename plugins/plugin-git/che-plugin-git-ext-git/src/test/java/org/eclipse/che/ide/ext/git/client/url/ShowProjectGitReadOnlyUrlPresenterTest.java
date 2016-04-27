@@ -65,11 +65,11 @@ public class ShowProjectGitReadOnlyUrlPresenterTest extends BaseTest {
                                                            consolesPanelPresenter,
                                                            workspace);
 
-        when(service.getGitReadOnlyUrl(anyString(), any(Path.class))).thenReturn(stringPromise);
+        when(service.getGitReadOnlyUrl(anyObject(), any(Path.class))).thenReturn(stringPromise);
         when(stringPromise.then(any(Operation.class))).thenReturn(stringPromise);
         when(stringPromise.catchError(any(Operation.class))).thenReturn(stringPromise);
 
-        when(service.remoteList(anyString(), any(Path.class), anyString(), anyBoolean())).thenReturn(remoteListPromise);
+        when(service.remoteList(anyObject(), any(Path.class), anyString(), anyBoolean())).thenReturn(remoteListPromise);
         when(remoteListPromise.then(any(Operation.class))).thenReturn(remoteListPromise);
         when(remoteListPromise.catchError(any(Operation.class))).thenReturn(remoteListPromise);
     }

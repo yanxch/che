@@ -123,7 +123,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
                 String errorMessage = error.getMessage() != null ? error.getMessage() : constant.remoteListFailed();
                 GitOutputConsole console = gitOutputConsoleFactory.create(REMOTE_REPO_COMMAND_NAME);
                 console.printError(errorMessage);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.remoteListFailed(), FAIL, true);
                 view.setEnablePushButton(false);
             }
@@ -234,7 +234,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
 
         final String configBranchRemote = "branch." + view.getLocalBranch() + ".remote";
         final String configUpstreamBranch = "branch." + view.getLocalBranch() + ".merge";
-        service.config(appContext.getDevMachine()), project.getLocation(), Arrays.asList(configUpstreamBranch, configBranchRemote), false)
+        service.config(appContext.getDevMachine(), project.getLocation(), Arrays.asList(configUpstreamBranch, configBranchRemote), false)
                .then(new Operation<Map<String, String>>() {
                    @Override
                    public void apply(Map<String, String> configs) throws OperationException {
@@ -291,7 +291,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
             @Override
             public void apply(PushResponse response) throws OperationException {
                 console.print(response.getCommandOutput());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notification.setStatus(SUCCESS);
                 if (response.getCommandOutput().contains("Everything up-to-date")) {
                     notification.setTitle(constant.pushUpToDate());
@@ -303,7 +303,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
             @Override
             public void apply(PromiseError error) throws OperationException {
                 handleError(error.getCause(), notification, console);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
             }
         });
         view.close();

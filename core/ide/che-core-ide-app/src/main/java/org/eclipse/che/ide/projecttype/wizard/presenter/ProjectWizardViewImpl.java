@@ -152,13 +152,6 @@ public class ProjectWizardViewImpl extends Window implements ProjectWizardView {
     }
 
     @Override
-    public void closeAndRevertChanges() {
-        close();
-
-        delegate.onChangesRevert();
-    }
-
-    @Override
     public void setNextButtonEnabled(boolean enabled) {
         nextStepButton.setEnabled(enabled);
     }

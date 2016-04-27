@@ -100,7 +100,7 @@ public class CheckoutReferenceTest extends BaseTest {
         presenter.onEnterClicked();
 
         verify(view, never()).close();
-        verify(service, never()).checkout(anyString(), any(Path.class), any(CheckoutRequest.class));
+        verify(service, never()).checkout(anyObject(), any(Path.class), any(CheckoutRequest.class));
     }
 
     @Test
@@ -109,7 +109,7 @@ public class CheckoutReferenceTest extends BaseTest {
         when(checkoutRequest.withName(anyString())).thenReturn(checkoutRequest);
         when(checkoutRequest.withCreateNew(anyBoolean())).thenReturn(checkoutRequest);
         reset(service);
-        when(service.checkout(anyString(), any(Path.class), any(CheckoutRequest.class))).thenReturn(voidPromise);
+        when(service.checkout(anyObject(), any(Path.class), any(CheckoutRequest.class))).thenReturn(voidPromise);
         when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
         when(voidPromise.catchError(any(Operation.class))).thenReturn(voidPromise);
         when(view.getReference()).thenReturn(CORRECT_REFERENCE);
@@ -124,7 +124,7 @@ public class CheckoutReferenceTest extends BaseTest {
         synchronizeCaptor.getValue().apply(new Resource[0]);
 
         verify(view).close();
-        verify(service).checkout(anyString(), any(Path.class), any(CheckoutRequest.class));
+        verify(service).checkout(anyObject(), any(Path.class), any(CheckoutRequest.class));
         verify(checkoutRequest).withName(CORRECT_REFERENCE);
         verifyNoMoreInteractions(checkoutRequest);
     }
@@ -135,7 +135,7 @@ public class CheckoutReferenceTest extends BaseTest {
         when(dtoFactory.createDto(CheckoutRequest.class)).thenReturn(checkoutRequest);
         when(checkoutRequest.withName(anyString())).thenReturn(checkoutRequest);
         when(checkoutRequest.withCreateNew(anyBoolean())).thenReturn(checkoutRequest);
-        when(service.checkout(anyString(), any(Path.class), any(CheckoutRequest.class))).thenReturn(voidPromise);
+        when(service.checkout(anyObject(), any(Path.class), any(CheckoutRequest.class))).thenReturn(voidPromise);
         when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
         when(voidPromise.catchError(any(Operation.class))).thenReturn(voidPromise);
 

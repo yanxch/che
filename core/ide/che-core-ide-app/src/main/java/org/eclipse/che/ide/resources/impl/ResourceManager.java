@@ -15,12 +15,12 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.google.inject.name.Named;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.model.project.SourceStorage;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
+import org.eclipse.che.api.machine.gwt.client.DevMachine;
 import org.eclipse.che.api.project.gwt.client.ProjectServiceClient;
 import org.eclipse.che.api.project.gwt.client.QueryExpression;
 import org.eclipse.che.api.project.shared.dto.ItemReference;
@@ -76,6 +76,7 @@ import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
+import static org.eclipse.che.ide.util.Arrays.batchRemove;
 import static org.eclipse.che.ide.util.NameUtils.checkFileName;
 import static org.eclipse.che.ide.util.NameUtils.checkFolderName;
 import static org.eclipse.che.ide.util.NameUtils.checkProjectName;
@@ -135,8 +136,9 @@ public final class ResourceManager {
     private final DtoFactory               dtoFactory;
     private final ProjectTypeRegistry      typeRegistry;
     private final Set<ResourceInterceptor> resourceInterceptors;
-    private final String                   wsAgentPath;
-    private final String                   wsId;
+    //    private final String                   wsAgentPath;
+//    private final String                   wsId;
+    private       DevMachine               devMachine;
 
     /**
      * Link to the workspace content root. Immutable among the workspace life.
@@ -154,16 +156,15 @@ public final class ResourceManager {
     private ProjectConfigDto[] cachedConfigs;
 
     @Inject
-    public ResourceManager(@Assisted String wsId,
+    public ResourceManager(@Assisted DevMachine devMachine,
                            ProjectServiceClient ps,
                            EventBus eventBus,
                            ResourceFactory resourceFactory,
                            PromiseProvider promises,
                            DtoFactory dtoFactory,
                            ProjectTypeRegistry typeRegistry,
-                           Set<ResourceInterceptor> resourceInterceptors,
-                           @Named("cheExtensionPath") String wsAgentPath) {
-        this.wsId = wsId;
+                           Set<ResourceInterceptor> resourceInterceptors) {
+        this.devMachine = devMachine;
         this.ps = ps;
         this.eventBus = eventBus;
         this.resourceFactory = resourceFactory;
@@ -171,7 +172,7 @@ public final class ResourceManager {
         this.dtoFactory = dtoFactory;
         this.typeRegistry = typeRegistry;
         this.resourceInterceptors = resourceInterceptors;
-        this.wsAgentPath = wsAgentPath;
+//        this.wsAgentPath = wsAgentPath;
         this.store = new InMemoryResourceStore();
 
         this.workspaceRoot = resourceFactory.newFolderImpl(Path.ROOT, this);
@@ -185,7 +186,7 @@ public final class ResourceManager {
      * @since 4.0.0-RC14
      */
     public Promise<Project[]> getWorkspaceProjects() {
-        return ps.getProjects(wsId).then(new Function<List<ProjectConfigDto>, Project[]>() {
+        return ps.getProjects(devMachine).then(new Function<List<ProjectConfigDto>, Project[]>() {
             @Override
             public Project[] apply(List<ProjectConfigDto> dtoConfigs) throws FunctionException {
                 store.clear();
@@ -264,7 +265,7 @@ public final class ResourceManager {
                                                .withMixins(request.getBody().getMixins())
                                                .withAttributes(request.getBody().getAttributes());
 
-        return ps.updateProject(wsId, dto).thenPromise(new Function<ProjectConfigDto, Promise<Project>>() {
+        return ps.updateProject(devMachine, dto).thenPromise(new Function<ProjectConfigDto, Promise<Project>>() {
             @Override
             public Promise<Project> apply(ProjectConfigDto reference) throws FunctionException {
 
@@ -296,7 +297,7 @@ public final class ResourceManager {
                 store.register(resourceLocation.segmentCount() == 1 ? Path.ROOT : newResource.getLocation().parent(), newResource);
 
                 //fetch updated configuration from the server
-                return ps.getProjects(wsId).thenPromise(new Function<List<ProjectConfigDto>, Promise<Project>>() {
+                return ps.getProjects(devMachine).thenPromise(new Function<List<ProjectConfigDto>, Promise<Project>>() {
                     @Override
                     public Promise<Project> apply(List<ProjectConfigDto> updatedConfiguration) throws FunctionException {
 
@@ -330,7 +331,7 @@ public final class ResourceManager {
                 checkState(!resource.isPresent(), "Resource already exists");
                 checkArgument(!parent.getLocation().isRoot(), "Failed to create folder in workspace root");
 
-                return ps.createFolder(wsId, parent.getLocation().append(name)).thenPromise(new Function<ItemReference, Promise<Folder>>() {
+                return ps.createFolder(devMachine, parent.getLocation().append(name)).thenPromise(new Function<ItemReference, Promise<Folder>>() {
                     @Override
                     public Promise<Folder> apply(final ItemReference reference) throws FunctionException {
 
@@ -381,7 +382,7 @@ public final class ResourceManager {
                 checkState(!resource.isPresent(), "Resource already exists");
                 checkArgument(!parent.getLocation().isRoot(), "Failed to create file in workspace root");
 
-                return ps.createFile(wsId, parent.getLocation().append(name), content).then(new Function<ItemReference, File>() {
+                return ps.createFile(devMachine, parent.getLocation().append(name), content).then(new Function<ItemReference, File>() {
                     @Override
                     public File apply(ItemReference reference) throws FunctionException {
                         final Link contentUrl = reference.getLink(GET_CONTENT_REL);
@@ -422,13 +423,13 @@ public final class ResourceManager {
                                                        .withMixins(createRequest.getBody().getMixins())
                                                        .withAttributes(createRequest.getBody().getAttributes());
 
-                return ps.createProject(wsId, dto).thenPromise(new Function<ProjectConfigDto, Promise<Project>>() {
+                return ps.createProject(devMachine, dto).thenPromise(new Function<ProjectConfigDto, Promise<Project>>() {
                     @Override
                     public Promise<Project> apply(ProjectConfigDto config) throws FunctionException {
                         final Project newResource = resourceFactory.newProjectImpl(config, ResourceManager.this);
                         store.register(Path.ROOT, newResource);
 
-                        return ps.getProjects(wsId).then(new Function<List<ProjectConfigDto>, Project>() {
+                        return ps.getProjects(devMachine).then(new Function<List<ProjectConfigDto>, Project>() {
                             @Override
                             public Project apply(List<ProjectConfigDto> updatedConfiguration) throws FunctionException {
 
@@ -468,11 +469,11 @@ public final class ResourceManager {
                                                                     .withLocation(sourceStorage.getLocation())
                                                                     .withParameters(sourceStorage.getParameters());
 
-                return ps.importProject(wsId, path.lastSegment(), sourceStorageDto).thenPromise(new Function<Void, Promise<Project>>() {
+                return ps.importProject(devMachine, path.lastSegment(), sourceStorageDto).thenPromise(new Function<Void, Promise<Project>>() {
                     @Override
                     public Promise<Project> apply(Void ignored) throws FunctionException {
 
-                        return ps.getProjects(wsId).then(new Function<List<ProjectConfigDto>, Project>() {
+                        return ps.getProjects(devMachine).then(new Function<List<ProjectConfigDto>, Project>() {
                             @Override
                             public Project apply(List<ProjectConfigDto> updatedConfiguration) throws FunctionException {
 
@@ -509,11 +510,11 @@ public final class ResourceManager {
             public Promise<Resource> apply(Optional<Resource> resource) throws FunctionException {
                 checkState(!resource.isPresent() || force, "Cannot create '" + destination.toString() + "'. Resource already exists.");
 
-                return ps.move(wsId, source.getLocation(), destination.parent(), destination.lastSegment(), force)
+                return ps.move(devMachine, source.getLocation(), destination.parent(), destination.lastSegment(), force)
                          .thenPromise(new Function<Void, Promise<Resource>>() {
                              @Override
                              public Promise<Resource> apply(Void ignored) throws FunctionException {
-                                 return ps.getItem(wsId, destination).thenPromise(new Function<ItemReference, Promise<Resource>>() {
+                                 return ps.getItem(devMachine, destination).thenPromise(new Function<ItemReference, Promise<Resource>>() {
                                      @Override
                                      public Promise<Resource> apply(ItemReference reference) throws FunctionException {
 
@@ -575,12 +576,12 @@ public final class ResourceManager {
             public Promise<Resource> apply(Optional<Resource> resource) throws FunctionException {
                 checkState(!resource.isPresent() || force, "Cannot create '" + destination.toString() + "'. Resource already exists.");
 
-                return ps.copy(wsId, source.getLocation(), destination.parent(), destination.lastSegment(), force)
+                return ps.copy(devMachine, source.getLocation(), destination.parent(), destination.lastSegment(), force)
                          .thenPromise(new Function<Void, Promise<Resource>>() {
                              @Override
                              public Promise<Resource> apply(Void ignored) throws FunctionException {
 
-                                 return ps.getItem(wsId, destination).then(new Function<ItemReference, Resource>() {
+                                 return ps.getItem(devMachine, destination).then(new Function<ItemReference, Resource>() {
                                      @Override
                                      public Resource apply(ItemReference reference) throws FunctionException {
                                          Resource copiedResource = newResourceFrom(reference);
@@ -605,7 +606,7 @@ public final class ResourceManager {
     protected Promise<Void> delete(final Resource resource) {
         checkArgument(!resource.getLocation().isRoot(), "Workspace root is not allowed to be moved");
 
-        return ps.delete(wsId, resource.getLocation()).then(new Function<Void, Void>() {
+        return ps.delete(devMachine, resource.getLocation()).then(new Function<Void, Void>() {
             @Override
             public Void apply(Void ignored) throws FunctionException {
                 store.dispose(resource.getLocation(), true);
@@ -619,7 +620,7 @@ public final class ResourceManager {
     protected Promise<Void> write(final File file, String content) {
         checkArgument(content != null, "Null content occurred");
 
-        return ps.writeFile(wsId, file.getLocation(), content).then(new Function<Void, Void>() {
+        return ps.writeFile(devMachine, file.getLocation(), content).then(new Function<Void, Void>() {
             @Override
             public Void apply(Void ignored) throws FunctionException {
                 eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(file, UPDATED | CONTENT)));
@@ -630,7 +631,7 @@ public final class ResourceManager {
     }
 
     protected Promise<String> read(File file) {
-        return ps.readFile(wsId, file.getLocation());
+        return ps.readFile(devMachine, file.getLocation());
     }
 
     protected Promise<Resource[]> getRemoteResources(final Container container, int depth, boolean includeFiles) {
@@ -642,7 +643,7 @@ public final class ResourceManager {
 
         final Optional<Resource[]> descendants = store.getAll(container.getLocation());
 
-        return ps.getTree(wsId, container.getLocation(), depth, includeFiles).then(new Function<TreeElement, Resource[]>() {
+        return ps.getTree(devMachine, container.getLocation(), depth, includeFiles).then(new Function<TreeElement, Resource[]>() {
             @Override
             public Resource[] apply(TreeElement tree) throws FunctionException {
 
@@ -734,49 +735,6 @@ public final class ResourceManager {
                 return reloaded;
             }
         });
-    }
-
-    protected <T> T[] batchRemove(T[] o1, T[] o2, boolean complement) {
-        checkArgument(o1 != null && o2 != null);
-
-        int r = 0, w = 0;
-
-        T[] o1Copy = copyOf(o1, o1.length);
-        T[] o2Copy = copyOf(o2, o2.length);
-
-        for (; r < o1Copy.length; r++)
-            if ((indexOf(o2Copy, o1Copy[r]) >= 0) == complement)
-                o1Copy[w++] = o1Copy[r];
-
-        if (r != o1Copy.length) {
-            arraycopy(o1Copy, r,
-                      o1Copy, w,
-                      o1Copy.length - r);
-            w += o1Copy.length - r;
-        }
-        if (w != o1Copy.length) {
-            for (int i = w; i < o1Copy.length; i++)
-                o1Copy[i] = null;
-
-            return copyOf(o1Copy, w);
-        } else {
-            return copyOf(o1Copy, o1Copy.length);
-        }
-    }
-
-    protected <T> int indexOf(T[] array, T o) {
-        if (o == null) {
-            for (int i = 0; i < array.length; i++) {
-                if (array[i] == null)
-                    return i;
-            }
-        } else {
-            for (int i = 0; i < array.length; i++) {
-                if (o.equals(array[i]))
-                    return i;
-            }
-        }
-        return -1;
     }
 
     protected Promise<Optional<Container>> getContainer(final Path absolutePath) {
@@ -946,7 +904,7 @@ public final class ResourceManager {
     }
 
     protected Promise<Resource[]> synchronize(final Container container) {
-        return ps.getProjects(wsId).thenPromise(new Function<List<ProjectConfigDto>, Promise<Resource[]>>() {
+        return ps.getProjects(devMachine).thenPromise(new Function<List<ProjectConfigDto>, Promise<Resource[]>>() {
             @Override
             public Promise<Resource[]> apply(List<ProjectConfigDto> updatedConfiguration) throws FunctionException {
                 cachedConfigs = updatedConfiguration.toArray(new ProjectConfigDto[updatedConfiguration.size()]);
@@ -1105,7 +1063,7 @@ public final class ResourceManager {
             queryExpression.setPath(container.getLocation().toString());
         }
 
-        return ps.search(wsId, queryExpression).thenPromise(new Function<List<ItemReference>, Promise<Resource[]>>() {
+        return ps.search(devMachine, queryExpression).thenPromise(new Function<List<ItemReference>, Promise<Resource[]>>() {
             @Override
             public Promise<Resource[]> apply(final List<ItemReference> references) throws FunctionException {
                 if (references.isEmpty()) {
@@ -1174,7 +1132,7 @@ public final class ResourceManager {
     protected String getUrl(Resource resource) {
         checkArgument(!resource.getLocation().isRoot(), "Workspace root doesn't have export URL");
 
-        final String baseUrl = wsAgentPath + "/project/" + wsId + "/export";
+        final String baseUrl = devMachine.getWsAgentBaseUrl() + "/project/" + devMachine.getId() + "/export";
 
         if (resource.getResourceType() == FILE) {
             return baseUrl + "/file" + resource.getLocation();
@@ -1184,7 +1142,7 @@ public final class ResourceManager {
     }
 
     public Promise<List<SourceEstimation>> resolve(Project project) {
-        return ps.resolveSources(wsId, project.getLocation());
+        return ps.resolveSources(devMachine, project.getLocation());
     }
 
     protected interface ResourceVisitor {
@@ -1200,6 +1158,6 @@ public final class ResourceManager {
     }
 
     public interface ResourceManagerFactory {
-        ResourceManager newResourceManager(String wsId);
+        ResourceManager newResourceManager(DevMachine devMachine);
     }
 }

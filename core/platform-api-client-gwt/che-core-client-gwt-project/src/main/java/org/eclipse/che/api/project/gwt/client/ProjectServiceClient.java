@@ -34,9 +34,9 @@ import java.util.List;
  * @author Vlad Zhukovskyi
  */
 public interface ProjectServiceClient {
-    Promise<List<ProjectConfigDto>> getProjects(String workspaceId);
+    Promise<List<ProjectConfigDto>> getProjects(DevMachine devMachine);
 
-    Promise<ProjectConfigDto> getProject(String workspaceId, Path path);
+    Promise<ProjectConfigDto> getProject(DevMachine devMachine, Path path);
 
     /**
      * Sends the request to the server to create new file in given {@code path}.
@@ -54,7 +54,7 @@ public interface ProjectServiceClient {
      * @return {@code Promise} with created {@code ItemReference}
      * @since 4.0.0-RC14
      */
-    Promise<ItemReference> createFile(String wsId, Path path, String content);
+    Promise<ItemReference> createFile(DevMachine devMachine, Path path, String content);
 
     /**
      * Sends the request to the server to create new folder in given {@code path}.
@@ -68,7 +68,7 @@ public interface ProjectServiceClient {
      * @return {@code Promise} with created {@code ItemReference}
      * @since 4.0.0-RC14
      */
-    Promise<ItemReference> createFolder(String wsId, Path path);
+    Promise<ItemReference> createFolder(DevMachine devMachine, Path path);
 
     /**
      * Sends the request to the server to create new project with given {@code config}.
@@ -80,7 +80,7 @@ public interface ProjectServiceClient {
      * @return {@code Promise} with created {@code ProjectConfigDto}
      * @since 4.0.0-RC14
      */
-    Promise<ProjectConfigDto> createProject(String wsId, ProjectConfigDto config);
+    Promise<ProjectConfigDto> createProject(DevMachine devMachine, ProjectConfigDto config);
 
     /**
      * Sends the request to the server to request info for the item with given {@code path}.
@@ -92,7 +92,7 @@ public interface ProjectServiceClient {
      * @return {@code Promise} with {@code ItemReference}
      * @since 4.0.0-RC14
      */
-    Promise<ItemReference> getItem(String wsId, Path path);
+    Promise<ItemReference> getItem(DevMachine devMachine, Path path);
 
     /**
      * Estimates if the folder supposed to be project of certain type.
@@ -106,9 +106,9 @@ public interface ProjectServiceClient {
      * @param callback
      *         the callback to use for the response
      */
-    void estimateProject(String workspaceId, String path, String projectType, AsyncRequestCallback<SourceEstimation> callback);
+    void estimateProject(DevMachine devMachine, String path, String projectType, AsyncRequestCallback<SourceEstimation> callback);
 
-    Promise<ProjectConfigDto> updateProject(String workspaceId, ProjectConfigDto descriptor);
+    Promise<ProjectConfigDto> updateProject(DevMachine devMachine, ProjectConfigDto descriptor);
 
     /**
      * Sends the request to the server to read the file content by given {@code path}.
@@ -120,7 +120,7 @@ public interface ProjectServiceClient {
      * @return {@code Promise} with file content response
      * @since 4.0.0-RC14
      */
-    Promise<String> readFile(String wsId, Path path);
+    Promise<String> readFile(DevMachine devMachine, Path path);
 
     /**
      * Sends the request to the server to update the file content by given {@code path}.
@@ -134,7 +134,7 @@ public interface ProjectServiceClient {
      * @return {@code Promise} with empty response
      * @since 4.0.0-RC-9
      */
-    Promise<Void> writeFile(String wsId, Path path, String content);
+    Promise<Void> writeFile(DevMachine devMachine, Path path, String content);
 
     /**
      * Sends the request to the server to delete resource with given {@code path}.
@@ -146,7 +146,7 @@ public interface ProjectServiceClient {
      * @return {@code Promise} with empty response
      * @since 4.0.0-RC-9
      */
-    Promise<Void> delete(String wsId, Path path);
+    Promise<Void> delete(DevMachine devMachine, Path path);
 
     /**
      * Sends the request to the server to copy given {@code source} to given {@code target}.
@@ -166,7 +166,7 @@ public interface ProjectServiceClient {
      * @return {@code Promise} with empty response
      * @since 4.0.0-RC14
      */
-    Promise<Void> copy(String wsId, Path source, Path target, String newName, boolean overwrite);
+    Promise<Void> copy(DevMachine devMachine, Path source, Path target, String newName, boolean overwrite);
 
     /**
      * Sends the request to the server to move given {@code source} to given {@code target}.
@@ -186,7 +186,7 @@ public interface ProjectServiceClient {
      * @return {@code Promise} with empty response
      * @since 4.0.0-RC14
      */
-    Promise<Void> move(String wsId, Path source, Path target, String newName, boolean overwrite);
+    Promise<Void> move(DevMachine devMachine, Path source, Path target, String newName, boolean overwrite);
 
     /**
      * Import sources into project.
@@ -201,7 +201,7 @@ public interface ProjectServiceClient {
      *         {@link SourceStorageDto}
      * @return a promise that will resolve when the project has been imported, or rejects with an error
      */
-    Promise<Void> importProject(String workspaceId, String name, SourceStorageDto sourceStorage);
+    Promise<Void> importProject(DevMachine devMachine, String name, SourceStorageDto sourceStorage);
 
     /**
      * Sends the request to the server to read resource tree.
@@ -217,7 +217,7 @@ public interface ProjectServiceClient {
      * @return {@code Promise} with tree response
      * @since 4.0.0-RC14
      */
-    Promise<TreeElement> getTree(String wsId, Path path, int depth, boolean includeFiles);
+    Promise<TreeElement> getTree(DevMachine devMachine, Path path, int depth, boolean includeFiles);
 
     /**
      * Search an item(s) by the specified criteria.
@@ -228,7 +228,7 @@ public interface ProjectServiceClient {
      *         search query expression
      * @return a promise that will provide a list of {@link ItemReference}s, or rejects with an error
      */
-    Promise<List<ItemReference>> search(String workspaceId, QueryExpression expression);
+    Promise<List<ItemReference>> search(DevMachine devMachine, QueryExpression expression);
 
     /**
      * Gets list of {@link SourceEstimation} for all supposed project types.
@@ -240,7 +240,7 @@ public interface ProjectServiceClient {
      * @return a promise that will provide a list of {@code SourceEstimation} for the given {@code workspaceId} and {@code path},
      * or rejects with on error
      */
-    Promise<List<SourceEstimation>> resolveSources(String workspaceId, Path path);
+    Promise<List<SourceEstimation>> resolveSources(DevMachine devMachine, Path path);
 
     /**
      * Update project.
@@ -256,7 +256,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #updateProject(String, ProjectConfigDto)}
      */
     @Deprecated
-    Promise<ProjectConfigDto> updateProject(String workspaceId, Path path, ProjectConfigDto descriptor);
+    Promise<ProjectConfigDto> updateProject(DevMachine devMachine, Path path, ProjectConfigDto descriptor);
 
     /**
      * Rename and/or set new media type for item.
@@ -274,7 +274,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #move(String, Path, Path, String, boolean)}
      */
     @Deprecated
-    void rename(String workspaceId, String path, String newName, String newMediaType, AsyncRequestCallback<Void> callback);
+    void rename(DevMachine devMachine, String path, String newName, String newMediaType, AsyncRequestCallback<Void> callback);
 
     /**
      * Get project.
@@ -285,7 +285,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #getProject(String, Path)}
      */
     @Deprecated
-    Promise<ProjectConfigDto> getProject(String workspaceId, String path);
+    Promise<ProjectConfigDto> getProject(DevMachine devMachine, String path);
 
     /**
      * Get children for the specified path.
@@ -298,7 +298,7 @@ public interface ProjectServiceClient {
      *         the callback to use for the response
      */
     @Deprecated
-    void getChildren(String workspaceId, String path, AsyncRequestCallback<List<ItemReference>> callback);
+    void getChildren(DevMachine devMachine, String path, AsyncRequestCallback<List<ItemReference>> callback);
 
     /**
      * Import sources into project.
@@ -316,7 +316,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #importProject(String, String, boolean, SourceStorageDto)}
      */
     @Deprecated
-    void importProject(String workspaceId, String path, boolean force, SourceStorageDto sourceStorage, RequestCallback<Void> callback);
+    void importProject(DevMachine devMachine, String path, boolean force, SourceStorageDto sourceStorage, RequestCallback<Void> callback);
 
     /**
      * Get all projects in current workspace.
@@ -328,7 +328,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #getProjects(String)}
      */
     @Deprecated
-    void getProjects(String workspaceId, AsyncRequestCallback<List<ProjectConfigDto>> callback);
+    void getProjects(DevMachine devMachine, AsyncRequestCallback<List<ProjectConfigDto>> callback);
 
     /**
      * Get project.
@@ -342,7 +342,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #getProject(String, String)}
      */
     @Deprecated
-    void getProject(String workspaceId, String path, AsyncRequestCallback<ProjectConfigDto> callback);
+    void getProject(DevMachine devMachine, String path, AsyncRequestCallback<ProjectConfigDto> callback);
 
     /**
      * Get item.
@@ -356,7 +356,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #getItem(String, Path)}
      */
     @Deprecated
-    void getItem(String workspaceId, String path, AsyncRequestCallback<ItemReference> callback);
+    void getItem(DevMachine devMachine, String path, AsyncRequestCallback<ItemReference> callback);
 
     /**
      * Create project.
@@ -370,7 +370,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #createProject(String, ProjectConfigDto)}
      */
     @Deprecated
-    void createProject(String workspaceId, ProjectConfigDto projectConfig, AsyncRequestCallback<ProjectConfigDto> callback);
+    void createProject(DevMachine devMachine, ProjectConfigDto projectConfig, AsyncRequestCallback<ProjectConfigDto> callback);
 
     /**
      * Get sub-project.
@@ -383,7 +383,7 @@ public interface ProjectServiceClient {
      *         the callback to use for the response
      */
     @Deprecated
-    void getModules(String workspaceId, String path, AsyncRequestCallback<List<ProjectConfigDto>> callback);
+    void getModules(DevMachine devMachine, String path, AsyncRequestCallback<List<ProjectConfigDto>> callback);
 
     /**
      * Create sub-project.
@@ -399,7 +399,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #createProject(String, ProjectConfigDto)}
      */
     @Deprecated
-    void createModule(String workspaceId,
+    void createModule(DevMachine devMachine,
                       String parentProjectPath,
                       ProjectConfigDto projectConfig,
                       AsyncRequestCallback<ProjectConfigDto> callback);
@@ -418,7 +418,7 @@ public interface ProjectServiceClient {
      * @deprecated instead of this method should use {@link ProjectServiceClient#updateProject(String, Path, ProjectConfigDto)}
      */
     @Deprecated
-    void updateProject(String workspaceId, String path, ProjectConfigDto descriptor, AsyncRequestCallback<ProjectConfigDto> callback);
+    void updateProject(DevMachine devMachine, String path, ProjectConfigDto descriptor, AsyncRequestCallback<ProjectConfigDto> callback);
 
     /**
      * Create new file in the specified folder.
@@ -436,7 +436,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #createFile(String, Path, String)}
      */
     @Deprecated
-    void createFile(String workspaceId, String parentPath, String name, String content, AsyncRequestCallback<ItemReference> callback);
+    void createFile(DevMachine devMachine, String parentPath, String name, String content, AsyncRequestCallback<ItemReference> callback);
 
 
     /**
@@ -453,7 +453,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #writeFile(String, Path, String)}
      */
     @Deprecated
-    void updateFile(String workspaceId, String path, String content, AsyncRequestCallback<Void> callback);
+    void updateFile(DevMachine devMachine, String path, String content, AsyncRequestCallback<Void> callback);
 
     /**
      * Get file content.
@@ -467,7 +467,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #readFile(String, Path)}
      */
     @Deprecated
-    void getFileContent(String workspaceId, String path, AsyncRequestCallback<String> callback);
+    void getFileContent(DevMachine devMachine, String path, AsyncRequestCallback<String> callback);
 
     /**
      * Gets list of {@link SourceEstimation} for all supposed project types.
@@ -481,7 +481,7 @@ public interface ProjectServiceClient {
      * @deprecated instead of this method should use {@link ProjectServiceClient#resolveSources(String, String)}
      */
     @Deprecated
-    void resolveSources(String workspaceId, String path, AsyncRequestCallback<List<SourceEstimation>> callback);
+    void resolveSources(DevMachine devMachine, String path, AsyncRequestCallback<List<SourceEstimation>> callback);
 
     /**
      * Create new folder in the specified folder.
@@ -495,7 +495,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #createFolder(String, Path)}
      */
     @Deprecated
-    void createFolder(String workspaceId, String path, AsyncRequestCallback<ItemReference> callback);
+    void createFolder(DevMachine devMachine, String path, AsyncRequestCallback<ItemReference> callback);
 
     /**
      * Delete item.
@@ -509,7 +509,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #delete(String, Path)}
      */
     @Deprecated
-    void delete(String workspaceId, String path, AsyncRequestCallback<Void> callback);
+    void delete(DevMachine devMachine, String path, AsyncRequestCallback<Void> callback);
 
     /**
      * Delete module.
@@ -525,7 +525,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #delete(String, Path)}
      */
     @Deprecated
-    void deleteModule(String workspaceId, String pathToParent, String modulePath, AsyncRequestCallback<Void> callback);
+    void deleteModule(DevMachine devMachine, String pathToParent, String modulePath, AsyncRequestCallback<Void> callback);
 
     /**
      * Copy an item with new name to the specified target path. Original item name is used if new name isn't set.
@@ -543,7 +543,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #copy(String, Path, Path, String, boolean)}
      */
     @Deprecated
-    void copy(String workspaceId, String path, String newParentPath, String newName, AsyncRequestCallback<Void> callback);
+    void copy(DevMachine devMachine, String path, String newParentPath, String newName, AsyncRequestCallback<Void> callback);
 
     /**
      * Move an item to the specified target path. Set new name to rename the resource when moving.
@@ -561,7 +561,7 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #move(String, Path, Path, String, boolean)}
      */
     @Deprecated
-    void move(String workspaceId, String path, String newParentPath, String newName, AsyncRequestCallback<Void> callback);
+    void move(DevMachine devMachine, String path, String newParentPath, String newName, AsyncRequestCallback<Void> callback);
 
     /**
      * Get folders tree starts from the specified path.
@@ -577,5 +577,5 @@ public interface ProjectServiceClient {
      * @deprecated use {@link #getTree(String, Path, int, boolean)}
      */
     @Deprecated
-    void getTree(String workspaceId, String path, int depth, AsyncRequestCallback<TreeElement> callback);
+    void getTree(DevMachine devMachine, String path, int depth, AsyncRequestCallback<TreeElement> callback);
 }

@@ -93,7 +93,7 @@ public class AddToIndexPresenter implements AddToIndexView.ActionDelegate {
                     view.showDialog();
                 } else {
                     console.print(constant.nothingAddToIndex());
-                    consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                    consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                     notificationManager.notify(constant.nothingAddToIndex());
                 }
             }
@@ -101,7 +101,7 @@ public class AddToIndexPresenter implements AddToIndexView.ActionDelegate {
             @Override
             public void apply(PromiseError error) throws OperationException {
                 console.printError(constant.statusFailed());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.statusFailed(), FAIL, true);
             }
         });
@@ -130,7 +130,7 @@ public class AddToIndexPresenter implements AddToIndexView.ActionDelegate {
             @Override
             public void apply(Void arg) throws OperationException {
                 console.print(constant.addSuccess());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.addSuccess());
                 view.close();
             }
@@ -139,7 +139,7 @@ public class AddToIndexPresenter implements AddToIndexView.ActionDelegate {
             public void apply(PromiseError arg) throws OperationException {
                 String errorMessage = constant.addFailed();
                 console.printError(errorMessage);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.addFailed(), FAIL, true);
                 view.close();
             }

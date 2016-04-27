@@ -45,9 +45,10 @@ public class InitRepositoryPresenterTest extends BaseTest {
                                                 gitOutputConsoleFactory,
                                                 consolesPanelPresenter,
                                                 service,
-                                                workspace);
+                                                workspace,
+                                                appContext);
 
-        when(service.init(anyString(), any(Path.class), anyBoolean())).thenReturn(voidPromise);
+        when(service.init(anyObject(), any(Path.class), anyBoolean())).thenReturn(voidPromise);
         when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
         when(voidPromise.catchError(any(Operation.class))).thenReturn(voidPromise);
     }

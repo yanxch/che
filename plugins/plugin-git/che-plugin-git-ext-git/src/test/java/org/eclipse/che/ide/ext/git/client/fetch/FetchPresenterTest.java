@@ -67,11 +67,11 @@ public class FetchPresenterTest extends BaseTest {
                                        consolesPanelPresenter,
                                        workspace);
 
-        when(service.remoteList(anyString(), any(Path.class), anyString(), anyBoolean())).thenReturn(remoteListPromise);
+        when(service.remoteList(anyObject(), any(Path.class), anyString(), anyBoolean())).thenReturn(remoteListPromise);
         when(remoteListPromise.then(any(Operation.class))).thenReturn(remoteListPromise);
         when(remoteListPromise.catchError(any(Operation.class))).thenReturn(remoteListPromise);
 
-        when(service.branchList(anyString(), any(Path.class), anyString())).thenReturn(branchListPromise);
+        when(service.branchList(anyObject(), any(Path.class), anyString())).thenReturn(branchListPromise);
         when(branchListPromise.then(any(Operation.class))).thenReturn(branchListPromise);
         when(branchListPromise.catchError(any(Operation.class))).thenReturn(branchListPromise);
 
@@ -155,7 +155,7 @@ public class FetchPresenterTest extends BaseTest {
 
         when(notificationManager.notify(anyString(), any(StatusNotification.Status.class), anyBoolean())).thenReturn(notification);
 
-        when(service.fetch(anyString(), any(Path.class), anyString(), any(List.class), anyBoolean())).thenReturn(voidPromise);
+        when(service.fetch(anyObject(), any(Path.class), anyString(), any(List.class), anyBoolean())).thenReturn(voidPromise);
         when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
         when(voidPromise.catchError(any(Operation.class))).thenReturn(voidPromise);
 
@@ -187,7 +187,7 @@ public class FetchPresenterTest extends BaseTest {
 
         when(notificationManager.notify(anyString(), any(StatusNotification.Status.class), anyBoolean())).thenReturn(notification);
 
-        when(service.fetch(anyString(), any(Path.class), anyString(), any(List.class), anyBoolean())).thenReturn(voidPromise);
+        when(service.fetch(anyObject(), any(Path.class), anyString(), any(List.class), anyBoolean())).thenReturn(voidPromise);
         when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
         when(voidPromise.catchError(any(Operation.class))).thenReturn(voidPromise);
 

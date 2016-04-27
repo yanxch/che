@@ -54,6 +54,7 @@ public class ResetFilesPresenterTest extends BaseTest {
 
         presenter = new ResetFilesPresenter(view,
                                             service,
+                                            appContext,
                                             constant,
                                             notificationManager,
                                             dtoFactory,
@@ -67,7 +68,7 @@ public class ResetFilesPresenterTest extends BaseTest {
         when(indexFile.withPath(anyString())).thenReturn(indexFile);
         when(indexFile.getPath()).thenReturn("foo");
 
-        when(service.getStatus(anyString(), any(Path.class))).thenReturn(statusPromise);
+        when(service.getStatus(anyObject(), any(Path.class))).thenReturn(statusPromise);
         when(statusPromise.then(any(Operation.class))).thenReturn(statusPromise);
         when(statusPromise.catchError(any(Operation.class))).thenReturn(statusPromise);
     }
@@ -162,7 +163,7 @@ public class ResetFilesPresenterTest extends BaseTest {
         when(status.getChanged()).thenReturn(changes);
         when(status.getRemoved()).thenReturn(changes);
 
-        when(service.reset(anyString(), any(Path.class), anyString(), any(ResetRequest.ResetType.class), anyObject())).thenReturn(voidPromise);
+        when(service.reset(anyObject(), any(Path.class), anyString(), any(ResetRequest.ResetType.class), anyObject())).thenReturn(voidPromise);
         when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
         when(voidPromise.catchError(any(Operation.class))).thenReturn(voidPromise);
 
@@ -191,7 +192,7 @@ public class ResetFilesPresenterTest extends BaseTest {
         when(status.getChanged()).thenReturn(changes);
         when(status.getRemoved()).thenReturn(changes);
 
-        when(service.reset(anyString(), any(Path.class), anyString(), any(ResetRequest.ResetType.class), anyObject())).thenReturn(voidPromise);
+        when(service.reset(anyObject(), any(Path.class), anyString(), any(ResetRequest.ResetType.class), anyObject())).thenReturn(voidPromise);
         when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
         when(voidPromise.catchError(any(Operation.class))).thenReturn(voidPromise);
 

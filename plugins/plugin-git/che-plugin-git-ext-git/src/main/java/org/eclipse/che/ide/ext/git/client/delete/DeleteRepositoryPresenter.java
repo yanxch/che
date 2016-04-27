@@ -72,7 +72,7 @@ public class DeleteRepositoryPresenter {
             @Override
             public void apply(Void ignored) throws OperationException {
                 console.print(constant.deleteGitRepositorySuccess());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.deleteGitRepositorySuccess());
 
                 project.synchronize();
@@ -81,7 +81,7 @@ public class DeleteRepositoryPresenter {
             @Override
             public void apply(PromiseError error) throws OperationException {
                 console.printError(error.getMessage());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.failedToDeleteRepository(), FAIL, true);
             }
         });

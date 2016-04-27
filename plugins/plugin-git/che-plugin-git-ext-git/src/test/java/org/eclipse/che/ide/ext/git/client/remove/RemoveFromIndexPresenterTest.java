@@ -157,7 +157,7 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
                 onSuccess.invoke(callback, EMPTY_TEXT);
                 return callback;
             }
-        }).when(service).remove(anyString(), anyObject(), anyObject(), anyBoolean(), anyObject());
+        }).when(service).remove(anyObject(), anyObject(), anyObject(), anyBoolean(), anyObject());
 
 //        presenter.showDialog();
         presenter.onRemoveClicked();
@@ -184,7 +184,7 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
                 onFailure.invoke(callback, mock(Throwable.class));
                 return callback;
             }
-        }).when(service).remove(anyString(), anyObject(), anyObject(), anyBoolean(), anyObject());
+        }).when(service).remove(anyObject(), anyObject(), anyObject(), anyBoolean(), anyObject());
 
 //        presenter.showDialog();
         presenter.onRemoveClicked();

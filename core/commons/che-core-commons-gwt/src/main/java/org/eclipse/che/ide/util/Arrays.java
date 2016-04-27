@@ -13,6 +13,8 @@ package org.eclipse.che.ide.util;
 import com.google.common.annotations.Beta;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.System.arraycopy;
+import static java.util.Arrays.copyOf;
 
 /**
  * Utility methods to operate with arrays.
@@ -62,4 +64,69 @@ public class Arrays {
         return array;
     }
 
+    public static <T> boolean contains(T[] array, T element) {
+        checkArgument(array != null, "Input array is null");
+
+        return indexOf(array, element) != -1;
+    }
+
+    public static <T> int indexOf(T[] array, T o) {
+        checkArgument(array != null, "Input array is null");
+
+        if (o == null) {
+            for (int i = 0; i < array.length; i++) {
+                if (array[i] == null)
+                    return i;
+            }
+        } else {
+            for (int i = 0; i < array.length; i++) {
+                if (o.equals(array[i]))
+                    return i;
+            }
+        }
+        return -1;
+    }
+
+    public static <T> T[] batchRemove(T[] o1, T[] o2, boolean complement) {
+        checkArgument(o1 != null && o2 != null);
+
+        int r = 0, w = 0;
+
+        T[] o1Copy = copyOf(o1, o1.length);
+        T[] o2Copy = copyOf(o2, o2.length);
+
+        for (; r < o1Copy.length; r++)
+            if ((indexOf(o2Copy, o1Copy[r]) >= 0) == complement)
+                o1Copy[w++] = o1Copy[r];
+
+        if (r != o1Copy.length) {
+            arraycopy(o1Copy, r,
+                      o1Copy, w,
+                      o1Copy.length - r);
+            w += o1Copy.length - r;
+        }
+        if (w != o1Copy.length) {
+            for (int i = w; i < o1Copy.length; i++)
+                o1Copy[i] = null;
+
+            return copyOf(o1Copy, w);
+        } else {
+            return copyOf(o1Copy, o1Copy.length);
+        }
+    }
+
+    public static <T> T[] remove(T[] array, T element) {
+        checkArgument(array != null, "Input array is null");
+
+        T[] modified = copyOf(array, array.length);
+
+        int size = modified.length;
+        int index = indexOf(modified, element);
+        int numMoved = modified.length - index - 1;
+        if (numMoved > 0) {
+            System.arraycopy(modified, index + 1, modified, index, numMoved);
+        }
+
+        return copyOf(modified, --size);
+    }
 }

@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import static org.eclipse.che.ide.ext.git.client.delete.DeleteRepositoryPresenter.DELETE_REPO_COMMAND_NAME;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
@@ -61,7 +62,7 @@ public class DeleteRepositoryPresenterTest extends BaseTest {
     @Test
     public void testDeleteRepositoryWhenDeleteRepositoryIsSuccessful() throws Exception {
 
-        when(service.deleteRepository(anyString(), any(Path.class))).thenReturn(voidPromise);
+        when(service.deleteRepository(anyObject(), any(Path.class))).thenReturn(voidPromise);
         when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
         when(voidPromise.catchError(any(Operation.class))).thenReturn(voidPromise);
 
@@ -79,7 +80,7 @@ public class DeleteRepositoryPresenterTest extends BaseTest {
     @Test
     public void testDeleteRepositoryWhenDeleteRepositoryIsFailed() throws Exception {
 
-        when(service.deleteRepository(anyString(), any(Path.class))).thenReturn(voidPromise);
+        when(service.deleteRepository(anyObject(), any(Path.class))).thenReturn(voidPromise);
         when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
         when(voidPromise.catchError(any(Operation.class))).thenReturn(voidPromise);
 

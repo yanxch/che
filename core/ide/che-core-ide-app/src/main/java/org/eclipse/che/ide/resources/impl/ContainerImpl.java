@@ -179,4 +179,10 @@ abstract class ContainerImpl extends ResourceImpl implements Container {
     public Promise<Resource[]> search(String fileMask, String contentMask) {
         return resourceManager.search(this, fileMask, contentMask);
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public Promise<Resource[]> getTree(int depth) {
+        return resourceManager.getRemoteResources(this, depth, true);
+    }
 }

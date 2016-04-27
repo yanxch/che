@@ -48,7 +48,7 @@ public class FileReferenceNode extends ItemReferenceBasedNode implements Virtual
      */
     public static final String DISPLAY_NAME_ATTR = "display";
     
-    private final String workspaceId;
+//    private final String workspaceId;
 
     @Inject
     public FileReferenceNode(@Assisted ItemReference itemReference,

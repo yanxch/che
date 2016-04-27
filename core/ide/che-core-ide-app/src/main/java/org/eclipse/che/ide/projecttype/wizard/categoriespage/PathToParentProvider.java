@@ -15,12 +15,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.eclipse.che.api.core.model.project.ProjectConfig;
-import org.eclipse.che.ide.api.project.node.Node;
 import org.eclipse.che.ide.api.project.type.wizard.ProjectWizardMode;
-import org.eclipse.che.ide.api.selection.Selection;
 import org.eclipse.che.ide.api.selection.SelectionAgent;
-import org.eclipse.che.ide.project.node.FolderReferenceNode;
-import org.eclipse.che.ide.project.node.ProjectNode;
 
 /**
  * The class provides path to parent node for different project wizard modes.Fro example we have some tree structure and select
@@ -76,37 +72,37 @@ class PathToParentProvider {
     }
 
     private String getPathToParentFromSelectedNode() {
-        Selection<?> selection = selectionAgent.getSelection();
-        if (selection == null || selection.isEmpty()) {
-            return DEFAULT_PARENT_DIRECTORY;
-        }
-
-        if (selection.getAllElements().size() > 1) {
-            return DEFAULT_PARENT_DIRECTORY;
-        }
-
-        Object selectedElement = selection.getHeadElement();
-
-        if (selectedElement instanceof FolderReferenceNode) {
-            Node parent = ((FolderReferenceNode)selectedElement).getParent();
-            return getPath(parent);
-        } else if (selectedElement instanceof ProjectNode) {
-            Node parent = ((ProjectNode)selectedElement).getParent();
-            return getPath(parent);
-        }
-
-        return DEFAULT_PARENT_DIRECTORY;
-    }
-
-    private String getPath(Node parent) {
-        if (parent instanceof ProjectNode) {
-            return ((ProjectNode)parent).getStorablePath() + '/';
-        } else if (parent instanceof FolderReferenceNode) {
-            return ((FolderReferenceNode)parent).getData().getPath() + '/';
-        }
+//        Selection<?> selection = selectionAgent.getSelection();
+//        if (selection == null || selection.isEmpty()) {
+//            return DEFAULT_PARENT_DIRECTORY;
+//        }
+//
+//        if (selection.getAllElements().size() > 1) {
+//            return DEFAULT_PARENT_DIRECTORY;
+//        }
+//
+//        Object selectedElement = selection.getHeadElement();
+//
+//        if (selectedElement instanceof FolderReferenceNode) {
+//            Node parent = ((FolderReferenceNode)selectedElement).getParent();
+//            return getPath(parent);
+//        } else if (selectedElement instanceof ProjectNode) {
+//            Node parent = ((ProjectNode)selectedElement).getParent();
+//            return getPath(parent);
+//        }
 
         return DEFAULT_PARENT_DIRECTORY;
     }
+
+//    private String getPath(Node parent) {
+//        if (parent instanceof ProjectNode) {
+//            return ((ProjectNode)parent).getStorablePath() + '/';
+//        } else if (parent instanceof FolderReferenceNode) {
+//            return ((FolderReferenceNode)parent).getData().getPath() + '/';
+//        }
+//
+//        return DEFAULT_PARENT_DIRECTORY;
+//    }
 
     private String getPathToParentFromConfig(ProjectConfig projectConfig) {
         String path = projectConfig.getPath();

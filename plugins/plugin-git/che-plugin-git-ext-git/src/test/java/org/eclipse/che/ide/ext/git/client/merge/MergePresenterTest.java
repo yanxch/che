@@ -86,11 +86,11 @@ public class MergePresenterTest extends BaseTest {
         when(mergeResult.getMergeStatus()).thenReturn(ALREADY_UP_TO_DATE);
         when(selectedReference.getDisplayName()).thenReturn(DISPLAY_NAME);
 
-        when(service.branchList(anyString(), any(Path.class), eq(LIST_LOCAL))).thenReturn(branchListPromise);
+        when(service.branchList(anyObject(), any(Path.class), eq(LIST_LOCAL))).thenReturn(branchListPromise);
         when(branchListPromise.then(any(Operation.class))).thenReturn(branchListPromise);
         when(branchListPromise.catchError(any(Operation.class))).thenReturn(branchListPromise);
 
-        when(service.branchList(anyString(), any(Path.class), eq(LIST_REMOTE))).thenReturn(remoteListBranchPromise);
+        when(service.branchList(anyObject(), any(Path.class), eq(LIST_REMOTE))).thenReturn(remoteListBranchPromise);
         when(remoteListBranchPromise.then(any(Operation.class))).thenReturn(remoteListBranchPromise);
         when(remoteListBranchPromise.catchError(any(Operation.class))).thenReturn(remoteListBranchPromise);
     }
@@ -140,7 +140,7 @@ public class MergePresenterTest extends BaseTest {
 
     @Test
     public void testOnMergeClickedWhenMergeRequestIsSuccessful() throws Exception {
-        when(service.merge(anyString(), any(Path.class), anyString())).thenReturn(mergeResultPromise);
+        when(service.merge(anyObject(), any(Path.class), anyString())).thenReturn(mergeResultPromise);
         when(mergeResultPromise.then(any(Operation.class))).thenReturn(mergeResultPromise);
         when(mergeResultPromise.catchError(any(Operation.class))).thenReturn(mergeResultPromise);
 
@@ -161,7 +161,7 @@ public class MergePresenterTest extends BaseTest {
     @Test
     public void testOnMergeClickedWhenMergeRequestIsFailed() throws Exception {
         when(selectedReference.getDisplayName()).thenReturn(DISPLAY_NAME);
-        when(service.merge(anyString(), any(Path.class), anyString())).thenReturn(mergeResultPromise);
+        when(service.merge(anyObject(), any(Path.class), anyString())).thenReturn(mergeResultPromise);
         when(mergeResultPromise.then(any(Operation.class))).thenReturn(mergeResultPromise);
         when(mergeResultPromise.catchError(any(Operation.class))).thenReturn(mergeResultPromise);
 

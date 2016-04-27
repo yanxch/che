@@ -107,7 +107,7 @@ public class ResetToCommitPresenter implements ResetToCommitView.ActionDelegate 
                 String errorMessage = (error.getMessage() != null) ? error.getMessage() : constant.logFailed();
                 GitOutputConsole console = gitOutputConsoleFactory.create(LOG_COMMAND_NAME);
                 console.printError(errorMessage);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.logFailed(), FAIL, true);
             }
         });
@@ -153,7 +153,7 @@ public class ResetToCommitPresenter implements ResetToCommitView.ActionDelegate 
             @Override
             public void apply(Void ignored) throws OperationException {
                 console.print(constant.resetSuccessfully());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.resetSuccessfully());
 
                 project.synchronize();
@@ -163,7 +163,7 @@ public class ResetToCommitPresenter implements ResetToCommitView.ActionDelegate 
             public void apply(PromiseError error) throws OperationException {
                 String errorMessage = (error.getMessage() != null) ? error.getMessage() : constant.resetFail();
                 console.printError(errorMessage);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.resetFail(), FAIL, true);
             }
         });

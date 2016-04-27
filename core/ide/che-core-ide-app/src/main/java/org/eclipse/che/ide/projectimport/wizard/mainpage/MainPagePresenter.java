@@ -18,6 +18,7 @@ import org.eclipse.che.api.project.gwt.client.ProjectImportersServiceClient;
 import org.eclipse.che.api.project.shared.dto.ProjectImporterData;
 import org.eclipse.che.api.project.shared.dto.ProjectImporterDescriptor;
 import org.eclipse.che.ide.CoreLocalizationConstant;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.project.MutableProjectConfig;
 import org.eclipse.che.ide.api.project.wizard.ImportWizardRegistry;
@@ -53,6 +54,7 @@ public class MainPagePresenter extends AbstractWizardPage<MutableProjectConfig> 
     private final NotificationManager           notificationManager;
     private final CoreLocalizationConstant      locale;
     private final ImportWizardRegistry          importWizardRegistry;
+    private final AppContext appContext;
     private final ProjectImportersServiceClient projectImportersService;
 
     private ImporterSelectionListener                    importerSelectionListener;
@@ -66,7 +68,8 @@ public class MainPagePresenter extends AbstractWizardPage<MutableProjectConfig> 
                              NotificationManager notificationManager,
                              CoreLocalizationConstant locale,
                              MainPageView view,
-                             ImportWizardRegistry importWizardRegistry) {
+                             ImportWizardRegistry importWizardRegistry,
+                             AppContext appContext) {
         super();
         this.workspace = workspace;
         this.view = view;
@@ -75,6 +78,7 @@ public class MainPagePresenter extends AbstractWizardPage<MutableProjectConfig> 
         this.notificationManager = notificationManager;
         this.locale = locale;
         this.importWizardRegistry = importWizardRegistry;
+        this.appContext = appContext;
 
         view.setDelegate(this);
     }

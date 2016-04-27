@@ -435,4 +435,6 @@ public interface Container extends Resource {
      * @since 4.0.0-RC14
      */
     Promise<Resource[]> search(String fileMask, String contentMask);
+
+    Promise<Resource[]> getTree(int depth);
 }

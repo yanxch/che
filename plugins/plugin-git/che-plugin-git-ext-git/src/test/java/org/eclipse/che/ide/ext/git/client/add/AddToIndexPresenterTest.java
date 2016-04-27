@@ -67,7 +67,7 @@ public class AddToIndexPresenterTest extends BaseTest {
 
     @Test
     public void testDialogWillNotBeShownWhenStatusRequestIsFailed() throws Exception {
-        when(service.getStatus(anyString(), any(Path.class))).thenReturn(statusPromise);
+        when(service.getStatus(anyObject(), any(Path.class))).thenReturn(statusPromise);
         when(statusPromise.then(any(Operation.class))).thenReturn(statusPromise);
         when(statusPromise.catchError(any(Operation.class))).thenReturn(statusPromise);
 
@@ -87,7 +87,7 @@ public class AddToIndexPresenterTest extends BaseTest {
     @Test
     public void testDialogWillNotBeShownWhenNothingAddToIndex() throws Exception {
         when(statusResponse.isClean()).thenReturn(true);
-        when(service.getStatus(anyString(), any(Path.class))).thenReturn(statusPromise);
+        when(service.getStatus(anyObject(), any(Path.class))).thenReturn(statusPromise);
         when(statusPromise.then(any(Operation.class))).thenReturn(statusPromise);
         when(statusPromise.catchError(any(Operation.class))).thenReturn(statusPromise);
 
@@ -106,7 +106,7 @@ public class AddToIndexPresenterTest extends BaseTest {
 
     @Test
     public void testShowDialogWhenRootFolderIsSelected() throws Exception {
-        when(service.getStatus(anyString(), any(Path.class))).thenReturn(statusPromise);
+        when(service.getStatus(anyObject(), any(Path.class))).thenReturn(statusPromise);
         when(statusPromise.then(any(Operation.class))).thenReturn(statusPromise);
         when(statusPromise.catchError(any(Operation.class))).thenReturn(statusPromise);
         when(appContext.getResources()).thenReturn(new Resource[]{mock(Resource.class)});
@@ -126,13 +126,13 @@ public class AddToIndexPresenterTest extends BaseTest {
     @Test
     public void testOnAddClickedWhenAddWSRequestIsSuccessful() throws Exception {
         reset(gitOutputConsoleFactory);
-        when(service.add(anyString(), any(Path.class), anyBoolean(), any(Path[].class))).thenReturn(voidPromise);
+        when(service.add(anyObject(), any(Path.class), anyBoolean(), any(Path[].class))).thenReturn(voidPromise);
         when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
         when(voidPromise.catchError(any(Operation.class))).thenReturn(voidPromise);
         when(gitOutputConsoleFactory.create(anyString())).thenReturn(console);
         when(view.isUpdated()).thenReturn(NEED_UPDATING);
         when(constant.addSuccess()).thenReturn(MESSAGE);
-        when(service.getStatus(anyString(), any(Path.class))).thenReturn(statusPromise);
+        when(service.getStatus(anyObject(), any(Path.class))).thenReturn(statusPromise);
         when(statusPromise.then(any(Operation.class))).thenReturn(statusPromise);
         when(statusPromise.catchError(any(Operation.class))).thenReturn(statusPromise);
 
@@ -157,10 +157,10 @@ public class AddToIndexPresenterTest extends BaseTest {
         reset(gitOutputConsoleFactory);
         when(gitOutputConsoleFactory.create(anyString())).thenReturn(console);
         when(view.isUpdated()).thenReturn(NEED_UPDATING);
-        when(service.add(anyString(), any(Path.class), anyBoolean(), any(Path[].class))).thenReturn(voidPromise);
+        when(service.add(anyObject(), any(Path.class), anyBoolean(), any(Path[].class))).thenReturn(voidPromise);
         when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
         when(voidPromise.catchError(any(Operation.class))).thenReturn(voidPromise);
-        when(service.getStatus(anyString(), any(Path.class))).thenReturn(statusPromise);
+        when(service.getStatus(anyObject(), any(Path.class))).thenReturn(statusPromise);
         when(statusPromise.then(any(Operation.class))).thenReturn(statusPromise);
         when(statusPromise.catchError(any(Operation.class))).thenReturn(statusPromise);
         when(appContext.getResources()).thenReturn(new Resource[]{file_1, file_2});

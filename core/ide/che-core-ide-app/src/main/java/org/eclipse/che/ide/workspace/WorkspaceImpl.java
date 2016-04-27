@@ -17,6 +17,7 @@ import com.google.web.bindery.event.shared.EventBus;
 import org.eclipse.che.api.core.model.machine.Command;
 import org.eclipse.che.api.core.model.workspace.Environment;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
+import org.eclipse.che.api.machine.gwt.client.DevMachine;
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateEvent;
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateHandler;
 import org.eclipse.che.api.promises.client.Operation;
@@ -29,7 +30,7 @@ import org.eclipse.che.ide.api.resources.ResourceChangedEvent.ResourceChangedHan
 import org.eclipse.che.ide.api.resources.ResourceDelta;
 import org.eclipse.che.ide.api.resources.ResourcePathComparator;
 import org.eclipse.che.ide.api.workspace.Workspace;
-import org.eclipse.che.ide.api.workspace.WorkspaceConfigStoredEvent;
+import org.eclipse.che.ide.api.workspace.WorkspaceReadyEvent;
 import org.eclipse.che.ide.api.workspace.WorkspaceConfigChangedEvent;
 import org.eclipse.che.ide.api.workspace.WorkspaceConfigChangedEvent.WorkspaceConfigChangedHandler;
 import org.eclipse.che.ide.resources.impl.ResourceDeltaImpl;
@@ -80,6 +81,7 @@ public final class WorkspaceImpl implements Workspace,
 
         eventBus.addHandler(WorkspaceConfigChangedEvent.getType(), this);
         eventBus.addHandler(ResourceChangedEvent.getType(), this);
+        eventBus.addHandler(WsAgentStateEvent.TYPE, this);
     }
 
     /** {@inheritDoc} */
@@ -144,17 +146,17 @@ public final class WorkspaceImpl implements Workspace,
     /** {@inheritDoc} */
     @Override
     public void onConfigChanged(final WorkspaceConfigChangedEvent event) {
-        this.wsConfiguration = event.getConfiguration();
+        this.wsConfiguration = event.getConfiguration().getConfig();
         this.wsId = event.getID();
         this.temporary = event.isTemporary();
 
-        resourceManager = resourceManagerFactory.newResourceManager(event.getID());
+        resourceManager = resourceManagerFactory.newResourceManager(new DevMachine(event.getConfiguration().getRuntime().getDevMachine())); //temporary solution, need to rework
         resourceManager.getWorkspaceProjects().then(new Operation<Project[]>() {
             @Override
             public void apply(Project[] projects) throws OperationException {
                 WorkspaceImpl.this.projects = projects;
                 Arrays.sort(WorkspaceImpl.this.projects, ResourcePathComparator.getInstance());
-                eventBus.fireEvent(new WorkspaceConfigStoredEvent(projects));
+                eventBus.fireEvent(new WorkspaceReadyEvent(projects));
             }
         });
     }

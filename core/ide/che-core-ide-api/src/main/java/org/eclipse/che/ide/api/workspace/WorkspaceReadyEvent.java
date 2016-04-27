@@ -29,28 +29,28 @@ import org.eclipse.che.ide.api.resources.Project;
  * @since 4.0.0-RC14
  */
 @Beta
-public class WorkspaceConfigStoredEvent extends GwtEvent<WorkspaceConfigStoredEvent.WorkspaceConfigurationAppliedHandler> {
+public class WorkspaceReadyEvent extends GwtEvent<WorkspaceReadyEvent.WorkspaceReadyHandler> {
 
     /**
      * A workspace change listener is notified of projects loading.
      * <p/>
      * Third party components may implement this interface to handle workspace projects loading event.
      */
-    public interface WorkspaceConfigurationAppliedHandler extends EventHandler {
+    public interface WorkspaceReadyHandler extends EventHandler {
         /**
          * Notifies the listener that some workspace configuration changes are happening. The supplied event dives details.
          *
          * @param event
-         *         instance of {@link WorkspaceConfigStoredEvent}
-         * @see WorkspaceConfigStoredEvent
+         *         instance of {@link WorkspaceReadyEvent}
+         * @see WorkspaceReadyEvent
          * @since 4.0.0-RC14
          */
-        void onConfigStored(WorkspaceConfigStoredEvent event);
+        void onWorkspaceReady(WorkspaceReadyEvent event);
     }
 
-    private static Type<WorkspaceConfigurationAppliedHandler> TYPE;
+    private static Type<WorkspaceReadyHandler> TYPE;
 
-    public static Type<WorkspaceConfigurationAppliedHandler> getType() {
+    public static Type<WorkspaceReadyHandler> getType() {
         if (TYPE == null) {
             TYPE = new Type<>();
         }
@@ -59,7 +59,7 @@ public class WorkspaceConfigStoredEvent extends GwtEvent<WorkspaceConfigStoredEv
 
     private final Project[] projects;
 
-    public WorkspaceConfigStoredEvent(Project[] projects) {
+    public WorkspaceReadyEvent(Project[] projects) {
         this.projects = projects;
     }
 
@@ -76,13 +76,13 @@ public class WorkspaceConfigStoredEvent extends GwtEvent<WorkspaceConfigStoredEv
 
     /** {@inheritDoc} */
     @Override
-    public Type<WorkspaceConfigurationAppliedHandler> getAssociatedType() {
+    public Type<WorkspaceReadyHandler> getAssociatedType() {
         return TYPE;
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void dispatch(WorkspaceConfigurationAppliedHandler handler) {
-        handler.onConfigStored(this);
+    protected void dispatch(WorkspaceReadyHandler handler) {
+        handler.onWorkspaceReady(this);
     }
 }

@@ -12,8 +12,8 @@ package org.eclipse.che.ide.upload.folder;
 
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
+import org.eclipse.che.api.machine.gwt.client.DevMachine;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.ide.CoreLocalizationConstant;
@@ -35,9 +35,8 @@ public class UploadFolderFromZipPresenter implements UploadFolderFromZipView.Act
 
     private final UploadFolderFromZipView  view;
     private final CoreLocalizationConstant locale;
-    private final String                   restContext;
     private final NotificationManager      notificationManager;
-    private       String                   workspaceId;
+    private final DevMachine devMachine;
     private       Container                container;
 
     @Inject
@@ -45,8 +44,7 @@ public class UploadFolderFromZipPresenter implements UploadFolderFromZipView.Act
                                         AppContext appContext,
                                         NotificationManager notificationManager,
                                         CoreLocalizationConstant locale) {
-        this.restContext = restContext;
-        this.workspaceId = appContext.getWorkspace().getId();
+        devMachine = appContext.getDevMachine();
         this.view = view;
         this.locale = locale;
         this.view.setDelegate(this);
@@ -60,7 +58,7 @@ public class UploadFolderFromZipPresenter implements UploadFolderFromZipView.Act
     public void showDialog(Container container) {
         this.container = container;
         view.showDialog();
-        view.setAction(restContext + "/project/" + workspaceId + "/upload/zipfolder" + container.getLocation());
+        view.setAction(devMachine.getWsAgentBaseUrl() + "/project/" + devMachine.getId() + "/upload/zipfolder" + container.getLocation());
     }
 
     /** {@inheritDoc} */

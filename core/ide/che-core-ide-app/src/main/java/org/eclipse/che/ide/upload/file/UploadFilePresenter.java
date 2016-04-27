@@ -14,9 +14,9 @@ import com.google.common.base.Optional;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.google.web.bindery.event.shared.EventBus;
 
+import org.eclipse.che.api.machine.gwt.client.DevMachine;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.ide.CoreLocalizationConstant;
@@ -28,7 +28,6 @@ import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.File;
-import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.resource.Path;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -44,11 +43,10 @@ import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.OPEN;
 public class UploadFilePresenter implements UploadFileView.ActionDelegate {
 
     private final UploadFileView           view;
-    private final String                   restContext;
     private final EventBus                 eventBus;
     private final NotificationManager      notificationManager;
     private final CoreLocalizationConstant locale;
-    private       String                   workspaceId;
+    private final DevMachine               devMachine;
     private       Container                container;
 
     @Inject
@@ -56,11 +54,8 @@ public class UploadFilePresenter implements UploadFileView.ActionDelegate {
                                AppContext appContext,
                                EventBus eventBus,
                                NotificationManager notificationManager,
-                               CoreLocalizationConstant locale,
-                               Workspace workspace) {
-
-        this.restContext = restContext;
-        this.workspaceId = workspace.getId();
+                               CoreLocalizationConstant locale) {
+        devMachine = appContext.getDevMachine();
         this.eventBus = eventBus;
         this.view = view;
         this.locale = locale;
@@ -75,7 +70,7 @@ public class UploadFilePresenter implements UploadFileView.ActionDelegate {
     public void showDialog(Container container) {
         this.container = container;
         view.showDialog();
-        view.setAction(restContext + "/project/" + workspaceId + "/uploadfile" + container.getLocation());
+        view.setAction(devMachine.getWsAgentBaseUrl() + "/project/" + devMachine.getId() + "/uploadfile" + container.getLocation());
     }
 
     /** {@inheritDoc} */

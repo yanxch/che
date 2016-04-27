@@ -155,7 +155,7 @@ public class CommitPresenter implements CommitView.ActionDelegate {
 
         checkState(!isNullOrEmpty(resources));
 
-        service.commit(workspace.getId(), project.getLocation(), message, toRelativePaths(resources), amend)
+        service.commit(appContext.getDevMachine(), project.getLocation(), message, toRelativePaths(resources), amend)
                .then(new Operation<Revision>() {
                    @Override
                    public void apply(Revision revision) throws OperationException {

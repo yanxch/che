@@ -102,7 +102,7 @@ public class ResetToCommitPresenterTest extends BaseTest {
                 return callback;
 
             }
-        }).when(service).log(anyString(), anyObject(), null,anyBoolean(), (AsyncRequestCallback<LogResponse>)anyObject());
+        }).when(service).log(anyObject(), anyObject(), null,anyBoolean(), (AsyncRequestCallback<LogResponse>)anyObject());
 
 //        presenter.showDialog();
 
@@ -127,7 +127,7 @@ public class ResetToCommitPresenterTest extends BaseTest {
                 return callback;
 
             }
-        }).when(service).log(anyString(), anyObject(), null, anyBoolean(), (AsyncRequestCallback<LogResponse>)anyObject());
+        }).when(service).log(anyObject(), anyObject(), null, anyBoolean(), (AsyncRequestCallback<LogResponse>)anyObject());
 
 //        presenter.showDialog();
 
@@ -157,7 +157,7 @@ public class ResetToCommitPresenterTest extends BaseTest {
                 return callback;
             }
         }).when(service)
-          .reset(anyString(), anyObject(), anyString(), (ResetRequest.ResetType)anyObject(), (List<String>)anyObject(),
+          .reset(anyObject(), anyObject(), anyString(), (ResetRequest.ResetType)anyObject(), (List<String>)anyObject(),
                  (AsyncRequestCallback<Void>)anyObject());
 
         presenter.onRevisionSelected(selectedRevision);
@@ -166,7 +166,7 @@ public class ResetToCommitPresenterTest extends BaseTest {
         verify(view).close();
         verify(selectedRevision).getId();
         verify(appContext).getCurrentProject();
-        verify(service).reset(anyString(), anyObject(), eq(PROJECT_PATH), eq(HARD), (List<String>)anyObject(),
+        verify(service).reset(anyObject(), anyObject(), eq(PROJECT_PATH), eq(HARD), (List<String>)anyObject(),
                               (AsyncRequestCallback<Void>)anyObject());
         verify(console).print(anyString());
 //        verify(notificationManager).notify(anyString(), rootProjectConfig);
@@ -190,7 +190,7 @@ public class ResetToCommitPresenterTest extends BaseTest {
                 return callback;
             }
         }).when(service)
-          .reset(anyString(), anyObject(), anyString(), (ResetRequest.ResetType)anyObject(),
+          .reset(anyObject(), anyObject(), anyString(), (ResetRequest.ResetType)anyObject(),
                  (List<String>)anyObject(), (AsyncRequestCallback<Void>)anyObject());
 
         presenter.onRevisionSelected(selectedRevision);
@@ -199,7 +199,7 @@ public class ResetToCommitPresenterTest extends BaseTest {
         verify(view).close();
         verify(selectedRevision).getId();
         verify(appContext).getCurrentProject();
-        verify(service).reset(anyString(), anyObject(), eq(PROJECT_PATH), eq(HARD), (List<String>)anyObject(),
+        verify(service).reset(anyObject(), anyObject(), eq(PROJECT_PATH), eq(HARD), (List<String>)anyObject(),
                               (AsyncRequestCallback<Void>)anyObject());
         verify(console).print(anyString());
 //        verify(notificationManager).notify(anyString(), rootProjectConfig);
@@ -216,7 +216,7 @@ public class ResetToCommitPresenterTest extends BaseTest {
                 onFailure.invoke(callback, mock(Throwable.class));
                 return callback;
             }
-        }).when(service).reset(anyString(), anyObject(), anyString(), (ResetRequest.ResetType)anyObject(), (List<String>)anyObject(),
+        }).when(service).reset(anyObject(), anyObject(), anyString(), (ResetRequest.ResetType)anyObject(), (List<String>)anyObject(),
                                (AsyncRequestCallback<Void>)anyObject());
 
         presenter.onRevisionSelected(selectedRevision);
@@ -225,7 +225,7 @@ public class ResetToCommitPresenterTest extends BaseTest {
         verify(view).close();
         verify(selectedRevision).getId();
         verify(appContext).getCurrentProject();
-        verify(service).reset(anyString(), anyObject(), eq(PROJECT_PATH), eq(MIXED), (java.util.List<String>)anyObject(),
+        verify(service).reset(anyObject(), anyObject(), eq(PROJECT_PATH), eq(MIXED), (java.util.List<String>)anyObject(),
                               (AsyncRequestCallback<Void>)anyObject());
         verify(console).printError(anyString());
 //        verify(notificationManager).notify(anyString(), rootProjectConfig);

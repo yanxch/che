@@ -16,6 +16,7 @@ import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.resources.ResourceInterceptor;
 import org.eclipse.che.ide.api.resources.marker.PresentableTextMarker;
+import org.eclipse.che.ide.extension.maven.shared.MavenAttributes;
 
 import java.util.List;
 import java.util.Map;
@@ -41,20 +42,27 @@ public class PomInterceptor implements ResourceInterceptor {
             return resource;
         }
 
-        if (POM_XML.equals(resource.getName())) {
-            final Project project = resource.getRelatedProject();
-            final Map<String, List<String>> attributes = project.getAttributes();
-
-            final String displayName;
-
-            if (attributes != null && attributes.containsKey(ARTIFACT_ID)) {
-                displayName = attributes.get(ARTIFACT_ID).get(0);
-            } else {
-                displayName = project.getName() + "/" + resource.getName();
-            }
-
-            resource.addMarker(new PresentableTextMarker(displayName));
+        if (!POM_XML.equals(resource.getName())) {
+            return resource;
         }
+
+        final Project project = resource.getRelatedProject();
+
+        if (!project.getType().equals(MavenAttributes.MAVEN_ID)) {
+            return resource;
+        }
+
+        final Map<String, List<String>> attributes = project.getAttributes();
+
+        final String displayName;
+
+        if (attributes != null && attributes.containsKey(ARTIFACT_ID)) {
+            displayName = attributes.get(ARTIFACT_ID).get(0);
+        } else {
+            displayName = project.getName() + "/" + resource.getName();
+        }
+
+        resource.addMarker(new PresentableTextMarker(displayName));
 
         return resource;
     }

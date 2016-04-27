@@ -114,7 +114,7 @@ public class MergePresenter implements MergeView.ActionDelegate {
             @Override
             public void apply(PromiseError error) throws OperationException {
                 console.printError(error.getMessage());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.branchesListFailed(), FAIL, true);
             }
         });
@@ -136,7 +136,7 @@ public class MergePresenter implements MergeView.ActionDelegate {
             @Override
             public void apply(PromiseError error) throws OperationException {
                 console.printError(error.getMessage());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.branchesListFailed(), FAIL, true);
             }
         });
@@ -161,7 +161,7 @@ public class MergePresenter implements MergeView.ActionDelegate {
             @Override
             public void apply(MergeResult result) throws OperationException {
                 console.print(formMergeMessage(result));
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(formMergeMessage(result));
 
                 project.synchronize();
@@ -181,7 +181,7 @@ public class MergePresenter implements MergeView.ActionDelegate {
                     return;
                 }
                 console.printError(error.getMessage());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.mergeFailed(), FAIL, true);
             }
         });

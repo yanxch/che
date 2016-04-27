@@ -15,7 +15,6 @@ import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
-import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -59,10 +58,10 @@ public class WorkspaceConfigChangedEvent extends GwtEvent<WorkspaceConfigChanged
     }
 
     private final String          wsId;
-    private final WorkspaceConfig configuration;
+    private final org.eclipse.che.api.core.model.workspace.Workspace configuration;
     private final boolean         temporary;
 
-    public WorkspaceConfigChangedEvent(String wsId, WorkspaceConfig configuration, boolean temporary) {
+    public WorkspaceConfigChangedEvent(String wsId, org.eclipse.che.api.core.model.workspace.Workspace configuration, boolean temporary) {
         this.wsId = checkNotNull(wsId, "Workspace identifier should not be null");
         this.configuration = checkNotNull(configuration, "Workspace configuration should not ba null");
         this.temporary = temporary;
@@ -85,7 +84,7 @@ public class WorkspaceConfigChangedEvent extends GwtEvent<WorkspaceConfigChanged
      * @see WorkspaceConfig
      * @since 4.0.0-RC14
      */
-    public WorkspaceConfig getConfiguration() {
+    public org.eclipse.che.api.core.model.workspace.Workspace getConfiguration() {
         return configuration;
     }
 
@@ -93,7 +92,7 @@ public class WorkspaceConfigChangedEvent extends GwtEvent<WorkspaceConfigChanged
      * Returns the persistence status of current workspace.
      *
      * @return the true if workspace is temporary, otherwise returns the false
-     * @see WorkspaceDto#isTemporary()
+     * @see Workspace#isTemporary()
      * @since 4.0.0-RC14
      */
     public boolean isTemporary() {

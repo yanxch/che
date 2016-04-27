@@ -13,11 +13,9 @@ package org.eclipse.che.api.machine.gwt.client;
 import com.google.common.base.Strings;
 import com.google.gwt.user.client.Window;
 
-import org.eclipse.che.api.core.model.machine.MachineStatus;
+import org.eclipse.che.api.core.model.machine.Machine;
 import org.eclipse.che.api.core.model.machine.Server;
 import org.eclipse.che.api.machine.shared.Constants;
-import org.eclipse.che.api.machine.shared.dto.MachineDto;
-import org.eclipse.che.api.machine.shared.dto.ServerDto;
 import org.eclipse.che.ide.util.loging.Log;
 
 import javax.validation.constraints.NotNull;
@@ -33,7 +31,7 @@ import java.util.Map;
  */
 public class DevMachine {
 
-    private final MachineDto devMachineDescriptor;
+    private final Machine devMachineDescriptor;
 
     private final Map<String, DevMachineServer> servers;
 
@@ -41,10 +39,10 @@ public class DevMachine {
 
     private final Map<String, String> envVariables;
 
-    public DevMachine(@NotNull MachineDto devMachineDescriptor) {
+    public DevMachine(@NotNull Machine devMachineDescriptor) {
         this.devMachineDescriptor = devMachineDescriptor;
 
-        Map<String, ServerDto> serverDtoMap = devMachineDescriptor.getRuntime().getServers();
+        Map<String, ? extends Server> serverDtoMap = devMachineDescriptor.getRuntime().getServers();
         servers = new HashMap<>(serverDtoMap.size());
         for (String s : serverDtoMap.keySet()) {
             servers.put(s, new DevMachineServer(serverDtoMap.get(s)));

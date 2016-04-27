@@ -54,13 +54,14 @@ public class StatusCommandPresenterTest extends BaseTest {
         super.disarm();
 
         presenter = new StatusCommandPresenter(service,
+                                               appContext,
                                                gitOutputConsoleFactory,
                                                consolesPanelPresenter,
                                                constant,
                                                notificationManager,
                                                workspace);
 
-        when(service.statusText(anyString(), any(Path.class), any(StatusFormat.class))).thenReturn(stringPromise);
+        when(service.statusText(anyObject(), any(Path.class), any(StatusFormat.class))).thenReturn(stringPromise);
         when(stringPromise.then(any(Operation.class))).thenReturn(stringPromise);
         when(stringPromise.catchError(any(Operation.class))).thenReturn(stringPromise);
     }

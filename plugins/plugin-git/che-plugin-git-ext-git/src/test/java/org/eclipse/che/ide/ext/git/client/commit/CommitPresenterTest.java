@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import static org.eclipse.che.ide.ext.git.client.commit.CommitPresenter.COMMIT_COMMAND_NAME;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
@@ -104,7 +105,7 @@ public class CommitPresenterTest extends BaseTest {
         when(view.isAllFilesInclued()).thenReturn(ALL_FILE_INCLUDES);
         when(view.isAmend()).thenReturn(IS_OVERWRITTEN);
 
-        when(service.commit(anyString(), any(Path.class), anyString(), anyBoolean(), anyBoolean())).thenReturn(revisionPromise);
+        when(service.commit(anyObject(), any(Path.class), anyString(), anyBoolean(), anyBoolean())).thenReturn(revisionPromise);
         when(revisionPromise.then(any(Operation.class))).thenReturn(revisionPromise);
         when(revisionPromise.catchError(any(Operation.class))).thenReturn(revisionPromise);
 
@@ -131,7 +132,7 @@ public class CommitPresenterTest extends BaseTest {
         when(view.isAllFilesInclued()).thenReturn(ALL_FILE_INCLUDES);
         when(view.isAmend()).thenReturn(IS_OVERWRITTEN);
 
-        when(service.commit(anyString(), any(Path.class), anyString(), anyBoolean(), anyBoolean())).thenReturn(revisionPromise);
+        when(service.commit(anyObject(), any(Path.class), anyString(), anyBoolean(), anyBoolean())).thenReturn(revisionPromise);
         when(revisionPromise.then(any(Operation.class))).thenReturn(revisionPromise);
         when(revisionPromise.catchError(any(Operation.class))).thenReturn(revisionPromise);
 

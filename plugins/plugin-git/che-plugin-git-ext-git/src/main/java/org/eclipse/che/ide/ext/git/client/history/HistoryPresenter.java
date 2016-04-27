@@ -160,7 +160,7 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
                     String errorMessage = error.getMessage() != null ? error.getMessage() : constant.logFailed();
                     GitOutputConsole console = gitOutputConsoleFactory.create(LOG_COMMAND_NAME);
                     console.printError(errorMessage);
-                    consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                    consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                     notificationManager.notify(constant.logFailed(), FAIL, true);
                 }
                 partStack.hidePart(HistoryPresenter.this);
@@ -352,7 +352,7 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
                        String errorMessage = error.getMessage() != null ? error.getMessage() : constant.diffFailed();
                        GitOutputConsole console = gitOutputConsoleFactory.create(DIFF_COMMAND_NAME);
                        console.printError(errorMessage);
-                       consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                       consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                        notificationManager.notify(constant.diffFailed(), FAIL, true);
                    }
                });
@@ -391,7 +391,7 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
                            String errorMessage = error.getMessage() != null ? error.getMessage() : constant.diffFailed();
                            GitOutputConsole console = gitOutputConsoleFactory.create(DIFF_COMMAND_NAME);
                            console.printError(errorMessage);
-                           consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                           consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                            notificationManager.notify(constant.diffFailed(), FAIL, true);
                        }
                    });

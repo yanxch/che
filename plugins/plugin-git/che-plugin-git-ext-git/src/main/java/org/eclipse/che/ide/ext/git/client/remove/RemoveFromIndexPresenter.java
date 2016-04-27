@@ -94,7 +94,7 @@ public class RemoveFromIndexPresenter implements RemoveFromIndexView.ActionDeleg
             @Override
             public void apply(Void ignored) throws OperationException {
                 console.print(constant.removeFilesSuccessfull());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
                 notificationManager.notify(constant.removeFilesSuccessfull());
 
                 project.synchronize();
@@ -103,7 +103,7 @@ public class RemoveFromIndexPresenter implements RemoveFromIndexView.ActionDeleg
             @Override
             public void apply(PromiseError error) throws OperationException {
                 handleError(error.getCause(), console);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
             }
         });
 

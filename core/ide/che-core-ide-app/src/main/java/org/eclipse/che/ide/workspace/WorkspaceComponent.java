@@ -172,7 +172,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
     public void setCurrentWorkspace(WorkspaceDto workspace) {
         appContext.setWorkspace(workspace); //TODO remove it in nearest future
 
-        eventBus.fireEvent(new WorkspaceConfigChangedEvent(workspace.getId(), workspace.getConfig(), workspace.isTemporary()));
+        eventBus.fireEvent(new WorkspaceConfigChangedEvent(workspace.getId(), workspace, workspace.isTemporary()));
 
         if (needToReloadComponents) {
             callback.onSuccess(WorkspaceComponent.this);
