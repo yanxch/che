@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.api.machine.gwt.client;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.gwt.user.client.Window;
 
@@ -39,9 +40,11 @@ public class DevMachine {
     private final Map<String, DevMachineServer> servers;
     private final Map<String, String> runtimeProperties;
     private final Map<String, String> envVariables;
+    private final List<Link> devMachineLinks;
 
     public DevMachine(@NotNull MachineDto devMachineDescriptor) {
         this.devMachineDescriptor = devMachineDescriptor;
+        this.devMachineLinks = devMachineDescriptor.getLinks();
 
         Map<String, ServerDto> serverDtoMap = devMachineDescriptor.getRuntime().getServers();
         servers = new HashMap<>(serverDtoMap.size());
@@ -66,9 +69,8 @@ public class DevMachine {
     }
 
     public String getWsAgentWebSocketUrl() {
-        DevMachineServer server = getServer(Constants.WSAGENT_REFERENCE);
-        if (server != null) {
-            String url = server.getUrl();
+        String url = getWsAgentSocketUrl();
+        if (url != null) {
             String extUrl = url.substring(url.indexOf(':'), url.length());
             boolean isSecureConnection = Window.Location.getProtocol().equals("https:");
             return (isSecureConnection ? "wss" : "ws") + extUrl + "/ws/" + getWorkspace();
@@ -90,6 +92,16 @@ public class DevMachine {
             Log.error(getClass(), message);
             throw new RuntimeException(message);
         }
+    }
+
+    private String getWsAgentSocketUrl() {
+        for (Link devMachineLink : devMachineLinks) {
+            if(Constants.WSAGENT_WEBSOCKET_REFERENCE.equals(devMachineLink.getRel())){
+                return devMachineLink.getHref();
+            }
+        }
+
+        return "";
     }
 
     public Map<String, DevMachineServer> getServers() {
