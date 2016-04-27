@@ -10,12 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.api.machine.gwt.client;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.gwt.user.client.Window;
 
-import org.eclipse.che.api.core.model.machine.MachineStatus;
-import org.eclipse.che.api.core.model.machine.Server;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.machine.shared.Constants;
 import org.eclipse.che.api.machine.shared.dto.MachineDto;
