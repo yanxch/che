@@ -66,11 +66,12 @@ public class DevMachine {
     }
 
     public String getWsAgentWebSocketUrl() {
-        String url = getWsAgentSocketUrl();
+        final String url = getWsAgentSocketUrl();
         if (url != null) {
-            String extUrl = url.substring(url.indexOf(':'), url.length());
-            boolean isSecureConnection = Window.Location.getProtocol().equals("https:");
-            return (isSecureConnection ? "wss" : "ws") + extUrl + "/ws/" + getWorkspace();
+//            String extUrl = url.substring(url.indexOf(':'), url.length());
+//            boolean isSecureConnection = Window.Location.getProtocol().equals("https:");
+//            return (isSecureConnection ? "wss" : "ws") + extUrl + "/ws/" + getWorkspace();
+            return url;
         } else {
             //should not be
             String message = "Reference " + Constants.WSAGENT_REFERENCE + " not found in DevMachine description";
