@@ -19,7 +19,6 @@ import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.api.core.rest.ApiExceptionMapper;
-import org.eclipse.che.api.core.rest.permission.PermissionManager;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.core.rest.shared.dto.ServiceError;
 import org.eclipse.che.api.machine.server.MachineManager;
@@ -50,6 +49,7 @@ import org.everrest.assured.EverrestJetty;
 import org.everrest.core.Filter;
 import org.everrest.core.GenericContainerRequest;
 import org.everrest.core.RequestFilter;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.testng.MockitoTestNGListener;
 import org.testng.annotations.BeforeMethod;
@@ -115,7 +115,7 @@ public class WorkspaceServiceTest {
     private static final String             IDE_CONTEXT = "ws";
     private static final LinkedList<String> ROLES       = new LinkedList<>(singleton("user"));
     @SuppressWarnings("unused")
-    private static final EnvironmentFilter  FILTER      = new EnvironmentFilter();
+    private static final EnvironmentFilter  FILTER  = new EnvironmentFilter();
 
     @Mock
     private WorkspaceManager   wsManager;
@@ -123,16 +123,14 @@ public class WorkspaceServiceTest {
     private MachineManager     machineManager;
     @Mock
     private WorkspaceValidator validator;
-    @Mock
-    private PermissionManager  permissionManager;
-
-    @SuppressWarnings("unused")
-    private WorkspaceService service;
 
     @BeforeMethod
     public void setup() {
-        service = new WorkspaceService(wsManager, machineManager, validator, permissionManager, new LinksInjector(IDE_CONTEXT));
+        service = new WorkspaceService(wsManager, machineManager, validator, IDE_CONTEXT, new LinksInjector(IDE_CONTEXT));
     }
+    
+    @InjectMocks
+    private WorkspaceService   service;
 
     @Test
     public void shouldCreateWorkspace() throws Exception {
@@ -315,7 +313,6 @@ public class WorkspaceServiceTest {
 
         assertEquals(response.getStatusCode(), 200);
         assertEquals(new WorkspaceImpl(unwrapDto(response, WorkspaceDto.class)), workspace);
-        verify(permissionManager).checkPermission(eq(Constants.START_WORKSPACE), any(), any());
         verify(wsManager).startWorkspace(workspace.getId(), workspace.getConfig().getDefaultEnv(), null);
         verify(wsManager, never()).recoverWorkspace(workspace.getId(), workspace.getConfig().getDefaultEnv(), null);
     }
@@ -339,7 +336,6 @@ public class WorkspaceServiceTest {
 
         assertEquals(response.getStatusCode(), 200);
         verify(validator).validateConfig(any());
-        verify(permissionManager).checkPermission(eq(Constants.START_WORKSPACE), any(), any(), any());
     }
 
     @Test
@@ -356,7 +352,6 @@ public class WorkspaceServiceTest {
 
         assertEquals(response.getStatusCode(), 200);
         assertEquals(new WorkspaceImpl(unwrapDto(response, WorkspaceDto.class)), workspace);
-        verify(permissionManager).checkPermission(eq(Constants.START_WORKSPACE), any(), any());
         verify(wsManager).recoverWorkspace(workspace.getId(), workspace.getConfig().getDefaultEnv(), null);
     }
 
