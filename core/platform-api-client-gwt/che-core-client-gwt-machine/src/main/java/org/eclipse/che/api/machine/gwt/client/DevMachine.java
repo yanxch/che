@@ -11,6 +11,9 @@
 package org.eclipse.che.api.machine.gwt.client;
 
 import com.google.common.base.Strings;
+import com.google.gwt.http.client.UrlBuilder;
+import com.google.gwt.safehtml.shared.SafeUri;
+import com.google.gwt.safehtml.shared.UriUtils;
 import com.google.gwt.user.client.Window;
 
 import org.eclipse.che.api.core.rest.shared.dto.Link;
@@ -20,6 +23,7 @@ import org.eclipse.che.api.machine.shared.dto.ServerDto;
 import org.eclipse.che.ide.util.loging.Log;
 
 import javax.validation.constraints.NotNull;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
