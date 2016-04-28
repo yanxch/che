@@ -37,6 +37,7 @@ import java.util.Objects;
  */
 public class Machine {
 
+    private final AppContext    appContext;
     private final MachineDto    descriptor;
     private final EntityFactory entityFactory;
 
@@ -45,7 +46,9 @@ public class Machine {
     @Inject
     public Machine(MachineLocalizationConstant locale,
                    EntityFactory entityFactory,
-                   @Assisted MachineDto descriptor) {
+                   @Assisted MachineDto descriptor,
+                   AppContext appContext) {
+        this.appContext = appContext;
         this.entityFactory = entityFactory;
         this.descriptor = descriptor;
         this.activeTabName = locale.tabInfo();
@@ -108,18 +111,12 @@ public class Machine {
     }
 
     public String getTerminalUrl() {
-        Map<String, ServerDto> serverDescriptors = descriptor.getRuntime().getServers();
-        for (ServerDto descriptor : serverDescriptors.values()) {
-            if (Constants.TERMINAL_REFERENCE.equals(descriptor.getRef())) {
-                String terminalUrl = descriptor.getUrl();
-                terminalUrl = terminalUrl.substring(terminalUrl.indexOf(':'), terminalUrl.length());
 
-                boolean isSecureConnection = Window.Location.getProtocol().equals("https:");
-
-                return (isSecureConnection ? "wss" : "ws") + terminalUrl + "/pty";
+        for (Link link : appContext.getWorkspace().getRuntime().getDevMachine().getLinks()) {
+            if (link.getRel().equals(Constants.TERMINAL_REFERENCE)) {
+                return link.getHref();
             }
         }
-
         return "";
     }
 

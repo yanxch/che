@@ -68,7 +68,7 @@ public class MachineTest {
         Map<String, ServerDto> servers = new HashMap<>();
         servers.put(SOME_TEXT, serverDescriptor);
 
-        machine = new Machine(locale, entityFactory, descriptor);
+        machine = new Machine(locale, entityFactory, descriptor, appContext);
 
         final WorkspaceDto ws = mock(WorkspaceDto.class);
         final WorkspaceRuntimeDto wsRuntime = mock(WorkspaceRuntimeDto.class);
@@ -93,7 +93,7 @@ public class MachineTest {
     @Test
     public void defaultActiveTabShouldBeReturned() {
         when(locale.tabInfo()).thenReturn(SOME_TEXT);
-        machine = new Machine(locale, entityFactory, descriptor);
+        machine = new Machine(locale, entityFactory, descriptor, appContext);
 
         String tabName = machine.getActiveTabName();
 
