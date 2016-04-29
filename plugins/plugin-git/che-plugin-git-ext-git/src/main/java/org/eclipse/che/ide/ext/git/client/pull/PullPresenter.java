@@ -38,6 +38,7 @@ import java.util.List;
 
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_LOCAL;
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_REMOTE;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.PROGRESS;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.SUCCESS;
@@ -158,7 +159,7 @@ public class PullPresenter implements PullView.ActionDelegate {
         view.close();
 
         final StatusNotification notification =
-                notificationManager.notify(constant.pullProcess(), PROGRESS, true);
+                notificationManager.notify(constant.pullProcess(), PROGRESS, FLOAT_MODE);
 
         service.pull(appContext.getDevMachine(), project.getLocation(), getRefs(), view.getRepositoryName()).then(new Operation<PullResponse>() {
             @Override
@@ -233,7 +234,7 @@ public class PullPresenter implements PullView.ActionDelegate {
         GitOutputConsole console = gitOutputConsoleFactory.create(commandName);
         console.printError(errorMessage);
         consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-        notificationManager.notify(errorMessage, FAIL, true);
+        notificationManager.notify(errorMessage, FAIL, FLOAT_MODE);
     }
 
     /** {@inheritDoc} */

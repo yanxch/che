@@ -8,21 +8,14 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.workspace.shared.dto.stack;
-
-import org.eclipse.che.api.workspace.server.model.stack.StackSource;
-import org.eclipse.che.dto.shared.DTO;
+package org.eclipse.che.ide.api.notification;
 
 /**
- * @author Alexander Andrienko
+ * Listener interface for being notified about changes of notification status.
+ *
+ * @author Roman Nikitenko
  */
-@DTO
-public interface StackSourceDto extends StackSource {
-    void setType(String type);
-
-    StackSourceDto withType(String type);
-
-    void setOrigin(String origin);
-
-    StackSourceDto withOrigin(String origin);
+public interface StatusNotificationListener {
+    /** Performs some actions in response to a notification status has been changed */
+    void onNotificationStatusChanged(StatusNotification notification);
 }

@@ -23,6 +23,7 @@ import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.Resource;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 
 /**
@@ -74,7 +75,7 @@ public class UploadFolderFromZipPresenter implements UploadFolderFromZipView.Act
 
         if (!isNullOrEmpty(result)) {
             view.closeDialog();
-            notificationManager.notify(locale.failedToUploadFilesFromZip(), parseMessage(result), FAIL, true);
+            notificationManager.notify(locale.failedToUploadFilesFromZip(), parseMessage(result), FAIL, FLOAT_MODE);
             return;
         }
 

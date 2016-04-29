@@ -39,6 +39,8 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkState;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.NOT_EMERGE_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.util.Arrays.isNullOrEmpty;
 import static org.eclipse.che.ide.util.ExceptionUtils.getErrorCode;
@@ -209,7 +211,7 @@ public class CommitPresenter implements CommitView.ActionDelegate {
         GitOutputConsole console = gitOutputConsoleFactory.create(COMMIT_COMMAND_NAME);
         console.printError(errorMessage);
         consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-        notificationManager.notify(constant.commitFailed(), errorMessage, FAIL, true);
+        notificationManager.notify(constant.commitFailed(), errorMessage, FAIL, FLOAT_MODE);
     }
 
     /** {@inheritDoc} */
@@ -253,7 +255,7 @@ public class CommitPresenter implements CommitView.ActionDelegate {
                                                              null).show();
                        } else {
                            CommitPresenter.this.view.setMessage("");
-                           notificationManager.notify(constant.logFailed(), FAIL, false);
+                           notificationManager.notify(constant.logFailed(), FAIL, NOT_EMERGE_MODE);
                        }
                    }
                });

@@ -39,6 +39,7 @@ import java.util.List;
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_LOCAL;
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_REMOTE;
 import static org.eclipse.che.api.git.shared.MergeResult.MergeStatus.ALREADY_UP_TO_DATE;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.ext.git.client.merge.Reference.RefType.LOCAL_BRANCH;
 import static org.eclipse.che.ide.ext.git.client.merge.Reference.RefType.REMOTE_BRANCH;
@@ -115,7 +116,7 @@ public class MergePresenter implements MergeView.ActionDelegate {
             public void apply(PromiseError error) throws OperationException {
                 console.printError(error.getMessage());
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                notificationManager.notify(constant.branchesListFailed(), FAIL, true);
+                notificationManager.notify(constant.branchesListFailed(), FAIL, FLOAT_MODE);
             }
         });
 
@@ -137,7 +138,7 @@ public class MergePresenter implements MergeView.ActionDelegate {
             public void apply(PromiseError error) throws OperationException {
                 console.printError(error.getMessage());
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                notificationManager.notify(constant.branchesListFailed(), FAIL, true);
+                notificationManager.notify(constant.branchesListFailed(), FAIL, FLOAT_MODE);
             }
         });
 
@@ -182,7 +183,7 @@ public class MergePresenter implements MergeView.ActionDelegate {
                 }
                 console.printError(error.getMessage());
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                notificationManager.notify(constant.mergeFailed(), FAIL, true);
+                notificationManager.notify(constant.mergeFailed(), FAIL, FLOAT_MODE);
             }
         });
     }

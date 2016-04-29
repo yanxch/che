@@ -44,6 +44,7 @@ import java.util.Map;
 import static java.util.Collections.singletonList;
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_LOCAL;
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_REMOTE;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.PROGRESS;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.SUCCESS;
@@ -124,7 +125,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
                 GitOutputConsole console = gitOutputConsoleFactory.create(REMOTE_REPO_COMMAND_NAME);
                 console.printError(errorMessage);
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                notificationManager.notify(constant.remoteListFailed(), FAIL, true);
+                notificationManager.notify(constant.remoteListFailed(), FAIL, FLOAT_MODE);
                 view.setEnablePushButton(false);
             }
         });
@@ -158,7 +159,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
                 GitOutputConsole console = gitOutputConsoleFactory.create(BRANCH_LIST_COMMAND_NAME);
                 console.printError(errorMessage);
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                notificationManager.notify(constant.localBranchesListFailed(), FAIL, true);
+                notificationManager.notify(constant.localBranchesListFailed(), FAIL, FLOAT_MODE);
                 view.setEnablePushButton(false);
             }
         });
@@ -208,7 +209,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
                         GitOutputConsole console = gitOutputConsoleFactory.create(CONFIG_COMMAND_NAME);
                         console.printError(constant.failedGettingConfig());
                         consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                        notificationManager.notify(constant.failedGettingConfig(), FAIL, true);
+                        notificationManager.notify(constant.failedGettingConfig(), FAIL, FLOAT_MODE);
                     }
                 });
             }
@@ -219,7 +220,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
                 GitOutputConsole console = gitOutputConsoleFactory.create(BRANCH_LIST_COMMAND_NAME);
                 console.printError(errorMessage);
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                notificationManager.notify(constant.remoteBranchesListFailed(), FAIL, true);
+                notificationManager.notify(constant.remoteBranchesListFailed(), FAIL, FLOAT_MODE);
                 view.setEnablePushButton(false);
             }
 
@@ -283,7 +284,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
     @Override
     public void onPushClicked() {
         final StatusNotification notification =
-                notificationManager.notify(constant.pushProcess(), PROGRESS, true);
+                notificationManager.notify(constant.pushProcess(), PROGRESS, FLOAT_MODE);
 
         final String repository = view.getRepository();
         final GitOutputConsole console = gitOutputConsoleFactory.create(PUSH_COMMAND_NAME);

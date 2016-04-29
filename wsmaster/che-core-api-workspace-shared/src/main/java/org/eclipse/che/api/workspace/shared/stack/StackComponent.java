@@ -8,19 +8,23 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.machine.shared;
-
-import org.eclipse.che.api.machine.server.recipe.PermissionsChecker;
+package org.eclipse.che.api.workspace.shared.stack;
 
 /**
- * Permissible interface should be implemented by data objects which require access.
- * It is commonly used with the {@link PermissionsChecker}.
+ * Defines the interface that describes the stack component. It is a part of the {@link Stack}.
  *
  * @author Alexander Andrienko
  */
-public interface Permissible {
+public interface StackComponent {
+
     /**
-     * Returns {@link Permissions} for access to the data object.
+     * Returns the name of the component.
+     * The name is unique per stack. (e.g. "jdk").
      */
-    Permissions getPermissions();
+    String getName();
+
+    /**
+     * Returns the version of the component. (e.g. "1.8")
+     */
+    String getVersion();
 }

@@ -29,6 +29,7 @@ import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPrese
 
 import java.util.List;
 
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.ext.git.client.remote.RemotePresenter.REMOTE_REPO_COMMAND_NAME;
 
@@ -89,7 +90,7 @@ public class ShowProjectGitReadOnlyUrlPresenter implements ShowProjectGitReadOnl
                 GitOutputConsole console = gitOutputConsoleFactory.create(REMOTE_REPO_COMMAND_NAME);
                 console.printError(errorMessage);
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                notificationManager.notify(constant.remoteListFailed(), FAIL, true);
+                notificationManager.notify(constant.remoteListFailed(), FAIL, FLOAT_MODE);
             }
         });
 
@@ -107,7 +108,7 @@ public class ShowProjectGitReadOnlyUrlPresenter implements ShowProjectGitReadOnl
                 console.printError(errorMessage);
                 consolesPanelPresenter
                         .addCommandOutput(appContext.getDevMachine().getId(), console);
-                notificationManager.notify(constant.initFailed(), FAIL, true);
+                notificationManager.notify(constant.initFailed(), FAIL, FLOAT_MODE);
             }
         });
     }

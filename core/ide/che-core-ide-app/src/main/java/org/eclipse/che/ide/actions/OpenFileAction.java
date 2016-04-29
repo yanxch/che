@@ -39,6 +39,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import static org.eclipse.che.api.promises.client.callback.CallbackPromiseHelper.createFromCallback;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.OPEN;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 
@@ -98,7 +99,7 @@ public class OpenFileAction extends Action implements PromisableAction {
                         actionCompletedCallback.onFailure(null);
                     }
 
-                    notificationManager.notify(localization.unableOpenResource(pathToOpen), FAIL, true);
+                    notificationManager.notify(localization.unableOpenResource(pathToOpen), FAIL, FLOAT_MODE);
                 }
             }
         });

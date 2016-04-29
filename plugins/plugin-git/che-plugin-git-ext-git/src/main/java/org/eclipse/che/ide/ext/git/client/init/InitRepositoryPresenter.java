@@ -28,6 +28,7 @@ import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPrese
 
 import javax.validation.constraints.NotNull;
 
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 
 /**
@@ -96,6 +97,6 @@ public class InitRepositoryPresenter {
     private void handleError(@NotNull Throwable e, GitOutputConsole console) {
         String errorMessage = (e.getMessage() != null && !e.getMessage().isEmpty()) ? e.getMessage() : constant.initFailed();
         console.printError(errorMessage);
-        notificationManager.notify(constant.initFailed(), FAIL, true);
+        notificationManager.notify(constant.initFailed(), FAIL, FLOAT_MODE);
     }
 }

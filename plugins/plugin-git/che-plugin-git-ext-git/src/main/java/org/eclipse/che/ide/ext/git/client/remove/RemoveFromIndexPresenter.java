@@ -31,6 +31,7 @@ import javax.validation.constraints.NotNull;
 
 import static com.google.common.base.Preconditions.checkState;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.util.Arrays.isNullOrEmpty;
 
 /**
@@ -134,7 +135,7 @@ public class RemoveFromIndexPresenter implements RemoveFromIndexView.ActionDeleg
         String errorMessage = (e.getMessage() != null && !e.getMessage().isEmpty()) ? e.getMessage() : constant.removeFilesFailed();
         console.printError(errorMessage);
         consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-        notificationManager.notify(constant.removeFilesFailed(), FAIL, true);
+        notificationManager.notify(constant.removeFilesFailed(), FAIL, FLOAT_MODE);
     }
 
     /** {@inheritDoc} */

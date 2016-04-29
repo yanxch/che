@@ -39,6 +39,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_LOCAL;
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_REMOTE;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.PROGRESS;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.SUCCESS;
@@ -117,7 +118,7 @@ public class FetchPresenter implements FetchView.ActionDelegate {
                 GitOutputConsole console = gitOutputConsoleFactory.create(FETCH_COMMAND_NAME);
                 console.printError(constant.remoteListFailed());
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                notificationManager.notify(constant.remoteListFailed(), FAIL, true);
+                notificationManager.notify(constant.remoteListFailed(), FAIL, FLOAT_MODE);
                 view.setEnableFetchButton(false);
             }
         });
@@ -153,7 +154,7 @@ public class FetchPresenter implements FetchView.ActionDelegate {
                 GitOutputConsole console = gitOutputConsoleFactory.create(FETCH_COMMAND_NAME);
                 console.printError(errorMessage);
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                notificationManager.notify(constant.branchesListFailed(), FAIL, true);
+                notificationManager.notify(constant.branchesListFailed(), FAIL, FLOAT_MODE);
                 view.setEnableFetchButton(false);
             }
         });
@@ -164,7 +165,7 @@ public class FetchPresenter implements FetchView.ActionDelegate {
     public void onFetchClicked() {
         final String remoteUrl = view.getRepositoryUrl();
 
-        final StatusNotification notification = notificationManager.notify(constant.fetchProcess(), PROGRESS, true);
+        final StatusNotification notification = notificationManager.notify(constant.fetchProcess(), PROGRESS, FLOAT_MODE);
         final GitOutputConsole console = gitOutputConsoleFactory.create(FETCH_COMMAND_NAME);
 
         service.fetch(appContext.getDevMachine(), project.getLocation(), view.getRepositoryName(), getRefs(), view.isRemoveDeletedRefs())

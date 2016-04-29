@@ -33,6 +33,8 @@ import org.eclipse.che.ide.resource.Path;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.OPEN;
 
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
+
 /**
  * The purpose of this class is upload file
  *
@@ -84,7 +86,7 @@ public class UploadFilePresenter implements UploadFileView.ActionDelegate {
     public void onSubmitComplete(String result) {
         if (!isNullOrEmpty(result)) {
             view.closeDialog();
-            notificationManager.notify(locale.failedToUploadFiles(), parseMessage(result), StatusNotification.Status.FAIL, true);
+            notificationManager.notify(locale.failedToUploadFiles(), parseMessage(result), StatusNotification.Status.FAIL, FLOAT_MODE);
             return;
         }
 

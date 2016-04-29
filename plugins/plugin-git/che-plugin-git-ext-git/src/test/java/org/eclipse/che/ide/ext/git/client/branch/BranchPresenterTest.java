@@ -32,6 +32,7 @@ import org.mockito.Mock;
 import java.util.Collections;
 import java.util.List;
 
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_ALL;
 import static org.eclipse.che.ide.ext.git.client.branch.BranchPresenter.BRANCH_CREATE_COMMAND_NAME;
 import static org.eclipse.che.ide.ext.git.client.branch.BranchPresenter.BRANCH_DELETE_COMMAND_NAME;
@@ -291,7 +292,7 @@ public class BranchPresenterTest extends BaseTest {
         verify(gitOutputConsoleFactory).create(BRANCH_DELETE_COMMAND_NAME);
         verify(console).printError(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager).notify(anyString(), anyObject(), eq(true));
+        verify(notificationManager).notify(anyString(), anyObject(), eq(FLOAT_MODE));
     }
 
     @Test
@@ -349,7 +350,7 @@ public class BranchPresenterTest extends BaseTest {
 
         verify(selectedBranch).getDisplayName();
         verify(selectedBranch).isRemote();
-        verify(notificationManager).notify(anyString(), eq(StatusNotification.Status.FAIL), eq(true));
+        verify(notificationManager).notify(anyString(), eq(StatusNotification.Status.FAIL), eq(FLOAT_MODE));
     }
 
     @Test
@@ -398,7 +399,7 @@ public class BranchPresenterTest extends BaseTest {
         verify(gitOutputConsoleFactory).create(BRANCH_CREATE_COMMAND_NAME);
         verify(console).printError(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager).notify(anyString(), anyObject(), eq(true));
+        verify(notificationManager).notify(anyString(), anyObject(), eq(FLOAT_MODE));
     }
 
     @Test

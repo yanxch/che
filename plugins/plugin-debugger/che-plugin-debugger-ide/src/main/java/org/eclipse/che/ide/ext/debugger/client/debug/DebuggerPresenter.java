@@ -51,6 +51,8 @@ import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.NOT_EMERGE_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.PROGRESS;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.SUCCESS;
@@ -175,7 +177,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
                 }).catchError(new Operation<PromiseError>() {
                     @Override
                     public void apply(PromiseError arg) throws OperationException {
-                        notificationManager.notify(constant.failedToGetVariableValueTitle(), arg.getMessage(), FAIL, true);
+                        notificationManager.notify(constant.failedToGetVariableValueTitle(), arg.getMessage(), FAIL, FLOAT_MODE);
                     }
                 });
             }
@@ -295,7 +297,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
     @Override
     public void onDebuggerAttached(final DebuggerDescriptor debuggerDescriptor, Promise<Void> connect) {
         final String address = debuggerDescriptor.getAddress();
-        final StatusNotification notification = notificationManager.notify(constant.debuggerConnectingTitle(address), PROGRESS, true);
+        final StatusNotification notification = notificationManager.notify(constant.debuggerConnectingTitle(address), PROGRESS, FLOAT_MODE);
 
         connect.then(new Operation<Void>() {
             @Override
@@ -314,7 +316,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
             public void apply(PromiseError arg) throws OperationException {
                 notification.setTitle(constant.failedToConnectToRemoteDebuggerDescription(address));
                 notification.setStatus(FAIL);
-                notification.setBalloon(true);
+                notification.setDisplayMode(FLOAT_MODE);
             }
         });
     }
@@ -323,7 +325,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
     public void onDebuggerDisconnected() {
         String address = debuggerDescriptor != null ? debuggerDescriptor.getAddress() : "";
         String content = constant.debuggerDisconnectedDescription(address);
-        notificationManager.notify(constant.debuggerDisconnectedTitle(), content, SUCCESS, false);
+        notificationManager.notify(constant.debuggerDisconnectedTitle(), content, SUCCESS, NOT_EMERGE_MODE);
 
         executionPoint = null;
         debuggerDescriptor = null;

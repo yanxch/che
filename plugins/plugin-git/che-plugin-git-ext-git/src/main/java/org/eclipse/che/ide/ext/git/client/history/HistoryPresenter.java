@@ -49,6 +49,7 @@ import java.util.List;
 
 import static java.util.Collections.singletonList;
 import static org.eclipse.che.api.git.shared.DiffRequest.DiffType.RAW;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.util.ExceptionUtils.getErrorCode;
 
@@ -161,7 +162,7 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
                     GitOutputConsole console = gitOutputConsoleFactory.create(LOG_COMMAND_NAME);
                     console.printError(errorMessage);
                     consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                    notificationManager.notify(constant.logFailed(), FAIL, true);
+                    notificationManager.notify(constant.logFailed(), FAIL, FLOAT_MODE);
                 }
                 partStack.hidePart(HistoryPresenter.this);
                 workspaceAgent.removePart(HistoryPresenter.this);
@@ -353,7 +354,7 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
                        GitOutputConsole console = gitOutputConsoleFactory.create(DIFF_COMMAND_NAME);
                        console.printError(errorMessage);
                        consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                       notificationManager.notify(constant.diffFailed(), FAIL, true);
+                       notificationManager.notify(constant.diffFailed(), FAIL, FLOAT_MODE);
                    }
                });
     }
@@ -392,7 +393,7 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
                            GitOutputConsole console = gitOutputConsoleFactory.create(DIFF_COMMAND_NAME);
                            console.printError(errorMessage);
                            consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                           notificationManager.notify(constant.diffFailed(), FAIL, true);
+                           notificationManager.notify(constant.diffFailed(), FAIL, FLOAT_MODE);
                        }
                    });
         } else {

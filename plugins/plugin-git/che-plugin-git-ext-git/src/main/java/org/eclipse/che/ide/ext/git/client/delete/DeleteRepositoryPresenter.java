@@ -26,6 +26,7 @@ import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsole;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsoleFactory;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter;
 
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 
 /**
@@ -82,7 +83,7 @@ public class DeleteRepositoryPresenter {
             public void apply(PromiseError error) throws OperationException {
                 console.printError(error.getMessage());
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                notificationManager.notify(constant.failedToDeleteRepository(), FAIL, true);
+                notificationManager.notify(constant.failedToDeleteRepository(), FAIL, FLOAT_MODE);
             }
         });
     }

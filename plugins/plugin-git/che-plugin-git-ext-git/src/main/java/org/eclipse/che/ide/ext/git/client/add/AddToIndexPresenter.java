@@ -32,6 +32,7 @@ import org.eclipse.che.ide.resource.Path;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 
 /**
  * Presenter for add changes to Git index.
@@ -102,7 +103,7 @@ public class AddToIndexPresenter implements AddToIndexView.ActionDelegate {
             public void apply(PromiseError error) throws OperationException {
                 console.printError(constant.statusFailed());
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                notificationManager.notify(constant.statusFailed(), FAIL, true);
+                notificationManager.notify(constant.statusFailed(), FAIL, FLOAT_MODE);
             }
         });
     }
@@ -140,7 +141,7 @@ public class AddToIndexPresenter implements AddToIndexView.ActionDelegate {
                 String errorMessage = constant.addFailed();
                 console.printError(errorMessage);
                 consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
-                notificationManager.notify(constant.addFailed(), FAIL, true);
+                notificationManager.notify(constant.addFailed(), FAIL, FLOAT_MODE);
                 view.close();
             }
         });

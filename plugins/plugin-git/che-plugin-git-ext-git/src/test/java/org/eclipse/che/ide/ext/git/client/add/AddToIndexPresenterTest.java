@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import java.util.List;
 
 import static org.eclipse.che.ide.ext.git.client.add.AddToIndexPresenter.ADD_TO_INDEX_COMMAND_NAME;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -79,7 +80,7 @@ public class AddToIndexPresenterTest extends BaseTest {
         verify(gitOutputConsoleFactory).create(ADD_TO_INDEX_COMMAND_NAME);
         verify(console).printError(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager).notify(anyString(), anyObject(), eq(true));
+        verify(notificationManager).notify(anyString(), anyObject(), eq(FLOAT_MODE));
         verify(view, never()).showDialog();
         verify(constant, times(2)).statusFailed();
     }
@@ -176,7 +177,7 @@ public class AddToIndexPresenterTest extends BaseTest {
         verify(gitOutputConsoleFactory, times(2)).create(ADD_TO_INDEX_COMMAND_NAME);
         verify(console).printError(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager).notify(anyString(), anyObject(), eq(true));
+        verify(notificationManager).notify(anyString(), anyObject(), eq(FLOAT_MODE));
         verify(constant, times(2)).addFailed();
     }
 

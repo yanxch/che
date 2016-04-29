@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.eclipse.che.api.git.shared.StatusFormat.LONG;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 
 /**
@@ -81,7 +82,7 @@ public class StatusCommandPresenter {
         }).catchError(new Operation<PromiseError>() {
             @Override
             public void apply(PromiseError error) throws OperationException {
-                notificationManager.notify(constant.statusFailed(), FAIL, true);
+                notificationManager.notify(constant.statusFailed(), FAIL, FLOAT_MODE);
             }
         });
     }
