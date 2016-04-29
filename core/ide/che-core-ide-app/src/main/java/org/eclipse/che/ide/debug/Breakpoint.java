@@ -112,6 +112,6 @@ public class Breakpoint {
     }
 
     public enum Type {
-        BREAKPOINT, DISABLED, CONDITIONAL, CURRENT
+        BREAKPOINT, CURRENT
     }
 }

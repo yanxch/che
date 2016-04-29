@@ -21,6 +21,10 @@ import org.eclipse.che.dto.shared.DTO;
 @DTO
 public interface BreakpointDto {
 
+    void setActive(boolean active);
+
+    boolean isActive();
+
     void setLineNumber(int lineNumber);
 
     int getLineNumber();

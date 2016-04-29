@@ -42,9 +42,9 @@
     <!-- Extensions                                                 -->
     <inherits name='org.eclipse.che.ide.ext.help.HelpAboutExtension'/>
     <inherits name='org.eclipse.che.ide.ext.web.Web'/>
-    <inherits name='org.eclipse.che.ide.ext.debugger.DebuggerExtension'/>
-    <inherits name='org.eclipse.che.ide.gdb.GdbExtension'/>
-    <inherits name='org.eclipse.che.ide.ext.java.jdi.JavaDebuggerExtension'/>
+    <inherits name='org.eclipse.che.plugin.debugger.ide.Debugger'/>
+    <inherits name='org.eclipse.che.plugin.gdb.ide.Gdb'/>
+    <inherits name='org.eclipse.che.plugin.jdb.ide.JavaDebugger'/>
     <inherits name='org.eclipse.che.ide.extension.machine.Machine'/>
     <inherits name='org.eclipse.che.ide.extension.maven.Maven'/>
     <inherits name='org.eclipse.che.ide.ext.gwt.GWT'/>
@@ -75,6 +75,7 @@
     <inherits name='org.eclipse.che.api.Factory'/>
     <inherits name="org.eclipse.che.api.Workspace"/>
     <inherits name="org.eclipse.che.api.Ssh"/>
+    <inherits name='org.eclipse.che.api.Debugger'/>
 
     <stylesheet src="IDE.css"/>
 

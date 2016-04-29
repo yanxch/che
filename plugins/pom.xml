@@ -32,6 +32,7 @@
         <module>plugin-machine</module>
         <module>plugin-debugger</module>
         <module>plugin-java</module>
+        <module>plugin-java-debugger</module>
         <module>plugin-gdb</module>
         <module>plugin-sdk</module>
         <module>plugin-orion</module>

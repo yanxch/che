@@ -52,7 +52,7 @@ public interface DebuggerObserver {
     /**
      * Event happens on step in.
      */
-    void onPreStepIn();
+    void onPreStepInto();
 
     /**
      * Event happens on step out.
