@@ -86,7 +86,7 @@ public class StatusCommandPresenterTest extends BaseTest {
         verify(stringPromise).catchError(promiseErrorCaptor.capture());
         promiseErrorCaptor.getValue().apply(promiseError);
 
-        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyBoolean());
+        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyObject());
         verify(constant).statusFailed();
     }
 }

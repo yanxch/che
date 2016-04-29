@@ -166,7 +166,7 @@ public class OrganizeImportsPresenter implements OrganizeImportsView.ActionDeleg
                                 .catchError(new Operation<PromiseError>() {
                                     @Override
                                     public void apply(PromiseError arg) throws OperationException {
-                                        notificationManager.notify(locale.failedToProcessOrganizeImports(), arg.getMessage(), FAIL, true);
+                                        notificationManager.notify(locale.failedToProcessOrganizeImports(), arg.getMessage(), FAIL, FLOAT_MODE);
                                     }
                                 });
         }

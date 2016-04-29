@@ -12,6 +12,7 @@ package org.eclipse.che.ide.ext.git.client.checkout;
 
 import org.eclipse.che.api.git.shared.CheckoutRequest;
 import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.ext.git.client.BaseTest;
 import org.eclipse.che.ide.resource.Path;
@@ -153,6 +154,6 @@ public class CheckoutReferenceTest extends BaseTest {
         verify(gitOutputConsoleFactory).create(CHECKOUT_COMMAND_NAME);
         verify(console).printError(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager).notify(anyString(), anyObject(), anyBoolean());
+        verify(notificationManager).notify(anyString(), anyObject(), any(StatusNotification.DisplayMode.class));
     }
 }

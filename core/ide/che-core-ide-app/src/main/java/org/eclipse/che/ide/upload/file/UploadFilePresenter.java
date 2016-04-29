@@ -121,7 +121,7 @@ public class UploadFilePresenter implements UploadFileView.ActionDelegate {
                     };
 
                     notificationManager.notify("File '" + view.getFileName() + "' has uploaded successfully", "Click here to open it",
-                                               StatusNotification.Status.SUCCESS, true, notificationListener);
+                                               StatusNotification.Status.SUCCESS, FLOAT_MODE, notificationListener);
 
                     view.closeDialog();
                 }

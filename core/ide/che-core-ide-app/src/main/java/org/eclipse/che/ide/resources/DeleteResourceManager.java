@@ -26,6 +26,7 @@ import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper.RequestCa
 import org.eclipse.che.api.promises.client.js.JsPromiseError;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.notification.NotificationManager;
+import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.resources.Folder;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.ui.dialogs.CancelCallback;
@@ -274,7 +275,7 @@ public class DeleteResourceManager {
                         @Override
                         public void apply(PromiseError error) throws OperationException {
                             notificationManager.notify("Failed to delete '" + resource.getName() + "'",
-                                                       error.getMessage(), FAIL, true);
+                                                       error.getMessage(), FAIL, StatusNotification.DisplayMode.FLOAT_MODE);
                         }
                     });
                 }

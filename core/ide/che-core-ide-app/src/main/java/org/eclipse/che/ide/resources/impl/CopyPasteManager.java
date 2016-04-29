@@ -39,6 +39,7 @@ import org.eclipse.che.ide.ui.dialogs.InputCallback;
 
 import static java.util.Arrays.copyOf;
 import static org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper.createFromAsyncRequest;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
 
@@ -221,7 +222,7 @@ class CopyPasteManager implements ResourceChangedHandler {
 
                 } else {
                     //notify user about failed copying
-                    notificationManager.notify("Error moving resource", error.getMessage(), FAIL, true);
+                    notificationManager.notify("Error moving resource", error.getMessage(), FAIL, FLOAT_MODE);
 
                     return promises.resolve(null);
                 }
@@ -322,7 +323,7 @@ class CopyPasteManager implements ResourceChangedHandler {
                     });
                 } else {
                     //notify user about failed copying
-                    notificationManager.notify("Error copying resource", error.getMessage(), FAIL, true);
+                    notificationManager.notify("Error copying resource", error.getMessage(), FAIL, FLOAT_MODE);
 
                     return promises.resolve(null);
                 }

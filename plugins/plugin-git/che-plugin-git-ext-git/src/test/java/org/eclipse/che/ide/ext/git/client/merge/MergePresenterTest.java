@@ -128,7 +128,7 @@ public class MergePresenterTest extends BaseTest {
         verify(gitOutputConsoleFactory).create(MERGE_COMMAND_NAME);
         verify(console, times(2)).printError(anyString());
         verify(consolesPanelPresenter, times(2)).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager, times(2)).notify(anyString(), any(StatusNotification.Status.class), anyBoolean());
+        verify(notificationManager, times(2)).notify(anyString(), any(StatusNotification.Status.class), anyObject());
     }
 
     @Test
@@ -174,7 +174,7 @@ public class MergePresenterTest extends BaseTest {
 
         verify(console).printError(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyBoolean());
+        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyObject());
     }
 
     @Test

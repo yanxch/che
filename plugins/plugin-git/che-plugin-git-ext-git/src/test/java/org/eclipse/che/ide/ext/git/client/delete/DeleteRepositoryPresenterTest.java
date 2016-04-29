@@ -92,6 +92,6 @@ public class DeleteRepositoryPresenterTest extends BaseTest {
         verify(gitOutputConsoleFactory).create(DELETE_REPO_COMMAND_NAME);
         verify(console).printError(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyBoolean());
+        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyObject());
     }
 }

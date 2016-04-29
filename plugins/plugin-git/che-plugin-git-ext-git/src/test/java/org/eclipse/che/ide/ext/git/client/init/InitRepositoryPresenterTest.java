@@ -79,6 +79,6 @@ public class InitRepositoryPresenterTest extends BaseTest {
         verify(gitOutputConsoleFactory).create(INIT_COMMAND_NAME);
         verify(console).printError(anyObject());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyBoolean());
+        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyObject());
     }
 }

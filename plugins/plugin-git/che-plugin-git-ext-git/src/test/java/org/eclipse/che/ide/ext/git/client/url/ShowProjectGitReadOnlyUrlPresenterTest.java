@@ -117,7 +117,7 @@ public class ShowProjectGitReadOnlyUrlPresenterTest extends BaseTest {
 
         verify(view).setRemotes(null);
         verify(console).printError(anyString());
-        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyBoolean());
+        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyObject());
     }
 
     @Test

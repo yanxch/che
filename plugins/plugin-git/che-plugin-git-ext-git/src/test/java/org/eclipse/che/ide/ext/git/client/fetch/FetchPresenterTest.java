@@ -126,7 +126,7 @@ public class FetchPresenterTest extends BaseTest {
         verify(gitOutputConsoleFactory).create(FETCH_COMMAND_NAME);
         verify(console).printError(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyBoolean());
+        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyObject());
         verify(view).setEnableFetchButton(eq(DISABLE_BUTTON));
     }
 
@@ -139,7 +139,7 @@ public class FetchPresenterTest extends BaseTest {
         promiseErrorCaptor.getValue().apply(promiseError);
 
         verify(constant, times(2)).remoteListFailed();
-        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyBoolean());
+        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyObject());
         verify(view).setEnableFetchButton(eq(DISABLE_BUTTON));
     }
 
@@ -153,7 +153,7 @@ public class FetchPresenterTest extends BaseTest {
 
         StatusNotification notification = mock(StatusNotification.class);
 
-        when(notificationManager.notify(anyString(), any(StatusNotification.Status.class), anyBoolean())).thenReturn(notification);
+        when(notificationManager.notify(anyString(), any(StatusNotification.Status.class), anyObject())).thenReturn(notification);
 
         when(service.fetch(anyObject(), any(Path.class), anyString(), any(List.class), anyBoolean())).thenReturn(voidPromise);
         when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
@@ -185,7 +185,7 @@ public class FetchPresenterTest extends BaseTest {
 
         StatusNotification notification = mock(StatusNotification.class);
 
-        when(notificationManager.notify(anyString(), any(StatusNotification.Status.class), anyBoolean())).thenReturn(notification);
+        when(notificationManager.notify(anyString(), any(StatusNotification.Status.class), anyObject())).thenReturn(notification);
 
         when(service.fetch(anyObject(), any(Path.class), anyString(), any(List.class), anyBoolean())).thenReturn(voidPromise);
         when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);

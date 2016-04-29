@@ -152,7 +152,7 @@ public class CommitPresenterTest extends BaseTest {
         verify(gitOutputConsoleFactory).create(COMMIT_COMMAND_NAME);
         verify(console).printError(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager).notify(anyString(), anyString(), any(StatusNotification.Status.class), anyBoolean());
+        verify(notificationManager).notify(anyString(), anyString(), any(StatusNotification.Status.class), anyObject());
     }
 
     @Test

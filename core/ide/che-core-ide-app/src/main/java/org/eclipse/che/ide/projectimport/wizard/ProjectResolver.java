@@ -21,6 +21,7 @@ import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.notification.Notification;
 import org.eclipse.che.ide.api.notification.NotificationListener;
 import org.eclipse.che.ide.api.notification.NotificationManager;
+import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.project.MutableProjectConfig;
 import org.eclipse.che.ide.api.project.type.ProjectTypeRegistry;
 import org.eclipse.che.ide.api.resources.Project;
@@ -103,8 +104,8 @@ public class ProjectResolver {
                     };
 
                     notificationManager.notify("Project " + project.getName() + " has to be configured",
-                                                                                 "Click here to set up your project.",
-                                                                                 SUCCESS, true, notificationListener);
+                                               "Click here to set up your project.",
+                                               SUCCESS, StatusNotification.DisplayMode.FLOAT_MODE, notificationListener);
 
 
                     return promiseProvider.resolve(project);

@@ -39,6 +39,7 @@ import javax.validation.constraints.NotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.OPEN;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
@@ -113,7 +114,7 @@ public abstract class AbstractNewResourceAction extends AbstractPerspectiveActio
         }).catchError(new Operation<PromiseError>() {
             @Override
             public void apply(PromiseError error) throws OperationException {
-                notificationManager.notify("Failed to create resource", error.getMessage(), FAIL, true);
+                notificationManager.notify("Failed to create resource", error.getMessage(), FAIL, FLOAT_MODE);
             }
         });
     }
