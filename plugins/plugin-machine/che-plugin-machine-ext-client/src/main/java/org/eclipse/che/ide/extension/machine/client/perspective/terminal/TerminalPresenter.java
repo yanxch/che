@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Codenvy, S.A. - initial API and implementation
+ * Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
 package org.eclipse.che.ide.extension.machine.client.perspective.terminal;
 
@@ -21,11 +21,13 @@ import com.google.gwt.user.client.ui.IsWidget;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
+import org.eclipse.che.api.machine.gwt.client.DevMachine;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.collections.Jso;
 import org.eclipse.che.ide.extension.machine.client.MachineLocalizationConstant;
@@ -57,7 +59,7 @@ public class TerminalPresenter implements TabPresenter, TerminalView.ActionDeleg
     private final TerminalView                view;
     private final NotificationManager         notificationManager;
     private final MachineLocalizationConstant locale;
-    private final Machine                     machine;
+    private final DevMachine                  machine;
     private final Timer                       retryConnectionTimer;
 
     private Promise<Boolean>      promise;
@@ -71,12 +73,12 @@ public class TerminalPresenter implements TabPresenter, TerminalView.ActionDeleg
     public TerminalPresenter(TerminalView view,
                              NotificationManager notificationManager,
                              MachineLocalizationConstant locale,
-                             @Assisted Machine machine) {
+                             AppContext appContext) {
         this.view = view;
         view.setDelegate(this);
         this.notificationManager = notificationManager;
         this.locale = locale;
-        this.machine = machine;
+        this.machine = appContext.getDevMachine();
 
         isTerminalConnected = false;
 

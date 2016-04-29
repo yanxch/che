@@ -68,7 +68,7 @@ public class MachineTest {
         Map<String, ServerDto> servers = new HashMap<>();
         servers.put(SOME_TEXT, serverDescriptor);
 
-        machine = new Machine(locale, entityFactory, descriptor, appContext);
+        machine = new Machine(locale, entityFactory, descriptor);
 
         final WorkspaceDto ws = mock(WorkspaceDto.class);
         final WorkspaceRuntimeDto wsRuntime = mock(WorkspaceRuntimeDto.class);
@@ -93,7 +93,7 @@ public class MachineTest {
     @Test
     public void defaultActiveTabShouldBeReturned() {
         when(locale.tabInfo()).thenReturn(SOME_TEXT);
-        machine = new Machine(locale, entityFactory, descriptor, appContext);
+        machine = new Machine(locale, entityFactory, descriptor);
 
         String tabName = machine.getActiveTabName();
 
@@ -135,17 +135,6 @@ public class MachineTest {
         machine.getType();
 
         verify(machineConfig).getType();
-    }
-
-    @Test
-    public void emptyUrlShouldBeReturnedWhenTerminalRefIsNull() {
-        when(serverDescriptor.getRef()).thenReturn(null);
-
-        String url = machine.getTerminalUrl();
-
-        verify(serverDescriptor, never()).getUrl();
-
-        assertThat(url, equalTo(""));
     }
 
     @Test

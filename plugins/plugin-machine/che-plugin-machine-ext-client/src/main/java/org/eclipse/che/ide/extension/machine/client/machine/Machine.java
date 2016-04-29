@@ -10,17 +10,13 @@
  *******************************************************************************/
 package org.eclipse.che.ide.extension.machine.client.machine;
 
-import com.google.gwt.user.client.Window;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import org.eclipse.che.api.core.model.machine.MachineStatus;
-import org.eclipse.che.api.core.rest.shared.dto.Link;
-import org.eclipse.che.api.machine.shared.Constants;
 import org.eclipse.che.api.machine.shared.dto.MachineDto;
 import org.eclipse.che.api.machine.shared.dto.MachineSourceDto;
 import org.eclipse.che.api.machine.shared.dto.ServerDto;
-import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.extension.machine.client.MachineLocalizationConstant;
 import org.eclipse.che.ide.extension.machine.client.inject.factories.EntityFactory;
 import org.eclipse.che.ide.extension.machine.client.perspective.widgets.machine.appliance.server.Server;
@@ -37,7 +33,6 @@ import java.util.Objects;
  */
 public class Machine {
 
-    private final AppContext    appContext;
     private final MachineDto    descriptor;
     private final EntityFactory entityFactory;
 
@@ -46,9 +41,7 @@ public class Machine {
     @Inject
     public Machine(MachineLocalizationConstant locale,
                    EntityFactory entityFactory,
-                   @Assisted MachineDto descriptor,
-                   AppContext appContext) {
-        this.appContext = appContext;
+                   @Assisted MachineDto descriptor) {
         this.entityFactory = entityFactory;
         this.descriptor = descriptor;
         this.activeTabName = locale.tabInfo();
@@ -108,16 +101,6 @@ public class Machine {
 
     public String getActiveTabName() {
         return activeTabName;
-    }
-
-    public String getTerminalUrl() {
-
-        for (Link link : appContext.getWorkspace().getRuntime().getDevMachine().getLinks()) {
-            if (link.getRel().equals(Constants.TERMINAL_REFERENCE)) {
-                return link.getHref();
-            }
-        }
-        return "";
     }
 
     public String getWorkspaceId() {
