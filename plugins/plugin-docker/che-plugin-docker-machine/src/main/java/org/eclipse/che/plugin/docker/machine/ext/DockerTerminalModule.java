@@ -11,13 +11,15 @@
 package org.eclipse.che.plugin.docker.machine.ext;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 import org.eclipse.che.api.core.model.machine.ServerConf;
 import org.eclipse.che.api.machine.server.terminal.MachineImplSpecificTerminalLauncher;
 import org.eclipse.che.plugin.docker.machine.DockerMachineImplTerminalLauncher;
-import org.eclipse.che.plugin.docker.machine.ext.provider.TerminalServerConfProvider;
+
+import java.util.Set;
 
 /**
  * Guice module for terminal feature in docker machines
@@ -33,17 +35,20 @@ public class DockerTerminalModule extends AbstractModule {
                           "&& cp /mnt/che/terminal -R ~/che" +
                           "&& ~/che/terminal/che-websocket-terminal -addr :4411 -cmd /bin/bash -static ~/che/terminal/");
 
-        Multibinder<ServerConf> machineServers = Multibinder.newSetBinder(binder(),
-                                                                          ServerConf.class,
-                                                                          Names.named("machine.docker.machine_servers"));
-        machineServers.addBinding().toProvider(TerminalServerConfProvider.class);
+        Multibinder<Set<ServerConf>> machineServersSets =
+                Multibinder.newSetBinder(binder(),
+                                         new TypeLiteral<Set<ServerConf>>() {},
+                                         Names.named("machine.docker.machine_servers_sets"));
+        machineServersSets.addBinding().toProvider(org.eclipse.che.plugin.docker.machine.ext.provider.TerminalServerConfProvider.class);
 
-        Multibinder<String> volumesMultibinder =
-                Multibinder.newSetBinder(binder(), String.class, Names.named("machine.docker.machine_volumes"));
-        volumesMultibinder.addBinding().toProvider(org.eclipse.che.plugin.docker.machine.ext.provider.TerminalVolumeProvider.class);
+        Multibinder<Set<String>> machineVolumesSets =
+                Multibinder.newSetBinder(binder(),
+                                         new TypeLiteral<Set<String>>() {},
+                                         Names.named("machine.docker.machine_volumes_sets"));
+        machineVolumesSets.addBinding().toProvider(org.eclipse.che.plugin.docker.machine.ext.provider.TerminalVolumeProvider.class);
 
         Multibinder<MachineImplSpecificTerminalLauncher> terminalLaunchers = Multibinder.newSetBinder(binder(),
                                                                                                       MachineImplSpecificTerminalLauncher.class);
-        terminalLaunchers.addBinding().to(DockerMachineImplTerminalLauncher.class);
+        terminalLaunchers.addBinding().to(org.eclipse.che.plugin.docker.machine.DockerMachineImplTerminalLauncher.class);
     }
 }

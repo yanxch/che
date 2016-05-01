@@ -16,6 +16,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Add env variable to docker dev-machine with path to root folder of projects
@@ -23,13 +25,13 @@ import javax.inject.Singleton;
  * @author Alexander Garagatyi
  */
 @Singleton
-public class ProjectsRootEnvVariableProvider implements Provider<String> {
+public class ProjectsRootEnvVariableProvider implements Provider<Set<String>> {
     @Inject
     @Named("che.machine.projects.internal.storage")
     private String projectFolderPath;
 
     @Override
-    public String get() {
-        return DockerInstanceRuntimeInfo.PROJECTS_ROOT_VARIABLE + '=' + projectFolderPath;
+    public Set<String> get() {
+        return Collections.singleton(DockerInstanceRuntimeInfo.PROJECTS_ROOT_VARIABLE + '=' + projectFolderPath);
     }
 }

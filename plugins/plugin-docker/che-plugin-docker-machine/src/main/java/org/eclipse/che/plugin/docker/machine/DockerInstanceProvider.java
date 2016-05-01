@@ -10,10 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.docker.machine;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import org.eclipse.che.api.core.NotFoundException;
@@ -30,7 +28,6 @@ import org.eclipse.che.api.machine.server.exception.UnsupportedRecipeException;
 import org.eclipse.che.api.machine.server.spi.Instance;
 import org.eclipse.che.api.machine.server.spi.InstanceKey;
 import org.eclipse.che.api.machine.server.spi.InstanceProvider;
-import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.commons.env.EnvironmentContext;
 import org.eclipse.che.commons.lang.IoUtil;
 import org.eclipse.che.commons.lang.NameGenerator;
@@ -59,14 +56,13 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
 
 /**
@@ -94,6 +90,11 @@ public class DockerInstanceProvider implements InstanceProvider {
     private final String[]                         allMachinesExtraHosts;
     private final String                           projectFolderPath;
 
+    /**
+     * Sets are bound in {@link DockerMachineModule}. Use multibinder of {@code Set<Set<T>>} to add more values.
+     */
+    // todo what will happen if I create multibinder also?
+    // todo check correct usage of all old multibinders
     @Inject
     public DockerInstanceProvider(DockerConnector docker,
                                   DockerConnectorConfiguration dockerConnectorConfiguration,
@@ -103,7 +104,7 @@ public class DockerInstanceProvider implements InstanceProvider {
                                   @Named("machine.docker.machine_servers") Set<ServerConf> allMachinesServers,
                                   @Named("machine.docker.dev_machine.machine_volumes") Set<String> devMachineSystemVolumes,
                                   @Named("machine.docker.machine_volumes") Set<String> allMachinesSystemVolumes,
-                                  @Nullable @Named("machine.docker.machine_extra_hosts") String allMachinesExtraHosts,
+                                  @Named("machine.docker.machine_hosts") Set<String> allMachinesExtraHosts,
                                   WorkspaceFolderPathProvider workspaceFolderPathProvider,
                                   @Named("che.machine.projects.internal.storage") String projectFolderPath,
                                   @Named("machine.docker.pull_image") boolean doForcePullOnBuild,
@@ -121,18 +122,14 @@ public class DockerInstanceProvider implements InstanceProvider {
         this.supportedRecipeTypes = Collections.singleton("dockerfile");
         this.projectFolderPath = projectFolderPath;
 
-        allMachinesSystemVolumes = removeEmptyAndNullValues(allMachinesSystemVolumes);
-        devMachineSystemVolumes = removeEmptyAndNullValues(devMachineSystemVolumes);
         if (SystemInfo.isWindows()) {
             allMachinesSystemVolumes = escapePaths(allMachinesSystemVolumes);
             devMachineSystemVolumes = escapePaths(devMachineSystemVolumes);
         }
         this.commonMachineSystemVolumes = allMachinesSystemVolumes.toArray(new String[allMachinesSystemVolumes.size()]);
-        final Set<String> devMachineVolumes = Sets.newHashSetWithExpectedSize(allMachinesSystemVolumes.size()
-                                                                              + devMachineSystemVolumes.size());
-        devMachineVolumes.addAll(allMachinesSystemVolumes);
-        devMachineVolumes.addAll(devMachineSystemVolumes);
-        this.devMachineSystemVolumes = devMachineVolumes.toArray(new String[devMachineVolumes.size()]);
+        this.devMachineSystemVolumes = Stream.concat(allMachinesSystemVolumes.stream(),
+                                                     devMachineSystemVolumes.stream())
+                                             .toArray(String[]::new);
 
         this.devMachinePortsToExpose = Maps.newHashMapWithExpectedSize(allMachinesServers.size() + devMachineServers.size());
         this.commonMachinePortsToExpose = Maps.newHashMapWithExpectedSize(allMachinesServers.size());
@@ -144,22 +141,14 @@ public class DockerInstanceProvider implements InstanceProvider {
             devMachinePortsToExpose.put(serverConf.getPort(), Collections.emptyMap());
         }
 
-        allMachinesEnvVariables = removeEmptyAndNullValues(allMachinesEnvVariables);
-        devMachineEnvVariables = removeEmptyAndNullValues(devMachineEnvVariables);
         this.commonMachineEnvVariables = allMachinesEnvVariables;
-        final HashSet<String> envVariablesForDevMachine = Sets.newHashSetWithExpectedSize(allMachinesEnvVariables.size() +
-                                                                                          devMachineEnvVariables.size());
-        envVariablesForDevMachine.addAll(allMachinesEnvVariables);
-        envVariablesForDevMachine.addAll(devMachineEnvVariables);
-        this.devMachineEnvVariables = envVariablesForDevMachine;
+        this.devMachineEnvVariables = Stream.concat(allMachinesEnvVariables.stream(), devMachineEnvVariables.stream())
+                                            .collect(Collectors.toSet());
 
         // always add the docker host
         String dockerHost = DockerInstanceRuntimeInfo.CHE_HOST.concat(":").concat(dockerConnectorConfiguration.getDockerHostIp());
-        if (isNullOrEmpty(allMachinesExtraHosts)) {
-            this.allMachinesExtraHosts = new String[] {dockerHost};
-        } else {
-            this.allMachinesExtraHosts = ObjectArrays.concat(allMachinesExtraHosts.split(","), dockerHost);
-        }
+        this.allMachinesExtraHosts = Stream.concat(allMachinesExtraHosts.stream(), Stream.of(dockerHost))
+                                           .toArray(String[]::new);
     }
 
     /**
@@ -466,14 +455,5 @@ public class DockerInstanceProvider implements InstanceProvider {
 
         // removing all not allowed characters + generating random name suffix
         return NameGenerator.generate(containerName.toLowerCase().replaceAll("[^a-z0-9_-]+", ""), 5);
-    }
-
-    /**
-     * Returns set that contains all non empty and non nullable values from specified set
-     */
-    protected Set<String> removeEmptyAndNullValues(Set<String> paths) {
-        return paths.stream()
-                    .filter(path -> !Strings.isNullOrEmpty(path))
-                    .collect(Collectors.toSet());
     }
 }

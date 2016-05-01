@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Set;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -35,30 +37,33 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
  * @author Alexander Garagatyi
  */
 @Singleton
-public class ExtServerVolumeProvider implements Provider<String> {
+public class ExtServerVolumeProvider implements Provider<Set<String>> {
 
     private static final String CONTAINER_TARGET = ":/mnt/che/ws-agent.zip:ro,Z";
     private static final String WS_AGENT         = "ws-agent.zip";
 
     private static final Logger LOG = LoggerFactory.getLogger(ExtServerVolumeProvider.class);
 
-    @Inject
-    @Named("machine.server.ext.archive")
-    private String extServerArchivePath;
+    private Set<String> volume;
 
-    @Override
-    public String get() {
+    @Inject
+    public ExtServerVolumeProvider(@Named("machine.server.ext.archive") String extServerArchivePath) {
         if (SystemInfo.isWindows()) {
             try {
                 final Path cheHome = WindowsHostUtils.ensureCheHomeExist();
                 final Path path = Files.copy(Paths.get(extServerArchivePath), cheHome.resolve(WS_AGENT), REPLACE_EXISTING);
-                return path.toString() + CONTAINER_TARGET;
+                volume = Collections.singleton(path.toString() + CONTAINER_TARGET);
             } catch (IOException e) {
                 LOG.warn(e.getMessage());
                 throw new RuntimeException(e);
             }
         } else {
-            return extServerArchivePath + CONTAINER_TARGET;
+            volume = Collections.singleton(extServerArchivePath + CONTAINER_TARGET);
         }
+    }
+
+    @Override
+    public Set<String> get() {
+        return volume;
     }
 }

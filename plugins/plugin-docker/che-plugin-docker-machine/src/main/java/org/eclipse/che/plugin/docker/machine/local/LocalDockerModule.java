@@ -11,6 +11,7 @@
 package org.eclipse.che.plugin.docker.machine.local;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
@@ -22,10 +23,11 @@ import org.eclipse.che.api.machine.server.spi.InstanceProcess;
 import org.eclipse.che.plugin.docker.machine.DockerInstance;
 import org.eclipse.che.plugin.docker.machine.DockerInstanceProvider;
 import org.eclipse.che.plugin.docker.machine.DockerInstanceRuntimeInfo;
-import org.eclipse.che.plugin.docker.machine.local.provider.CheHostVfsRootDirProvider;
-import org.eclipse.che.plugin.docker.machine.local.provider.ExtraVolumeProvider;
-import org.eclipse.che.plugin.docker.machine.node.DockerNode;
 import org.eclipse.che.plugin.docker.machine.DockerProcess;
+import org.eclipse.che.plugin.docker.machine.local.provider.CheHostVfsRootDirProvider;
+import org.eclipse.che.plugin.docker.machine.node.DockerNode;
+
+import java.util.Set;
 
 import static org.eclipse.che.inject.Matchers.names;
 
@@ -37,6 +39,7 @@ import static org.eclipse.che.inject.Matchers.names;
  * @author gazarenkov
  * @author Alexander Garagatyi
  */
+// Not a DynaModule, install manually
 public class LocalDockerModule extends AbstractModule {
 
     @Override
@@ -60,12 +63,12 @@ public class LocalDockerModule extends AbstractModule {
 
         bind(org.eclipse.che.plugin.docker.client.DockerRegistryChecker.class).asEagerSingleton();
 
-        Multibinder<String> debMachineEnvVars = Multibinder.newSetBinder(binder(),
-                                                                         String.class,
-                                                                         Names.named("machine.docker.dev_machine.machine_env"))
-                                                           .permitDuplicates();
-        debMachineEnvVars.addBinding()
-                         .toProvider(org.eclipse.che.plugin.docker.machine.local.provider.DockerApiHostEnvVariableProvider.class);
+        Multibinder<Set<String>> devMachineEnvVarsSets =
+                Multibinder.newSetBinder(binder(),
+                                         new TypeLiteral<Set<String>>() {},
+                                         Names.named("machine.docker.dev_machine.machine_env_sets"));
+        devMachineEnvVarsSets.addBinding()
+                             .toProvider(org.eclipse.che.plugin.docker.machine.local.provider.DockerApiHostEnvVariableProvider.class);
 
         install(new org.eclipse.che.plugin.docker.machine.DockerMachineModule());
 
@@ -74,9 +77,10 @@ public class LocalDockerModule extends AbstractModule {
         requestInjection(offlineMachineBuildInterceptor);
         bindInterceptor(Matchers.subclassesOf(DockerInstanceProvider.class), names("buildImage"), offlineMachineBuildInterceptor);
 
-        Multibinder<String> devMachineVolumes = Multibinder.newSetBinder(binder(),
-                                                                         String.class,
-                                                                         Names.named("machine.docker.dev_machine.machine_volumes"));
-        devMachineVolumes.addBinding().toProvider(org.eclipse.che.plugin.docker.machine.local.provider.ExtraVolumeProvider.class);
+        Multibinder<Set<String>> devMachineVolumesSets =
+                Multibinder.newSetBinder(binder(),
+                                         new TypeLiteral<Set<String>>() {},
+                                         Names.named("machine.docker.dev_machine.machine_volumes_sets"));
+        devMachineVolumesSets.addBinding().toProvider(org.eclipse.che.plugin.docker.machine.local.provider.ExtraVolumesProvider.class);
     }
 }

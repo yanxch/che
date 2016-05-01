@@ -11,12 +11,16 @@
 package org.eclipse.che.plugin.docker.machine.ext;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 import org.eclipse.che.api.core.model.machine.ServerConf;
 import org.eclipse.che.inject.CheBootstrap;
-import org.eclipse.che.plugin.docker.machine.ext.provider.WsAgentServerConfProvider;
+
+import java.util.Set;
+
+import static java.util.Collections.singleton;
 
 /**
  * Guice module for extension servers feature in docker machines
@@ -28,32 +32,34 @@ import org.eclipse.che.plugin.docker.machine.ext.provider.WsAgentServerConfProvi
 public class DockerExtServerModule extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder<ServerConf> machineServers = Multibinder.newSetBinder(binder(),
-                                                                          ServerConf.class,
-                                                                          Names.named("machine.docker.dev_machine.machine_servers"));
-        machineServers.addBinding().toProvider(WsAgentServerConfProvider.class);
+        Multibinder<Set<ServerConf>> devMachineServersSets =
+                Multibinder.newSetBinder(binder(),
+                                         new TypeLiteral<Set<ServerConf>>() {},
+                                         Names.named("machine.docker.dev_machine.machine_servers_sets"));
+        devMachineServersSets.addBinding().toProvider(org.eclipse.che.plugin.docker.machine.ext.provider.WsAgentServerConfProvider.class);
 
-        Multibinder<String> volumesMultibinder = Multibinder.newSetBinder(binder(),
-                                                                          String.class,
-                                                                          Names.named("machine.docker.dev_machine.machine_volumes"));
-        volumesMultibinder.addBinding()
-                          .toProvider(org.eclipse.che.plugin.docker.machine.ext.provider.ExtServerVolumeProvider.class);
+        Multibinder<Set<String>> devMachineVolumesSets =
+                Multibinder.newSetBinder(binder(),
+                                         new TypeLiteral<Set<String>>() {},
+                                         Names.named("machine.docker.dev_machine.machine_volumes_sets"));
+        devMachineVolumesSets.addBinding()
+                             .toProvider(org.eclipse.che.plugin.docker.machine.ext.provider.ExtServerVolumeProvider.class);
 
-        Multibinder<String> debMachineEnvVars = Multibinder.newSetBinder(binder(),
-                                                                         String.class,
-                                                                         Names.named("machine.docker.dev_machine.machine_env"));
-        debMachineEnvVars.addBinding().toProvider(org.eclipse.che.plugin.docker.machine.ext.provider.ApiEndpointEnvVariableProvider.class);
-        debMachineEnvVars.addBinding().toProvider(org.eclipse.che.plugin.docker.machine.ext.provider.ProjectsRootEnvVariableProvider.class);
-        debMachineEnvVars.addBinding()
-                         .toInstance(CheBootstrap.CHE_LOCAL_CONF_DIR
-                                     + '='
-                                     + org.eclipse.che.plugin.docker.machine.ext.provider.DockerExtConfBindingProvider
-                                             .EXT_CHE_LOCAL_CONF_DIR);
+        Multibinder<Set<String>> devMachineEnvVarsSets =
+                Multibinder.newSetBinder(binder(),
+                                         new TypeLiteral<Set<String>>() {},
+                                         Names.named("machine.docker.dev_machine.machine_env_sets"));
+        devMachineEnvVarsSets.addBinding()
+                             .toProvider(org.eclipse.che.plugin.docker.machine.ext.provider.ApiEndpointEnvVariableProvider.class);
+        devMachineEnvVarsSets.addBinding()
+                             .toProvider(org.eclipse.che.plugin.docker.machine.ext.provider.ProjectsRootEnvVariableProvider.class);
+        devMachineEnvVarsSets.addBinding()
+                             .toInstance(singleton(CheBootstrap.CHE_LOCAL_CONF_DIR
+                                                   + '='
+                                                   +
+                                                   org.eclipse.che.plugin.docker.machine.ext.provider.DockerExtConfBindingProvider.EXT_CHE_LOCAL_CONF_DIR));
 
-        org.eclipse.che.plugin.docker.machine.ext.provider.DockerExtConfBindingProvider extConfBindingProvider =
-                new org.eclipse.che.plugin.docker.machine.ext.provider.DockerExtConfBindingProvider();
-        if (extConfBindingProvider.get() != null) {
-            volumesMultibinder.addBinding().toProvider(extConfBindingProvider);
-        }
+        devMachineVolumesSets.addBinding()
+                             .toProvider(org.eclipse.che.plugin.docker.machine.ext.provider.DockerExtConfBindingProvider.class);
     }
 }

@@ -8,7 +8,6 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-
 package org.eclipse.che.plugin.docker.machine.ext.provider;
 
 import org.eclipse.che.api.core.model.machine.ServerConf;
@@ -19,6 +18,8 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.net.URI;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Provides server conf that describes websocket terminal server
@@ -26,7 +27,7 @@ import java.net.URI;
  * @author Alexander Garagatyi
  */
 @Singleton
-public class TerminalServerConfProvider implements Provider<ServerConf> {
+public class TerminalServerConfProvider implements Provider<Set<ServerConf>> {
     public static final String TERMINAL_SERVER_REFERENCE = "terminal";
 
     @Inject
@@ -34,7 +35,10 @@ public class TerminalServerConfProvider implements Provider<ServerConf> {
     private URI apiEndpoint;
 
     @Override
-    public ServerConf get() {
-        return new ServerConfImpl(TERMINAL_SERVER_REFERENCE, "4411/tcp", apiEndpoint.getScheme(), null);
+    public Set<ServerConf> get() {
+        return Collections.singleton(new ServerConfImpl(TERMINAL_SERVER_REFERENCE,
+                                                        "4411/tcp",
+                                                        apiEndpoint.getScheme(),
+                                                        null));
     }
 }

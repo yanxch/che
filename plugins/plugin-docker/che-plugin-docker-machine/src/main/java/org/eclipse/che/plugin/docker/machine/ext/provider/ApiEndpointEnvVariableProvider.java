@@ -16,6 +16,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Add env variable to docker dev-machine with url of Che API
@@ -23,13 +25,13 @@ import javax.inject.Singleton;
  * @author Alexander Garagatyi
  */
 @Singleton
-public class ApiEndpointEnvVariableProvider implements Provider<String> {
+public class ApiEndpointEnvVariableProvider implements Provider<Set<String>> {
     @Inject
     @Named("machine.docker.che_api.endpoint")
     private String apiEndpoint;
 
     @Override
-    public String get() {
-        return DockerInstanceRuntimeInfo.API_ENDPOINT_URL_VARIABLE + '=' + apiEndpoint;
+    public Set<String> get() {
+        return Collections.singleton(DockerInstanceRuntimeInfo.API_ENDPOINT_URL_VARIABLE + '=' + apiEndpoint);
     }
 }

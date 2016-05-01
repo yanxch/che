@@ -16,6 +16,8 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.net.URI;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Provides DOCKER_HOST env variable for the sake of access to docker API within docker container
@@ -23,20 +25,21 @@ import java.net.URI;
  * @author Alexander Garagatyi
  */
 @Singleton
-public class DockerApiHostEnvVariableProvider implements Provider<String> {
+public class DockerApiHostEnvVariableProvider implements Provider<Set<String>> {
     @Inject
     private DockerConnectorConfiguration dockerConnectorConfiguration;
 
     @Override
-    public String get() {
+    public Set<String> get() {
         final URI dockerDaemonUri = dockerConnectorConfiguration.getDockerDaemonUri();
         if ("http".equals(dockerDaemonUri.getScheme())) {
-            return DockerConnectorConfiguration.DOCKER_HOST_PROPERTY
-                   + "=tcp://"
-                   + dockerConnectorConfiguration.getDockerHost()
-                   + ':'
-                   + dockerDaemonUri.getPort();
+            return Collections.singleton(DockerConnectorConfiguration.DOCKER_HOST_PROPERTY
+                                           + "=tcp://"
+                                           + dockerConnectorConfiguration.getDockerHost()
+                                           + ':'
+                                           + dockerDaemonUri.getPort());
+        } else {
+            return Collections.emptySet();
         }
-        return "";
     }
 }

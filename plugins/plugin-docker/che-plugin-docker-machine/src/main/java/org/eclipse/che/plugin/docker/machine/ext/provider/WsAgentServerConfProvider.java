@@ -19,6 +19,8 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.net.URI;
+import java.util.Collections;
+import java.util.Set;
 
 import static org.eclipse.che.api.machine.shared.Constants.WSAGENT_REFERENCE;
 
@@ -28,18 +30,18 @@ import static org.eclipse.che.api.machine.shared.Constants.WSAGENT_REFERENCE;
  * @author Alexander Garagatyi
  */
 @Singleton
-public class WsAgentServerConfProvider implements Provider<ServerConf> {
+public class WsAgentServerConfProvider implements Provider<Set<ServerConf>> {
 
     @Inject
     @Named("api.endpoint")
     private URI apiEndpoint;
 
     @Override
-    public ServerConf get() {
-        return new ServerConfImpl(WSAGENT_REFERENCE,
-                                  Constants.WS_AGENT_PORT,
-                                  apiEndpoint.getScheme(),
-                                  "/wsagent/ext");
+    public Set<ServerConf> get() {
+        return Collections.singleton(new ServerConfImpl(WSAGENT_REFERENCE,
+                                                        Constants.WS_AGENT_PORT,
+                                                        apiEndpoint.getScheme(),
+                                                        "/wsagent/ext"));
     }
 
 }

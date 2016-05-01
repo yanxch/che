@@ -22,6 +22,8 @@ import javax.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Provides path to the configuration folder on hosted machine for mounting it to docker machine.
@@ -32,7 +34,7 @@ import java.nio.file.Path;
  * @author Sergii Leschenko
  */
 @Singleton
-public class DockerExtConfBindingProvider implements Provider<String> {
+public class DockerExtConfBindingProvider implements Provider<Set<String>> {
 
     public static final String EXT_CHE_LOCAL_CONF_DIR = "/mnt/che/conf";
 
@@ -40,17 +42,19 @@ public class DockerExtConfBindingProvider implements Provider<String> {
     private static final String CONTAINER_TARGET = ":" + EXT_CHE_LOCAL_CONF_DIR + ":ro";
     private static final Logger LOG              = LoggerFactory.getLogger(DockerExtConfBindingProvider.class);
 
-    @Override
-    public String get() {
+    private Set<String> volume;
+
+    public DockerExtConfBindingProvider() {
         String localConfDir = System.getenv(CheBootstrap.CHE_LOCAL_CONF_DIR);
         if (localConfDir == null) {
-            return null;
+            volume = Collections.emptySet();
         }
         File extConfDir = new File(localConfDir, PLUGIN_CONF);
         if (!extConfDir.isDirectory()) {
-            LOG.warn("DockerExtConfBindingProvider",
-                     String.format("%s set to the %s but it must be directory not file", CheBootstrap.CHE_LOCAL_CONF_DIR, localConfDir));
-            return null;
+            LOG.warn("DockerExtConfBindingProvider: {} set to the {} but it must be directory not file",
+                     CheBootstrap.CHE_LOCAL_CONF_DIR,
+                     localConfDir);
+            volume = Collections.emptySet();
         }
 
         if (SystemInfo.isWindows()) {
@@ -58,13 +62,18 @@ public class DockerExtConfBindingProvider implements Provider<String> {
                 final Path cheHome = WindowsHostUtils.ensureCheHomeExist();
                 final Path plgConfDir = cheHome.resolve(PLUGIN_CONF);
                 IoUtil.copy(extConfDir, plgConfDir.toFile(), null, true);
-                return plgConfDir.toString() + CONTAINER_TARGET;
+                volume = Collections.singleton(plgConfDir.toString() + CONTAINER_TARGET);
             } catch (IOException e) {
                 LOG.warn(e.getMessage());
                 throw new RuntimeException(e);
             }
         } else {
-            return extConfDir.getAbsolutePath() + CONTAINER_TARGET;
+            volume = Collections.singleton(extConfDir.getAbsolutePath() + CONTAINER_TARGET);
         }
+    }
+
+    @Override
+    public Set<String> get() {
+        return volume;
     }
 }

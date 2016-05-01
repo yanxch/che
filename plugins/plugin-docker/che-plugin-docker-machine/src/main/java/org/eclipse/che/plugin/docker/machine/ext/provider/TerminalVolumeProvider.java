@@ -23,6 +23,8 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Provides volumes configuration of machine for terminal
@@ -32,30 +34,33 @@ import java.nio.file.Paths;
  * @author Alexander Garagatyi
  */
 @Singleton
-public class TerminalVolumeProvider implements Provider<String> {
+public class TerminalVolumeProvider implements Provider<Set<String>> {
 
     private static final String CONTAINER_TARGET = ":/mnt/che/terminal:ro,Z";
     private static final String TERMINAL         = "terminal";
     private static final Logger LOG              = LoggerFactory.getLogger(TerminalVolumeProvider.class);
 
-    @Inject
-    @Named("machine.server.terminal.path_to_archive.linux_amd64")
-    private String terminalArchivePath;
+    private Set<String> terminalVolume;
 
-    @Override
-    public String get() {
+    @Inject
+    public TerminalVolumeProvider(@Named("machine.server.terminal.path_to_archive.linux_amd64") String terminalArchivePath) {
         if (SystemInfo.isWindows()) {
             try {
                 final Path cheHome = WindowsHostUtils.ensureCheHomeExist();
                 final Path terminalPath = cheHome.resolve(TERMINAL);
                 IoUtil.copy(Paths.get(terminalArchivePath).toFile(), terminalPath.toFile(), null, true);
-                return terminalPath.toString() + CONTAINER_TARGET;
+                terminalVolume = Collections.singleton(terminalPath.toString() + CONTAINER_TARGET);
             } catch (IOException e) {
                 LOG.warn(e.getMessage());
                 throw new RuntimeException(e);
             }
         } else {
-            return terminalArchivePath + CONTAINER_TARGET;
+            terminalVolume = Collections.singleton(terminalArchivePath + CONTAINER_TARGET);
         }
+    }
+
+    @Override
+    public Set<String> get() {
+        return terminalVolume;
     }
 }
