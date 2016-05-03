@@ -17,6 +17,7 @@ import com.google.web.bindery.event.shared.EventBus;
 import org.eclipse.che.api.debugger.gwt.client.DebuggerServiceClient;
 import org.eclipse.che.api.debugger.shared.dto.DebugSession;
 import org.eclipse.che.api.debugger.shared.dto.DebuggerInfo;
+import org.eclipse.che.api.debugger.shared.dto.LinePosition;
 import org.eclipse.che.api.debugger.shared.dto.Location;
 import org.eclipse.che.api.debugger.shared.dto.StackFrameDump;
 import org.eclipse.che.api.debugger.shared.dto.Value;
@@ -42,6 +43,8 @@ import org.eclipse.che.api.promises.client.js.JsPromise;
 import org.eclipse.che.api.promises.client.js.JsPromiseError;
 import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.commons.annotation.Nullable;
+import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.filetypes.FileTypeRegistry;
 import org.eclipse.che.ide.api.project.tree.VirtualFile;
 import org.eclipse.che.ide.debug.Breakpoint;
@@ -51,6 +54,9 @@ import org.eclipse.che.ide.debug.DebuggerManager;
 import org.eclipse.che.ide.debug.DebuggerObservable;
 import org.eclipse.che.ide.debug.DebuggerObserver;
 import org.eclipse.che.ide.dto.DtoFactory;
+import org.eclipse.che.ide.jseditor.client.text.LinearRange;
+import org.eclipse.che.ide.jseditor.client.texteditor.TextEditor;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.plugin.debugger.ide.fqn.FqnResolverFactory;
 import org.eclipse.che.ide.rest.HTTPStatus;
 import org.eclipse.che.ide.util.loging.Log;
@@ -90,6 +96,8 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
     private final DebuggerManager        debuggerManager;
     private final String                 debuggerType;
     private final String                 eventChannel;
+    private final EditorAgent            editorAgent;
+    private final AppContext             appContext;
 
     private DebugSession                       debugSession;
     private Location                           currentLocation;
@@ -106,7 +114,9 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
                             ActiveFileHandler activeFileHandler,
                             DebuggerManager debuggerManager,
                             FileTypeRegistry fileTypeRegistry,
-                            String type) {
+                            String type,
+                            EditorAgent editorAgent,
+                            AppContext appContext) {
         this.service = service;
         this.dtoFactory = dtoFactory;
         this.localStorageProvider = localStorageProvider;
@@ -118,6 +128,8 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
         this.fileTypeRegistry = fileTypeRegistry;
         this.debuggerType = type;
         this.eventChannel = debuggerType + ":events:";
+        this.editorAgent = editorAgent;
+        this.appContext = appContext;
 
         restoreDebuggerState();
         addHandlers(messageBusProvider);
@@ -304,11 +316,22 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
             Location location = dtoFactory.createDto(Location.class);
             location.setLineNumber(lineNumber + 1);
 
-            String fqn = pathToFqn(file);
+            TextEditor textEditor = (TextEditor)editorAgent.getOpenedEditor(Path.valueOf(file.getPath()));
+
+            LinearRange range = textEditor.getDocument().getLinearRangeForLine(lineNumber);
+            int startCharacterCoordinate = range.getStartOffset();
+            int endCharacterCoordinate = startCharacterCoordinate + range.getLength();
+            Log.info(getClass(), startCharacterCoordinate + " " + endCharacterCoordinate);
+
+            LinePosition linePosition = dtoFactory.createDto(org.eclipse.che.api.debugger.shared.dto.LinePosition.class);
+            location.setLinePosition(linePosition);
+            location.getLinePosition().withStartCharOffset(startCharacterCoordinate).withEndCharOffset(endCharacterCoordinate);
+
+            String fqn = pathToFqn(file);//todo get fqn from file
             if (fqn == null) {
                 return;
             }
-            location.setTarget(fqn);
+            location.withTarget(fqn).withProjectName(appContext.getCurrentProject().getRootProject().getPath());
 
             org.eclipse.che.api.debugger.shared.dto.Breakpoint breakpoint =
                     dtoFactory.createDto(org.eclipse.che.api.debugger.shared.dto.Breakpoint.class);

@@ -12,32 +12,24 @@ package org.eclipse.che.api.debugger.shared.dto;
 
 import org.eclipse.che.dto.shared.DTO;
 
-/** @author andrew00x */
+/**
+ * //
+ *
+ * @author Alexander Andrienko
+ */
+//todo need check do we need this dto
 @DTO
-public interface Location {
-    String getTarget();
+public interface LinePosition {
+    int getStartCharOffset();
 
-    void setTarget(String target);
+    void setStartCharOffset(int startOffset);
 
-    Location withTarget(String target);
+    LinePosition withStartCharOffset(int startOffset);
 
-    int getLineNumber();
+    int getEndCharOffset();
 
-    void setLineNumber(int lineNumber);
+    void setEndCharOffset(int endOffset);
 
-    Location withLineNumber(int lineNumber);
-
-    //todo need talk about it with Anatoliy
-    String getProjectName();
-
-    void setProjectName(String projectName);
-
-    Location withProjectName(String projectName);
-
-
-    LinePosition getLinePosition();
-
-    void setLinePosition(LinePosition linePosition);
-
-    Location withLinePosition(LinePosition linePosition);
+    LinePosition withEndCharOffset(int endOffset);
 }
+

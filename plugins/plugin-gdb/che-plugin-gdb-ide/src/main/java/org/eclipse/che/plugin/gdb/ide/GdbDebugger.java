@@ -17,6 +17,7 @@ import org.eclipse.che.api.debugger.gwt.client.DebuggerServiceClient;
 import org.eclipse.che.api.debugger.shared.dto.Location;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.app.CurrentProject;
+import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.filetypes.FileTypeRegistry;
 import org.eclipse.che.ide.api.project.tree.VirtualFile;
 import org.eclipse.che.ide.debug.DebuggerDescriptor;
@@ -56,7 +57,8 @@ public class GdbDebugger extends AbstractDebugger {
                        GdbDebuggerFileHandler activeFileHandler,
                        DebuggerManager debuggerManager,
                        FileTypeRegistry fileTypeRegistry,
-                       AppContext appContext) {
+                       AppContext appContext,
+                       EditorAgent editorAgent) {
 
         super(service,
               dtoFactory,
@@ -67,7 +69,9 @@ public class GdbDebugger extends AbstractDebugger {
               activeFileHandler,
               debuggerManager,
               fileTypeRegistry,
-              ID);
+              ID,
+              editorAgent,
+              appContext);//todo appContext this problem
         this.appContext = appContext;
     }
 

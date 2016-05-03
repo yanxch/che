@@ -104,7 +104,7 @@ public class JavaSourceFolderUtil {
         String projectPath = removeEndingPathSeparator(projectConfig.getPath());
         Map<String, List<String>> attributes = projectConfig.getAttributes();
 
-        List<String> sourceFolders = attributes.get(projectBuilder + ".source.folder");
+        List<String> sourceFolders = attributes.get("java.source.folder");
         if (sourceFolders != null) {
             for (String sourceFolder : sourceFolders) {
                 allSourceFolders.add(projectPath + addStartingPathSeparator(sourceFolder) + '/');

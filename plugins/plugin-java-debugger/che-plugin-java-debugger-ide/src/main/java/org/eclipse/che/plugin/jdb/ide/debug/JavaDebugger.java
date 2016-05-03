@@ -17,6 +17,7 @@ import org.eclipse.che.api.debugger.gwt.client.DebuggerServiceClient;
 import org.eclipse.che.api.debugger.shared.dto.Location;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.app.CurrentProject;
+import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.filetypes.FileTypeRegistry;
 import org.eclipse.che.ide.api.project.tree.VirtualFile;
 import org.eclipse.che.ide.debug.DebuggerDescriptor;
@@ -60,7 +61,8 @@ public class JavaDebugger extends AbstractDebugger {
                         JavaDebuggerFileHandler javaDebuggerFileHandler,
                         DebuggerManager debuggerManager,
                         FileTypeRegistry fileTypeRegistry,
-                        AppContext appContext) {
+                        AppContext appContext,
+                        EditorAgent editorAgent) {
         super(service,
               dtoFactory,
               localStorageProvider,
@@ -70,7 +72,9 @@ public class JavaDebugger extends AbstractDebugger {
               javaDebuggerFileHandler,
               debuggerManager,
               fileTypeRegistry,
-              ID);
+              ID,
+              editorAgent,
+              appContext);
         this.appContext = appContext;
     }
 
@@ -82,7 +86,8 @@ public class JavaDebugger extends AbstractDebugger {
             return Collections.emptyList();
         }
 
-        String pathSuffix = location.getTarget().replace(".", "/") + ".java";
+        String fqn = prepareFQN(location.getTarget());
+        String pathSuffix = fqn.replace(".", "/") + ".java";
 
         List<String> sourceFolders = JavaSourceFolderUtil.getSourceFolders(currentProject);
         List<String> filePaths = new ArrayList<>(sourceFolders.size() + 1);
@@ -93,6 +98,19 @@ public class JavaDebugger extends AbstractDebugger {
         filePaths.add(location.getTarget());
 
         return filePaths;
+    }
+
+    private String prepareFQN(String fqn) {
+        //handle fqn in case nested classes
+        //handle fqn in case nested classes
+        if (fqn.contains("$")) {
+            return fqn.substring(0, fqn.indexOf("$"));
+        }
+        //handle fqn in case lambda expression
+        if (fqn.contains("$$")) {
+            return fqn.substring(0, fqn.indexOf("$$"));
+        }
+        return fqn;
     }
 
     @Override

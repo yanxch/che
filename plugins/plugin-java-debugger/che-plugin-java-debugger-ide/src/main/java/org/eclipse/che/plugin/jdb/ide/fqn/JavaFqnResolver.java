@@ -75,7 +75,7 @@ public class JavaFqnResolver implements FqnResolver {
         String projectBuilder = getProjectBuilder(projectNode);
         Map<String, List<String>> attributes = projectNode.getProjectConfig().getAttributes();
 
-        sourceFolders.addAll(attributes.containsKey(projectBuilder + ".source.folder") ? attributes.get(projectBuilder + ".source.folder")
+        sourceFolders.addAll(attributes.containsKey("java.source.folder") ? attributes.get("java.source.folder")
                                                                                        : Collections.<String>emptyList());
 
         sourceFolders.addAll(attributes.containsKey(projectBuilder + ".test.source.folder") ? attributes.get(projectBuilder + ".test.source.folder")

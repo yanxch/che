@@ -45,12 +45,15 @@ import org.eclipse.che.api.debugger.shared.dto.action.StepIntoAction;
 import org.eclipse.che.api.debugger.shared.dto.action.StepOutAction;
 import org.eclipse.che.api.debugger.shared.dto.action.StepOverAction;
 import org.eclipse.che.api.debugger.shared.dto.events.BreakpointActivatedEvent;
+import org.eclipse.che.jdt.JavaDebuggerUtil;
 import org.eclipse.che.plugin.jdb.server.exceptions.DebuggerAbsentInformationException;
 import org.eclipse.che.plugin.jdb.server.expression.Evaluator;
 import org.eclipse.che.plugin.jdb.server.expression.ExpressionException;
 import org.eclipse.che.plugin.jdb.server.expression.ExpressionParser;
+import org.eclipse.jdt.core.JavaModelException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.eclipse.jdt.core.IType;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -192,7 +195,7 @@ public class JavaDebugger implements EventsHandler, Debugger {
 
     @Override
     public void addBreakpoint(Breakpoint breakpoint) throws DebuggerException {
-        final String className = breakpoint.getLocation().getTarget();
+        final String className = findFQN(breakpoint);
         final int lineNumber = breakpoint.getLocation().getLineNumber();
         List<ReferenceType> classes = vm.classesByName(className);
         // it may mean that class doesn't loaded by a target JVM yet
@@ -241,6 +244,22 @@ public class JavaDebugger implements EventsHandler, Debugger {
             throw new DebuggerException(e.getMessage(), e);
         }
         LOG.debug("Add breakpoint: {}", location);
+    }
+
+    private String findFQN(Breakpoint breakpoint) throws DebuggerException {
+        final String parentFqn = breakpoint.getLocation().getTarget();
+        final String projectPath = breakpoint.getLocation().getProjectName();
+        int startCharOffset = breakpoint.getLocation().getLinePosition().getStartCharOffset();
+        int endCharOffset = breakpoint.getLocation().getLinePosition().getEndCharOffset();
+        try {
+            IType iType = JavaDebuggerUtil.findTypeByPosition(projectPath, parentFqn, startCharOffset, endCharOffset);
+            if (iType != null) {
+                return iType.getFullyQualifiedName();//what about lyambda ? This will be work for them?
+            }
+        } catch (JavaModelException e) {
+            throw new DebuggerException(e.getMessage(), e);
+        }
+        return null;
     }
 
     private void deferBreakpoint(Breakpoint breakpoint) throws DebuggerException {
