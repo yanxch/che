@@ -20,19 +20,23 @@ import elemental.html.SpanElement;
 import com.google.inject.Inject;
 
 import org.eclipse.che.api.machine.shared.dto.MachineDto;
+import org.eclipse.che.api.machine.shared.dto.MachineRuntimeInfoDto;
 import org.eclipse.che.ide.api.parts.PartStackUIResources;
 import org.eclipse.che.ide.extension.machine.client.MachineLocalizationConstant;
 import org.eclipse.che.ide.extension.machine.client.MachineResources;
 import org.eclipse.che.ide.ui.Tooltip;
-
-import static org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter.SSH_PORT;
-import static org.eclipse.che.ide.ui.menu.PositionController.HorizontalAlign.MIDDLE;
-import static org.eclipse.che.ide.ui.menu.PositionController.VerticalAlign.BOTTOM;
 import org.eclipse.che.ide.ui.tree.NodeRenderer;
 import org.eclipse.che.ide.ui.tree.TreeNodeElement;
 import org.eclipse.che.ide.util.dom.Elements;
 import org.vectomatic.dom.svg.ui.SVGImage;
 import org.vectomatic.dom.svg.ui.SVGResource;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter.SSH_PORT;
+import static org.eclipse.che.ide.ui.menu.PositionController.HorizontalAlign.MIDDLE;
+import static org.eclipse.che.ide.ui.menu.PositionController.VerticalAlign.BOTTOM;
 
 /**
  * Renderer for {@ProcessTreeNode} UI presentation.
@@ -41,7 +45,12 @@ import org.vectomatic.dom.svg.ui.SVGResource;
  * @author Roman Nikitenko
  */
 public class ProcessTreeRenderer implements NodeRenderer<ProcessTreeNode> {
-
+    public static final Map<String, String> MACHINE_LABELS_BY_CATEGORY_MAP = new HashMap<String, String>() {
+        {
+            put("docker", "dkr");
+            put("development", "dev");
+        }
+    };
     private final MachineResources            resources;
     private final MachineLocalizationConstant locale;
     private final PartStackUIResources        partStackUIResources;
@@ -83,13 +92,24 @@ public class ProcessTreeRenderer implements NodeRenderer<ProcessTreeNode> {
         return treeNode;
     }
 
+    private DivElement createMachineLabel(String machineCategory) {
+        final DivElement machineLabel = Elements.createDivElement();
+
+        if (MACHINE_LABELS_BY_CATEGORY_MAP.containsKey(machineCategory)) {
+            machineLabel.setTextContent(MACHINE_LABELS_BY_CATEGORY_MAP.get(machineCategory));
+            machineLabel.setClassName(resources.getCss().dockerMachineLabel());
+            return machineLabel;
+        }
+
+        machineLabel.setTextContent(machineCategory.substring(0, 3));
+        machineLabel.setClassName(resources.getCss().differentMachineLabel());
+        return machineLabel;
+    }
+
     private SpanElement createMachineElement(final ProcessTreeNode node, final MachineDto machine) {
         SpanElement root = Elements.createSpanElement();
-        if (machine.getConfig().isDev()) {
-            SpanElement devLabel = Elements.createSpanElement(resources.getCss().devMachineLabel());
-            devLabel.setTextContent(locale.viewProcessesDevTitle());
-            root.appendChild(devLabel);
-        }
+        final String machineCategory = machine.getConfig().isDev() ? locale.devMachineCategory() : machine.getConfig().getType();
+        root.appendChild(createMachineLabel(machineCategory));
 
         Element statusElement = Elements.createSpanElement(resources.getCss().machineStatus());
         root.appendChild(statusElement);
@@ -101,21 +121,23 @@ public class ProcessTreeRenderer implements NodeRenderer<ProcessTreeNode> {
             statusElement.appendChild(Elements.createDivElement(resources.getCss().machineStatusPausedRight()));
         }
 
-        Tooltip.create((elemental.dom.Element) statusElement,
-                BOTTOM,
-                MIDDLE,
-                locale.viewMachineRunningTooltip());
+        Tooltip.create(statusElement,
+                       BOTTOM,
+                       MIDDLE,
+                       locale.viewMachineRunningTooltip());
 
         SpanElement newTerminalButton = Elements.createSpanElement(resources.getCss().processButton());
         newTerminalButton.appendChild((Node)new SVGImage(resources.addTerminalIcon()).getElement());
         root.appendChild(newTerminalButton);
 
-        Tooltip.create((elemental.dom.Element)newTerminalButton,
+        Tooltip.create(newTerminalButton,
                        BOTTOM,
                        MIDDLE,
                        locale.viewNewTerminalTooltip());
 
-        if (machine.getRuntime().getServers().containsKey(SSH_PORT + "/tcp")) {
+        MachineRuntimeInfoDto runtime = machine.getRuntime();
+
+        if (runtime != null && runtime.getServers().containsKey(SSH_PORT + "/tcp")) {
             SpanElement sshButton = Elements.createSpanElement(resources.getCss().sshButton());
             sshButton.setTextContent("SSH");
             root.appendChild(sshButton);
@@ -129,10 +151,10 @@ public class ProcessTreeRenderer implements NodeRenderer<ProcessTreeNode> {
                 }
             }, true);
 
-            Tooltip.create((elemental.dom.Element) sshButton,
-                    BOTTOM,
-                    MIDDLE,
-                    locale.connectViaSSH());
+            Tooltip.create(sshButton,
+                           BOTTOM,
+                           MIDDLE,
+                           locale.connectViaSSH());
         }
 
         newTerminalButton.addEventListener(Event.CLICK, new EventListener() {
@@ -167,7 +189,7 @@ public class ProcessTreeRenderer implements NodeRenderer<ProcessTreeNode> {
         newTerminalButton.addEventListener(Event.DBLCLICK, blockMouseListener, true);
 
 
-        Element nameElement = Elements.createSpanElement(resources.getCss().machineLabel());
+        Element nameElement = Elements.createSpanElement(resources.getCss().nameLabel());
         nameElement.setTextContent(machine.getConfig().getName());
         root.appendChild(nameElement);
 
@@ -217,7 +239,7 @@ public class ProcessTreeRenderer implements NodeRenderer<ProcessTreeNode> {
             DivElement divElement = Elements.createDivElement(resources.getCss().processIconPanel());
             iconElement.appendChild(divElement);
 
-            divElement.appendChild((Node) new SVGImage(icon).getElement());
+            divElement.appendChild((Node)new SVGImage(icon).getElement());
         }
 
         root.appendChild(createCloseElement(node));
@@ -237,9 +259,9 @@ public class ProcessTreeRenderer implements NodeRenderer<ProcessTreeNode> {
         SpanElement closeButton = Elements.createSpanElement(resources.getCss().processesPanelCloseButtonForProcess());
 
         SVGImage icon = new SVGImage(partStackUIResources.closeIcon());
-        closeButton.appendChild((Node) icon.getElement());
+        closeButton.appendChild((Node)icon.getElement());
 
-        Tooltip.create((elemental.dom.Element)closeButton,
+        Tooltip.create(closeButton,
                        BOTTOM,
                        MIDDLE,
                        locale.viewCloseProcessOutputTooltip());
@@ -259,10 +281,10 @@ public class ProcessTreeRenderer implements NodeRenderer<ProcessTreeNode> {
     private SpanElement createStopProcessElement(final ProcessTreeNode node) {
         SpanElement stopProcessButton = Elements.createSpanElement(resources.getCss().processesPanelStopButtonForProcess());
 
-        Tooltip.create((elemental.dom.Element) stopProcessButton,
-                BOTTOM,
-                MIDDLE,
-                locale.viewStropProcessTooltip());
+        Tooltip.create(stopProcessButton,
+                       BOTTOM,
+                       MIDDLE,
+                       locale.viewStropProcessTooltip());
 
         stopProcessButton.addEventListener(Event.CLICK, new EventListener() {
             @Override

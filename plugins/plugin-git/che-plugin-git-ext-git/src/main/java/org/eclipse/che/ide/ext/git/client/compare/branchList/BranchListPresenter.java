@@ -10,29 +10,27 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.git.client.compare.branchList;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.eclipse.che.api.git.gwt.client.GitServiceClient;
 import org.eclipse.che.api.git.shared.Branch;
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.app.CurrentProject;
 import org.eclipse.che.ide.api.notification.NotificationManager;
-import org.eclipse.che.ide.api.project.node.HasStorablePath;
-import org.eclipse.che.ide.api.selection.Selection;
+import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.compare.ComparePresenter;
+import org.eclipse.che.ide.ext.git.client.compare.FileStatus.Status;
 import org.eclipse.che.ide.ext.git.client.compare.changedList.ChangedListPresenter;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsole;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsoleFactory;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
-import org.eclipse.che.ide.project.node.ResourceBasedNode;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
-import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
-import org.eclipse.che.ide.rest.StringUnmarshaller;
-import org.eclipse.che.ide.ui.dialogs.ConfirmCallback;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 
 import javax.validation.constraints.NotNull;
@@ -43,7 +41,9 @@ import java.util.Map;
 
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_ALL;
 import static org.eclipse.che.api.git.shared.DiffRequest.DiffType.NAME_STATUS;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.NOT_EMERGE_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
+import static org.eclipse.che.ide.ext.git.client.compare.FileStatus.defineStatus;
 
 /**
  * Presenter for displaying list of branches for comparing selected with local changes.
@@ -56,20 +56,18 @@ public class BranchListPresenter implements BranchListView.ActionDelegate {
 
     private final ComparePresenter         comparePresenter;
     private final ChangedListPresenter     changedListPresenter;
-    private final DtoUnmarshallerFactory   dtoUnmarshallerFactory;
     private final GitOutputConsoleFactory  gitOutputConsoleFactory;
     private final ConsolesPanelPresenter   consolesPanelPresenter;
+    private final Workspace                workspace;
     private final BranchListView           view;
     private final DialogFactory            dialogFactory;
-    private final ProjectExplorerPresenter projectExplorer;
-    private final GitServiceClient         gitService;
+    private final GitServiceClient         service;
     private final GitLocalizationConstant  locale;
     private final AppContext               appContext;
     private final NotificationManager      notificationManager;
-    private final String                   workspaceId;
 
-    private CurrentProject project;
-    private Branch         selectedBranch;
+    private Branch  selectedBranch;
+    private Project project;
 
     @Inject
     public BranchListPresenter(BranchListView view,
@@ -79,31 +77,29 @@ public class BranchListPresenter implements BranchListView.ActionDelegate {
                                GitLocalizationConstant locale,
                                AppContext appContext,
                                NotificationManager notificationManager,
-                               DtoUnmarshallerFactory dtoUnmarshallerFactory,
                                DialogFactory dialogFactory,
-                               ProjectExplorerPresenter projectExplorer,
                                GitOutputConsoleFactory gitOutputConsoleFactory,
-                               ConsolesPanelPresenter consolesPanelPresenter) {
+                               ConsolesPanelPresenter consolesPanelPresenter,
+                               Workspace workspace) {
         this.view = view;
         this.comparePresenter = comparePresenter;
         this.changedListPresenter = changedListPresenter;
         this.dialogFactory = dialogFactory;
-        this.projectExplorer = projectExplorer;
-        this.gitService = service;
+        this.service = service;
         this.locale = locale;
         this.appContext = appContext;
         this.notificationManager = notificationManager;
-        this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
         this.gitOutputConsoleFactory = gitOutputConsoleFactory;
         this.consolesPanelPresenter = consolesPanelPresenter;
-        this.workspaceId = appContext.getWorkspaceId();
+        this.workspace = workspace;
 
         this.view.setDelegate(this);
     }
 
     /** Open dialog and shows branches to compare. */
-    public void showBranches() {
-        project = appContext.getCurrentProject();
+    public void showBranches(Project project) {
+        this.project = project;
+
         getBranches();
     }
 
@@ -116,53 +112,50 @@ public class BranchListPresenter implements BranchListView.ActionDelegate {
     /** {@inheritDoc} */
     @Override
     public void onCompareClicked() {
-        ProjectConfigDto project = appContext.getCurrentProject().getRootProject();
-        String pattern;
-        String path;
+        service.diff(appContext.getDevMachine(),
+                     project.getLocation(),
+                     Collections.<String>emptyList(),
+                     NAME_STATUS,
+                     false,
+                     0,
+                     selectedBranch.getName(),
+                     false)
+               .then(new Operation<String>() {
+                   @Override
+                   public void apply(String diff) throws OperationException {
+                       if (diff.isEmpty()) {
+                           dialogFactory.createMessageDialog(locale.compareMessageIdenticalContentTitle(),
+                                                             locale.compareMessageIdenticalContentText(), null).show();
+                       } else {
+                           final String[] changedFiles = diff.split("\n");
+                           if (changedFiles.length == 1) {
+                               project.getFile(changedFiles[0].substring(2)).then(new Operation<Optional<File>>() {
+                                   @Override
+                                   public void apply(Optional<File> file) throws OperationException {
+                                       if (file.isPresent()) {
+                                           comparePresenter.show(file.get(),
+                                                                 defineStatus(changedFiles[0].substring(0, 1)),
+                                                                 selectedBranch.getName());
+                                       }
+                                   }
+                               });
+                           } else {
+                               Map<String, Status> items = new HashMap<>();
+                               for (String item : changedFiles) {
+                                   items.put(item.substring(2, item.length()), defineStatus(item.substring(0, 1)));
+                               }
+                               changedListPresenter.show(items, selectedBranch.getName(), project);
+                           }
+                       }
+                   }
+               })
+               .catchError(new Operation<PromiseError>() {
+                   @Override
+                   public void apply(PromiseError error) throws OperationException {
+                       notificationManager.notify(locale.diffFailed(), FAIL, NOT_EMERGE_MODE);
+                   }
+               });
 
-        Selection<ResourceBasedNode<?>> selection = getExplorerSelection();
-
-        if (selection == null || selection.getHeadElement() == null) {
-            path = project.getPath();
-        } else {
-            path = ((HasStorablePath)selection.getHeadElement()).getStorablePath();
-        }
-
-        pattern = path.replaceFirst(project.getPath(), "");
-        pattern = (pattern.startsWith("/")) ? pattern.replaceFirst("/", "") : pattern;
-
-        gitService.diff(workspaceId, project, Collections.singletonList(pattern), NAME_STATUS, false, 0, selectedBranch.getName(), false,
-                        new AsyncRequestCallback<String>(new StringUnmarshaller()) {
-                            @Override
-                            protected void onSuccess(String result) {
-                                if (result.isEmpty()) {
-                                    dialogFactory.createMessageDialog(locale.compareMessageIdenticalContentTitle(),
-                                                                      locale.compareMessageIdenticalContentText(), new ConfirmCallback() {
-                                                @Override
-                                                public void accepted() {
-                                                    //Do nothing
-                                                }
-                                            }).show();
-                                } else {
-                                    String[] changedFiles = result.split("\n");
-                                    if (changedFiles.length == 1) {
-                                        comparePresenter.show(changedFiles[0].substring(2), changedFiles[0].substring(0, 1),
-                                                              selectedBranch.getName());
-                                    } else {
-                                        Map<String, String> items = new HashMap<>();
-                                        for (String item : changedFiles) {
-                                            items.put(item.substring(2, item.length()), item.substring(0, 1));
-                                        }
-                                        changedListPresenter.show(items, selectedBranch.getName());
-                                    }
-                                }
-                            }
-
-                            @Override
-                            protected void onFailure(Throwable exception) {
-                                notificationManager.notify(locale.diffFailed(), FAIL, false);
-                            }
-                        });
         view.close();
     }
 
@@ -183,33 +176,21 @@ public class BranchListPresenter implements BranchListView.ActionDelegate {
 
     /** Get list of branches from selected project. */
     private void getBranches() {
-        gitService.branchList(workspaceId, project.getRootProject(), LIST_ALL,
-                              new AsyncRequestCallback<List<Branch>>(dtoUnmarshallerFactory.newListUnmarshaller(Branch.class)) {
-                                  @Override
-                                  protected void onSuccess(List<Branch> result) {
-                                      view.setBranches(result);
-                                      view.showDialog();
-                                  }
-
-                                  @Override
-                                  protected void onFailure(Throwable exception) {
-                                      final String errorMessage =
-                                              (exception.getMessage() != null) ? exception.getMessage() : locale.branchesListFailed();
-                                      GitOutputConsole console = gitOutputConsoleFactory.create(BRANCH_LIST_COMMAND_NAME);
-                                      console.printError(errorMessage);
-                                      consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-                                      notificationManager.notify(locale.branchesListFailed(), FAIL, false);
-                                  }
-                              }
-                             );
-    }
-
-    private Selection<ResourceBasedNode<?>> getExplorerSelection() {
-        final Selection<ResourceBasedNode<?>> selection = (Selection<ResourceBasedNode<?>>)projectExplorer.getSelection();
-        if (selection == null || selection.isEmpty() || selection.getHeadElement() instanceof HasStorablePath) {
-            return selection;
-        } else {
-            return null;
-        }
+        service.branchList(appContext.getDevMachine(), project.getLocation(), LIST_ALL).then(new Operation<List<Branch>>() {
+            @Override
+            public void apply(List<Branch> branches) throws OperationException {
+                view.setBranches(branches);
+                view.showDialog();
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError error) throws OperationException {
+                final String errorMessage = (error.getMessage() != null) ? error.getMessage() : locale.branchesListFailed();
+                GitOutputConsole console = gitOutputConsoleFactory.create(BRANCH_LIST_COMMAND_NAME);
+                console.printError(errorMessage);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
+                notificationManager.notify(locale.branchesListFailed(), FAIL, NOT_EMERGE_MODE);
+            }
+        });
     }
 }

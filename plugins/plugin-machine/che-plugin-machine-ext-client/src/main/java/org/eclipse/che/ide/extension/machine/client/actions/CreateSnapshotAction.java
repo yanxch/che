@@ -14,7 +14,7 @@ import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.actions.WorkspaceSnapshotCreator;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
-import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.workspace.Workspace;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -25,19 +25,20 @@ import static org.eclipse.che.ide.extension.machine.client.perspective.Operation
 
 /**
  * @author Yevhenii Voevodin
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class CreateSnapshotAction extends AbstractPerspectiveAction {
 
 
-    private final AppContext               appContext;
     private final WorkspaceSnapshotCreator snapshotCreator;
+    private final Workspace                workspace;
 
     @Inject
-    public CreateSnapshotAction(CoreLocalizationConstant locale, AppContext appContext, WorkspaceSnapshotCreator snapshotCreator) {
+    public CreateSnapshotAction(CoreLocalizationConstant locale, WorkspaceSnapshotCreator snapshotCreator, Workspace workspace) {
         super(singletonList(OPERATIONS_PERSPECTIVE_ID), locale.createSnapshotTitle(), locale.createSnapshotDescription(), null, null);
-        this.appContext = appContext;
         this.snapshotCreator = snapshotCreator;
+        this.workspace = workspace;
     }
 
     @Override
@@ -47,6 +48,6 @@ public class CreateSnapshotAction extends AbstractPerspectiveAction {
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        snapshotCreator.createSnapshot(appContext.getWorkspace().getId());
+        snapshotCreator.createSnapshot(workspace.getId());
     }
 }

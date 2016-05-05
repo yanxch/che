@@ -17,14 +17,14 @@ import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.machine.Command;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.model.workspace.Environment;
-import org.eclipse.che.api.core.model.workspace.UsersWorkspace;
+import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
+import org.eclipse.che.api.core.model.workspace.WorkspaceRuntime;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.api.core.rest.HttpJsonRequestFactory;
-import org.eclipse.che.api.core.rest.shared.dto.Link;
-import org.eclipse.che.api.workspace.server.DtoConverter;
 import org.eclipse.che.api.workspace.server.WorkspaceService;
-import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
+import org.eclipse.che.api.workspace.server.model.impl.WorkspaceRuntimeImpl;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -33,11 +33,11 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import static org.eclipse.che.dto.server.DtoFactory.newDto;
+import static org.eclipse.che.api.project.server.DtoConverter.asDto;
 
 /**
  * For caching and proxy-ing Workspace Configuration.
@@ -55,6 +55,7 @@ public class WorkspaceHolder {
 
     @Inject
     public WorkspaceHolder(@Named("api.endpoint") String apiEndpoint,
+                           @Named("env.CHE_WORKSPACE_ID") String workspaceId,
                            HttpJsonRequestFactory httpJsonRequestFactory) throws ServerException {
         this.apiEndpoint = apiEndpoint;
         this.httpJsonRequestFactory = httpJsonRequestFactory;
@@ -63,8 +64,6 @@ public class WorkspaceHolder {
         // for Docker container name of this property is defined in
         // org.eclipse.che.plugin.docker.machine.DockerInstanceMetadata.CHE_WORKSPACE_ID
         // it resides on Workspace Master side so not accessible from agent code
-        final String workspaceId = System.getenv("CHE_WORKSPACE_ID");
-
         if (workspaceId == null) {
             throw new ServerException("Workspace ID is not defined for Workspace Agent");
         }
@@ -73,47 +72,104 @@ public class WorkspaceHolder {
     }
 
     @VisibleForTesting
-    protected WorkspaceHolder(UsersWorkspaceDto workspace) throws ServerException {
+    protected WorkspaceHolder(WorkspaceDto workspace) throws ServerException {
         this.workspace = new UsersWorkspaceImpl(workspace);
     }
 
     /**
      * @return workspace object
      */
-    public UsersWorkspace getWorkspace() {
+    public Workspace getWorkspace() {
         return this.workspace;
     }
 
     /**
-     * updates projects on ws master side
+     * Add project on WS-master side.
      *
-     * @param projects
+     * @param project
+     *         project to add
      * @throws ServerException
      */
-    public void updateProjects(Collection<RegisteredProject> projects) throws ServerException {
-        List<RegisteredProject> persistedProjects = projects.stream()
-                                                            .filter(project -> !project.isDetected())
-                                                            .collect(Collectors.toList());
+    void addProject(RegisteredProject project) throws ServerException {
+        if (project.isDetected()) {
+            return;
+        }
 
-        workspace.setProjects(persistedProjects);
+        workspace.addProject(project);
 
         final String href = UriBuilder.fromUri(apiEndpoint)
-                                      .path(WorkspaceService.class).path(WorkspaceService.class, "update")
+                                      .path(WorkspaceService.class)
+                                      .path(WorkspaceService.class, "addProject")
                                       .build(workspace.getId()).toString();
-        final Link link = newDto(Link.class).withMethod("PUT").withHref(href);
-
         try {
-            httpJsonRequestFactory.fromLink(link)
-                                  .setBody(DtoConverter.asDto(workspace.getConfig()))
-                                  .request();
+            httpJsonRequestFactory.fromUrl(href).usePostMethod().setBody(asDto(project)).request();
         } catch (IOException | ApiException e) {
             throw new ServerException(e.getMessage());
         }
 
-        // sync local projects
-        projects.stream()
-                .filter(project -> !project.isSynced())
-                .forEach(RegisteredProject::setSync);
+        if (!project.isSynced()) {
+            project.setSync();
+        }
+    }
+
+    /**
+     * Updates project on WS-master side.
+     *
+     * @param project
+     *         project to update
+     * @throws ServerException
+     */
+    void updateProject(RegisteredProject project) throws ServerException {
+        if (project.isDetected()) {
+            return;
+        }
+
+        workspace.updateProject(project);
+
+        final String href = UriBuilder.fromUri(apiEndpoint)
+                                      .path(WorkspaceService.class)
+                                      .path(WorkspaceService.class, "updateProject")
+                                      .build(workspace.getId(), project.getPath()).toString();
+        try {
+            httpJsonRequestFactory.fromUrl(href).usePutMethod().setBody(asDto(project)).request();
+        } catch (IOException | ApiException e) {
+            throw new ServerException(e.getMessage());
+        }
+
+        if (!project.isSynced()) {
+            project.setSync();
+        }
+    }
+
+    /**
+     * Removes projects on WS-master side.
+     *
+     * @param projects
+     *         projects to remove
+     * @throws ServerException
+     */
+    void removeProjects(Collection<RegisteredProject> projects) throws ServerException {
+        for (RegisteredProject project : projects) {
+            removeProject(project);
+        }
+    }
+
+    private void removeProject(RegisteredProject project) throws ServerException {
+        if (project.isDetected()) {
+            return;
+        }
+
+        workspace.removeProject(project);
+
+        final String href = UriBuilder.fromUri(apiEndpoint)
+                                      .path(WorkspaceService.class)
+                                      .path(WorkspaceService.class, "deleteProject")
+                                      .build(workspace.getId(), project.getPath()).toString();
+        try {
+            httpJsonRequestFactory.fromUrl(href).useDeleteMethod().request();
+        } catch (IOException | ApiException e) {
+            throw new ServerException(e.getMessage());
+        }
     }
 
     /**
@@ -121,32 +177,36 @@ public class WorkspaceHolder {
      * @return
      * @throws ServerException
      */
-    private UsersWorkspaceDto workspaceDto(String wsId) throws ServerException {
+    private WorkspaceDto workspaceDto(String wsId) throws ServerException {
         final String href = UriBuilder.fromUri(apiEndpoint)
-                                      .path(WorkspaceService.class).path(WorkspaceService.class, "getById")
+                                      .path(WorkspaceService.class).path(WorkspaceService.class, "getByKey")
                                       .build(wsId).toString();
-        final Link link = newDto(Link.class).withMethod("GET").withHref(href);
-
         try {
-            return httpJsonRequestFactory.fromLink(link).request().asDto(UsersWorkspaceDto.class);
+            return httpJsonRequestFactory.fromUrl(href).useGetMethod().request().asDto(WorkspaceDto.class);
         } catch (IOException | ApiException e) {
             throw new ServerException(e);
         }
     }
 
-    protected static class UsersWorkspaceImpl implements UsersWorkspace {
-        private String              id;
-        private String              owner;
-        private boolean             isTemporary;
-        private WorkspaceStatus     status;
-        private WorkspaceConfigImpl workspaceConfig;
+    protected static class UsersWorkspaceImpl implements Workspace {
+        private String               id;
+        private String               namespace;
+        private boolean              isTemporary;
+        private WorkspaceStatus      status;
+        private WorkspaceConfigImpl  workspaceConfig;
+        private WorkspaceRuntimeImpl runtime;
+        private Map<String, String>  attributes;
 
-        UsersWorkspaceImpl(UsersWorkspace usersWorkspace) {
-            id = usersWorkspace.getId();
-            owner = usersWorkspace.getOwner();
-            isTemporary = usersWorkspace.isTemporary();
-            status = usersWorkspace.getStatus();
-            workspaceConfig = new WorkspaceConfigImpl(usersWorkspace.getConfig());
+        UsersWorkspaceImpl(WorkspaceDto workspaceDto) {
+            id = workspaceDto.getId();
+            namespace = workspaceDto.getNamespace();
+            isTemporary = workspaceDto.isTemporary();
+            status = workspaceDto.getStatus();
+            workspaceConfig = new WorkspaceConfigImpl(workspaceDto.getConfig());
+            if (workspaceDto.getRuntime() != null) {
+                runtime = new WorkspaceRuntimeImpl(workspaceDto.getRuntime());
+            }
+            attributes = new HashMap<>(workspaceDto.getAttributes());
         }
 
         @Override
@@ -155,13 +215,18 @@ public class WorkspaceHolder {
         }
 
         @Override
+        public WorkspaceRuntime getRuntime() {
+            return runtime;
+        }
+
+        @Override
         public String getId() {
             return id;
         }
 
         @Override
-        public String getOwner() {
-            return owner;
+        public String getNamespace() {
+            return namespace;
         }
 
         @Override
@@ -174,17 +239,39 @@ public class WorkspaceHolder {
             return status;
         }
 
-        public void setProjects(final List<RegisteredProject> projects) {
-            List<NewProjectConfig> p = projects.stream()
-                                               .map(project -> new NewProjectConfig(project.getPath(),
-                                                                                    project.getType(),
-                                                                                    project.getMixins(),
-                                                                                    project.getName(),
-                                                                                    project.getDescription(),
-                                                                                    project.getPersistableAttributes(),
-                                                                                    project.getSource()))
-                                               .collect(Collectors.toList());
-            getConfig().setProjects(p);
+        @Override
+        public Map<String, String> getAttributes() {
+            return attributes;
+        }
+
+        public List<? extends ProjectConfig> getProjects() {
+            return getConfig().getProjects();
+        }
+
+        public void removeProject(ProjectConfig project) {
+            getConfig().getProjects().removeIf(p -> p.getPath().equals(project.getPath()));
+        }
+
+        public void setProjects(List<? extends ProjectConfig> projects) {
+            getConfig().setProjects(projects);
+        }
+
+        public void addProject(RegisteredProject project) {
+            final ProjectConfig config = new NewProjectConfig(project.getPath(),
+                                                              project.getType(),
+                                                              project.getMixins(),
+                                                              project.getName(),
+                                                              project.getDescription(),
+                                                              project.getPersistableAttributes(),
+                                                              project.getSource());
+            List<ProjectConfig> list = new ArrayList<>(getConfig().getProjects());
+            list.add(config);
+            getConfig().setProjects(list);
+        }
+
+        public void updateProject(RegisteredProject project) {
+            removeProject(project);
+            addProject(project);
         }
     }
 
@@ -204,7 +291,6 @@ public class WorkspaceHolder {
             commands = config.getCommands();
             projects = config.getProjects();
             environments = config.getEnvironments();
-            attributes = config.getAttributes();
         }
 
         @Override
@@ -232,18 +318,13 @@ public class WorkspaceHolder {
             return projects;
         }
 
-        public void setProjects(List<NewProjectConfig> projects) {
+        public void setProjects(List<? extends ProjectConfig> projects) {
             this.projects = projects;
         }
 
         @Override
         public List<? extends Environment> getEnvironments() {
             return environments;
-        }
-
-        @Override
-        public Map<String, String> getAttributes() {
-            return attributes;
         }
     }
 }

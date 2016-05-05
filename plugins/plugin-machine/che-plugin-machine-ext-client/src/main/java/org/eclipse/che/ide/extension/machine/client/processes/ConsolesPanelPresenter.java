@@ -16,25 +16,21 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.machine.gwt.client.MachineServiceClient;
 import org.eclipse.che.api.machine.gwt.client.events.DevMachineStateEvent;
-import org.eclipse.che.api.machine.gwt.client.events.DevMachineStateHandler;
 import org.eclipse.che.api.machine.shared.dto.CommandDto;
 import org.eclipse.che.api.machine.shared.dto.MachineDto;
 import org.eclipse.che.api.machine.shared.dto.MachineProcessDto;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
-import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedEvent;
-import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedHandler;
 import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStoppedEvent;
 import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStoppedHandler;
-import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.mvp.View;
 import org.eclipse.che.ide.api.notification.NotificationManager;
+import org.eclipse.che.ide.api.outputconsole.OutputConsole;
 import org.eclipse.che.ide.api.parts.HasView;
 import org.eclipse.che.ide.api.parts.WorkspaceAgent;
 import org.eclipse.che.ide.api.parts.base.BasePresenter;
@@ -47,6 +43,7 @@ import org.eclipse.che.ide.extension.machine.client.command.CommandTypeRegistry;
 import org.eclipse.che.ide.extension.machine.client.inject.factories.EntityFactory;
 import org.eclipse.che.ide.extension.machine.client.inject.factories.TerminalFactory;
 import org.eclipse.che.ide.extension.machine.client.machine.Machine;
+import org.eclipse.che.ide.extension.machine.client.machine.MachineStateEvent;
 import org.eclipse.che.ide.extension.machine.client.outputspanel.console.CommandConsoleFactory;
 import org.eclipse.che.ide.extension.machine.client.outputspanel.console.CommandOutputConsole;
 import org.eclipse.che.ide.extension.machine.client.outputspanel.console.DefaultOutputConsole;
@@ -64,8 +61,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.che.ide.api.outputconsole.OutputConsole;
-
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.extension.machine.client.perspective.terminal.TerminalPresenter.TerminalStateListener;
 import static org.eclipse.che.ide.extension.machine.client.processes.ProcessTreeNode.ProcessNodeType.COMMAND_NODE;
@@ -82,32 +78,38 @@ import static org.eclipse.che.ide.extension.machine.client.processes.ProcessTree
  */
 @Singleton
 public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPanelView.ActionDelegate,
-        HasView, ProcessFinishedHandler, OutputConsole.ConsoleOutputListener, WorkspaceStartedHandler, WorkspaceStoppedHandler {
+                                                                     HasView,
+                                                                     ProcessFinishedHandler,
+                                                                     OutputConsole.ConsoleOutputListener,
+                                                                     WorkspaceStoppedHandler,
+                                                                     MachineStateEvent.Handler {
 
     private static final String DEFAULT_TERMINAL_NAME = "Terminal";
 
     public static final String SSH_PORT = "22";
 
-    private final DtoFactory                  dtoFactory;
-    private final DialogFactory               dialogFactory;
-    private final EntityFactory               entityFactory;
-    private final TerminalFactory             terminalFactory;
-    private final CommandConsoleFactory       commandConsoleFactory;
-    private final NotificationManager         notificationManager;
-    private final MachineLocalizationConstant localizationConstant;
-    private final ConsolesPanelView           view;
-    private final MachineResources            resources;
-    private final AppContext                  appContext;
-    private final MachineServiceClient        machineService;
-    private final WorkspaceAgent              workspaceAgent;
-    private final CommandTypeRegistry         commandTypeRegistry;
+    private final DtoFactory                   dtoFactory;
+    private final DialogFactory                dialogFactory;
+    private final EntityFactory                entityFactory;
+    private final TerminalFactory              terminalFactory;
+    private final CommandConsoleFactory        commandConsoleFactory;
+    private final NotificationManager          notificationManager;
+    private final MachineLocalizationConstant  localizationConstant;
+    private final ConsolesPanelView            view;
+    private final MachineResources             resources;
+    private final AppContext                   appContext;
+    private final MachineServiceClient         machineService;
+    private final WorkspaceAgent               workspaceAgent;
+    private final CommandTypeRegistry          commandTypeRegistry;
+    private final Map<String, ProcessTreeNode> machineNodes;
 
-    ProcessTreeNode                rootNode;
-    ProcessTreeNode                selectedTreeNode;
-    Map<String, TerminalPresenter> terminals = new HashMap<>();
+    final List<ProcessTreeNode>          rootChildren;
+    final Map<String, TerminalPresenter> terminals;
+    final Map<String, OutputConsole>     consoles;
+    final Map<OutputConsole, String>     consoleCommands;
 
-    Map<String, OutputConsole>     consoles = new HashMap<>();
-    Map<OutputConsole, String>     consoleCommands = new HashMap<>();
+    ProcessTreeNode rootNode;
+    ProcessTreeNode selectedTreeNode;
 
     @Inject
     public ConsolesPanelPresenter(ConsolesPanelView view,
@@ -138,32 +140,38 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         this.appContext = appContext;
         this.machineService = machineService;
 
-        this.fetchMachines();
+        this.rootChildren = new ArrayList<>();
+        this.terminals = new HashMap<>();
+        this.consoles = new HashMap<>();
+        this.consoleCommands = new HashMap<>();
+        this.machineNodes = new HashMap<>();
+
+        fetchMachines();
 
         this.view.setDelegate(this);
         this.view.setTitle(localizationConstant.viewConsolesTitle());
 
-        eventBus.addHandler(DevMachineStateEvent.TYPE, new DevMachineStateHandler() {
+        eventBus.addHandler(DevMachineStateEvent.TYPE, new DevMachineStateEvent.Handler() {
             @Override
-            public void onMachineStarted(DevMachineStateEvent event) {
+            public void onDevMachineStarted(DevMachineStateEvent event) {
                 fetchMachines();
             }
 
             @Override
-            public void onMachineDestroyed(DevMachineStateEvent event) {
+            public void onDevMachineDestroyed(DevMachineStateEvent event) {
             }
         });
 
         eventBus.addHandler(ProcessFinishedEvent.TYPE, this);
-        eventBus.addHandler(WorkspaceStartedEvent.TYPE, this);
         eventBus.addHandler(WorkspaceStoppedEvent.TYPE, this);
+        eventBus.addHandler(MachineStateEvent.TYPE, this);
     }
 
     @Override
     public void onProcessFinished(ProcessFinishedEvent event) {
         for (Map.Entry<String, OutputConsole> entry : consoles.entrySet()) {
             if (entry.getValue().isFinished()) {
-                view.setProcessRunning(entry.getKey(), false);
+                view.setStopButtonVisibility(entry.getKey(), false);
             }
         }
     }
@@ -200,6 +208,38 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         container.setWidget(view);
     }
 
+    @Override
+    public void onMachineCreating(MachineStateEvent event) {
+    }
+
+    @Override
+    public void onMachineRunning(MachineStateEvent event) {
+        workspaceAgent.setActivePart(this);
+
+        machineService.getMachine(event.getMachineId()).then(new Operation<MachineDto>() {
+            @Override
+            public void apply(MachineDto machine) throws OperationException {
+                addMachineToConsoles(machine);
+            }
+        });
+    }
+
+    @Override
+    public void onMachineDestroyed(MachineStateEvent event) {
+        String destroyedMachineId = event.getMachineId();
+
+        ProcessTreeNode destroyedMachineNode = machineNodes.get(destroyedMachineId);
+        if (destroyedMachineNode == null) {
+            return;
+        }
+
+        rootChildren.remove(destroyedMachineNode);
+        onCloseTerminal(destroyedMachineNode);
+        onStopCommandProcess(destroyedMachineNode);
+
+        view.setProcessesData(rootNode);
+    }
+
     /** Get the list of all available machines. */
     public void fetchMachines() {
         String workspaceId = appContext.getWorkspaceId();
@@ -207,21 +247,47 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         machineService.getMachines(workspaceId).then(new Operation<List<MachineDto>>() {
             @Override
             public void apply(List<MachineDto> machines) throws OperationException {
-                List<ProcessTreeNode> rootChildren = new ArrayList<>();
-
                 rootNode = new ProcessTreeNode(ROOT_NODE, null, null, null, rootChildren);
+
+                MachineDto devMachine = getDevMachine(machines);
+                addMachineToConsoles(devMachine);
+
+                machines.remove(devMachine);
+
                 for (MachineDto machine : machines) {
-                    if (machine.getStatus() == MachineStatus.RUNNING && machine.getConfig().isDev()) {
-                        List<ProcessTreeNode> processTreeNodes = new ArrayList<ProcessTreeNode>();
-                        ProcessTreeNode machineNode = new ProcessTreeNode(MACHINE_NODE, rootNode, machine, null, processTreeNodes);
-                        machineNode.setRunning(true);
-                        rootChildren.add(machineNode);
-                        view.setProcessesData(rootNode);
-                        restoreState(machine.getId());
-                    }
+                    addMachineToConsoles(machine);
                 }
             }
         });
+    }
+
+    private MachineDto getDevMachine(List<MachineDto> machines) {
+        for (MachineDto machine : machines) {
+            if (machine.getConfig().isDev()) {
+                return machine;
+            }
+        }
+
+        throw new IllegalArgumentException("Dev machine can not be null");
+    }
+
+    private void addMachineToConsoles(MachineDto machine) {
+        List<ProcessTreeNode> processTreeNodes = new ArrayList<ProcessTreeNode>();
+        ProcessTreeNode machineNode = new ProcessTreeNode(MACHINE_NODE, rootNode, machine, null, processTreeNodes);
+        machineNode.setRunning(true);
+
+        if (rootChildren.contains(machineNode)) {
+            rootChildren.remove(machineNode);
+        }
+
+        rootChildren.add(machineNode);
+        view.setProcessesData(rootNode);
+
+        String machineId = machine.getId();
+
+        restoreState(machineId);
+
+        machineNodes.put(machineId, machineNode);
     }
 
     private void restoreState(final String machineId) {
@@ -265,7 +331,7 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         ProcessTreeNode machineTreeNode = findProcessTreeNodeById(machineId);
         if (machineTreeNode == null) {
             notificationManager.notify(localizationConstant.failedToExecuteCommand(), localizationConstant.machineNotFound(machineId),
-                                       FAIL, true);
+                                       FAIL, FLOAT_MODE);
             Log.error(getClass(), localizationConstant.machineNotFound(machineId));
             return;
         }
@@ -277,12 +343,13 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
             commandId = processTreeNode.getId();
             view.hideProcessOutput(commandId);
         } else {
-            ProcessTreeNode commandNode = new ProcessTreeNode(COMMAND_NODE, machineTreeNode, outputConsoleTitle, outputConsole.getTitleIcon(), null);
+            ProcessTreeNode commandNode =
+                    new ProcessTreeNode(COMMAND_NODE, machineTreeNode, outputConsoleTitle, outputConsole.getTitleIcon(), null);
             commandId = commandNode.getId();
             view.addProcessNode(commandNode);
             addChildToMachineNode(commandNode, machineTreeNode);
         }
-        
+
         updateCommandOutput(commandId, outputConsole);
 
         resfreshStopButtonState(commandId);
@@ -311,8 +378,8 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         workspaceAgent.setActivePart(this);
 
         if (selectedTreeNode == null) {
-            if (appContext.getDevMachineId() != null) {
-                onAddTerminal(appContext.getDevMachineId());
+            if (appContext.getDevMachine() != null) {
+                onAddTerminal(appContext.getDevMachine().getId());
             }
             return;
         }
@@ -321,8 +388,8 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
             onAddTerminal(selectedTreeNode.getId());
         } else {
             if (selectedTreeNode.getParent() != null &&
-                    selectedTreeNode.getParent().getType() == MACHINE_NODE) {
-                onAddTerminal(selectedTreeNode.getParent().getId());
+                selectedTreeNode.getParent().getType() == MACHINE_NODE) {
+                onAddTerminal(appContext.getDevMachine().getId());
             }
         }
     }
@@ -343,7 +410,7 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
 
                 if (machineTreeNode == null) {
                     notificationManager.notify(localizationConstant.failedToConnectTheTerminal(),
-                                               localizationConstant.machineNotFound(machineId), FAIL, true);
+                                               localizationConstant.machineNotFound(machineId), FAIL, FLOAT_MODE);
                     Log.error(getClass(), localizationConstant.machineNotFound(machineId));
                     return;
                 }
@@ -502,14 +569,14 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         int neighborIndex = processIndex > 0 ? processIndex - 1 : processIndex + 1;
         ProcessTreeNode neighborNode = view.getNodeByIndex(neighborIndex);
         String neighborNodeId = neighborNode.getId();
-        
+
         removeChildFromMachineNode(node, parentNode);
         view.selectNode(neighborNode);
         resfreshStopButtonState(neighborNodeId);
         view.showProcessOutput(neighborNodeId);
         view.hideProcessOutput(processId);
     }
-    
+
     private void resfreshStopButtonState(String selectedNodeId) {
         if (selectedNodeId == null) {
             return;
@@ -517,8 +584,10 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
 
         for (Map.Entry<String, OutputConsole> entry : consoles.entrySet()) {
             String nodeId = entry.getKey();
-            if (selectedNodeId.equals(nodeId)) {
-                view.setProcessRunning(nodeId, !entry.getValue().isFinished());
+            if (selectedNodeId.equals(nodeId) && !entry.getValue().isFinished()) {
+                view.setStopButtonVisibility(selectedNodeId, true);
+            } else {
+                view.setStopButtonVisibility(nodeId, false);
             }
         }
     }
@@ -589,13 +658,10 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
     }
 
     @Override
-    public void onWorkspaceStarted(UsersWorkspaceDto workspace) {
-    }
-
-    @Override
     public void onWorkspaceStopped(WorkspaceStoppedEvent event) {
         for (ProcessTreeNode processTreeNode : rootNode.getChildren()) {
             if (processTreeNode.getType() == MACHINE_NODE) {
+                onCloseTerminal(processTreeNode);
                 processTreeNode.setRunning(false);
                 if (processTreeNode.getChildren() != null) {
                     processTreeNode.getChildren().clear();
@@ -603,9 +669,11 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
             }
         }
 
+        rootNode.getChildren().clear();
+        rootChildren.clear();
+
         view.clear();
         view.selectNode(null);
         view.setProcessesData(rootNode);
     }
-
 }

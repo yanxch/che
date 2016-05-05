@@ -33,8 +33,6 @@ import org.eclipse.che.api.machine.shared.dto.LimitsDto;
 import org.eclipse.che.api.machine.shared.dto.MachineConfigDto;
 import org.eclipse.che.api.machine.shared.dto.MachineSourceDto;
 import org.eclipse.che.api.machine.shared.dto.ServerConfDto;
-import org.eclipse.che.api.workspace.server.model.stack.StackComponent;
-import org.eclipse.che.api.workspace.server.model.stack.StackSource;
 import org.eclipse.che.api.workspace.server.spi.StackDao;
 import org.eclipse.che.api.workspace.server.model.impl.stack.StackImpl;
 import org.eclipse.che.api.workspace.server.stack.adapters.CommandAdapter;
@@ -54,6 +52,8 @@ import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.stack.StackComponentDto;
 import org.eclipse.che.api.workspace.shared.dto.stack.StackDto;
+import org.eclipse.che.api.workspace.shared.stack.StackComponent;
+import org.eclipse.che.api.workspace.shared.stack.StackSource;
 import org.mockito.Mock;
 import org.mockito.testng.MockitoTestNGListener;
 import org.testng.annotations.Listeners;
@@ -130,8 +130,8 @@ public class StackLoaderTest {
     public void dtoShouldBeSerialized() {
         StackDto stackDtoDescriptor = newDto(StackDto.class).withName("nameWorkspaceConfig");
         StackComponentDto stackComponentDto = newDto(StackComponentDto.class)
-                                                        .withName("java")
-                                                        .withVersion("1.8");
+                .withName("java")
+                .withVersion("1.8");
         stackDtoDescriptor.setComponents(Collections.singletonList(stackComponentDto));
         stackDtoDescriptor.setTags(Arrays.asList("some teg1", "some teg2"));
         stackDtoDescriptor.setDescription("description");
@@ -157,14 +157,14 @@ public class StackLoaderTest {
                                                                           .withLocation("location");
 
         ProjectConfigDto moduleConfigDto = newDto(ProjectConfigDto.class).withName("module")
-                                                                          .withPath("somePath")
-                                                                          .withAttributes(projectMap)
-                                                                          .withType("maven type")
-                                                                          .withDescription("some project description")
-                                                                          .withLinks(Collections.singletonList(link))
-                                                                          .withMixins(Collections.singletonList("mixin time"))
-                                                                          .withProblems(Collections.singletonList(projectProblem))
-                                                                          .withSource(sourceStorageDto);
+                                                                         .withPath("somePath")
+                                                                         .withAttributes(projectMap)
+                                                                         .withType("maven type")
+                                                                         .withDescription("some project description")
+                                                                         .withLinks(Collections.singletonList(link))
+                                                                         .withMixins(Collections.singletonList("mixin time"))
+                                                                         .withProblems(Collections.singletonList(projectProblem))
+                                                                         .withSource(sourceStorageDto);
 
         ProjectConfigDto projectConfigDto = newDto(ProjectConfigDto.class).withName("project")
                                                                           .withPath("somePath")
@@ -207,7 +207,6 @@ public class StackLoaderTest {
                                                         .withCommandLine("command line");
 
         WorkspaceConfigDto workspaceConfigDto = newDto(WorkspaceConfigDto.class).withName("SomeWorkspaceConfig")
-                                                                                .withAttributes(attributes)
                                                                                 .withDescription("some workspace")
                                                                                 .withLinks(Collections.singletonList(link))
                                                                                 .withDefaultEnv("some Default Env name")

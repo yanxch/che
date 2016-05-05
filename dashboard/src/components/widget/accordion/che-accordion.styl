@@ -1,6 +1,3 @@
-$pane-title-color = #a5a5a5
-$active-pane-title-color = #393939
-
 .che-accordion
   .che-accordion-body, .che-accordion-title
     display block
@@ -8,7 +5,7 @@ $active-pane-title-color = #393939
 
   .che-accordion-title
     margin-top 10px
-    color $pane-title-color
+    color $clear-foggy-sky-color
 
     cursor pointer
 
@@ -20,11 +17,14 @@ $active-pane-title-color = #393939
     transition all 0.5s
     transform translateZ(0)
 
-.che-accordion.active
+.che-accordion.che-accordion-active
   .che-accordion-title
-    color $active-pane-title-color
+    color $che-loader-active-title-color
+.che-accordion.che-accordion-error
+  .che-accordion-title
+    color $error-color !important
 
-.che-accordion.closed
+.che-accordion.che-accordion-closed
   .che-accordion-title
     transition transform 0.5s
     transform-origin left bottom

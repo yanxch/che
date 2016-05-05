@@ -13,6 +13,7 @@ package org.eclipse.che.ide.extension.machine.client.actions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.eclipse.che.api.core.model.machine.Machine;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.extension.machine.client.MachineLocalizationConstant;
@@ -32,13 +33,13 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
 @Singleton
 public class ExecuteSelectedCommandAction extends AbstractPerspectiveAction {
 
-    private final SelectCommandComboBoxReady selectCommandAction;
+    private final SelectCommandComboBox selectCommandAction;
     private final CommandManager             commandManager;
 
     @Inject
     public ExecuteSelectedCommandAction(MachineLocalizationConstant localizationConstant,
                                         MachineResources resources,
-                                        SelectCommandComboBoxReady selectCommandAction,
+                                        SelectCommandComboBox selectCommandAction,
                                         CommandManager commandManager) {
         super(Collections.singletonList(PROJECT_PERSPECTIVE_ID),
               localizationConstant.executeSelectedCommandControlTitle(),
@@ -57,8 +58,11 @@ public class ExecuteSelectedCommandAction extends AbstractPerspectiveAction {
     @Override
     public void actionPerformed(ActionEvent e) {
         final CommandConfiguration command = selectCommandAction.getSelectedCommand();
-        if (command != null) {
-            commandManager.execute(command);
+        Machine machine = selectCommandAction.getSelectedMachine();
+
+        if (command != null && machine != null) {
+            commandManager.execute(command, machine);
         }
     }
+
 }

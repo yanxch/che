@@ -132,16 +132,21 @@ export class CheToolbar {
       template += '<md-icon md-font-icon=\"fa fa-ellipsis-v\"></md-icon></div>';
       template += '<md-menu-content width=\"3\">';
       template += '<md-menu-item ng-repeat=\"item in ' + dropdownMenu + '" >';
-      template += '<md-button ng-click=\"item.onclick()\">{{item.title}}</md-button>';
+      template += '<md-button ng-click=\"item.onclick()\" ng-disabled=\"item.disabled()\">{{item.title}}</md-button>';
       template += '</md-menu-content></md-menu>';
     }
 
     if (buttonName) {
-      template = template + '<a class=\"che-toolbar-control-button\" title=\"' + buttonName + '\" href=\"' + buttonHref + '\"';
+      template += '<che-button-primary-flat class=\"che-toolbar-open-button\"';
+      template += ' che-button-title=\"' + buttonName + '\"';
+      if (buttonIcon) {
+        template += ' che-button-icon=\"' + buttonIcon + '\"';
+      }
+      template += ' href=\"' + buttonHref + '\"';
       if (buttonHrefTarget) {
         template = template + ' target=\"' + buttonHrefTarget + '\"';
       }
-      template += '><md-icon md-font-icon=\"fa ' + buttonIcon + '\"></md-icon></a>';
+      template += '</che-button-primary-flat>';
     }
 
     if (addButtonName) {

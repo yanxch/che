@@ -20,29 +20,32 @@ export class ReadyToGoStacksCtrl {
    * Default constructor that is using resource
    * @ngInject for Dependency injection
    */
-  constructor($timeout, $rootScope, cheStack) {
+  constructor($timeout, $rootScope, lodash, cheStack) {
     this.$timeout = $timeout;
     this.$rootScope = $rootScope;
+    this.lodash = lodash;
     this.cheStack = cheStack;
 
     this.stacks = [];
     this.stack = null;
 
-    let promiseStack = cheStack.fetchStacks();
-    promiseStack.then(() => {
-        this.updateData();
-      },
-      (error) => {
-        // etag handling so also retrieve last data that were fetched before
-        if (error.status === 304) {
-          // ok
+    if (cheStack.getStacks().length) {
+      this.updateData();
+    } else {
+      let promiseStack = cheStack.fetchStacks();
+      promiseStack.then(() => {
           this.updateData();
-        }
-      });
-
+        },
+        (error) => {
+          // etag handling so also retrieve last data that were fetched before
+          if (error.status === 304) {
+            // ok
+            this.updateData();
+          }
+        });
+    }
   }
 
-  //TODO should change che-simple-selecter widget
   cheSimpleSelecterDefault(stack) {
     this.stack = stack;
     this.$timeout(() => {
@@ -50,7 +53,6 @@ export class ReadyToGoStacksCtrl {
     });
   }
 
-  //TODO should change che-simple-selecter widget
   cheSimpleSelecter(projectName, stack) {
     this.stack = stack;
     this.$timeout(() => {
@@ -66,9 +68,11 @@ export class ReadyToGoStacksCtrl {
     var remoteStacks = this.cheStack.getStacks();
     // remote stacks are
     remoteStacks.forEach((stack) => {
-      stack.iconName = stack.name.toLowerCase();
-      if (/\./.test(stack.iconName)) {
-        stack.iconName = stack.iconName.replace(new RegExp('\\.', 'g'), '');
+      let findLink = this.lodash.find(stack.links, (link) => {
+        return link.rel === 'get icon link';
+      });
+      if (findLink) {
+        stack.iconSrc = findLink.href;
       }
       this.stacks.push(stack);
     });

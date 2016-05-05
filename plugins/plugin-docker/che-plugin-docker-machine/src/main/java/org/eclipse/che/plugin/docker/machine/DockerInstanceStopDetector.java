@@ -15,7 +15,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.eclipse.che.api.core.notification.EventService;
-import org.eclipse.che.api.machine.server.InstanceStateEvent;
+import org.eclipse.che.api.machine.server.event.InstanceStateEvent;
 import org.eclipse.che.plugin.docker.client.DockerConnector;
 import org.eclipse.che.plugin.docker.client.MessageProcessor;
 import org.eclipse.che.plugin.docker.client.json.Event;
@@ -122,12 +122,14 @@ public class DockerInstanceStopDetector {
             switch (message.getStatus()) {
                 case "oom":
                     containersOomTimestamps.put(message.getId(), message.getId());
+                    LOG.info("OOM of process in container {} has been detected", message.getId());
                     break;
                 case "die":
                     InstanceStateEvent.Type instanceStateChangeType;
                     if (containersOomTimestamps.getIfPresent(message.getId()) != null) {
                         instanceStateChangeType = InstanceStateEvent.Type.OOM;
                         containersOomTimestamps.invalidate(message.getId());
+                        LOG.info("OOM of container '{}' has been detected", message.getId());
                     } else {
                         instanceStateChangeType = InstanceStateEvent.Type.DIE;
                     }

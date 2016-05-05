@@ -25,72 +25,72 @@ export class CheAccordion {
     this.restrict = 'E';
     this.transclude = true;
     this.replace = true;
-    this.template = '<div ng-transclude class="che-accordion closed"></div>';
+    this.template = '<div ng-transclude class="che-accordion che-accordion-closed"></div>';
 
     // scope values
     this.scope = {
-      index: '@cheIndex',
-      step: '@cheCurrentStep'
+      openCondition: '=cheOpenCondition'
     };
   }
 
-  link($scope, element) {
+  link($scope, element, attr, ctrl) {
     let currentBodyElement = element.find('.che-accordion-body');
 
     // automatic switching panes
     $scope.$watch(() => {
-      return $scope.step;
-    }, (newVal) => {
-      if ($scope.index === newVal) {
-        element.siblings().removeClass('active');
-        element.addClass('active');
-      }
-
-      if (!element.siblings().hasClass('dirty') && $scope.index === newVal) {
-        openPane();
+      return $scope.openCondition;
+    }, (doOpenPane) => {
+      if (!element.siblings().hasClass('che-accordion-dirty')) {
+        openPane(doOpenPane);
       }
     });
 
     // manual switching panes
     element.bind('click', (event) => {
       if (angular.element(event.target).parent().hasClass('che-accordion-title')) {
-        element.addClass('dirty');
-        openPane(element);
+        element.addClass('che-accordion-dirty');
+        openPane(true);
       }
     });
 
-    currentBodyElement.bind('transitionend', () => {
-      currentBodyElement.removeAttr('style');
-    });
-
-    let openPane = () => {
-      if (element.hasClass('closed')) {
+    let openPane = (doOpenPane) => {
+      if (element.hasClass('che-accordion-closed')) {
         let siblingElements = element.siblings(),
           panesToClose = [];
 
         // find opened pane and close it
         for (let i = 0; i < siblingElements.length; i++) {
           let siblingEl = angular.element(siblingElements[i]);
-          if (siblingEl.hasClass('closed')) {
+          if (siblingEl.hasClass('che-accordion-closed')) {
             continue;
           }
 
           let siblingBodyEl = siblingEl.find('.che-accordion-body'),
-            siblingBodyHeight = siblingBodyEl[0].scrollHeight;
+            siblingBodyHeight = siblingBodyEl[0].clientHeight;
           siblingBodyEl.css('height', siblingBodyHeight);
           panesToClose.push(siblingEl);
         }
 
-        // open current pane
-        let currentBodyHeight = currentBodyElement[0].scrollHeight;
-        currentBodyElement.css('height', currentBodyHeight);
-
         this.$timeout(() => {
+          // close other panes
           panesToClose.forEach((pane) => {
-            pane.addClass('closed');
+            pane.addClass('che-accordion-closed');
           });
-          element.removeClass('closed');
-        },0);
+
+          if (doOpenPane) {
+            let currentBodyHeight = currentBodyElement[0].scrollHeight;
+            if (currentBodyElement[0].clientHeight !== currentBodyHeight) {
+              currentBodyElement.css('height', currentBodyHeight);
+            }
+
+            // open current pane
+            element.removeClass('che-accordion-closed');
+          }
+        },10).then(() => {
+          for (let i=0; i<siblingElements.length; i++) {
+            angular.element(siblingElements[i]).find('.che-accordion-body').removeAttr('style');
+          }
+        });
       }
     }
   }

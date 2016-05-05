@@ -10,70 +10,70 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.git.client.compare;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.git.gwt.client.GitServiceClient;
 import org.eclipse.che.api.git.shared.ShowFileContentResponse;
-import org.eclipse.che.api.project.gwt.client.ProjectServiceClient;
-import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.event.FileContentUpdateEvent;
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.api.notification.NotificationManager;
+import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.resources.Container;
+import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
-import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
-import org.eclipse.che.ide.rest.StringUnmarshaller;
+import org.eclipse.che.ide.ext.git.client.compare.FileStatus.Status;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.ui.dialogs.CancelCallback;
 import org.eclipse.che.ide.ui.dialogs.ConfirmCallback;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.NOT_EMERGE_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
+import static org.eclipse.che.ide.ext.git.client.compare.FileStatus.Status.ADDED;
+import static org.eclipse.che.ide.ext.git.client.compare.FileStatus.Status.DELETED;
 
 /**
  * Presenter for comparing current files with files from specified revision or branch.
  *
  * @author Igor Vinokur
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class ComparePresenter implements CompareView.ActionDelegate {
 
     private final AppContext              appContext;
-    private final EventBus                eventBus;
     private final DialogFactory           dialogFactory;
-    private final DtoUnmarshallerFactory  dtoUnmarshallerFactory;
     private final CompareView             view;
-    private final ProjectServiceClient    projectService;
-    private final GitServiceClient        gitService;
+    private final GitServiceClient        service;
     private final GitLocalizationConstant locale;
     private final NotificationManager     notificationManager;
-    private final String                  workspaceId;
+    private final Workspace               workspace;
 
-    private String item;
-    private String newContent;
+    private File   comparedFile;
+    private String revision;
+    private String localContent;
 
     @Inject
     public ComparePresenter(AppContext appContext,
-                            EventBus eventBus,
                             DialogFactory dialogFactory,
-                            DtoUnmarshallerFactory dtoUnmarshallerFactory,
                             CompareView view,
-                            ProjectServiceClient projectServiceClient,
-                            GitServiceClient gitServiceClient,
+                            GitServiceClient service,
                             GitLocalizationConstant locale,
-                            NotificationManager notificationManager) {
+                            NotificationManager notificationManager,
+                            Workspace workspace) {
         this.appContext = appContext;
-        this.eventBus = eventBus;
         this.dialogFactory = dialogFactory;
-        this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
         this.view = view;
-        this.projectService = projectServiceClient;
-        this.gitService = gitServiceClient;
+        this.service = service;
         this.locale = locale;
         this.notificationManager = notificationManager;
+        this.workspace = workspace;
         this.view.setDelegate(this);
-
-        this.workspaceId = appContext.getWorkspaceId();
     }
 
     /**
@@ -81,52 +81,60 @@ public class ComparePresenter implements CompareView.ActionDelegate {
      *
      * @param file
      *         file name with its full path
-     * @param state
-     *         state of the file
+     * @param status
+     *         status of the file
      * @param revision
      *         hash of revision or branch
      */
-    public void show(final String file, final String state, final String revision) {
-        this.item = file;
+    public void show(final File file, final Status status, final String revision) {
+        this.comparedFile = file;
+        this.revision = revision;
 
-        if (state.startsWith("A")) {
-            showCompare(file, "", revision);
-        } else if (state.startsWith("D")) {
-            gitService.showFileContent(workspaceId, appContext.getCurrentProject().getRootProject(), file, revision,
-                                       new AsyncRequestCallback<ShowFileContentResponse>(
-                                               dtoUnmarshallerFactory.newUnmarshaller(ShowFileContentResponse.class)) {
-                                           @Override
-                                           protected void onSuccess(final ShowFileContentResponse response) {
-                                               view.setTitle(file);
-                                               view.show(response.getContent(), "", revision, file);
-                                           }
+        if (status.equals(ADDED)) {
+            showCompare("");
+            return;
+        }
 
-                                           @Override
-                                           protected void onFailure(Throwable exception) {
-                                               notificationManager.notify(exception.getMessage(), FAIL, false);
-                                           }
-                                       });
+        final Project project = file.getRelatedProject();
+        final Path relPath = file.getLocation().removeFirstSegments(project.getLocation().segmentCount());
+
+        if (status.equals(DELETED)) {
+            service.showFileContent(appContext.getDevMachine(), project.getLocation(), relPath, revision)
+                   .then(new Operation<ShowFileContentResponse>() {
+                       @Override
+                       public void apply(ShowFileContentResponse content) throws OperationException {
+                           view.setTitle(file.getLocation().toString());
+                           view.show(content.getContent(), "", revision, file.getLocation().toString());
+                       }
+                   })
+                   .catchError(new Operation<PromiseError>() {
+                       @Override
+                       public void apply(PromiseError error) throws OperationException {
+                           notificationManager.notify(error.getMessage(), FAIL, NOT_EMERGE_MODE);
+                       }
+                   });
         } else {
-            gitService.showFileContent(workspaceId, appContext.getCurrentProject().getRootProject(), file, revision,
-                                       new AsyncRequestCallback<ShowFileContentResponse>(
-                                               dtoUnmarshallerFactory.newUnmarshaller(ShowFileContentResponse.class)) {
-                                           @Override
-                                           protected void onSuccess(final ShowFileContentResponse response) {
-                                               showCompare(file, response.getContent(), revision);
-                                           }
 
-                                           @Override
-                                           protected void onFailure(Throwable exception) {
-                                               notificationManager.notify(exception.getMessage(), FAIL, false);
-                                           }
-                                       });
+            service.showFileContent(appContext.getDevMachine(), project.getLocation(), relPath, revision)
+                   .then(new Operation<ShowFileContentResponse>() {
+                       @Override
+                       public void apply(ShowFileContentResponse content) throws OperationException {
+                           showCompare(content.getContent());
+                       }
+                   })
+                   .catchError(new Operation<PromiseError>() {
+                       @Override
+                       public void apply(PromiseError error) throws OperationException {
+                           notificationManager.notify(error.getMessage(), FAIL, NOT_EMERGE_MODE);
+                       }
+                   });
         }
     }
 
     /** {@inheritDoc} */
     @Override
     public void onClose(final String newContent) {
-        if (this.newContent == null || newContent.equals(this.newContent)) {
+        if (this.localContent == null || newContent.equals(localContent)) {
             view.hide();
             return;
         }
@@ -134,19 +142,18 @@ public class ComparePresenter implements CompareView.ActionDelegate {
         ConfirmCallback confirmCallback = new ConfirmCallback() {
             @Override
             public void accepted() {
-                final String path = appContext.getCurrentProject().getRootProject().getName() + "/" + item;
-                projectService.updateFile(workspaceId, path, newContent, new AsyncRequestCallback<Void>() {
+                comparedFile.updateContent(newContent).then(new Operation<Void>() {
                     @Override
-                    protected void onSuccess(Void result) {
-                        eventBus.fireEvent(new FileContentUpdateEvent("/" + path));
-                    }
+                    public void apply(Void ignored) throws OperationException {
+                        final Optional<Container> parent = comparedFile.getParent();
 
-                    @Override
-                    protected void onFailure(Throwable exception) {
-                        notificationManager.notify(exception.getMessage(), FAIL, false);
+                        if (parent.isPresent()) {
+                            parent.get().synchronize();
+                        }
+
+                        view.hide();
                     }
                 });
-                view.hide();
             }
         };
 
@@ -161,23 +168,15 @@ public class ComparePresenter implements CompareView.ActionDelegate {
                                           confirmCallback, cancelCallback).show();
     }
 
-    private void showCompare(final String file, final String oldContent, final String revision) {
-        String fullItemPath = appContext.getCurrentProject().getRootProject().getName() + "/" + file;
-
-        projectService.getFileContent(appContext.getWorkspace().getId(),
-                                      fullItemPath,
-                                      new AsyncRequestCallback<String>(new StringUnmarshaller()) {
-                                          @Override
-                                          protected void onSuccess(final String newContent) {
-                                              view.setTitle(file);
-                                              ComparePresenter.this.newContent = newContent;
-                                              view.show(oldContent, newContent, revision, file);
-                                          }
-
-                                          @Override
-                                          protected void onFailure(Throwable exception) {
-                                              notificationManager.notify(exception.getMessage(), FAIL, false);
-                                          }
-                                      });
+    private void showCompare(final String remoteContent) {
+        comparedFile.getContent().then(new Operation<String>() {
+            @Override
+            public void apply(String local) throws OperationException {
+                localContent = local;
+                final String path = comparedFile.getLocation().toString();
+                view.setTitle(path);
+                view.show(remoteContent, localContent, revision, path);
+            }
+        });
     }
 }

@@ -11,19 +11,17 @@
 package org.eclipse.che.ide.extension.machine.client.actions;
 
 import com.google.gwtmockito.GwtMockitoTestRunner;
-import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.actions.WorkspaceSnapshotCreator;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.action.Presentation;
-import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-import static org.eclipse.che.dto.server.DtoFactory.newDto;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
@@ -47,7 +45,7 @@ public class CreateSnapshotActionTest {
     private ActionEvent event;
 
     @Mock(answer = Answers.RETURNS_MOCKS)
-    private AppContext appContext;
+    private Workspace workspace;
 
     @InjectMocks
     private CreateSnapshotAction createSnapshotAction;
@@ -80,7 +78,7 @@ public class CreateSnapshotActionTest {
 
     @Test
     public void shouldCreateSnapshotWithWorkspaceIdFromAppContextWhenActionPerformed() {
-        when(appContext.getWorkspace()).thenReturn(newDto(UsersWorkspaceDto.class).withId("workspace123"));
+        when(workspace.getId()).thenReturn("workspace123");
 
         createSnapshotAction.actionPerformed(event);
 

@@ -29,6 +29,7 @@ public interface ProjectWizardView extends View<ProjectWizardView.ActionDelegate
 
     void setLoaderVisibility(boolean visible);
 
+    /** The method just close the dialog. For example after save button clicked. */
     void close();
 
     void setNextButtonEnabled(boolean enabled);

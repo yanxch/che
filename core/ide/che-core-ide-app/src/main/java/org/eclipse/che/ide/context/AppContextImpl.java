@@ -10,50 +10,56 @@
  *******************************************************************************/
 package org.eclipse.che.ide.context;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.factory.shared.dto.Factory;
+import org.eclipse.che.api.machine.gwt.client.DevMachine;
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateEvent;
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateHandler;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.app.CurrentProject;
 import org.eclipse.che.ide.api.app.CurrentUser;
+import org.eclipse.che.ide.api.app.StartUpAction;
+import org.eclipse.che.ide.api.data.HasDataObject;
 import org.eclipse.che.ide.api.event.SelectionChangedEvent;
 import org.eclipse.che.ide.api.event.SelectionChangedHandler;
 import org.eclipse.che.ide.api.event.project.CurrentProjectChangedEvent;
 import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent;
 import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent.ProjectUpdatedHandler;
-import org.eclipse.che.ide.api.project.node.HasProjectConfig;
-import org.eclipse.che.ide.api.project.node.Node;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.selection.Selection;
-import org.eclipse.che.ide.project.node.ProjectNode;
-import org.eclipse.che.ide.api.app.StartUpAction;
+import org.eclipse.che.ide.api.workspace.Workspace;
 
 import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implementation of {@link AppContext}.
  *
  * @author Vitaly Parfonov
  * @author Artem Zatsarynnyi
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAgentStateHandler, ProjectUpdatedHandler {
 
     private final EventBus                  eventBus;
     private final BrowserQueryFieldRenderer browserQueryFieldRenderer;
+    private final Workspace workspace;
     private final List<String>              projectsInImport;
 
-    private UsersWorkspaceDto   workspace;
+    private WorkspaceDto   usersWorkspaceDto;
     private CurrentProject      currentProject;
     private CurrentUser         currentUser;
     private Factory             factory;
-    private String              devMachineId;
+    private DevMachine          devMachine;
     private String              projectsRoot;
     /**
      * List of actions with parameters which comes from startup URL.
@@ -61,10 +67,15 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
      */
     private List<StartUpAction> startAppActions;
 
+    private Resource   currentResource;
+    private Resource[] currentResources;
+
     @Inject
-    public AppContextImpl(EventBus eventBus, BrowserQueryFieldRenderer browserQueryFieldRenderer) {
+    public AppContextImpl(EventBus eventBus, BrowserQueryFieldRenderer browserQueryFieldRenderer,
+                          Workspace workspace) {
         this.eventBus = eventBus;
         this.browserQueryFieldRenderer = browserQueryFieldRenderer;
+        this.workspace = workspace;
 
         projectsInImport = new ArrayList<>();
 
@@ -73,35 +84,23 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
         eventBus.addHandler(ProjectUpdatedEvent.getType(), this);
     }
 
-    private static ProjectConfigDto getRootConfig(Node selectedNode) {
-        Node parent = selectedNode.getParent();
-        if (parent == null) {
-            if (selectedNode instanceof ProjectNode) {
-                return ((ProjectNode)selectedNode).getData();
-            }
-            return null;
-        }
-
-        return getRootConfig(parent);
+    @Override
+    public WorkspaceDto getWorkspace() {
+        return usersWorkspaceDto;
     }
 
     @Override
-    public UsersWorkspaceDto getWorkspace() {
-        return workspace;
-    }
-
-    @Override
-    public void setWorkspace(UsersWorkspaceDto workspace) {
-        this.workspace = workspace;
+    public void setWorkspace(WorkspaceDto workspace) {
+        this.usersWorkspaceDto = workspace;
     }
 
     @Override
     public String getWorkspaceId() {
-        if (workspace == null) {
+        if (usersWorkspaceDto == null) {
             throw new IllegalArgumentException(getClass() + " Workspace can not be null.");
         }
 
-        return workspace.getId();
+        return usersWorkspaceDto.getId();
     }
 
     @Override
@@ -155,13 +154,13 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
     }
 
     @Override
-    public String getDevMachineId() {
-        return devMachineId;
+    public DevMachine getDevMachine() {
+        return devMachine;
     }
 
     @Override
-    public void setDevMachineId(String id) {
-        this.devMachineId = id;
+    public void setDevMachine(DevMachine devMachine) {
+        this.devMachine = devMachine;
     }
 
     @Override
@@ -181,36 +180,43 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
             return;
         }
 
-        if (selection == null) {
-            currentProject = null;
-            browserQueryFieldRenderer.setProjectName("");
+        browserQueryFieldRenderer.setProjectName("");
+
+        currentResource = null;
+        currentResources = null;
+
+        if (selection == null || selection.getHeadElement() == null) {
             return;
         }
 
-        final Object headElement = selection.getHeadElement();
-        if (headElement == null) {
-            currentProject = null;
-            browserQueryFieldRenderer.setProjectName("");
-            return;
-        }
+        final Object headObject = selection.getHeadElement();
+        final List<?> allObjects = selection.getAllElements();
 
-        currentProject = new CurrentProject();
+        if (headObject instanceof HasDataObject) {
+            Object data = ((HasDataObject)headObject).getData();
 
-        if (headElement instanceof HasProjectConfig) {
-            final HasProjectConfig hasProjectConfig = (HasProjectConfig)headElement;
-            final ProjectConfigDto module = (hasProjectConfig).getProjectConfig();
-            currentProject.setProjectConfig(module);
-        }
-
-        if (headElement instanceof Node) {
-            ProjectConfigDto rootConfig = getRootConfig((Node)headElement);
-            if (rootConfig == null) {
-                rootConfig = currentProject.getProjectConfig();
+            if (data instanceof Resource) {
+                currentResource = (Resource)data;
             }
-            currentProject.setRootProject(rootConfig);
-            browserQueryFieldRenderer.setProjectName(rootConfig.getName());
+        } else if (headObject instanceof Resource) {
+            currentResource = (Resource)headObject;
         }
-        eventBus.fireEvent(new CurrentProjectChangedEvent(currentProject.getProjectConfig()));
+
+        Set<Resource> resources = Sets.newHashSet();
+
+        for (Object object : allObjects) {
+            if (object instanceof HasDataObject) {
+                Object data = ((HasDataObject)object).getData();
+
+                if (data instanceof Resource) {
+                    resources.add((Resource)data);
+                }
+            } else if (object instanceof Resource) {
+                resources.add((Resource)object);
+            }
+        }
+
+        currentResources = resources.toArray(new Resource[resources.size()]);
     }
 
     @Override
@@ -237,5 +243,46 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
             currentProject.setRootProject(updatedProjectDescriptor);
             browserQueryFieldRenderer.setProjectName(updatedProjectDescriptor.getName());
         }
+    }
+
+    @Override
+    public Resource getResource() {
+        return currentResource;
+    }
+
+    @Override
+    public Resource[] getResources() {
+        return currentResources;
+    }
+
+    @Override
+    public Project getRootProject() {
+        if (currentResource == null) {
+            return null;
+        }
+
+        if (currentResources == null) {
+            return null;
+        }
+
+        Project root = null;
+
+        for (Project project : workspace.getProjects()) {
+            if (project.getLocation().isPrefixOf(currentResources[0].getLocation())) {
+                root = project;
+            }
+        }
+
+        if (root == null) {
+            return null;
+        }
+
+        for (int i = 1; i < currentResources.length; i++) {
+            if (!root.getLocation().isPrefixOf(currentResources[i].getLocation())) {
+                return null;
+            }
+        }
+
+        return root;
     }
 }

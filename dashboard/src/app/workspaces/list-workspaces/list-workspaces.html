@@ -13,9 +13,9 @@
 <che-toolbar che-title="All Workspaces ({{listWorkspacesCtrl.userWorkspaces.length}})"
               che-add-button-name="New Workspace"
               che-add-button-href="#/create-workspace"
+              che-dropdown-menu="listWorkspacesCtrl.menuOptions"
               che-search-placeholder="Search for workspaces..."
-              che-search-model="listWorkspacesCtrl.workspaceFilter.config.name"
-              che-event-logger="workspaces/new.workspace"></che-toolbar>
+              che-search-model="listWorkspacesCtrl.workspaceFilter.config.name"></che-toolbar>
 <md-content md-scroll-y flex layout="column" md-theme="maincontent-theme">
   <md-progress-linear md-mode="indeterminate" class="workspaces-list-progress"
                       ng-show="listWorkspacesCtrl.isInfoLoading"></md-progress-linear>
@@ -31,7 +31,9 @@
       </che-list-title>
       <che-list ng-show="(listWorkspacesCtrl.userWorkspaces | filter:listWorkspacesCtrl.workspaceFilter).length > 0">
         <che-workspace-item ng-repeat="workspace in listWorkspacesCtrl.userWorkspaces | filter:listWorkspacesCtrl.workspaceFilter"
-                             che-workspace-item="workspace"></che-workspace-item>
+                            ng-model="listWorkspacesCtrl.workspacesSelectedStatus[workspace.id]"
+                            che-selectable="true"
+                            che-workspace-item="workspace"></che-workspace-item>
       </che-list>
     </div>
   </md-content>

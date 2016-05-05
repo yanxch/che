@@ -10,28 +10,25 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.git.client.init;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.api.project.gwt.client.ProjectServiceClient;
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+import org.eclipse.che.api.git.gwt.client.GitServiceClient;
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.app.CurrentProject;
-import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent;
 import org.eclipse.che.ide.api.notification.NotificationManager;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
-import org.eclipse.che.ide.ext.git.client.GitRepositoryInitializer;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsole;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsoleFactory;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
-import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
-import org.eclipse.che.ide.util.loging.Log;
 
 import javax.validation.constraints.NotNull;
 
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 
 /**
@@ -39,63 +36,54 @@ import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAI
  *
  * @author Ann Zhuleva
  * @author Roman Nikitenko
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class InitRepositoryPresenter {
     public static final String INIT_COMMAND_NAME = "Git init";
 
-    private final GitRepositoryInitializer gitRepositoryInitializer;
-    private final ProjectServiceClient     projectService;
-    private final DtoUnmarshallerFactory   dtoUnmarshaller;
-    private final EventBus                 eventBus;
-    private final GitOutputConsoleFactory  gitOutputConsoleFactory;
-    private final ConsolesPanelPresenter   consolesPanelPresenter;
+    private final GitOutputConsoleFactory gitOutputConsoleFactory;
+    private final ConsolesPanelPresenter  consolesPanelPresenter;
+    private final GitServiceClient        service;
+    private final Workspace               workspace;
+    private final GitLocalizationConstant constant;
+    private final NotificationManager     notificationManager;
     private final AppContext               appContext;
-    private final GitLocalizationConstant  constant;
-    private final NotificationManager      notificationManager;
 
     @Inject
-    public InitRepositoryPresenter(AppContext appContext,
-                                   GitLocalizationConstant constant,
+    public InitRepositoryPresenter(GitLocalizationConstant constant,
                                    NotificationManager notificationManager,
-                                   GitRepositoryInitializer gitRepositoryInitializer,
-                                   ProjectServiceClient projectServiceClient,
-                                   DtoUnmarshallerFactory dtoUnmarshaller,
-                                   EventBus eventBus,
                                    GitOutputConsoleFactory gitOutputConsoleFactory,
-                                   ConsolesPanelPresenter consolesPanelPresenter) {
-        this.appContext = appContext;
+                                   ConsolesPanelPresenter consolesPanelPresenter,
+                                   GitServiceClient service,
+                                   Workspace workspace,
+                                   AppContext appContext) {
         this.constant = constant;
         this.notificationManager = notificationManager;
-        this.gitRepositoryInitializer = gitRepositoryInitializer;
-        this.projectService = projectServiceClient;
-        this.dtoUnmarshaller = dtoUnmarshaller;
-        this.eventBus = eventBus;
         this.gitOutputConsoleFactory = gitOutputConsoleFactory;
         this.consolesPanelPresenter = consolesPanelPresenter;
+        this.service = service;
+        this.workspace = workspace;
+        this.appContext = appContext;
     }
 
-    public void initRepository() {
-        final CurrentProject currentProject = appContext.getCurrentProject();
-
-        if (currentProject == null || currentProject.getRootProject() == null) {
-            Log.error(getClass(), "Open the project before initialize repository");
-            return;
-        }
+    public void initRepository(final Project project) {
         final GitOutputConsole console = gitOutputConsoleFactory.create(INIT_COMMAND_NAME);
-        gitRepositoryInitializer.initGitRepository(currentProject.getRootProject(), new AsyncCallback<Void>() {
-            @Override
-            public void onFailure(Throwable caught) {
-                handleError(caught, console);
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-            }
 
+        service.init(appContext.getDevMachine(), project.getLocation(), false).then(new Operation<Void>() {
             @Override
-            public void onSuccess(Void result) {
+            public void apply(Void ignored) throws OperationException {
                 console.print(constant.initSuccess());
-                consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-                notificationManager.notify(constant.initSuccess(), currentProject.getRootProject());
-                getRootProject(currentProject.getRootProject());
+                consolesPanelPresenter.addCommandOutput(workspace.getId(), console);
+                notificationManager.notify(constant.initSuccess());
+
+                project.synchronize();
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError error) throws OperationException {
+                handleError(error.getCause(), console);
+                consolesPanelPresenter.addCommandOutput(workspace.getId(), console);
             }
         });
     }
@@ -109,22 +97,6 @@ public class InitRepositoryPresenter {
     private void handleError(@NotNull Throwable e, GitOutputConsole console) {
         String errorMessage = (e.getMessage() != null && !e.getMessage().isEmpty()) ? e.getMessage() : constant.initFailed();
         console.printError(errorMessage);
-        notificationManager.notify(constant.initFailed(), FAIL, true, appContext.getCurrentProject().getRootProject());
-    }
-
-    private void getRootProject(final ProjectConfigDto projectConfig) {
-        projectService.getProject(appContext.getWorkspace().getId(),
-                                  projectConfig.getPath(),
-                                  new AsyncRequestCallback<ProjectConfigDto>(dtoUnmarshaller.newUnmarshaller(ProjectConfigDto.class)) {
-                                      @Override
-                                      protected void onSuccess(ProjectConfigDto result) {
-                                          eventBus.fireEvent(new ProjectUpdatedEvent(projectConfig.getPath(), result));
-                                      }
-
-                                      @Override
-                                      protected void onFailure(Throwable exception) {
-
-                                      }
-                                  });
+        notificationManager.notify(constant.initFailed(), FAIL, FLOAT_MODE);
     }
 }

@@ -21,10 +21,10 @@ import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.CoreLocalizationConstant;
-import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.project.wizard.ProjectNotificationSubscriber;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.commons.exception.UnmarshallerException;
 import org.eclipse.che.ide.util.loging.Log;
 import org.eclipse.che.ide.websocket.Message;
@@ -32,6 +32,7 @@ import org.eclipse.che.ide.websocket.MessageBus;
 import org.eclipse.che.ide.websocket.WebSocketException;
 import org.eclipse.che.ide.websocket.rest.SubscriptionHandler;
 
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.PROGRESS;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.SUCCESS;
@@ -47,8 +48,8 @@ public class ProjectNotificationSubscriberImpl implements ProjectNotificationSub
 
     private final Operation<PromiseError>  logErrorHandler;
     private final CoreLocalizationConstant locale;
+    private final Workspace                workspace;
     private final NotificationManager      notificationManager;
-    private final String                   workspaceId;
     private final Promise<MessageBus>      messageBusPromise;
 
     private String                      wsChannel;
@@ -58,12 +59,12 @@ public class ProjectNotificationSubscriberImpl implements ProjectNotificationSub
 
     @Inject
     public ProjectNotificationSubscriberImpl(CoreLocalizationConstant locale,
-                                             AppContext appContext,
+                                             Workspace workspace,
                                              NotificationManager notificationManager,
                                              WsAgentStateController wsAgentStateController) {
         this.locale = locale;
+        this.workspace = workspace;
         this.notificationManager = notificationManager;
-        this.workspaceId = appContext.getWorkspace().getId();
         this.messageBusPromise = wsAgentStateController.getMessageBus();
         this.logErrorHandler = new Operation<PromiseError>() {
             @Override
@@ -75,14 +76,14 @@ public class ProjectNotificationSubscriberImpl implements ProjectNotificationSub
 
     @Override
     public void subscribe(final String projectName) {
-        notification = notificationManager.notify(locale.importingProject(), PROGRESS, true);
+        notification = notificationManager.notify(locale.importingProject(), PROGRESS, FLOAT_MODE);
         subscribe(projectName, notification);
     }
 
     @Override
     public void subscribe(final String projectName, final StatusNotification existingNotification) {
         this.projectName = projectName;
-        this.wsChannel = "importProject:output:" + workspaceId + ":" + projectName;
+        this.wsChannel = "importProject:output:" + workspace.getId() + ":" + projectName;
         this.notification = existingNotification;
         this.subscriptionHandler = new SubscriptionHandler<String>(new LineUnmarshaller()) {
             @Override

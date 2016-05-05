@@ -193,9 +193,7 @@ public class ImageViewer extends AbstractEditorPresenter implements FileEventHan
             return;
         }
 
-        final String eventFilePath = event.getFile().getPath();
-        final String filePath = input.getFile().getPath();
-        if (filePath.equals(eventFilePath)) {
+        if (event.getFile().equals(input.getFile())) {
             workspaceAgent.removePart(this);
         }
     }

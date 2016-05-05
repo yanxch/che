@@ -17,9 +17,10 @@ import com.google.inject.assistedinject.AssistedInject;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.icon.Icon;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.ext.java.client.JavaResources;
-import org.eclipse.che.ide.ext.java.client.projecttree.JavaSourceFolderUtil;
 import org.eclipse.che.ide.ext.java.client.refactoring.RefactoringUpdater;
 import org.eclipse.che.ide.ext.java.shared.dto.ProposalPresentation;
 import org.eclipse.che.ide.ext.java.shared.dto.Proposals;
@@ -38,6 +39,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.eclipse.che.ide.ext.java.client.util.JavaUtil.resolveFQN;
 
 public class JavaCodeAssistProcessor implements CodeAssistProcessor {
 
@@ -152,21 +155,23 @@ public class JavaCodeAssistProcessor implements CodeAssistProcessor {
             return;
         }
         final VirtualFile file = editor.getEditorInput().getFile();
-        final String projectPath = file.getProject().getProjectConfig().getPath();
-        String fqn = JavaSourceFolderUtil.getFQNForFile(file);
-        Unmarshallable<Proposals> unmarshaller = unmarshallerFactory.newUnmarshaller(Proposals.class);
-        client.computeProposals(projectPath, fqn, offset, textEditor.getDocument().getContents(),
-                                new AsyncRequestCallback<Proposals>(unmarshaller) {
-                                    @Override
-                                    protected void onSuccess(Proposals proposals) {
-                                        showProposals(callback, proposals);
-                                    }
 
-            @Override
-            protected void onFailure(Throwable throwable) {
-                Log.error(JavaCodeAssistProcessor.class, throwable);
-            }
-        });
+        if (file instanceof Resource) {
+            final Project project = ((Resource)file).getRelatedProject();
+            Unmarshallable<Proposals> unmarshaller = unmarshallerFactory.newUnmarshaller(Proposals.class);
+            client.computeProposals(project.getLocation().toString(), resolveFQN(file), offset, textEditor.getDocument().getContents(),
+                                    new AsyncRequestCallback<Proposals>(unmarshaller) {
+                                        @Override
+                                        protected void onSuccess(Proposals proposals) {
+                                            showProposals(callback, proposals);
+                                        }
+
+                                        @Override
+                                        protected void onFailure(Throwable throwable) {
+                                            Log.error(JavaCodeAssistProcessor.class, throwable);
+                                        }
+                                    });
+        }
     }
 
     private void showProposals(final CodeAssistCallback callback, final Proposals respons) {

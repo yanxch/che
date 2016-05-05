@@ -15,13 +15,9 @@ import com.google.web.bindery.event.shared.EventBus;
 import org.eclipse.che.api.project.shared.dto.ItemReference;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.commons.annotation.Nullable;
-import org.eclipse.che.ide.api.project.node.HasStorablePath;
-import org.eclipse.che.ide.api.project.node.Node;
-import org.eclipse.che.ide.api.project.node.resource.DeleteProcessor;
-import org.eclipse.che.ide.api.project.node.resource.RenameProcessor;
-import org.eclipse.che.ide.api.project.node.settings.NodeSettings;
-import org.eclipse.che.ide.project.node.resource.ItemReferenceProcessor;
+import org.eclipse.che.ide.api.data.HasStorablePath;
+import org.eclipse.che.ide.api.data.tree.Node;
+import org.eclipse.che.ide.api.data.tree.settings.NodeSettings;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -29,30 +25,28 @@ import java.util.List;
 /**
  * @author Vlad Zhukovskiy
  */
+@Deprecated
 public abstract class ItemReferenceBasedNode extends ResourceBasedNode<ItemReference> implements HasStorablePath {
-    protected final ItemReferenceProcessor resourceProcessor;
 
     public ItemReferenceBasedNode(@NotNull ItemReference itemReference,
                                   @NotNull ProjectConfigDto projectConfig,
                                   @NotNull NodeSettings nodeSettings,
                                   @NotNull EventBus eventBus,
-                                  @NotNull NodeManager nodeManager,
-                                  @NotNull ItemReferenceProcessor resourceProcessor) {
-        super(itemReference, projectConfig, nodeSettings, eventBus, nodeManager);
-        this.resourceProcessor = resourceProcessor;
+                                  @NotNull Object nodeManager) {
+        super(itemReference, projectConfig, nodeSettings, eventBus);
     }
 
-    @Nullable
-    @Override
-    public DeleteProcessor<ItemReference> getDeleteProcessor() {
-        return resourceProcessor;
-    }
-
-    @Nullable
-    @Override
-    public RenameProcessor<ItemReference> getRenameProcessor() {
-        return resourceProcessor;
-    }
+//    @Nullable
+//    @Override
+//    public DeleteProcessor<ItemReference> getDeleteProcessor() {
+//        return resourceProcessor;
+//    }
+//
+//    @Nullable
+//    @Override
+//    public RenameProcessor<ItemReference> getRenameProcessor() {
+//        return resourceProcessor;
+//    }
 
     @NotNull
     @Override
@@ -68,7 +62,7 @@ public abstract class ItemReferenceBasedNode extends ResourceBasedNode<ItemRefer
     @NotNull
     @Override
     protected Promise<List<Node>> getChildrenImpl() {
-        return nodeManager.getChildren(getStorablePath(), getProjectConfig(), getSettings());
+        return /*nodeManager.getChildren(getStorablePath(), getProjectConfig(), getSettings())*/null;
     }
 
     @NotNull

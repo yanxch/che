@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ui.dropdown;
 
-import com.google.inject.assistedinject.Assisted;
-
 import javax.validation.constraints.NotNull;
 
 /**
@@ -20,28 +18,17 @@ import javax.validation.constraints.NotNull;
  * @author Valeriy Svydenko
  */
 public interface DropDownListFactory {
-    /**
-     * Create an instance of {@link DropDownHeaderWidget} with a given identifier for registering.
-     *
-     * @param listId
-     *         list identifier
-     * @return an instance of {@link DropDownHeaderWidget}
-     */
-    @NotNull
-    DropDownHeaderWidget createList(@NotNull String listId);
 
     /**
-     * Create an instance of {@link SimpleListElementAction} with given name amd icon for displaying it and header which is configured this
-     * element.
+     * Create an instance of {@link DropDownWidget} managing action group registered in action manager.
      *
-     * @param id
-     *         id of action
-     * @param name
-     *         name of action
-     * @param header
-     *         header widget of custom list
-     * @return an instance of {@link SimpleListElementAction}
+     * @param actionGroupId
+     *          identifier of {@link org.eclipse.che.ide.api.action.ActionGroup} registered in action manager
+     *
+     * @return
+     *          an instance of {@link DropDownWidget}
      */
     @NotNull
-    SimpleListElementAction createElement(@NotNull @Assisted("id") String id, @NotNull @Assisted("name") String name, DropDownHeaderWidget header);
+    DropDownWidget createDropDown(@NotNull String actionGroupId);
+
 }

@@ -18,11 +18,10 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
 import org.eclipse.che.api.machine.gwt.client.MachineManager;
-import org.eclipse.che.ide.api.component.WsAgentComponent;
+import org.eclipse.che.api.machine.shared.Constants;
 import org.eclipse.che.ide.api.extension.ExtensionGinModule;
 import org.eclipse.che.ide.api.outputconsole.OutputConsole;
 import org.eclipse.che.ide.api.parts.Perspective;
-import org.eclipse.che.ide.extension.machine.client.MachineComponent;
 import org.eclipse.che.ide.extension.machine.client.command.CommandType;
 import org.eclipse.che.ide.extension.machine.client.command.custom.CustomCommandType;
 import org.eclipse.che.ide.extension.machine.client.command.edit.EditCommandsView;
@@ -59,6 +58,8 @@ import org.eclipse.che.ide.extension.machine.client.perspective.widgets.tab.head
 import org.eclipse.che.ide.extension.machine.client.perspective.widgets.tab.header.TabHeaderImpl;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelView;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelViewImpl;
+import org.eclipse.che.ide.extension.machine.client.targets.TargetsView;
+import org.eclipse.che.ide.extension.machine.client.targets.TargetsViewImpl;
 import org.eclipse.che.ide.ui.toolbar.ToolbarPresenter;
 
 import static org.eclipse.che.ide.extension.machine.client.perspective.OperationsPerspective.OPERATIONS_PERSPECTIVE_ID;
@@ -76,9 +77,6 @@ public class MachineGinModule extends AbstractGinModule {
     /** {@inheritDoc} */
     @Override
     protected void configure() {
-        GinMapBinder<String, WsAgentComponent> componentBinder = GinMapBinder.newMapBinder(binder(), String.class, WsAgentComponent.class);
-        componentBinder.addBinding("Start Machine").to(MachineComponent.class);
-
         GinMapBinder<String, Perspective> perspectiveBinder = GinMapBinder.newMapBinder(binder(), String.class, Perspective.class);
         perspectiveBinder.addBinding(OPERATIONS_PERSPECTIVE_ID).to(OperationsPerspective.class);
 
@@ -97,6 +95,8 @@ public class MachineGinModule extends AbstractGinModule {
 
         bind(EditCommandsView.class).to(EditCommandsViewImpl.class).in(Singleton.class);
 
+        bind(TargetsView.class).to(TargetsViewImpl.class).in(Singleton.class);
+
         GinMultibinder.newSetBinder(binder(), CommandType.class).addBinding().to(CustomCommandType.class);
 
         bind(CommandPropertyValueProviderRegistry.class).to(CommandPropertyValueProviderRegistryImpl.class).in(Singleton.class);
@@ -114,5 +114,7 @@ public class MachineGinModule extends AbstractGinModule {
         install(new GinFactoryModuleBuilder().build(TerminalFactory.class));
 
         bind(MachineManager.class).to(MachineManagerImpl.class).in(Singleton.class);
+
+        bindConstant().annotatedWith(Names.named("machine.extension.api_port")).to(Constants.WS_AGENT_PORT);
     }
 }

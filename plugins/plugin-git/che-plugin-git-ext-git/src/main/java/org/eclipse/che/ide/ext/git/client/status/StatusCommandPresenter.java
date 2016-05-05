@@ -10,31 +10,35 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.git.client.status;
 
-import org.eclipse.che.ide.api.theme.Style;
-import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.eclipse.che.api.git.gwt.client.GitServiceClient;
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.app.CurrentProject;
 import org.eclipse.che.ide.api.notification.NotificationManager;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.theme.Style;
+import org.eclipse.che.ide.api.workspace.Workspace;
+import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsole;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsoleFactory;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
-import org.eclipse.che.ide.rest.StringUnmarshaller;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.eclipse.che.api.git.shared.StatusFormat.LONG;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 
 /**
  * Handler to process actions with displaying the status of the Git work tree.
  *
  * @author Ann Zhuleva
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class StatusCommandPresenter {
@@ -46,6 +50,7 @@ public class StatusCommandPresenter {
     private final ConsolesPanelPresenter  consolesPanelPresenter;
     private final GitLocalizationConstant constant;
     private final NotificationManager     notificationManager;
+    private final Workspace               workspace;
 
     /**
      * Create presenter.
@@ -56,34 +61,30 @@ public class StatusCommandPresenter {
                                   GitOutputConsoleFactory gitOutputConsoleFactory,
                                   ConsolesPanelPresenter consolesPanelPresenter,
                                   GitLocalizationConstant constant,
-                                  NotificationManager notificationManager) {
+                                  NotificationManager notificationManager,
+                                  Workspace workspace) {
         this.service = service;
         this.appContext = appContext;
         this.gitOutputConsoleFactory = gitOutputConsoleFactory;
         this.consolesPanelPresenter = consolesPanelPresenter;
         this.constant = constant;
         this.notificationManager = notificationManager;
+        this.workspace = workspace;
     }
 
     /** Show status. */
-    public void showStatus() {
-        final CurrentProject project = appContext.getCurrentProject();
-        if (project == null) {
-            return;
-        }
-
-        service.statusText(appContext.getWorkspaceId(), project.getRootProject(), LONG,
-                           new AsyncRequestCallback<String>(new StringUnmarshaller()) {
-                               @Override
-                               protected void onSuccess(String result) {
-                                   printGitStatus(result);
-                               }
-
-                               @Override
-                               protected void onFailure(Throwable exception) {
-                                   notificationManager.notify(constant.statusFailed(), FAIL, true, project.getRootProject());
-                               }
-                           });
+    public void showStatus(Project project) {
+        service.statusText(appContext.getDevMachine(), project.getLocation(), LONG).then(new Operation<String>() {
+            @Override
+            public void apply(String status) throws OperationException {
+                printGitStatus(status);
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError error) throws OperationException {
+                notificationManager.notify(constant.statusFailed(), FAIL, FLOAT_MODE);
+            }
+        });
     }
 
     /**
@@ -101,18 +102,18 @@ public class StatusCommandPresenter {
         boolean stagedChangesAlreadyPrinted = false;
         for (String line : statusLines) {
             if ((line.startsWith("\t") || line.startsWith("#\t")) && containsStagedChanges && !stagedChangesAlreadyPrinted) {
-                console.print(line, Style.getGitConsoleStagedFilesColor());
+                console.print(line, Style.getVcsConsoleStagedFilesColor());
                 if (statusLines.indexOf(line) == statusLines.size() - 1 || statusLines.get(statusLines.indexOf(line) + 1).equals("")) {
                     stagedChangesAlreadyPrinted = true;
                 }
                 continue;
             } else if ((line.startsWith("\t") || line.startsWith("#\t"))) {
-                console.print(line, Style.getGitConsoleUnstagedFilesColor());
+                console.print(line, Style.getVcsConsoleUnstagedFilesColor());
                 continue;
             }
             console.print(line);
         }
 
-        consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
+        consolesPanelPresenter.addCommandOutput(workspace.getId(), console);
     }
 }

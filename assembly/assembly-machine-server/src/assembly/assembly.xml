@@ -29,7 +29,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <unpack>false</unpack>
             <outputDirectory>webapps</outputDirectory>
-            <outputFileNameMapping>ide.war</outputFileNameMapping>
+            <outputFileNameMapping>wsagent.war</outputFileNameMapping>
             <includes>
                 <include>org.eclipse.che:assembly-machine-war</include>
             </includes>
@@ -39,6 +39,10 @@
         <fileSet>
             <directory>${project.basedir}/src/assembly/che-templates</directory>
             <outputDirectory>che-templates</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/assembly/webapps</directory>
+            <outputDirectory>webapps</outputDirectory>
         </fileSet>
     </fileSets>
     <files>

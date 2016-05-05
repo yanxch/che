@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.editor;
 
+import com.google.common.base.Optional;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -17,12 +18,9 @@ import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateEvent;
 import org.eclipse.che.api.machine.gwt.client.events.WsAgentStateHandler;
-import org.eclipse.che.api.project.gwt.client.ProjectServiceClient;
-import org.eclipse.che.api.project.shared.dto.ItemReference;
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.commons.annotation.Nullable;
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.ide.CoreLocalizationConstant;
-import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorInput;
 import org.eclipse.che.ide.api.editor.EditorOpenedEvent;
@@ -30,303 +28,250 @@ import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter.EditorPartCloseHandler;
 import org.eclipse.che.ide.api.editor.EditorProvider;
 import org.eclipse.che.ide.api.editor.EditorRegistry;
+import org.eclipse.che.ide.api.editor.OpenEditorCallbackImpl;
 import org.eclipse.che.ide.api.event.ActivePartChangedEvent;
 import org.eclipse.che.ide.api.event.ActivePartChangedHandler;
 import org.eclipse.che.ide.api.event.FileContentUpdateEvent;
 import org.eclipse.che.ide.api.event.FileEvent;
-import org.eclipse.che.ide.api.event.FileEvent.FileOperation;
 import org.eclipse.che.ide.api.event.FileEventHandler;
 import org.eclipse.che.ide.api.event.WindowActionEvent;
 import org.eclipse.che.ide.api.event.WindowActionHandler;
-import org.eclipse.che.ide.api.event.project.DeleteProjectEvent;
-import org.eclipse.che.ide.api.event.project.DeleteProjectHandler;
 import org.eclipse.che.ide.api.filetypes.FileType;
 import org.eclipse.che.ide.api.filetypes.FileTypeRegistry;
-import org.eclipse.che.ide.api.notification.NotificationManager;
-import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.parts.PartPresenter;
 import org.eclipse.che.ide.api.parts.PropertyListener;
 import org.eclipse.che.ide.api.parts.WorkspaceAgent;
-import org.eclipse.che.ide.api.project.node.HasStorablePath;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.Container;
+import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.resources.ResourceChangedEvent;
+import org.eclipse.che.ide.api.resources.ResourceChangedEvent.ResourceChangedHandler;
+import org.eclipse.che.ide.api.resources.ResourceDelta;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.api.texteditor.HasReadOnlyProperty;
-import org.eclipse.che.ide.project.event.ResourceNodeDeletedEvent;
-import org.eclipse.che.ide.project.event.ResourceNodeRenamedEvent;
-import org.eclipse.che.ide.project.node.FileReferenceNode;
-import org.eclipse.che.ide.project.node.FolderReferenceNode;
-import org.eclipse.che.ide.project.node.ItemReferenceBasedNode;
-import org.eclipse.che.ide.project.node.ModuleNode;
-import org.eclipse.che.ide.project.node.NodeManager;
-import org.eclipse.che.ide.project.node.ResourceBasedNode;
 import org.eclipse.che.ide.resource.Path;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
-import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
-import org.eclipse.che.ide.rest.Unmarshallable;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
-import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.CLOSE;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.Lists.newArrayList;
 import static org.eclipse.che.ide.api.parts.PartStackType.EDITING;
+import static org.eclipse.che.ide.api.resources.Resource.FILE;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.ADDED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
 
-/** @author Evgen Vidolob */
+/**
+ * Default implementation of {@link EditorAgent}.
+ *
+ * @author Evgen Vidolob
+ * @author Vlad Zhukovskyi
+ * @see EditorAgent
+ **/
 @Singleton
-public class EditorAgentImpl implements EditorAgent {
+public class EditorAgentImpl implements EditorAgent,
+                                        EditorPartCloseHandler,
+                                        FileEventHandler,
+                                        ActivePartChangedHandler,
+                                        WindowActionHandler,
+                                        ResourceChangedHandler,
+                                        WsAgentStateHandler {
+
+    private final EventBus                 eventBus;
+    private final WorkspaceAgent           workspaceAgent;
+    private final FileTypeRegistry         fileTypeRegistry;
+    private final EditorRegistry           editorRegistry;
+    private final CoreLocalizationConstant coreLocalizationConstant;
 
     private final List<EditorPartPresenter> openedEditors;
-    /** Used to notify {@link EditorAgentImpl} that editor has closed */
-    private final EditorPartCloseHandler editorClosed     = new EditorPartCloseHandler() {
-        @Override
-        public void onClose(EditorPartPresenter editor) {
-            editorClosed(editor);
-        }
-    };
-    private final FileEventHandler       fileEventHandler = new FileEventHandler() {
-        @Override
-        public void onFileOperation(final FileEvent event) {
-            if (event.getOperationType() == FileOperation.OPEN) {
-                openEditor(event.getFile());
-            } else if (event.getOperationType() == CLOSE) {
-                closeEditor(event.getFile());
-            }
-        }
-    };
-    private final EventBus                  eventBus;
-    private final WorkspaceAgent            workspace;
     private       List<EditorPartPresenter> dirtyEditors;
-    private       FileTypeRegistry          fileTypeRegistry;
-    private       EditorRegistry            editorRegistry;
     private       EditorPartPresenter       activeEditor;
-    private final ActivePartChangedHandler activePartChangedHandler = new ActivePartChangedHandler() {
-        @Override
-        public void onActivePartChanged(ActivePartChangedEvent event) {
-            if (event.getActivePart() instanceof EditorPartPresenter) {
-                activeEditor = (EditorPartPresenter)event.getActivePart();
-                activeEditor.activate();
-            }
-        }
-    };
-    private       NotificationManager      notificationManager;
-    private       CoreLocalizationConstant coreLocalizationConstant;
-    private final NodeManager              nodeManager;
-    private final ProjectServiceClient     projectService;
-    private final AppContext               appContext;
-    private final DtoUnmarshallerFactory   unmarshallerFactory;
-    private final WindowActionHandler windowActionHandler = new WindowActionHandler() {
-        @Override
-        public void onWindowClosing(final WindowActionEvent event) {
-            for (EditorPartPresenter editorPartPresenter : openedEditors) {
-                if (editorPartPresenter.isDirty()) {
-                    event.setMessage(coreLocalizationConstant.changesMayBeLost());
-                }
-            }
-        }
-
-        @Override
-        public void onWindowClosed(WindowActionEvent event) {
-        }
-    };
 
     @Inject
     public EditorAgentImpl(EventBus eventBus,
                            FileTypeRegistry fileTypeRegistry,
                            EditorRegistry editorRegistry,
-                           final WorkspaceAgent workspace,
-                           final NotificationManager notificationManager,
-                           CoreLocalizationConstant coreLocalizationConstant,
-                           NodeManager nodeManager,
-                           ProjectServiceClient projectServiceClient,
-                           AppContext appContext,
-                           DtoUnmarshallerFactory unmarshallerFactory) {
-        super();
+                           WorkspaceAgent workspaceAgent,
+                           CoreLocalizationConstant coreLocalizationConstant) {
         this.eventBus = eventBus;
         this.fileTypeRegistry = fileTypeRegistry;
         this.editorRegistry = editorRegistry;
-        this.workspace = workspace;
-        this.notificationManager = notificationManager;
+        this.workspaceAgent = workspaceAgent;
         this.coreLocalizationConstant = coreLocalizationConstant;
-        this.nodeManager = nodeManager;
-        this.appContext = appContext;
-        this.projectService = projectServiceClient;
-        this.unmarshallerFactory = unmarshallerFactory;
-        openedEditors = new ArrayList<>();
+        this.openedEditors = newArrayList();
 
-        bind();
+        eventBus.addHandler(ActivePartChangedEvent.TYPE, this);
+        eventBus.addHandler(FileEvent.TYPE, this);
+        eventBus.addHandler(WindowActionEvent.TYPE, this);
+        eventBus.addHandler(ResourceChangedEvent.getType(), this);
+        eventBus.addHandler(WsAgentStateEvent.TYPE, this);
     }
 
-    protected void bind() {
-        eventBus.addHandler(ActivePartChangedEvent.TYPE, activePartChangedHandler);
-        eventBus.addHandler(FileEvent.TYPE, fileEventHandler);
-        eventBus.addHandler(WindowActionEvent.TYPE, windowActionHandler);
-        eventBus.addHandler(ResourceNodeDeletedEvent.getType(), new ResourceNodeDeletedEvent.ResourceNodeDeletedHandler() {
-            @Override
-            public void onResourceEvent(ResourceNodeDeletedEvent event) {
-                ResourceBasedNode node = event.getNode();
-                if (node instanceof FileReferenceNode) {
-                    for (EditorPartPresenter editor : openedEditors) {
-                        VirtualFile deletedVFile = (VirtualFile)node;
-                        if (deletedVFile.getPath().equals(editor.getEditorInput().getFile().getPath())) {
-                            eventBus.fireEvent(new FileEvent(editor.getEditorInput().getFile(), CLOSE));
-                        }
-                    }
-                } else if (node instanceof FolderReferenceNode) {
-                    for (EditorPartPresenter editor : openedEditors) {
-                        if (editor.getEditorInput().getFile().getPath().startsWith(((FolderReferenceNode)node).getStorablePath())) {
-                            eventBus.fireEvent(new FileEvent(editor.getEditorInput().getFile(), CLOSE));
-                        }
-                    }
-                } else if (node instanceof ModuleNode) {
-                    for (EditorPartPresenter editor : openedEditors) {
-                        VirtualFile virtualFile = editor.getEditorInput().getFile();
-                        if (moduleHasFile(node.getProjectConfig(), virtualFile)) {
-                            eventBus.fireEvent(new FileEvent(virtualFile, CLOSE));
-                        }
-                        if (node.getParent() == null || !(node.getParent() instanceof HasStorablePath)) {
-                            return;
-                        }
-
-                        String parentPath = ((HasStorablePath)node.getParent()).getStorablePath();
-                        String openFileName = virtualFile.getName();
-                        String openFilePath = virtualFile.getPath();
-                        if (openFilePath.contains(parentPath) && openFileName.equals("modules")) {
-                            eventBus.fireEvent(new FileContentUpdateEvent(openFilePath));
-                        }
-                    }
-                }
-            }
-        });
-        eventBus.addHandler(DeleteProjectEvent.TYPE, new DeleteProjectHandler() {
-            @Override
-            public void onProjectDeleted(DeleteProjectEvent event) {
-                ProjectConfigDto configDto = event.getProjectConfig();
-                for (EditorPartPresenter editor : openedEditors) {
-                    VirtualFile virtualFile = editor.getEditorInput().getFile();
-                    if (moduleHasFile(configDto, virtualFile)) {
-                        eventBus.fireEvent(new FileEvent(virtualFile, CLOSE));
-                    }
-                }
-            }
-        });
-        eventBus.addHandler(ResourceNodeRenamedEvent.getType(), new ResourceNodeRenamedEvent.ResourceNodeRenamedHandler() {
-            @Override
-            public void onResourceRenamedEvent(ResourceNodeRenamedEvent event) {
-                ResourceBasedNode<?> resourceBaseNode = event.getNode();
-
-                if (resourceBaseNode instanceof FolderReferenceNode || resourceBaseNode instanceof ModuleNode) {
-                    HasStorablePath renamedTargetStoragePath = ((HasStorablePath)resourceBaseNode);
-                    final String oldTargetPath = renamedTargetStoragePath.getStorablePath();
-                    final String newTargetPath;
-                    if (resourceBaseNode instanceof FolderReferenceNode) {
-                        newTargetPath = ((ItemReference)event.getNewDataObject()).getPath();
-                    } else {
-                        newTargetPath = ((ProjectConfigDto)event.getNewDataObject()).getPath();
-                    }
-                    final Unmarshallable<ItemReference> unmarshaller = unmarshallerFactory.newUnmarshaller(ItemReference.class);
-                    updateEditorPartsAfterRename(new LinkedList<>(openedEditors),
-                                                 oldTargetPath,
-                                                 newTargetPath,
-                                                 unmarshaller);
-                }
-            }
-        });
-
-        eventBus.addHandler(WsAgentStateEvent.TYPE, new WsAgentStateHandler() {
-            @Override
-            public void onWsAgentStarted(WsAgentStateEvent event) {
-                //to do nothing
-            }
-
-            @Override
-            public void onWsAgentStopped(WsAgentStateEvent event) {
-                List<VirtualFile> filesToClose = new ArrayList<>();
-                for (EditorPartPresenter editor : openedEditors) {
-                    filesToClose.add(editor.getEditorInput().getFile());
-                }
-
-                for (VirtualFile virtualFile : filesToClose) {
-                    eventBus.fireEvent(new FileEvent(virtualFile, FileEvent.FileOperation.CLOSE));
-                }
-            }
-        });
+    @Override
+    public void onClose(EditorPartPresenter editor) {
+        closeEditorPart(editor);
     }
 
-    //todo Warning: this code should be reworked or deleted when folders and maven modules won't being closed after rename
+    @Override
+    public void onFileOperation(FileEvent event) {
+        switch (event.getOperationType()) {
+            case OPEN:
+                openEditor(event.getFile());
+                break;
+            case CLOSE:
+                closeEditor(event.getFile());
+        }
+    }
 
-    /**
-     * Recursive update opened editor parts after renaming their parent folder or parent module
-     *
-     * @param editorParts
-     *         list opened editor parts
-     */
-    private void updateEditorPartsAfterRename(final LinkedList<EditorPartPresenter> editorParts,
-                                              final String oldTargetPath,
-                                              final String newTargetPath,
-                                              final Unmarshallable<ItemReference> unmarshaller) {
-        if (editorParts.isEmpty()) {
+    @Override
+    public void onActivePartChanged(ActivePartChangedEvent event) {
+        if (event.getActivePart() instanceof EditorPartPresenter) {
+            activeEditor = (EditorPartPresenter)event.getActivePart();
+            activeEditor.activate();
+        }
+    }
+
+    @Override
+    public void onWindowClosing(WindowActionEvent event) {
+        for (EditorPartPresenter editorPartPresenter : getOpenedEditors()) {
+            if (editorPartPresenter.isDirty()) {
+                event.setMessage(coreLocalizationConstant.changesMayBeLost()); //TODO need to move this into standalone component
+                return;
+            }
+        }
+    }
+
+    @Override
+    public void onWindowClosed(WindowActionEvent event) {
+        //do nothing
+    }
+
+    @Override
+    public void onResourceChanged(ResourceChangedEvent event) {
+        final ResourceDelta delta = event.getDelta();
+        final Resource resource = delta.getResource();
+
+        switch (delta.getKind()) {
+            case ADDED:
+                onResourceCreated(delta);
+                break;
+            case REMOVED:
+                onResourceRemoved(resource);
+                break;
+            case UPDATED:
+                onResourceUpdated(resource);
+        }
+    }
+
+    @Override
+    public void onWsAgentStarted(WsAgentStateEvent event) {
+        //do nothing
+    }
+
+    @Override
+    public void onWsAgentStopped(WsAgentStateEvent event) {
+        for (EditorPartPresenter editor : getOpenedEditors()) {
+            closeEditorPart(editor);
+        }
+    }
+
+    protected void onResourceCreated(ResourceDelta delta) {
+        if ((delta.getFlags() & (MOVED_FROM | MOVED_TO)) == 0) {
             return;
         }
-        final EditorPartPresenter editorPart = editorParts.pop();
-        final String oldFilePath = editorPart.getEditorInput().getFile().getPath();
 
-        if (!oldFilePath.startsWith(oldTargetPath + "/")) {
-            updateEditorPartsAfterRename(editorParts, oldTargetPath, newTargetPath, unmarshaller);
+        final Resource resource = delta.getResource();
+        final Path movedFrom = delta.getFromPath();
+
+        if (resource.getResourceType() == FILE) {
+            final EditorPartPresenter editor = getOpenedEditor(delta.getFromPath());
+            if (editor != null) {
+                editor.getEditorInput().setFile((File)resource);
+                editor.onFileChanged();
+                eventBus.fireEvent(new FileContentUpdateEvent(resource.getLocation().toString()));
+            }
+        } else {
+            List<EditorPartPresenter> outdatedEditors = newArrayList();
+            for (EditorPartPresenter editor : getOpenedEditors()) {
+                if (movedFrom.isPrefixOf(editor.getEditorInput().getFile().getLocation())) {
+                    outdatedEditors.add(editor);
+                }
+            }
+
+            if (outdatedEditors.isEmpty()) {
+                return;
+            }
+
+            for (final EditorPartPresenter editor : outdatedEditors) {
+                final Path rawPath = editor.getEditorInput().getFile().getLocation().removeFirstSegments(movedFrom.segmentCount());
+
+                ((Container)resource).getFile(rawPath).then(new Operation<Optional<File>>() {
+                    @Override
+                    public void apply(Optional<File> newFile) throws OperationException {
+                        if (newFile.isPresent()) {
+                            editor.getEditorInput().setFile(newFile.get());
+                            editor.onFileChanged();
+                            eventBus.fireEvent(new FileContentUpdateEvent(newFile.get().getLocation().toString()));
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    protected void onResourceRemoved(Resource resource) {
+        if (resource.getResourceType() == FILE) {
+            closeEditorPart(getOpenedEditor(resource.getLocation()));
+            return;
         }
 
-        final String newFilePath = oldFilePath.replaceFirst(oldTargetPath, newTargetPath);
-
-        projectService.getItem(appContext.getWorkspace().getId(), newFilePath, new AsyncRequestCallback<ItemReference>(unmarshaller) {
-            @Override
-            protected void onSuccess(ItemReference result) {
-                FileReferenceNode fileReferenceNode = ((FileReferenceNode)editorPart.getEditorInput().getFile());
-                ProjectConfigDto configDto = fileReferenceNode.getProjectConfig();
-                final ItemReferenceBasedNode wrappedNode = nodeManager.wrap(result, configDto);
-
-                if (wrappedNode instanceof FileReferenceNode) {
-                    updateEditorNode(oldFilePath, (FileReferenceNode)wrappedNode);
-                }
-                updateEditorPartsAfterRename(editorParts, oldTargetPath, newTargetPath, unmarshaller);
+        for (EditorPartPresenter editor : getOpenedEditors()) {
+            final Path location = editor.getEditorInput().getFile().getLocation();
+            if (resource.getLocation().equals(location) || resource.getLocation().isPrefixOf(location)) {
+                closeEditorPart(editor);
             }
-
-            @Override
-            protected void onFailure(Throwable exception) {
-                updateEditorPartsAfterRename(editorParts, oldTargetPath, newTargetPath, unmarshaller);
-            }
-        });
+        }
     }
 
-    private boolean moduleHasFile(ProjectConfigDto configDto, VirtualFile virtualFile) {
-        String descriptorPath = configDto.getPath();
-        String descriptorPathOfFile = virtualFile.getProject().getProjectConfig().getPath();
-        return descriptorPathOfFile.equals(descriptorPath) || descriptorPathOfFile.startsWith(descriptorPath + "/");
+    protected void onResourceUpdated(Resource resource) {
+        if (resource.getResourceType() != FILE) {
+            return;
+        }
+
+        final EditorPartPresenter editor = getOpenedEditor(resource.getLocation());
+
+        if (editor != null) {
+            editor.getEditorInput().setFile((File)resource);
+            editor.onFileChanged();
+            eventBus.fireEvent(new FileContentUpdateEvent(resource.getLocation().toString()));
+        }
     }
 
-    /** {@inheritDoc} */
     @Override
     public void openEditor(@NotNull final VirtualFile file) {
-        doOpen(file, null);
+        doOpen(file, new OpenEditorCallbackImpl());
     }
 
-    /** {@inheritDoc} */
+    @Override
     public void closeEditor(VirtualFile file) {
-        EditorPartPresenter openedEditor = getOpenedEditor(Path.valueOf(file.getPath()));
-        if (openedEditor != null) {
-            editorClosed(openedEditor);
-        }
+        checkArgument(file != null, "Null file occurred");
+
+        closeEditorPart(getOpenedEditor(file.getLocation()));
     }
 
-    /** {@inheritDoc} */
     @Override
     public void openEditor(@NotNull VirtualFile file, @NotNull OpenEditorCallback callback) {
         doOpen(file, callback);
     }
 
     private void doOpen(final VirtualFile file, final OpenEditorCallback callback) {
-        EditorPartPresenter openedEditor = getOpenedEditor(Path.valueOf(file.getPath()));
+        EditorPartPresenter openedEditor = getOpenedEditor(file.getLocation());
         if (openedEditor != null) {
-            workspace.setActivePart(openedEditor, EDITING);
+            workspaceAgent.setActivePart(openedEditor, EDITING);
             callback.onEditorActivated(openedEditor);
         } else {
             FileType fileType = fileTypeRegistry.getFileTypeByFile(file);
@@ -334,12 +279,12 @@ public class EditorAgentImpl implements EditorAgent {
             final EditorPartPresenter editor = editorProvider.getEditor();
 
             editor.init(new EditorInputImpl(fileType, file), callback);
-            editor.addCloseHandler(editorClosed);
+            editor.addCloseHandler(this);
 
-            workspace.openPart(editor, EDITING);
+            workspaceAgent.openPart(editor, EDITING);
             openedEditors.add(editor);
 
-            workspace.setActivePart(editor);
+            workspaceAgent.setActivePart(editor);
             editor.addPropertyListener(new PropertyListener() {
                 @Override
                 public void propertyChanged(PartPresenter source, int propId) {
@@ -347,25 +292,20 @@ public class EditorAgentImpl implements EditorAgent {
                         if (editor instanceof HasReadOnlyProperty) {
                             ((HasReadOnlyProperty)editor).setReadOnly(file.isReadOnly());
                         }
-                        if (callback != null) {
-                            callback.onEditorOpened(editor);
-                        }
 
+                        callback.onEditorOpened(editor);
                         eventBus.fireEvent(new EditorOpenedEvent(file, editor));
                     }
                 }
             });
-
         }
     }
 
-    /** {@inheritDoc} */
     @Override
     public void activateEditor(@NotNull EditorPartPresenter editor) {
-        workspace.setActivePart(editor);
+        workspaceAgent.setActivePart(editor);
     }
 
-    /** {@inheritDoc} */
     @Override
     public List<EditorPartPresenter> getDirtyEditors() {
         List<EditorPartPresenter> dirtyEditors = new ArrayList<>();
@@ -377,39 +317,40 @@ public class EditorAgentImpl implements EditorAgent {
         return dirtyEditors;
     }
 
-    /** @param editor */
-    protected void editorClosed(EditorPartPresenter editor) {
+    protected void closeEditorPart(EditorPartPresenter editor) {
+        if (editor == null) {
+            return;
+        }
+
         openedEditors.remove(editor);
 
-        //call close() method
         editor.close(false);
 
         if (activeEditor == null) {
             return;
         }
 
-        String closedFilePath = editor.getEditorInput().getFile().getPath();
-        String activeFilePath = activeEditor.getEditorInput().getFile().getPath();
-        if (activeFilePath.equals(closedFilePath)) {
+        final VirtualFile closedFile = editor.getEditorInput().getFile();
+        final VirtualFile activeFile = activeEditor.getEditorInput().getFile();
+        if (activeFile.equals(closedFile)) {
             activeEditor = null;
         }
     }
 
-    /** {@inheritDoc} */
     @NotNull
     @Override
     public List<EditorPartPresenter> getOpenedEditors() {
-        return openedEditors;
+        return newArrayList(openedEditors);
     }
 
-    /** {@inheritDoc} */
     @Override
     public EditorPartPresenter getOpenedEditor(Path path) {
         for (EditorPartPresenter editor : openedEditors) {
-            if (path.equals(Path.valueOf(editor.getEditorInput().getFile().getPath()))) {
+            if (path.equals(editor.getEditorInput().getFile().getLocation())) {
                 return editor;
             }
         }
+
         return null;
     }
 
@@ -430,7 +371,6 @@ public class EditorAgentImpl implements EditorAgent {
             @Override
             public void onFailure(Throwable caught) {
                 callback.onFailure(caught);
-                notificationManager.notify(coreLocalizationConstant.someFilesCanNotBeSaved(), StatusNotification.Status.FAIL, true);
             }
 
             @Override
@@ -445,69 +385,8 @@ public class EditorAgentImpl implements EditorAgent {
         });
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public void updateEditorNode(@NotNull String path, @NotNull VirtualFile virtualFile) {
-        EditorPartPresenter openedEditor = getOpenedEditor(Path.valueOf(path));
-        if (openedEditor == null) {
-            return;
-        }
-        openedEditor.getEditorInput().setFile(virtualFile);
-        openedEditor.onFileChanged();
-    }
-
-    /** {@inheritDoc} */
     @Override
     public EditorPartPresenter getActiveEditor() {
         return activeEditor;
-    }
-
-    /** {@inheritDoc} */
-    @Nullable
-    @Override
-    public EditorPartPresenter getNextEditor() {
-        EditorPartPresenter nextPart = null;
-        Iterator<EditorPartPresenter> iterator = openedEditors.iterator();
-        while (iterator.hasNext()) {
-            EditorPartPresenter editor = iterator.next();
-            if (activeEditor.equals(editor) && iterator.hasNext()) {
-                nextPart = iterator.next();
-                break;
-            }
-        }
-        return nextPart;
-    }
-
-    /** {@inheritDoc} */
-    @Nullable
-    @Override
-    public EditorPartPresenter getPreviousEditor() {
-        EditorPartPresenter previousEditor = null;
-        for (EditorPartPresenter editor : openedEditors) {
-            if (activeEditor.equals(editor) && previousEditor != null) {
-                break;
-            }
-            previousEditor = editor;
-        }
-        return previousEditor;
-    }
-
-    /** {@inheritDoc} */
-    @Nullable
-    @Override
-    public EditorPartPresenter getLastEditor() {
-        EditorPartPresenter result = null;
-        for (EditorPartPresenter editor : openedEditors) {
-            result = editor;
-        }
-        return result;
-    }
-
-    /** {@inheritDoc} */
-    @Nullable
-    @Override
-    public EditorPartPresenter getFirstEditor() {
-        Iterator<EditorPartPresenter> openedEditors = this.openedEditors.iterator();
-        return openedEditors.hasNext() ? openedEditors.next() : null;
     }
 }

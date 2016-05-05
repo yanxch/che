@@ -32,9 +32,8 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import javax.validation.constraints.NotNull;
-
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static com.google.gwt.user.client.ui.HasHorizontalAlignment.ALIGN_LEFT;
@@ -42,7 +41,8 @@ import static com.google.gwt.user.client.ui.HasHorizontalAlignment.ALIGN_LEFT;
 /**
  * The implementation of {@link ResetFilesPresenter}.
  *
- * @author <a href="mailto:aplotnikov@codenvy.com">Andrey Plotnikov</a>
+ * @author Andrey Plotnikov
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class ResetFilesViewImpl extends Window implements ResetFilesView {
@@ -141,14 +141,23 @@ public class ResetFilesViewImpl extends Window implements ResetFilesView {
         indexFiles.addStyleName(resources.gitCSS().cells());
     }
 
+    @Override
+    protected void onEnterClicked() {
+        if (isWidgetFocused(btnCancel)) {
+            delegate.onCancelClicked();
+            return;
+        }
+
+        if (isWidgetFocused(btnReset)) {
+            delegate.onResetClicked();
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
-    public void setIndexedFiles(@NotNull List<IndexFile> indexedFiles) {
-        // Wraps Array in java.util.List
+    public void setIndexedFiles(IndexFile[] indexedFiles) {
         List<IndexFile> appList = new ArrayList<>();
-        for (IndexFile indexedFile : indexedFiles) {
-            appList.add(indexedFile);
-        }
+        Collections.addAll(appList, indexedFiles);
         indexFiles.setRowData(appList);
     }
 
@@ -161,7 +170,7 @@ public class ResetFilesViewImpl extends Window implements ResetFilesView {
     /** {@inheritDoc} */
     @Override
     public void showDialog() {
-        this.show();
+        this.show(btnReset);
     }
 
     /** {@inheritDoc} */

@@ -15,7 +15,6 @@ import elemental.client.Browser;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.logical.shared.CloseEvent;
 import com.google.gwt.event.logical.shared.CloseHandler;
 import com.google.gwt.user.client.Window;
@@ -26,14 +25,21 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
+import org.eclipse.che.api.machine.gwt.client.DevMachine;
+import org.eclipse.che.api.machine.gwt.client.WsAgentStateController;
+import org.eclipse.che.api.machine.shared.dto.MachineDto;
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.PromiseError;
+import org.eclipse.che.api.workspace.gwt.client.WorkspaceServiceClient;
 import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedEvent;
 import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedHandler;
-import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
-import org.eclipse.che.ide.api.ProductInfoDataProvider;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.component.Component;
 import org.eclipse.che.ide.api.component.WsAgentComponent;
 import org.eclipse.che.ide.api.event.WindowActionEvent;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.statepersistance.AppStateManager;
 import org.eclipse.che.ide.util.loging.Log;
 import org.eclipse.che.ide.workspace.WorkspacePresenter;
@@ -46,31 +52,38 @@ import java.util.Map;
  *
  * @author Nikolay Zamosenchuk
  * @author Dmitry Shnurenko
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class BootstrapController {
 
-    private final Provider<WorkspacePresenter> workspaceProvider;
-    private final ExtensionInitializer         extensionInitializer;
-    private final EventBus                     eventBus;
-    private final ProductInfoDataProvider      productInfoDataProvider;
-    private final Provider<AppStateManager>    appStateManagerProvider;
-    private final AppContext                   appContext;
+    private final Provider<WorkspacePresenter>     workspaceProvider;
+    private final ExtensionInitializer             extensionInitializer;
+    private final EventBus                         eventBus;
+    private final Provider<AppStateManager>        appStateManagerProvider;
+    private final AppContext                       appContext;
+    private final WorkspaceServiceClient           workspaceService;
+    private final Provider<WsAgentStateController> wsAgentStateControllerProvider;
+    private final Workspace workspace;
 
     @Inject
     public BootstrapController(Provider<WorkspacePresenter> workspaceProvider,
                                ExtensionInitializer extensionInitializer,
                                EventBus eventBus,
-                               ProductInfoDataProvider productInfoDataProvider,
                                Provider<AppStateManager> appStateManagerProvider,
                                AppContext appContext,
-                               DtoRegistrar dtoRegistrar) {
+                               DtoRegistrar dtoRegistrar,
+                               WorkspaceServiceClient workspaceService,
+                               Provider<WsAgentStateController> wsAgentStateControllerProvider,
+                               Workspace workspace) {
         this.workspaceProvider = workspaceProvider;
         this.extensionInitializer = extensionInitializer;
         this.eventBus = eventBus;
-        this.productInfoDataProvider = productInfoDataProvider;
         this.appStateManagerProvider = appStateManagerProvider;
         this.appContext = appContext;
+        this.workspaceService = workspaceService;
+        this.wsAgentStateControllerProvider = wsAgentStateControllerProvider;
+        this.workspace = workspace;
 
         appContext.setStartUpActions(StartUpActionsParser.getStartUpActions());
         dtoRegistrar.registerDtoProviders();
@@ -87,8 +100,24 @@ public class BootstrapController {
     private void startWsAgentComponents(EventBus eventBus, final Map<String, Provider<WsAgentComponent>> components) {
         eventBus.addHandler(WorkspaceStartedEvent.TYPE, new WorkspaceStartedHandler() {
             @Override
-            public void onWorkspaceStarted(UsersWorkspaceDto workspace) {
-                startWsAgentComponents(components.values().iterator());
+            public void onWorkspaceStarted(WorkspaceStartedEvent event) {
+                workspaceService.getWorkspace(event.getWorkspace().getId()).then(new Operation<WorkspaceDto>() {
+                    @Override
+                    public void apply(WorkspaceDto ws) throws OperationException {
+                        MachineDto devMachineDto = ws.getRuntime().getDevMachine();
+                        DevMachine devMachine = new DevMachine(devMachineDto);
+                        appContext.setDevMachine(devMachine);
+                        appContext.setProjectsRoot(devMachineDto.getRuntime().projectsRoot());
+                        wsAgentStateControllerProvider.get().initialize(devMachine);
+                        startWsAgentComponents(components.values().iterator());
+                    }
+                }).catchError(new Operation<PromiseError>() {
+                    @Override
+                    public void apply(PromiseError err) throws OperationException {
+                        Log.error(getClass(), err.getCause());
+                        initializationFailed(err.getMessage());
+                    }
+                });
             }
         });
     }
@@ -165,8 +194,6 @@ public class BootstrapController {
 
         // Display IDE
         workspacePresenter.go(mainPanel);
-
-        Document.get().setTitle(productInfoDataProvider.getDocumentTitle());
 
         // Bind browser's window events
         Window.addWindowClosingHandler(new Window.ClosingHandler() {

@@ -73,19 +73,24 @@ public abstract class FactoryBaseValidator {
                                               "digits or these following special characters -._.");
             }
 
-            final String location = project.getSource().getLocation();
-            final String parameterLocationName = "project.storage.location";
-            if (isNullOrEmpty(location)) {
-                throw new BadRequestException(format(FactoryConstants.PARAMETRIZED_ILLEGAL_PARAMETER_VALUE_MESSAGE,
-                                                     parameterLocationName,
-                                                     location));
-            }
-            try {
-                URLDecoder.decode(location, "UTF-8");
-            } catch (IllegalArgumentException | UnsupportedEncodingException e) {
-                throw new BadRequestException(format(FactoryConstants.PARAMETRIZED_ILLEGAL_PARAMETER_VALUE_MESSAGE,
-                                                     parameterLocationName,
-                                                     location));
+            if (project.getPath().indexOf('/', 1) == -1) {
+
+                final String location = project.getSource().getLocation();
+                final String parameterLocationName = "project.source.location";
+
+                if (isNullOrEmpty(location)) {
+                    throw new BadRequestException(format(FactoryConstants.PARAMETRIZED_ILLEGAL_PARAMETER_VALUE_MESSAGE,
+                                                         parameterLocationName,
+                                                         location));
+                }
+
+                try {
+                    URLDecoder.decode(location, "UTF-8");
+                } catch (IllegalArgumentException | UnsupportedEncodingException e) {
+                    throw new BadRequestException(format(FactoryConstants.PARAMETRIZED_ILLEGAL_PARAMETER_VALUE_MESSAGE,
+                                                         parameterLocationName,
+                                                         location));
+                }
             }
         }
     }
@@ -213,7 +218,7 @@ public abstract class FactoryBaseValidator {
 
         for (Action applicationAction : applicationActions) {
             String id = applicationAction.getId();
-            if ("openFile".equals(id) || "findReplace".equals(id) || "runCommand".equals(id)) {
+            if ("openFile".equals(id) || "findReplace".equals(id) || "runCommand".equals(id) || "newTerminal".equals(id)) {
                 throw new BadRequestException(format(FactoryConstants.INVALID_ACTION_SECTION, id));
             }
         }
@@ -222,9 +227,7 @@ public abstract class FactoryBaseValidator {
         if (onAppLoaded != null) {
             for (Action action : onAppLoaded.getActions()) {
                 final Map<String, String> properties = action.getProperties();
-                if ("openWelcomePage".equals(action.getId()) && (isNullOrEmpty(properties.get("nonAuthenticatedContentUrl")) ||
-                                                                 isNullOrEmpty(properties.get("authenticatedContentUrl")))) {
-
+                if ("openWelcomePage".equals(action.getId()) && isNullOrEmpty(properties.get("greetingContentUrl"))) {
                     throw new BadRequestException(FactoryConstants.INVALID_WELCOME_PAGE_ACTION);
                 }
             }

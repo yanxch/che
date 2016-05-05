@@ -20,8 +20,8 @@ import org.eclipse.che.ide.ext.java.client.JavaResources;
 import org.eclipse.che.ide.ext.java.client.dependenciesupdater.DependenciesUpdater;
 
 import javax.validation.constraints.NotNull;
-import java.util.Arrays;
 
+import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.extension.maven.shared.MavenAttributes.MAVEN_ID;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
@@ -39,7 +39,7 @@ public class UpdateDependencyAction extends AbstractPerspectiveAction {
     public UpdateDependencyAction(AppContext appContext,
                                   JavaResources resources,
                                   DependenciesUpdater dependenciesUpdater) {
-        super(Arrays.asList(PROJECT_PERSPECTIVE_ID), "Update Dependencies", "Update Dependencies", null, resources.updateDependencies());
+        super(singletonList(PROJECT_PERSPECTIVE_ID), "Update Dependencies", "Update Dependencies", null, resources.updateDependencies());
         this.appContext = appContext;
         this.dependenciesUpdater = dependenciesUpdater;
     }

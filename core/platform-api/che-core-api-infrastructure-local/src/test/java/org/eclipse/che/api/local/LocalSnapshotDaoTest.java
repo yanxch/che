@@ -14,7 +14,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import org.eclipse.che.api.local.storage.LocalStorageFactory;
-import org.eclipse.che.api.machine.server.impl.SnapshotImpl;
+import org.eclipse.che.api.machine.server.model.impl.SnapshotImpl;
 import org.eclipse.che.api.machine.server.recipe.adapters.InstanceKeyAdapter;
 import org.eclipse.che.api.machine.server.spi.InstanceKey;
 import org.testng.annotations.BeforeMethod;
@@ -81,7 +81,7 @@ public class LocalSnapshotDaoTest {
                            .generateId()
                            .setType("docker")
                            .setInstanceKey(new DummyInstanceKey())
-                           .setOwner("user123")
+                           .setNamespace("user123")
                            .setWorkspaceId("workspace123")
                            .setMachineName("machine123")
                            .setEnvName("env123")

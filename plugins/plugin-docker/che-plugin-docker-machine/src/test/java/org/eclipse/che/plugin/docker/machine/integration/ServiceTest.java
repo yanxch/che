@@ -21,7 +21,7 @@ import org.eclipse.che.api.machine.server.MachineRegistry;
 import org.eclipse.che.api.machine.server.MachineService;
 import org.eclipse.che.api.machine.server.dao.SnapshotDao;
 import org.eclipse.che.api.machine.server.exception.MachineException;
-import org.eclipse.che.api.machine.server.impl.SnapshotImpl;
+import org.eclipse.che.api.machine.server.spi.impl.SnapshotImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineStateImpl;
 import org.eclipse.che.api.machine.server.spi.InstanceProvider;
@@ -237,7 +237,7 @@ public class ServiceTest {
         when(snapshot.getType()).thenReturn("docker");
         when(snapshot.getWorkspaceId()).thenReturn("wsId");
         when(snapshot.getInstanceKey()).thenReturn(pushedImage);
-        when(snapshot.getOwner()).thenReturn(USER);
+        when(snapshot.getNamespace()).thenReturn(USER);
 
         final MachineStateDescriptor machine = machineService
                 .createMachineFromSnapshot(newDto(SnapshotMachineCreationMetadata.class).withSnapshotId(SNAPSHOT_ID));
@@ -317,7 +317,7 @@ public class ServiceTest {
         SnapshotImpl snapshot = mock(SnapshotImpl.class);
         when(snapshotDao.getSnapshot(SNAPSHOT_ID)).thenReturn(snapshot);
         when(snapshot.getType()).thenReturn("docker");
-        when(snapshot.getOwner()).thenReturn(USER);
+        when(snapshot.getNamespace()).thenReturn(USER);
         when(snapshot.getInstanceKey()).thenReturn(pushedImage);
 
         machineService.removeSnapshot(SNAPSHOT_ID);

@@ -15,7 +15,6 @@ import com.google.gwtmockito.GwtMockitoTestRunner;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.ide.Resources;
-import org.eclipse.che.ide.api.extension.ExtensionRegistry;
 import org.eclipse.che.ide.api.notification.Notification;
 import org.eclipse.che.ide.api.notification.NotificationListener;
 import org.eclipse.che.ide.api.notification.ReadState;
@@ -28,6 +27,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Answers;
 import org.mockito.Mock;
 
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.NOT_EMERGE_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.SUCCESS;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -96,7 +97,7 @@ public class NotificationManagerImplTest {
 
     @Test
     public void testShowStatusNotification() throws Exception {
-        StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, true, null, null);
+        StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, FLOAT_MODE, null, null);
         manager.notify(notification);
 
         verify(notificationContainer).addNotification(eq(notification));
@@ -105,7 +106,7 @@ public class NotificationManagerImplTest {
 
     @Test
     public void testShowStatusNotificationOnlyInEventsPanel() throws Exception {
-        StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, false, null, null);
+        StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, NOT_EMERGE_MODE, null, null);
         manager.notify(notification);
 
         verify(notificationContainer).addNotification(eq(notification));
@@ -114,7 +115,7 @@ public class NotificationManagerImplTest {
 
     @Test
     public void testRemoveNotification() throws Exception {
-        StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, false, null, null);
+        StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, NOT_EMERGE_MODE, null, null);
         manager.removeNotification(notification);
 
         verify(notificationContainer).removeNotification(eq(notification));
@@ -123,34 +124,34 @@ public class NotificationManagerImplTest {
     @Test
     public void testOnMessageClicked() throws Exception {
         NotificationListener listener = mock(NotificationListener.class);
-        StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, false, null, listener);
+        StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, NOT_EMERGE_MODE, null, listener);
 
         manager.onClick(notification);
-        verify(listener).onClick();
-        verify(listener, never()).onClose();
-        verify(listener, never()).onDoubleClick();
+        verify(listener).onClick(eq(notification));
+        verify(listener, never()).onClose(eq(notification));
+        verify(listener, never()).onDoubleClick(eq(notification));
     }
 
     @Test
     public void testOnMessageDoubleClicked() throws Exception {
         NotificationListener listener = mock(NotificationListener.class);
-        StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, false, null, listener);
+        StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, NOT_EMERGE_MODE, null, listener);
 
         manager.onDoubleClick(notification);
-        verify(listener, never()).onClick();
-        verify(listener, never()).onClose();
-        verify(listener).onDoubleClick();
+        verify(listener, never()).onClick(eq(notification));
+        verify(listener, never()).onClose(eq(notification));
+        verify(listener).onDoubleClick(eq(notification));
     }
 
     @Test
     public void testOnCloseMessageClicked() throws Exception {
         NotificationListener listener = mock(NotificationListener.class);
-        StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, false, null, listener);
+        StatusNotification notification = new StatusNotification("Title", "Message", SUCCESS, NOT_EMERGE_MODE, null, listener);
 
         manager.onClose(notification);
-        verify(listener, never()).onClick();
-        verify(listener).onClose();
-        verify(listener, never()).onDoubleClick();
+        verify(listener, never()).onClick(eq(notification));
+        verify(listener).onClose(eq(notification));
+        verify(listener, never()).onDoubleClick(eq(notification));
     }
 
     @Test

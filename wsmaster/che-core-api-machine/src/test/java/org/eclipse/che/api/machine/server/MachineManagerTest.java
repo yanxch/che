@@ -18,6 +18,7 @@ import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.core.util.LineConsumer;
 import org.eclipse.che.api.machine.server.dao.SnapshotDao;
+import org.eclipse.che.api.machine.server.exception.MachineException;
 import org.eclipse.che.api.machine.server.model.impl.LimitsImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineConfigImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
@@ -26,6 +27,8 @@ import org.eclipse.che.api.machine.server.model.impl.ServerConfImpl;
 import org.eclipse.che.api.machine.server.recipe.RecipeImpl;
 import org.eclipse.che.api.machine.server.spi.Instance;
 import org.eclipse.che.api.machine.server.spi.InstanceProvider;
+import org.eclipse.che.api.machine.server.util.RecipeDownloader;
+import org.eclipse.che.api.machine.server.wsagent.WsAgentLauncher;
 import org.eclipse.che.commons.env.EnvironmentContext;
 import org.eclipse.che.commons.lang.IoUtil;
 import org.eclipse.che.commons.user.UserImpl;
@@ -42,11 +45,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -70,6 +75,8 @@ public class MachineManagerTest {
 
     @Mock
     private MachineInstanceProviders machineInstanceProviders;
+    @Mock
+    private RecipeDownloader         recipeDownloader;
     @Mock
     private InstanceProvider         instanceProvider;
     @Mock
@@ -95,8 +102,8 @@ public class MachineManagerTest {
                                          machineLogsDir,
                                          eventService,
                                          DEFAULT_MACHINE_MEMORY_SIZE_MB,
-                                         "apiEndpoint",
-                                         wsAgentLauncher));
+                                         wsAgentLauncher,
+                                         recipeDownloader));
 
         EnvironmentContext envCont = new EnvironmentContext();
         envCont.setUser(new UserImpl(null, USER_ID, null, null, false));
@@ -105,8 +112,12 @@ public class MachineManagerTest {
         RecipeImpl recipe = new RecipeImpl().withScript("script").withType("Dockerfile");
 //        doNothing().when(manager).createMachineLogsDir(anyString());
         doReturn(MACHINE_ID).when(manager).generateMachineId();
-        doReturn(recipe).when(manager).getRecipeByLocation(any(MachineConfig.class));
+        when(recipeDownloader.getRecipe(any(MachineConfig.class))).thenReturn(recipe);
         when(machineInstanceProviders.getProvider(anyString())).thenReturn(instanceProvider);
+        HashSet<String> recipeTypes = new HashSet<>();
+        recipeTypes.add("test type 1");
+        recipeTypes.add("dockerfile");
+        when(instanceProvider.getRecipeTypes()).thenReturn(recipeTypes);
         when(instanceProvider.createInstance(eq(recipe), any(Machine.class), any(LineConsumer.class))).thenReturn(instance);
         when(machineRegistry.getInstance(anyString())).thenReturn(instance);
     }
@@ -118,13 +129,13 @@ public class MachineManagerTest {
 
     @Test(expectedExceptions = BadRequestException.class, expectedExceptionsMessageRegExp = "Invalid machine name @name!")
     public void shouldThrowExceptionOnMachineCreationIfMachineNameIsInvalid() throws Exception {
-        doReturn(new RecipeImpl().withScript("script").withType("Dockerfile"))
-                .when(manager).getRecipeByLocation(any(MachineConfig.class));
+        when(recipeDownloader.getRecipe(any(MachineConfig.class))).thenReturn(new RecipeImpl().withScript("script")
+                                                                                              .withType("Dockerfile"));
 
         MachineConfig machineConfig = new MachineConfigImpl(false,
                                                             "@name!",
                                                             "machineType",
-                                                            new MachineSourceImpl("Recipe", "location"),
+                                                            new MachineSourceImpl("Dockerfile", "location"),
                                                             new LimitsImpl(1024),
                                                             Arrays.asList(new ServerConfImpl("ref1",
                                                                                              "8080",
@@ -182,6 +193,20 @@ public class MachineManagerTest {
         verify(wsAgentLauncher, never()).startWsAgent(WS_ID);
     }
 
+    @Test
+    public void shouldRemoveMachineFromRegistryIfInstanceDestroyingFailsOnDestroy() throws Exception {
+        final MachineConfigImpl machineConfig = createMachineConfig();
+        when(instance.getConfig()).thenReturn(machineConfig);
+        when(instance.getWorkspaceId()).thenReturn(WS_ID);
+        doThrow(new MachineException("test")).when(instance).destroy();
+
+        try {
+            manager.destroy(MACHINE_ID, false);
+        } catch (Exception e) {
+            verify(machineRegistry).remove(MACHINE_ID);
+        }
+    }
+
     private static Path targetDir() throws Exception {
         final URL url = Thread.currentThread().getContextClassLoader().getResource(".");
         assertNotNull(url);
@@ -192,7 +217,7 @@ public class MachineManagerTest {
         return new MachineConfigImpl(false,
                                      "MachineName",
                                      "docker",
-                                     new MachineSourceImpl("Recipe", "location"),
+                                     new MachineSourceImpl("Dockerfile", "location"),
                                      new LimitsImpl(1024),
                                      Arrays.asList(new ServerConfImpl("ref1",
                                                                       "8080",

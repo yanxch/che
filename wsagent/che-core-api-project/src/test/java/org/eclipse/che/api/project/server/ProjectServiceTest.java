@@ -51,8 +51,8 @@ import org.eclipse.che.api.vfs.search.SearcherProvider;
 import org.eclipse.che.api.vfs.search.impl.FSLuceneSearcherProvider;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
-import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.commons.json.JsonHelper;
 import org.eclipse.che.commons.lang.IoUtil;
 import org.eclipse.che.commons.lang.ws.rs.ExtMediaType;
@@ -101,7 +101,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.HttpMethod.DELETE;
 import static javax.ws.rs.HttpMethod.GET;
 import static javax.ws.rs.HttpMethod.POST;
@@ -143,7 +142,7 @@ public class ProjectServiceTest {
     @Mock
     private UserDao                userDao;
     @Mock
-    private UsersWorkspaceDto      usersWorkspaceMock;
+    private WorkspaceDto      usersWorkspaceMock;
     @Mock
     private WorkspaceConfigDto     workspaceConfigMock;
     @Mock
@@ -239,7 +238,7 @@ public class ProjectServiceTest {
         projects.add(testProjectConfigMock);
         when(httpJsonRequestFactory.fromLink(any())).thenReturn(httpJsonRequest);
         when(httpJsonRequest.request()).thenReturn(httpJsonResponse);
-        when(httpJsonResponse.asDto(UsersWorkspaceDto.class)).thenReturn(usersWorkspaceMock);
+        when(httpJsonResponse.asDto(WorkspaceDto.class)).thenReturn(usersWorkspaceMock);
         when(usersWorkspaceMock.getConfig()).thenReturn(workspaceConfigMock);
         when(workspaceConfigMock.getProjects()).thenReturn(projects);
 
@@ -290,16 +289,31 @@ public class ProjectServiceTest {
 
     private static class TestWorkspaceHolder extends WorkspaceHolder {
         private TestWorkspaceHolder() throws ServerException {
-            super(DtoFactory.newDto(UsersWorkspaceDto.class).withId("id")
+            super(DtoFactory.newDto(WorkspaceDto.class).withId("id")
                             .withConfig(DtoFactory.newDto(WorkspaceConfigDto.class)
                                                   .withName("name")
                                                   .withProjects(new ArrayList<>())));
         }
 
         @Override
-        public void updateProjects(Collection<RegisteredProject> projects) throws ServerException {
-            List<RegisteredProject> persistedProjects = projects.stream().filter(project -> !project.isDetected()).collect(toList());
-            workspace.setProjects(persistedProjects);
+        void addProject(RegisteredProject project) throws ServerException {
+            if (!project.isDetected()) {
+                workspace.addProject(project);
+            }
+        }
+
+        @Override
+        public void updateProject(RegisteredProject project) throws ServerException {
+            if (!project.isDetected()) {
+                workspace.updateProject(project);
+            }
+        }
+
+        @Override
+        void removeProjects(Collection<RegisteredProject> projects) throws ServerException {
+            projects.stream()
+                    .filter(project -> !project.isDetected())
+                    .forEach(workspace::removeProject);
         }
     }
 

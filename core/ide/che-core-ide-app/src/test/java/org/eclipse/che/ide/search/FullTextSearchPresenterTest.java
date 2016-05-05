@@ -10,36 +10,28 @@
  *******************************************************************************/
 package org.eclipse.che.ide.search;
 
+import com.google.common.base.Optional;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 
-import org.eclipse.che.api.core.rest.shared.dto.ServiceError;
-import org.eclipse.che.api.project.gwt.client.ProjectServiceClient;
-import org.eclipse.che.api.project.gwt.client.QueryExpression;
-import org.eclipse.che.api.project.shared.dto.ItemReference;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
-import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
-import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.dto.DtoFactory;
-import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
+import org.eclipse.che.ide.api.resources.Container;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.workspace.Workspace;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.search.presentation.FindResultPresenter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.Matchers;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,97 +45,81 @@ public class FullTextSearchPresenterTest {
     private final String SEARCHED_TEXT = "to be or not to be";
 
     @Mock
-    private FullTextSearchView           view;
+    private FullTextSearchView                             view;
     @Mock
-    private FindResultPresenter          findResultPresenter;
+    private FindResultPresenter                            findResultPresenter;
     @Mock
-    private DtoFactory                   dtoFactory;
+    private Workspace                                      workspace;
     @Mock
-    private DtoUnmarshallerFactory       dtoUnmarshallerFactory;
+    private Container                                      workspaceRoot;
     @Mock
-    private ProjectServiceClient         projectServiceClient;
+    private Container                                      searchContainer;
     @Mock
-    private Promise<List<ItemReference>> promise;
+    private Promise<Optional<Container>>                   optionalContainerPromise;
+    @Captor
+    private ArgumentCaptor<Operation<Optional<Container>>> optionalContainerCaptor;
     @Mock
-    private PromiseError                 promiseError;
-
-    @Mock
-    private AppContext           appContext;
-    @Mock
-    private UsersWorkspaceDto    workspaceDto;
-
+    private Promise<Resource[]>                            searchResultPromise;
+    @Captor
+    private ArgumentCaptor<Operation<Resource[]>>          searchResultCaptor;
     @Captor
     private ArgumentCaptor<Operation<PromiseError>>        operationErrorCapture;
     @Captor
-    private ArgumentCaptor<Operation<List<ItemReference>>> operationSuccessCapture;
+    private ArgumentCaptor<Operation<Resource[]>>          operationSuccessCapture;
 
     FullTextSearchPresenter fullTextSearchPresenter;
 
     @Before
     public void setUp() throws Exception {
-        when(appContext.getWorkspace()).thenReturn(workspaceDto);
-        when(workspaceDto.getId()).thenReturn("id");
-        String MASK = "mask";
-        when(view.getFileMask()).thenReturn(MASK);
-        String PATH = "path";
-        when(view.getPathToSearch()).thenReturn(PATH);
-        when(projectServiceClient.search(anyString(), Matchers.<QueryExpression>any())).thenReturn(promise);
-        when(promise.then(operationSuccessCapture.capture())).thenReturn(promise);
-
         fullTextSearchPresenter = new FullTextSearchPresenter(view,
                                                               findResultPresenter,
-                                                              dtoFactory,
-                                                              appContext,
-                                                              projectServiceClient);
+                                                              workspace);
     }
 
     @Test
     public void viewShouldBeShowed() {
-        fullTextSearchPresenter.showDialog();
+        final Path path = Path.valueOf("/search");
+        fullTextSearchPresenter.showDialog(path);
 
         verify(view).showDialog();
         verify(view).clearInput();
-    }
-
-    @Test
-    public void pathOfDirectoryToSearchShouldBeSet() {
-        fullTextSearchPresenter.setPathDirectory(anyString());
-
-        verify(view).setPathDirectory(anyString());
+        verify(view).setPathDirectory(eq(path.toString()));
     }
 
     @Test
     public void searchShouldBeSuccessfullyFinished() throws Exception {
-        List<ItemReference> result = new ArrayList<>();
+        when(view.getPathToSearch()).thenReturn("/search");
+        when(workspace.getWorkspaceRoot()).thenReturn(workspaceRoot);
+        when(workspaceRoot.getContainer(any(Path.class))).thenReturn(optionalContainerPromise);
+        when(searchContainer.search(anyString(), anyString())).thenReturn(searchResultPromise);
 
         fullTextSearchPresenter.search(SEARCHED_TEXT);
 
-        verify(view, times(2)).getPathToSearch();
-        verify(view, times(2)).getFileMask();
+        verify(optionalContainerPromise).then(optionalContainerCaptor.capture());
+        optionalContainerCaptor.getValue().apply(Optional.of(searchContainer));
 
-        verify(promise).then(operationSuccessCapture.capture());
-        operationSuccessCapture.getValue().apply(result);
+        verify(searchResultPromise).then(searchResultCaptor.capture());
+        searchResultCaptor.getValue().apply(new Resource[0]);
 
+        verify(view, never()).showErrorMessage(anyString());
         verify(view).close();
-        verify(findResultPresenter).handleResponse(result, SEARCHED_TEXT);
+        verify(findResultPresenter).handleResponse(eq(new Resource[0]), eq(SEARCHED_TEXT));
     }
 
     @Test
     public void searchHasDoneWithSomeError() throws Exception {
-        ServiceError serviceError = Mockito.mock(ServiceError.class);
-        when(promiseError.getMessage()).thenReturn(SEARCHED_TEXT);
-        when(dtoFactory.createDtoFromJson(SEARCHED_TEXT, ServiceError.class)).thenReturn(serviceError);
-        when(serviceError.getMessage()).thenReturn(SEARCHED_TEXT);
+        when(view.getPathToSearch()).thenReturn("/search");
+        when(workspace.getWorkspaceRoot()).thenReturn(workspaceRoot);
+        when(workspaceRoot.getContainer(any(Path.class))).thenReturn(optionalContainerPromise);
 
         fullTextSearchPresenter.search(SEARCHED_TEXT);
 
-        verify(view, times(2)).getPathToSearch();
-        verify(view, times(2)).getFileMask();
+        verify(optionalContainerPromise).then(optionalContainerCaptor.capture());
+        optionalContainerCaptor.getValue().apply(Optional.<Container>absent());
 
-        verify(promise).catchError(operationErrorCapture.capture());
-        operationErrorCapture.getValue().apply(promiseError);
-
-        verify(view).showErrorMessage(SEARCHED_TEXT);
+        verify(view).showErrorMessage(anyString());
+        verify(view, never()).close();
+        verify(findResultPresenter, never()).handleResponse(any(Resource[].class), anyString());
     }
 
     @Test
@@ -151,10 +127,23 @@ public class FullTextSearchPresenterTest {
         when(view.getSearchText()).thenReturn(SEARCHED_TEXT);
         when(view.isAcceptButtonInFocus()).thenReturn(true);
 
+        when(view.getPathToSearch()).thenReturn("/search");
+        when(workspace.getWorkspaceRoot()).thenReturn(workspaceRoot);
+        when(workspaceRoot.getContainer(any(Path.class))).thenReturn(optionalContainerPromise);
+        when(searchContainer.search(anyString(), anyString())).thenReturn(searchResultPromise);
+        Resource[] result = new Resource[0];
+
         fullTextSearchPresenter.onEnterClicked();
 
-        verify(view).getSearchText();
-        verify(projectServiceClient).search(anyString(), (QueryExpression)anyObject());
+        verify(optionalContainerPromise).then(optionalContainerCaptor.capture());
+        optionalContainerCaptor.getValue().apply(Optional.of(searchContainer));
+
+        verify(searchResultPromise).then(searchResultCaptor.capture());
+        searchResultCaptor.getValue().apply(result);
+
+        verify(view, never()).showErrorMessage(anyString());
+        verify(view).close();
+        verify(findResultPresenter).handleResponse(eq(result), eq(SEARCHED_TEXT));
     }
 
     @Test
@@ -165,7 +154,6 @@ public class FullTextSearchPresenterTest {
 
         verify(view).close();
         verify(view, never()).getSearchText();
-        verify(projectServiceClient, never()).search(anyString(), (QueryExpression)anyObject());
     }
 
     @Test
@@ -176,6 +164,5 @@ public class FullTextSearchPresenterTest {
 
         verify(view).showSelectPathDialog();
         verify(view, never()).getSearchText();
-        verify(projectServiceClient, never()).search(anyString(), (QueryExpression)anyObject());
     }
 }

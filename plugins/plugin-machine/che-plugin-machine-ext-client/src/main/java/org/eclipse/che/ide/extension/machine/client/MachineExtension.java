@@ -22,6 +22,7 @@ import org.eclipse.che.ide.actions.StopWorkspaceAction;
 import org.eclipse.che.ide.api.action.ActionManager;
 import org.eclipse.che.ide.api.action.DefaultActionGroup;
 import org.eclipse.che.ide.api.action.IdeActions;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.constraints.Constraints;
 import org.eclipse.che.ide.api.extension.Extension;
 import org.eclipse.che.ide.api.icon.Icon;
@@ -38,7 +39,7 @@ import org.eclipse.che.ide.extension.machine.client.actions.EditCommandsAction;
 import org.eclipse.che.ide.extension.machine.client.actions.ExecuteSelectedCommandAction;
 import org.eclipse.che.ide.extension.machine.client.actions.RestartMachineAction;
 import org.eclipse.che.ide.extension.machine.client.actions.RunCommandAction;
-import org.eclipse.che.ide.extension.machine.client.actions.SelectCommandComboBoxReady;
+import org.eclipse.che.ide.extension.machine.client.actions.SelectCommandComboBox;
 import org.eclipse.che.ide.extension.machine.client.actions.SwitchPerspectiveAction;
 import org.eclipse.che.ide.extension.machine.client.command.custom.CustomCommandType;
 import org.eclipse.che.ide.extension.machine.client.command.valueproviders.ServerPortProvider;
@@ -47,6 +48,7 @@ import org.eclipse.che.ide.extension.machine.client.machine.console.MachineConso
 import org.eclipse.che.ide.extension.machine.client.outputspanel.OutputsContainerPresenter;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter;
 import org.eclipse.che.ide.extension.machine.client.processes.NewTerminalAction;
+import org.eclipse.che.ide.extension.machine.client.targets.EditTargetsAction;
 import org.eclipse.che.ide.ui.toolbar.ToolbarPresenter;
 import org.eclipse.che.ide.util.input.KeyCodeMap;
 
@@ -69,15 +71,18 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
 @Extension(title = "Machine", version = "1.0.0")
 public class MachineExtension {
 
-    public static final String GROUP_MACHINE_CONSOLE_TOOLBAR    = "MachineConsoleToolbar";
-    public static final String GROUP_MACHINE_TOOLBAR            = "MachineGroupToolbar";
-    public static final String GROUP_COMMANDS_LIST              = "CommandsListGroup";
-    public static final String GROUP_COMMANDS_LIST_DISPLAY_NAME = "Run";
+    public static final String GROUP_MACHINE_CONSOLE_TOOLBAR = "MachineConsoleToolbar";
+    public static final String GROUP_MACHINE_TOOLBAR         = "MachineGroupToolbar";
+    public static final String GROUP_COMMANDS_DROPDOWN       = "CommandsSelector";
+    public static final String GROUP_COMMANDS_LIST           = "CommandsListGroup";
+    public static final String GROUP_MACHINES_DROPDOWN       = "MachinesSelector";
+    public static final String GROUP_MACHINES_LIST           = "MachinesListGroup";
 
     @Inject
     public MachineExtension(MachineResources machineResources,
                             final EventBus eventBus,
                             final WorkspaceAgent workspaceAgent,
+                            final AppContext   appContext,
                             final ConsolesPanelPresenter consolesPanelPresenter,
                             final Provider<ServerPortProvider> machinePortProvider,
                             final OutputsContainerPresenter outputsContainerPresenter,
@@ -86,14 +91,17 @@ public class MachineExtension {
                             CustomCommandType arbitraryCommandType) {
         machineResources.getCss().ensureInjected();
 
-        workspaceAgent.openPart(outputsContainerPresenter, PartStackType.INFORMATION);
-        workspaceAgent.openPart(consolesPanelPresenter, PartStackType.INFORMATION);
-
         eventBus.addHandler(WsAgentStateEvent.TYPE, new WsAgentStateHandler() {
             @Override
             public void onWsAgentStarted(WsAgentStateEvent event) {
                 machinePortProvider.get();
                 perspectiveManager.setPerspectiveId(PROJECT_PERSPECTIVE_ID);
+                workspaceAgent.openPart(outputsContainerPresenter, PartStackType.INFORMATION);
+                workspaceAgent.openPart(consolesPanelPresenter, PartStackType.INFORMATION);
+
+                if (appContext.getFactory() == null) {
+                    consolesPanelPresenter.newTerminal();
+                }
             }
 
             @Override
@@ -109,7 +117,7 @@ public class MachineExtension {
                                 ActionManager actionManager,
                                 KeyBindingAgent keyBinding,
                                 ExecuteSelectedCommandAction executeSelectedCommandAction,
-                                SelectCommandComboBoxReady selectCommandAction,
+                                SelectCommandComboBox selectCommandAction,
                                 EditCommandsAction editCommandsAction,
                                 CreateMachineAction createMachine,
                                 RestartMachineAction restartMachine,
@@ -119,7 +127,10 @@ public class MachineExtension {
                                 SwitchPerspectiveAction switchPerspectiveAction,
                                 CreateSnapshotAction createSnapshotAction,
                                 RunCommandAction runCommandAction,
-                                NewTerminalAction newTerminalAction) {
+                                NewTerminalAction newTerminalAction,
+                                EditTargetsAction editTargetsAction,
+                                IconRegistry iconRegistry,
+                                MachineResources machineResources) {
         final DefaultActionGroup mainMenu = (DefaultActionGroup)actionManager.getAction(GROUP_MAIN_MENU);
 
         final DefaultActionGroup workspaceMenu = (DefaultActionGroup)actionManager.getAction(GROUP_WORKSPACE);
@@ -129,6 +140,8 @@ public class MachineExtension {
         actionManager.registerAction("editCommands", editCommandsAction);
         actionManager.registerAction("selectCommandAction", selectCommandAction);
         actionManager.registerAction("executeSelectedCommand", executeSelectedCommandAction);
+
+        actionManager.registerAction("editTargets", editTargetsAction);
 
         //add actions in machine menu
         final DefaultActionGroup machineMenu = new DefaultActionGroup(localizationConstant.mainMenuMachine(), true, actionManager);
@@ -147,6 +160,7 @@ public class MachineExtension {
         runMenu.add(newTerminalAction, FIRST);
         runMenu.addSeparator();
         runMenu.add(editCommandsAction);
+        runMenu.add(editTargetsAction);
 
         workspaceMenu.add(stopWorkspaceAction);
 
@@ -161,7 +175,7 @@ public class MachineExtension {
         final DefaultActionGroup centerToolbarGroup = (DefaultActionGroup)actionManager.getAction(GROUP_CENTER_TOOLBAR);
         final DefaultActionGroup machineToolbarGroup = new DefaultActionGroup(GROUP_MACHINE_TOOLBAR, false, actionManager);
         actionManager.registerAction(GROUP_MACHINE_TOOLBAR, machineToolbarGroup);
-        centerToolbarGroup.add(machineToolbarGroup);
+        centerToolbarGroup.add(machineToolbarGroup, FIRST);
         machineToolbarGroup.add(selectCommandAction);
         final DefaultActionGroup executeToolbarGroup = new DefaultActionGroup(actionManager);
         executeToolbarGroup.add(executeSelectedCommandAction);
@@ -171,18 +185,20 @@ public class MachineExtension {
         final DefaultActionGroup rightToolbarGroup = (DefaultActionGroup)actionManager.getAction(GROUP_RIGHT_TOOLBAR);
         rightToolbarGroup.add(switchPerspectiveAction);
 
-        // add group for command list
-        final DefaultActionGroup commandList = new DefaultActionGroup(GROUP_COMMANDS_LIST_DISPLAY_NAME, true, actionManager);
+        // add group for list of machines
+        final DefaultActionGroup machinesList = new DefaultActionGroup(GROUP_MACHINES_DROPDOWN, true, actionManager);
+        actionManager.registerAction(GROUP_MACHINES_LIST, machinesList);
+        machinesList.add(editTargetsAction, FIRST);
 
+        // add group for list of commands
+        final DefaultActionGroup commandList = new DefaultActionGroup(GROUP_COMMANDS_DROPDOWN, true, actionManager);
         actionManager.registerAction(GROUP_COMMANDS_LIST, commandList);
         commandList.add(editCommandsAction, FIRST);
 
-        final DefaultActionGroup runContextGroup = (DefaultActionGroup)actionManager.getAction(IdeActions.GROUP_RUN_CONTEXT_MENU);
-        runContextGroup.add(commandList);
-        runContextGroup.addSeparator();
-
         // Define hot-keys
         keyBinding.getGlobal().addKey(new KeyBuilder().alt().charCode(KeyCodeMap.F12).build(), "newTerminal");
+
+        iconRegistry.registerIcon(new Icon("che.machine.icon", machineResources.devMachine()));
     }
 
     @Inject
@@ -196,4 +212,5 @@ public class MachineExtension {
         consoleToolbarActionGroup.addSeparator();
         machineConsoleToolbar.bindMainGroup(consoleToolbarActionGroup);
     }
+
 }

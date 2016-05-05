@@ -22,9 +22,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.CoreLocalizationConstant;
-import org.eclipse.che.ide.api.project.node.HasStorablePath;
-import org.eclipse.che.ide.api.project.node.Node;
-import org.eclipse.che.ide.api.project.node.interceptor.NodeInterceptor;
+import org.eclipse.che.ide.api.data.HasStorablePath;
+import org.eclipse.che.ide.api.data.tree.Node;
+import org.eclipse.che.ide.api.data.tree.NodeInterceptor;
 import org.eclipse.che.ide.ui.smartTree.KeyboardNavigationHandler;
 import org.eclipse.che.ide.ui.smartTree.NodeUniqueKeyProvider;
 import org.eclipse.che.ide.ui.smartTree.Tree;
@@ -49,6 +49,9 @@ import static org.eclipse.che.ide.ui.smartTree.SelectionModel.Mode.SINGLE;
 public class SelectPathViewImpl extends Window implements SelectPathView {
     private Tree           tree;
     private ActionDelegate delegate;
+
+    Button acceptButton;
+    Button cancelButton;
 
     @UiField
     DockLayoutPanel treeContainer;
@@ -95,27 +98,34 @@ public class SelectPathViewImpl extends Window implements SelectPathView {
 
         handler.bind(tree);
 
-        Button cancel = createButton(locale.cancel(), "select-path-cancel-button", new ClickHandler() {
+        cancelButton = createButton(locale.cancel(), "select-path-cancel-button", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 hide();
             }
         });
 
-        Button ok = createPrimaryButton(locale.ok(), "select-path-ok-button", new ClickHandler() {
+        acceptButton = createPrimaryButton(locale.ok(), "select-path-ok-button", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 acceptButtonClicked();
             }
         });
 
-        addButtonToFooter(ok);
-        addButtonToFooter(cancel);
+        addButtonToFooter(acceptButton);
+        addButtonToFooter(cancelButton);
     }
 
     @Override
     protected void onEnterClicked() {
-        acceptButtonClicked();
+        if (isWidgetFocused(acceptButton)) {
+            acceptButtonClicked();
+            return;
+        }
+
+        if (isWidgetFocused(cancelButton)) {
+            hide();
+        }
     }
 
     @Override

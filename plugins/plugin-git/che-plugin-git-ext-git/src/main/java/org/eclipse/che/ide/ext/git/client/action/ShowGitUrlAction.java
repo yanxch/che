@@ -15,12 +15,17 @@ import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.url.ShowProjectGitReadOnlyUrlPresenter;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 import org.eclipse.che.ide.ui.FontAwesome;
 
-/** @author Andrey Plotnikov */
+import static com.google.common.base.Preconditions.checkState;
+
+/**
+ * @author Andrey Plotnikov
+ * @author Vlad Zhukovskyi
+ */
 @Singleton
 public class ShowGitUrlAction extends GitAction {
     private final ShowProjectGitReadOnlyUrlPresenter presenter;
@@ -28,16 +33,18 @@ public class ShowGitUrlAction extends GitAction {
     @Inject
     public ShowGitUrlAction(ShowProjectGitReadOnlyUrlPresenter presenter,
                             AppContext appContext,
-                            GitLocalizationConstant constant,
-                            ProjectExplorerPresenter projectExplorer) {
-        super(constant.projectReadOnlyGitUrlPrompt(), constant.projectReadOnlyGitUrlPrompt(), FontAwesome.LINK, appContext,
-              projectExplorer);
+                            GitLocalizationConstant constant) {
+        super(constant.projectReadOnlyGitUrlPrompt(), constant.projectReadOnlyGitUrlPrompt(), FontAwesome.LINK, appContext);
         this.presenter = presenter;
     }
 
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        presenter.showDialog();
+        final Project project = appContext.getRootProject();
+
+        checkState(project != null, "Null project occurred");
+
+        presenter.showDialog(project);
     }
 }

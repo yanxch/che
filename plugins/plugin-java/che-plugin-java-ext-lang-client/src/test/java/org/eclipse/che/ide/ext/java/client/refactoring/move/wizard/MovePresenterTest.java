@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.java.client.refactoring.move.wizard;
 
+import com.google.common.base.Optional;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 
 import org.eclipse.che.api.promises.client.Function;
@@ -17,20 +18,20 @@ import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.app.CurrentProject;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.notification.NotificationManager;
+import org.eclipse.che.ide.api.resources.Container;
+import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.ext.java.client.JavaLocalizationConstant;
 import org.eclipse.che.ide.ext.java.client.navigation.service.JavaNavigationService;
-import org.eclipse.che.ide.ext.java.client.project.node.JavaFileNode;
-import org.eclipse.che.ide.ext.java.client.project.node.PackageNode;
 import org.eclipse.che.ide.ext.java.client.refactoring.RefactorInfo;
 import org.eclipse.che.ide.ext.java.client.refactoring.RefactoringUpdater;
 import org.eclipse.che.ide.ext.java.client.refactoring.preview.PreviewPresenter;
 import org.eclipse.che.ide.ext.java.client.refactoring.service.RefactoringServiceClient;
+import org.eclipse.che.ide.ext.java.client.resource.JavaSourceFolderMarker;
 import org.eclipse.che.ide.ext.java.shared.dto.model.JavaProject;
 import org.eclipse.che.ide.ext.java.shared.dto.refactoring.ChangeCreationResult;
 import org.eclipse.che.ide.ext.java.shared.dto.refactoring.CreateMoveRefactoring;
@@ -42,6 +43,7 @@ import org.eclipse.che.ide.ext.java.shared.dto.refactoring.RefactoringStatus;
 import org.eclipse.che.ide.ext.java.shared.dto.refactoring.ReorgDestination;
 import org.eclipse.che.ide.jseditor.client.texteditor.TextEditor;
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
+import org.eclipse.che.ide.resource.Path;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,6 +56,7 @@ import org.mockito.Mockito;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.ext.java.shared.dto.refactoring.RefactoringStatus.ERROR;
 import static org.eclipse.che.ide.ext.java.shared.dto.refactoring.RefactoringStatus.FATAL;
@@ -71,6 +74,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * @author Valeriy Svydenko
+ * @author Vlad Zhukovskyi
  */
 @RunWith(GwtMockitoTestRunner.class)
 public class MovePresenterTest {
@@ -82,8 +86,6 @@ public class MovePresenterTest {
     private MoveView                 moveView;
     @Mock
     private RefactoringUpdater       refactoringUpdater;
-    @Mock
-    private AppContext               appContext;
     @Mock
     private PreviewPresenter         previewPresenter;
     @Mock
@@ -100,10 +102,19 @@ public class MovePresenterTest {
     private JavaLocalizationConstant locale;
     @Mock
     private NotificationManager      notificationManager;
+    @Mock
+    private EditorAgent              editorAgent;
 
     //local params
     @Mock
-    private RefactorInfo                  refactorInfo;
+    private RefactorInfo refactorInfo;
+    @Mock
+    private File         file;
+    @Mock
+    private Container    srcFolder;
+    @Mock
+    private Project relatedProject;
+
     @Mock
     private RefactoringStatus             refactoringStatus;
     @Mock
@@ -115,21 +126,11 @@ public class MovePresenterTest {
     @Mock
     private CreateMoveRefactoring         moveRefactoring;
     @Mock
-    private CurrentProject                currentProject;
-    @Mock
-    private PackageNode                   packageNode;
-    @Mock
-    private EditorAgent                   editorAgent;
-    @Mock
     private ChangeCreationResult          changeCreationResult;
     @Mock
     private MoveSettings                  moveSettings;
     @Mock
     private ReorgDestination              destination;
-    @Mock
-    private JavaFileNode                  sourceFileNode;
-    @Mock
-    private ProjectConfigDto              projectConfig;
     @Mock
     private Promise<String>               sessionPromise;
     @Mock
@@ -165,24 +166,16 @@ public class MovePresenterTest {
     @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
-        List selectedItems = new ArrayList<>();
-
-        selectedItems.add(packageNode);
-        selectedItems.add(sourceFileNode);
-
         when(editorAgent.getActiveEditor()).thenReturn(activeEditor);
-        when(refactorInfo.getSelectedItems()).thenReturn(selectedItems);
         when(dtoFactory.createDto(ElementToMove.class)).thenReturn(javaElement);
         when(dtoFactory.createDto(CreateMoveRefactoring.class)).thenReturn(moveRefactoring);
         when(dtoFactory.createDto(ReorgDestination.class)).thenReturn(destination);
-        when(appContext.getCurrentProject()).thenReturn(currentProject);
-        when(currentProject.getProjectConfig()).thenReturn(projectConfig);
-        when(projectConfig.getPath()).thenReturn(PROJECT_PATH);
         when(refactorService.createMoveRefactoring(moveRefactoring)).thenReturn(sessionPromise);
+        when(sessionPromise.then(any(Operation.class))).thenReturn(sessionPromise);
         when(refactorService.applyRefactoring(session)).thenReturn(refactoringResultPromise);
         when(refactorService.setDestination(destination)).thenReturn(refactoringStatusPromise);
         when(navigationService.getProjectsAndPackages(true)).thenReturn(projectsPromise);
-        when(projectsPromise.then(Matchers.<Operation<List<JavaProject>>>anyObject())).thenReturn(projectsPromise);
+        when(projectsPromise.then(any(Operation.class))).thenReturn(projectsPromise);
         when(dtoFactory.createDto(MoveSettings.class)).thenReturn(moveSettings);
         when(dtoFactory.createDto(RefactoringSession.class)).thenReturn(session);
         when(changeCreationResult.getStatus()).thenReturn(refactoringStatus);
@@ -195,7 +188,6 @@ public class MovePresenterTest {
 
         presenter = new MovePresenter(moveView,
                                       refactoringUpdater,
-                                      appContext,
                                       editorAgent,
                                       previewPresenter,
                                       refactorService,
@@ -216,18 +208,18 @@ public class MovePresenterTest {
         JavaProject javaProject = Mockito.mock(JavaProject.class);
         javaProjects.add(javaProject);
 
-        when(sessionPromise.then(Matchers.<Operation<String>>anyObject())).thenReturn(sessionPromise);
-        when(sourceFileNode.getName()).thenReturn("file.name");
-        when(javaProject.getPath()).thenReturn(PROJECT_PATH);
+        when(refactorInfo.getResources()).thenReturn(new Resource[]{file});
+        when(file.getParentWithMarker(eq(JavaSourceFolderMarker.ID))).thenReturn(Optional.of(srcFolder));
+        when(file.getLocation()).thenReturn(Path.valueOf("/project/src/a/b/C.java"));
+        when(file.getName()).thenReturn("C.java");
+        when(file.getFileExtension()).thenReturn("java");
+        when(srcFolder.getLocation()).thenReturn(Path.valueOf("/project/src"));
+        when(file.getResourceType()).thenReturn(Resource.FILE);
+
+        when(file.getRelatedProject()).thenReturn(relatedProject);
+        when(relatedProject.getLocation()).thenReturn(Path.valueOf("/project"));
 
         presenter.show(refactorInfo);
-
-        verify(moveView).setEnablePreviewButton(false);
-        verify(moveView).setEnableAcceptButton(false);
-        verify(moveView).clearErrorLabel();
-        verify(moveRefactoring).setProjectPath(PROJECT_PATH);
-        verify(refactorService).createMoveRefactoring(moveRefactoring);
-        verify(packageNode).getStorablePath();
 
         verify(sessionPromise).then(sessionOperation.capture());
         sessionOperation.getValue().apply("sessionId");
@@ -271,7 +263,7 @@ public class MovePresenterTest {
 
         verify(locale).showPreviewError();
         verify(promiseError).getMessage();
-        verify(notificationManager).notify(anyString(), anyString(), eq(FAIL), eq(true));
+        verify(notificationManager).notify(anyString(), anyString(), eq(FAIL), eq(FLOAT_MODE));
     }
 
     @Test
@@ -330,15 +322,21 @@ public class MovePresenterTest {
 
         verify(locale).applyMoveError();
         verify(promiseError).getMessage();
-        verify(notificationManager).notify(anyString(), anyString(), eq(FAIL), eq(true));
+        verify(notificationManager).notify(anyString(), anyString(), eq(FAIL), eq(FLOAT_MODE));
     }
 
     @Test
     public void acceptButtonActionShouldBePerformed() throws Exception {
+
         when(moveSettings.isUpdateQualifiedNames()).thenReturn(true);
         when(changeCreationResult.isCanShowPreviewPage()).thenReturn(true);
         when(changeCreationResult.getStatus()).thenReturn(refactoringResult);
         when(refactoringResult.getSeverity()).thenReturn(OK);
+
+        when(refactorInfo.getResources()).thenReturn(new Resource[]{file});
+        when(file.getRelatedProject()).thenReturn(relatedProject);
+        when(relatedProject.getLocation()).thenReturn(Path.valueOf("/project"));
+        presenter.refactorInfo = refactorInfo;
 
         presenter.onAcceptButtonClicked();
 
@@ -355,11 +353,10 @@ public class MovePresenterTest {
         verify(changeCreationResultPromise).then(changeResultOperation.capture());
         changeResultOperation.getValue().apply(changeCreationResult);
 
-
         verify(refactoringResultPromise).then(refResultOperation.capture());
         refResultOperation.getValue().apply(refactoringResult);
         verify(moveView).hide();
-        verify(refactoringUpdater).updateAfterRefactoring(Matchers.<RefactorInfo>any(), anyList());
+        verify(refactoringUpdater).updateAfterRefactoring(anyList());
 
         verify(moveView, never()).showErrorMessage(refactoringResult);
     }
@@ -370,6 +367,11 @@ public class MovePresenterTest {
         when(changeCreationResult.isCanShowPreviewPage()).thenReturn(true);
         when(changeCreationResult.getStatus()).thenReturn(refactoringResult);
         when(refactoringResult.getSeverity()).thenReturn(2);
+
+        when(refactorInfo.getResources()).thenReturn(new Resource[]{file});
+        when(file.getRelatedProject()).thenReturn(relatedProject);
+        when(relatedProject.getLocation()).thenReturn(Path.valueOf("/project"));
+        presenter.refactorInfo = refactorInfo;
 
         presenter.onAcceptButtonClicked();
 
@@ -389,7 +391,7 @@ public class MovePresenterTest {
         verify(refactoringResultPromise).then(refResultOperation.capture());
         refResultOperation.getValue().apply(refactoringResult);
         verify(moveView, never()).hide();
-        verify(refactoringUpdater, never()).updateAfterRefactoring(Matchers.<RefactorInfo>any(), anyList());
+        verify(refactoringUpdater, never()).updateAfterRefactoring(anyList());
 
         verify(moveView).showErrorMessage(refactoringResult);
     }

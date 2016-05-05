@@ -16,11 +16,13 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
 import org.eclipse.che.ide.api.editor.EditorWithErrors;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.api.text.Region;
 import org.eclipse.che.ide.ext.java.client.event.DependencyUpdatedEvent;
 import org.eclipse.che.ide.ext.java.client.event.DependencyUpdatedEventHandler;
-import org.eclipse.che.ide.ext.java.client.projecttree.JavaSourceFolderUtil;
+import org.eclipse.che.ide.ext.java.client.util.JavaUtil;
 import org.eclipse.che.ide.ext.java.shared.dto.Problem;
 import org.eclipse.che.ide.ext.java.shared.dto.ReconcileResult;
 import org.eclipse.che.ide.jseditor.client.annotation.AnnotationModel;
@@ -83,18 +85,22 @@ public class JavaReconcilerStrategy implements ReconcilingStrategy {
             first = false;
         }
 
+        if (file instanceof Resource) {
+            final Project project = ((Resource)file).getRelatedProject();
 
-        String fqn = JavaSourceFolderUtil.getFQNForFile(file);
-        client.reconcile(file.getProject().getProjectConfig().getPath(), fqn, new JavaReconcileClient.ReconcileCallback() {
-            @Override
-            public void onReconcile(ReconcileResult result) {
-                if (result == null) {
-                    return;
+            client.reconcile(project.getLocation().toString(), JavaUtil.resolveFQN(file), new JavaReconcileClient.ReconcileCallback() {
+                @Override
+                public void onReconcile(ReconcileResult result) {
+                    if (result == null) {
+                        return;
+                    }
+                    doReconcile(result.getProblems());
+                    highlighter.reconcile(result.getHighlightedPositions());
                 }
-                doReconcile(result.getProblems());
-                highlighter.reconcile(result.getHighlightedPositions());
-            }
-        });
+            });
+        }
+
+
     }
 
 

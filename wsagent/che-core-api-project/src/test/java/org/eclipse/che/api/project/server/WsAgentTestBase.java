@@ -29,8 +29,8 @@ import org.eclipse.che.api.vfs.impl.file.FileWatcherNotificationHandler;
 import org.eclipse.che.api.vfs.impl.file.LocalVirtualFileSystemProvider;
 import org.eclipse.che.api.vfs.search.impl.FSLuceneSearcherProvider;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.commons.lang.IoUtil;
 import org.eclipse.che.dto.server.DtoFactory;
 
@@ -128,14 +128,14 @@ public class WsAgentTestBase {
         //ArrayList <RegisteredProject> updatedProjects = new ArrayList<>();
 
         protected TestWorkspaceHolder() throws ServerException {
-            super(DtoFactory.newDto(UsersWorkspaceDto.class).withId("id")
+            super(DtoFactory.newDto(WorkspaceDto.class).withId("id")
                             .withConfig(DtoFactory.newDto(WorkspaceConfigDto.class)
                                                   .withName("name")));
         }
 
 
         protected TestWorkspaceHolder(List<ProjectConfigDto> projects) throws ServerException {
-            super(DtoFactory.newDto(UsersWorkspaceDto.class)
+            super(DtoFactory.newDto(WorkspaceDto.class)
                             .withId("id")
                             .withConfig(DtoFactory.newDto(WorkspaceConfigDto.class)
                                                   .withName("name")
@@ -143,10 +143,24 @@ public class WsAgentTestBase {
         }
 
         @Override
-        public void updateProjects(Collection<RegisteredProject> projects) throws ServerException {
-            List<RegisteredProject> persistedProjects = projects.stream().filter(project -> !project.isDetected()).collect(toList());
-            workspace.setProjects(persistedProjects);
-            //setProjects(new ArrayList<>(projects));
+        void addProject(RegisteredProject project) throws ServerException {
+            if (!project.isDetected()) {
+                workspace.addProject(project);
+            }
+        }
+
+        @Override
+        public void updateProject(RegisteredProject project) throws ServerException {
+            if (!project.isDetected()) {
+                workspace.updateProject(project);
+            }
+        }
+
+        @Override
+        void removeProjects(Collection<RegisteredProject> projects) throws ServerException {
+            projects.stream()
+                    .filter(project -> !project.isDetected())
+                    .forEach(workspace::removeProject);
         }
     }
 

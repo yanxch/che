@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.jseditor.client.filetype;
 
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.util.loging.Log;
 
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ public class ExtensionFileTypeIdentifier implements FileTypeIdentifier {
 
     /** Prepares the know extension registry. */
     public void init() {
-        this.mappings.put("c", makeList("text/x-c"));
+        this.mappings.put("c", makeList("text/x-csrc"));
         this.mappings.put("C", makeList("text/x-c++src"));
         this.mappings.put("cc", makeList("text/x-c++src"));
         this.mappings.put("cpp", makeList("text/x-c++src"));

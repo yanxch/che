@@ -54,6 +54,8 @@ export class CreateWorkspaceCtrl {
     this.recipeScript = null;
     this.importWorkspace = '';
     this.defaultWorkspaceName = null;
+
+    cheAPI.cheWorkspace.fetchWorkspaces();
   }
 
   /**
@@ -72,14 +74,16 @@ export class CreateWorkspaceCtrl {
    * @param stack  the selected stack
    */
   cheStackLibrarySelecter(stack) {
-    this.stack = stack;
-    this.recipeUrl = null;
-    this.isCustomStack = false;
-    if (stack.workspaceConfig && stack.workspaceConfig.name) {
-      this.setWorkspaceName(stack.workspaceConfig.name);
-      return;
+    if (stack) {
+      this.isCustomStack = false;
+      this.recipeUrl = null;
     }
-    this.generateWorkspaceName();
+    if (this.stack !== stack && stack && stack.workspaceConfig && stack.workspaceConfig.name) {
+      this.setWorkspaceName(stack.workspaceConfig.name);
+    } else {
+      this.generateWorkspaceName();
+    }
+    this.stack = stack;
   }
 
   /**
@@ -168,11 +172,11 @@ export class CreateWorkspaceCtrl {
     let recipeName = 'generated-' + stack.name;
     let recipeScript;
     // what is type of source ?
-    switch (recipeSource.type) {
+    switch (recipeSource.type.toLowerCase()) {
       case 'image':
         recipeScript = 'FROM ' + recipeSource.origin;
         break;
-      case 'recipe':
+      case 'dockerfile':
         recipeScript = recipeSource.origin;
         break;
       default:
@@ -219,7 +223,7 @@ export class CreateWorkspaceCtrl {
    */
   redirectAfterSubmitWorkspace(promise) {
     promise.then((workspaceData) => {
-      let infoMessage = 'Workspace ' + workspaceData.name + ' successfully created.';
+      let infoMessage = 'Workspace ' + workspaceData.config.name + ' successfully created.';
       this.cheNotification.showInfo(infoMessage);
       this.$location.path('/workspace/' + workspaceData.id);
     }, (error) => {

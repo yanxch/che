@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ui.smartTree.compare;
 
-import org.eclipse.che.ide.api.project.node.Node;
+import org.eclipse.che.ide.api.data.tree.Node;
 
 import java.util.Comparator;
 
@@ -24,6 +24,6 @@ public class NameComparator implements Comparator<Node> {
     /** {@inheritDoc} */
     @Override
     public int compare(Node o1, Node o2) {
-        return o1.getName().compareTo(o2.getName());
+        return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
     }
 }

@@ -10,11 +10,10 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.git.client.importer.page;
 
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
-import org.eclipse.che.ide.api.wizard.Wizard;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
+import org.eclipse.che.ide.api.project.MutableProjectConfig;
+import org.eclipse.che.ide.api.wizard.Wizard;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,8 +22,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -41,19 +44,19 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class GitImporterPagePresenterTest {
     @Mock
-    private Wizard.UpdateDelegate    updateDelegate;
+    private Wizard.UpdateDelegate                     updateDelegate;
     @Mock
-    private GitImporterPageView      view;
+    private GitImporterPageView                       view;
     @Mock
-    private GitLocalizationConstant  locale;
+    private GitLocalizationConstant                   locale;
     @Mock
-    private ProjectConfigDto         dataObject;
+    private MutableProjectConfig                      dataObject;
     @Mock
-    private SourceStorageDto         source;
+    private MutableProjectConfig.MutableSourceStorage source;
     @Mock
-    private Map<String, String>      parameters;
+    private Map<String, String>                       parameters;
     @InjectMocks
-    private GitImporterPagePresenter presenter;
+    private GitImporterPagePresenter                  presenter;
 
     @Before
     public void setUp() {
@@ -243,13 +246,61 @@ public class GitImporterPagePresenterTest {
         verify(dataObject).setDescription(eq(description));
     }
 
-    /**
-     * Directory name field must become enabled when Keep directory is checked.
-     */
     @Test
     public void keepDirectorySelectedTest() {
+        Map<String, String> parameters = new HashMap<>();
+        when(source.getParameters()).thenReturn(parameters);
+        when(view.getDirectoryName()).thenReturn("directory");
+
         presenter.keepDirectorySelected(true);
-        verify(view).enableDirectoryNameField(true);
+
+        assertEquals("directory", parameters.get("keepDirectory"));
+        verify(dataObject).setType("blank");
+        verify(view).highlightDirectoryNameField(eq(false));
+        verify(view).focusDirectoryNameFiend();
+    }
+
+    @Test
+    public void keepDirectoryUnSelectedTest() {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("keepDir", "directory");
+        when(source.getParameters()).thenReturn(parameters);
+
+        presenter.keepDirectorySelected(false);
+
+        assertTrue(parameters.isEmpty());
+        verify(dataObject).setType(eq(null));
+        verify(view).highlightDirectoryNameField(eq(false));
+    }
+
+    @Test
+    public void keepDirectoryNameChangedAndKeepDirectorySelectedTest() {
+        Map<String, String> parameters = new HashMap<>();
+        when(source.getParameters()).thenReturn(parameters);
+        when(view.getDirectoryName()).thenReturn("directory");
+        when(view.keepDirectory()).thenReturn(true);
+
+        presenter.keepDirectoryNameChanged("directory");
+
+        assertEquals("directory", parameters.get("keepDirectory"));
+        verify(dataObject, never()).setPath(any());
+        verify(dataObject).setType(eq("blank"));
+        verify(view).highlightDirectoryNameField(eq(false));
+    }
+
+    @Test
+    public void keepDirectoryNameChangedAndKeepDirectoryUnSelectedTest() {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("keepDirectory", "directory");
+        when(source.getParameters()).thenReturn(parameters);
+        when(view.keepDirectory()).thenReturn(false);
+
+        presenter.keepDirectoryNameChanged("directory");
+
+        assertTrue(parameters.isEmpty());
+        verify(dataObject, never()).setPath(any());
+        verify(dataObject).setType(eq(null));
+        verify(view).highlightDirectoryNameField(eq(false));
     }
 
     /**
@@ -259,15 +310,6 @@ public class GitImporterPagePresenterTest {
     public void branchSelectedTest() {
         presenter.branchSelected(true);
         verify(view).enableBranchNameField(true);
-    }
-
-    /**
-     * Directory name field must become disabled when Keep directory is unchecked.
-     */
-    @Test
-    public void keepDirectoryNotSelectedTest() {
-        presenter.keepDirectorySelected(false);
-        verify(view).enableDirectoryNameField(false);
     }
 
     /**

@@ -34,7 +34,7 @@ import org.eclipse.che.ide.api.event.FileEvent;
 import org.eclipse.che.ide.api.event.FileEventHandler;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.parts.WorkspaceAgent;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.api.selection.Selection;
 import org.eclipse.che.ide.api.texteditor.HandlesTextOperations;
 import org.eclipse.che.ide.api.texteditor.HandlesUndoRedo;
@@ -67,6 +67,8 @@ import org.eclipse.che.ide.jseditor.client.gutter.HasGutter;
 import org.eclipse.che.ide.jseditor.client.keymap.KeyBindingAction;
 import org.eclipse.che.ide.jseditor.client.keymap.Keybinding;
 import org.eclipse.che.ide.jseditor.client.position.PositionConverter;
+import org.eclipse.che.ide.jseditor.client.quickfix.QuickAssistAssistant;
+import org.eclipse.che.ide.jseditor.client.quickfix.QuickAssistProcessor;
 import org.eclipse.che.ide.jseditor.client.quickfix.QuickAssistantFactory;
 import org.eclipse.che.ide.jseditor.client.reconciler.Reconciler;
 import org.eclipse.che.ide.jseditor.client.reconciler.ReconcilerWithAutoSave;
@@ -75,6 +77,7 @@ import org.eclipse.che.ide.jseditor.client.text.TextPosition;
 import org.eclipse.che.ide.jseditor.client.text.TextRange;
 import org.eclipse.che.ide.jseditor.client.texteditor.EditorWidget.WidgetInitializedCallback;
 import org.eclipse.che.ide.jseditor.client.texteditor.EmbeddedTextEditorPartView.Delegate;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.texteditor.selection.CursorModelWithHandler;
 import org.eclipse.che.ide.ui.dialogs.CancelCallback;
 import org.eclipse.che.ide.ui.dialogs.ConfirmCallback;
@@ -88,6 +91,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.NOT_EMERGE_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 
 /**
@@ -109,10 +113,10 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
 
     private static final String TOGGLE_LINE_BREAKPOINT = "Toggle line breakpoint";
 
-    private final WorkspaceAgent         workspaceAgent;
-    private final EditorWidgetFactory<T> editorWidgetFactory;
-    private final EditorModule<T>        editorModule;
-    private final JsEditorConstants      constant;
+    private final WorkspaceAgent           workspaceAgent;
+    private final EditorWidgetFactory<T>   editorWidgetFactory;
+    private final EditorModule<T>          editorModule;
+    private final JsEditorConstants        constant;
 
     private final DocumentStorage            documentStorage;
     private final EventBus                   generalEventBus;
@@ -130,6 +134,7 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
     private EditorWidget             editorWidget;
     private Document                 document;
     private CursorModelWithHandler   cursorModel;
+    private QuickAssistAssistant     quickAssistant;
     private HasKeybindings keyBindingsManager = new TemporaryKeybindingsManager();
     private LoaderFactory       loaderFactory;
     private NotificationManager notificationManager;
@@ -178,10 +183,15 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
 
     @Override
     protected void initializeEditor(final OpenEditorCallback callback) {
+        QuickAssistProcessor processor = configuration.getQuickAssistProcessor();
+        if (quickAssistantFactory != null && processor != null) {
+            quickAssistant = quickAssistantFactory.createQuickAssistant(this);
+            quickAssistant.setQuickAssistProcessor(processor);
+        }
         new TextEditorInit<T>(configuration,
                               generalEventBus,
                               this.codeAssistantFactory,
-                              this.quickAssistantFactory,
+                              this.quickAssistant,
                               this).init();
 
         if (editorModule.isError()) {
@@ -210,6 +220,23 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
         documentStorage.getDocument(input.getFile(), dualCallback);
         if (!moduleReady) {
             editorModule.waitReady(dualCallback);
+        }
+    }
+
+    /**
+     * Show the quick assist assistant.
+     */
+    public void showQuickAssist() {
+        if (quickAssistant == null) {
+            return;
+        }
+        PositionConverter positionConverter = getPositionConverter();
+        if (positionConverter != null) {
+            TextPosition cursor = getCursorPosition();
+            PositionConverter.PixelCoordinates pixelPos = positionConverter.textToPixel(cursor);
+            quickAssistant.showPossibleQuickAssists(getCursorModel().getCursorPosition().getOffset(),
+                                                    pixelPos.getX(),
+                                                    pixelPos.getY());
         }
     }
 
@@ -247,7 +274,7 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
         this.generalEventBus.addHandler(FileContentUpdateEvent.TYPE, new FileContentUpdateHandler() {
             @Override
             public void onFileContentUpdate(final FileContentUpdateEvent event) {
-                if (event.getFilePath() != null && event.getFilePath().equals(document.getFile().getPath())) {
+                if (event.getFilePath() != null && Path.valueOf(event.getFilePath()).equals(getEditorInput().getFile().getLocation())) {
                     updateContent();
                 }
             }
@@ -262,7 +289,7 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
          * -restore current cursor position
          */
         final TextPosition currentCursor = getCursorPosition();
-        this.documentStorage.getDocument(document.getFile(), new EmbeddedDocumentCallback() {
+        this.documentStorage.getDocument(getEditorInput().getFile(), new EmbeddedDocumentCallback() {
 
             @Override
             public void onDocumentReceived(final String content) {
@@ -315,6 +342,8 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
         if (reconciler != null) {
             reconciler.uninstall();
         }
+
+        workspaceAgent.removePart(this);
     }
 
     @Inject
@@ -396,10 +425,8 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
             return;
         }
 
-        final String eventFilePath = event.getFile().getPath();
-        final String filePath = input.getFile().getPath();
-        if (filePath.equals(eventFilePath)) {
-            workspaceAgent.removePart(this);
+        if (input.getFile().equals(event.getFile())) {
+            close(false);
         }
     }
 
@@ -462,7 +489,7 @@ public class EmbeddedTextEditorPresenter<T extends EditorWidget> extends Abstrac
 
             @Override
             public void onFailure(Throwable caught) {
-                notificationManager.notify(constant.failedToUpdateContentOfFiles(), caught.getMessage(), FAIL, false);
+                notificationManager.notify(constant.failedToUpdateContentOfFiles(), caught.getMessage(), FAIL, NOT_EMERGE_MODE);
                 if (callback != null) {
                     callback.onFailure(caught);
                 }

@@ -22,10 +22,10 @@ import org.eclipse.che.api.machine.shared.Permissions;
 import org.eclipse.che.api.workspace.server.model.impl.stack.StackComponentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.stack.StackImpl;
 import org.eclipse.che.api.workspace.server.model.impl.stack.StackSourceImpl;
-import org.eclipse.che.api.workspace.server.model.stack.Stack;
-import org.eclipse.che.api.workspace.server.model.stack.StackSource;
 import org.eclipse.che.api.workspace.server.stack.StackTypeAdaptersProvider;
 import org.eclipse.che.api.workspace.server.stack.image.StackIcon;
+import org.eclipse.che.api.workspace.shared.stack.Stack;
+import org.eclipse.che.api.workspace.shared.stack.StackSource;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -71,7 +71,7 @@ public class LocalStackDaoTest {
         final Path targetDir = Paths.get(url.toURI()).getParent();
         storageRoot = targetDir.resolve("stack");
         stackJsonPath = storageRoot.resolve("stacks.json");
-        parentIconFolder = storageRoot.resolve("stack_img").resolve("stackdskhfdskf");
+        parentIconFolder = storageRoot.resolve("images").resolve("stackdskhfdskf");
         pathToIcon = parentIconFolder.resolve("java-type.svg");
         stackDao = new LocalStackDaoImpl(new StackLocalStorage(storageRoot.toString(), new StackTypeAdaptersProvider()));
     }

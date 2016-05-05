@@ -29,23 +29,28 @@ import org.eclipse.che.api.workspace.gwt.client.WorkspaceServiceClient;
 import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStartedEvent;
 import org.eclipse.che.api.workspace.gwt.client.event.WorkspaceStoppedEvent;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
-import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.api.workspace.shared.dto.event.WorkspaceStatusEvent;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.actions.WorkspaceSnapshotCreator;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.event.HttpSessionDestroyedEvent;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.preferences.PreferencesManager;
+import org.eclipse.che.ide.api.workspace.Workspace;
+import org.eclipse.che.ide.api.workspace.WorkspaceConfigChangedEvent;
 import org.eclipse.che.ide.context.BrowserQueryFieldRenderer;
 import org.eclipse.che.ide.api.component.Component;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
+import org.eclipse.che.ide.rest.HTTPStatus;
 import org.eclipse.che.ide.ui.dialogs.CancelCallback;
 import org.eclipse.che.ide.ui.dialogs.ConfirmCallback;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 import org.eclipse.che.ide.ui.loaders.initialization.InitialLoadingInfo;
 import org.eclipse.che.ide.ui.loaders.initialization.LoaderPresenter;
+import org.eclipse.che.ide.util.ExceptionUtils;
 import org.eclipse.che.ide.util.loging.Log;
 import org.eclipse.che.ide.websocket.MessageBus;
 import org.eclipse.che.ide.websocket.MessageBusProvider;
@@ -61,6 +66,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.RUNNING;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.NOT_EMERGE_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.ui.loaders.initialization.InitialLoadingInfo.Operations.WORKSPACE_BOOTING;
 import static org.eclipse.che.ide.ui.loaders.initialization.OperationInfo.Status.ERROR;
@@ -96,6 +103,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
     private final MessageBusProvider       messageBusProvider;
     private final InitialLoadingInfo       initialLoadingInfo;
     private final WorkspaceSnapshotCreator snapshotCreator;
+    private final Workspace                workspace;
 
     protected Callback<Component, Exception> callback;
     protected boolean                        needToReloadComponents;
@@ -117,7 +125,8 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                               PreferencesManager preferencesManager,
                               DtoFactory dtoFactory,
                               InitialLoadingInfo initialLoadingInfo,
-                              WorkspaceSnapshotCreator snapshotCreator) {
+                              WorkspaceSnapshotCreator snapshotCreator,
+                              Workspace workspace) {
         this.workspaceServiceClient = workspaceServiceClient;
         this.createWorkspacePresenter = createWorkspacePresenter;
         this.startWorkspacePresenter = startWorkspacePresenter;
@@ -135,6 +144,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
         this.dtoFactory = dtoFactory;
         this.initialLoadingInfo = initialLoadingInfo;
         this.snapshotCreator = snapshotCreator;
+        this.workspace = workspace;
 
         this.needToReloadComponents = true;
 
@@ -144,7 +154,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
     /** {@inheritDoc} */
     @Override
     public void onWsAgentStarted(WsAgentStateEvent event) {
-        notificationManager.notify(locale.extServerStarted(), StatusNotification.Status.SUCCESS, true);
+        notificationManager.notify(locale.extServerStarted(), StatusNotification.Status.SUCCESS, FLOAT_MODE);
     }
 
     /** {@inheritDoc} */
@@ -161,15 +171,17 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
      * @param workspace
      *         workspace which will be current
      */
-    public void setCurrentWorkspace(UsersWorkspaceDto workspace) {
-        appContext.setWorkspace(workspace);
+    public void setCurrentWorkspace(WorkspaceDto workspace) {
+        appContext.setWorkspace(workspace); //TODO remove it in nearest future
+
+        eventBus.fireEvent(new WorkspaceConfigChangedEvent(workspace.getId(), workspace, workspace.isTemporary()));
 
         if (needToReloadComponents) {
             callback.onSuccess(WorkspaceComponent.this);
             needToReloadComponents = false;
         }
 
-        browserQueryFieldRenderer.setWorkspaceName(workspace.getConfig().getName());
+        browserQueryFieldRenderer.setQueryField(workspace.getConfig().getName(), "");
     }
 
     /**
@@ -177,38 +189,54 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
      *
      * @param workspace
      *         workspace which will be started
+     * @param callback
+     *         callback to be executed
      */
-    public void startWorkspaceById(final UsersWorkspaceDto workspace) {
-        loader.show(initialLoadingInfo);
-        initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), IN_PROGRESS);
-
-        if (messageBus != null) {
-            messageBus.cancelReconnection();
-        }
-        messageBus = messageBusProvider.createMessageBus(workspace.getId());
-
-        messageBus.addOnOpenHandler(new ConnectionOpenedHandler() {
+    public void startWorkspaceById(final WorkspaceDto workspace, final Callback<Component, Exception> callback) {
+        this.callback = callback;
+        workspaceServiceClient.getWorkspace(workspace.getId()).then(new Operation<WorkspaceDto>() {
             @Override
-            public void onOpen() {
-                messageBus.removeOnOpenHandler(this);
-                subscribeToWorkspaceStatusWebSocket(workspace);
+            public void apply(WorkspaceDto arg) throws OperationException {
+                loader.show(initialLoadingInfo);
+                initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), IN_PROGRESS);
 
-                if (!RUNNING.equals(workspace.getStatus())) {
-                    workspaceServiceClient.getSnapshot(workspace.getId()).then(new Operation<List<SnapshotDto>>() {
-                        @Override
-                        public void apply(List<SnapshotDto> snapshots) throws OperationException {
-                            if (snapshots.isEmpty()) {
-                                handleWsStart(workspaceServiceClient.startById(workspace.getId(),
-                                                                               workspace.getConfig().getDefaultEnv()));
-                            } else {
-                                showRecoverWorkspaceConfirmDialog(workspace);
-                            }
+                if (messageBus != null) {
+                    messageBus.cancelReconnection();
+                }
+                messageBus = messageBusProvider.createMessageBus(workspace.getId());
+
+                messageBus.addOnOpenHandler(new ConnectionOpenedHandler() {
+                    @Override
+                    public void onOpen() {
+                        messageBus.removeOnOpenHandler(this);
+                        subscribeToWorkspaceStatusWebSocket(workspace);
+
+                        if (!RUNNING.equals(workspace.getStatus())) {
+                            workspaceServiceClient.getSnapshot(workspace.getId()).then(new Operation<List<SnapshotDto>>() {
+                                @Override
+                                public void apply(List<SnapshotDto> snapshots) throws OperationException {
+                                    if (snapshots.isEmpty()) {
+                                        handleWsStart(workspaceServiceClient.startById(workspace.getId(),
+                                                                                       workspace.getConfig().getDefaultEnv()));
+                                    } else {
+                                        showRecoverWorkspaceConfirmDialog(workspace);
+                                    }
+                                }
+                            });
+                        } else {
+                            initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
+                            setCurrentWorkspace(workspace);
+                            eventBus.fireEvent(new WorkspaceStartedEvent(workspace));
                         }
-                    });
-                } else {
-                    initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
-                    setCurrentWorkspace(workspace);
-                    eventBus.fireEvent(new WorkspaceStartedEvent(workspace));
+                    }
+                });
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError err) throws OperationException {
+                Log.error(getClass(), err.getCause());
+                if (ExceptionUtils.getStatusCode(err.getCause()) == HTTPStatus.FORBIDDEN) {
+                    eventBus.fireEvent(new HttpSessionDestroyedEvent());
                 }
             }
         });
@@ -220,7 +248,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
      * <p> When "Ok" button is pressed - {@link WorkspaceServiceClient#recoverWorkspace(String, String, String) recovers workspace}
      * <br>When "Cancel" button is pressed - {@link WorkspaceServiceClient#startById(String, String) starts workspace}
      */
-    private void showRecoverWorkspaceConfirmDialog(final UsersWorkspaceDto workspace) {
+    private void showRecoverWorkspaceConfirmDialog(final WorkspaceDto workspace) {
         dialogFactory.createConfirmDialog("Workspace recovering",
                                           "Do you want to recover the workspace from snapshot?",
                                           new ConfirmCallback() {
@@ -246,10 +274,10 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
     /**
      * Handles workspace start or recovering.
      */
-    private void handleWsStart(final Promise<UsersWorkspaceDto> promise) {
-        promise.then(new Operation<UsersWorkspaceDto>() {
+    private void handleWsStart(final Promise<WorkspaceDto> promise) {
+        promise.then(new Operation<WorkspaceDto>() {
             @Override
-            public void apply(UsersWorkspaceDto workspace) throws OperationException {
+            public void apply(WorkspaceDto workspace) throws OperationException {
                 initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
                 setCurrentWorkspace(workspace);
                 EnvironmentDto currentEnvironment = null;
@@ -278,7 +306,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
         });
     }
 
-    private void subscribeToWorkspaceStatusWebSocket(final UsersWorkspaceDto workspace) {
+    private void subscribeToWorkspaceStatusWebSocket(final WorkspaceDto workspace) {
         Unmarshallable<WorkspaceStatusEvent> unmarshaller = dtoUnmarshallerFactory.newWSUnmarshaller(WorkspaceStatusEvent.class);
 
         try {
@@ -291,27 +319,21 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
 
                         case RUNNING:
                             setCurrentWorkspace(workspace);
-                            notificationManager.notify(locale.startedWs(), StatusNotification.Status.SUCCESS, true);
+                            notificationManager.notify(locale.startedWs(), StatusNotification.Status.SUCCESS, FLOAT_MODE);
                             eventBus.fireEvent(new WorkspaceStartedEvent(workspace));
                             break;
 
                         case ERROR:
                             unSubscribeWorkspace(statusEvent.getWorkspaceId(), this);
-                            notificationManager.notify(locale.workspaceStartFailed(), FAIL, true);
+                            notificationManager.notify(locale.workspaceStartFailed(), FAIL, FLOAT_MODE);
                             initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), ERROR);
                             showErrorDialog(workspaceName, statusEvent.getError());
                             eventBus.fireEvent(new WorkspaceStoppedEvent(workspace));
                             break;
 
                         case STOPPED:
-                            workspaceServiceClient.getWorkspaces(SKIP_COUNT, MAX_COUNT).then(new Operation<List<UsersWorkspaceDto>>() {
-                                @Override
-                                public void apply(List<UsersWorkspaceDto> workspaces) throws OperationException {
-                                    startWorkspacePresenter.show(workspaces, callback);
-                                }
-                            });
                             unSubscribeWorkspace(statusEvent.getWorkspaceId(), this);
-                            notificationManager.notify(locale.extServerStopped(), StatusNotification.Status.SUCCESS, true);
+                            notificationManager.notify(locale.extServerStopped(), StatusNotification.Status.SUCCESS, FLOAT_MODE);
                             eventBus.fireEvent(new WorkspaceStoppedEvent(workspace));
                             break;
 
@@ -328,7 +350,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
 
                 @Override
                 protected void onErrorReceived(Throwable exception) {
-                    notificationManager.notify(exception.getMessage(), FAIL, false);
+                    notificationManager.notify(exception.getMessage(), FAIL, NOT_EMERGE_MODE);
                 }
             });
         } catch (WebSocketException exception) {
@@ -337,9 +359,9 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
     }
 
     private void showErrorDialog(final String wsName, final String errorMessage) {
-        workspaceServiceClient.getWorkspaces(SKIP_COUNT, MAX_COUNT).then(new Operation<List<UsersWorkspaceDto>>() {
+        workspaceServiceClient.getWorkspaces(SKIP_COUNT, MAX_COUNT).then(new Operation<List<WorkspaceDto>>() {
             @Override
-            public void apply(final List<UsersWorkspaceDto> workspaces) throws OperationException {
+            public void apply(final List<WorkspaceDto> workspaces) throws OperationException {
                 dialogFactory.createMessageDialog(locale.startWsErrorTitle(),
                                                   locale.startWsErrorContent(wsName, errorMessage),
                                                   new ConfirmCallback() {
@@ -365,11 +387,11 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
     /**
      * Starts specified workspace if it's {@link WorkspaceStatus} different of {@code RUNNING}
      */
-    protected Operation<UsersWorkspaceDto> startWorkspace() {
-        return new Operation<UsersWorkspaceDto>() {
+    protected Operation<WorkspaceDto> startWorkspace() {
+        return new Operation<WorkspaceDto>() {
             @Override
-            public void apply(UsersWorkspaceDto workspaceToStart) throws OperationException {
-                startWorkspaceById(workspaceToStart);
+            public void apply(WorkspaceDto workspaceToStart) throws OperationException {
+                startWorkspaceById(workspaceToStart, callback);
             }
         };
     }

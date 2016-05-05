@@ -33,7 +33,6 @@ import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.TextBox;
@@ -49,7 +48,6 @@ import org.eclipse.che.ide.api.icon.IconRegistry;
 import org.eclipse.che.ide.extension.machine.client.MachineLocalizationConstant;
 import org.eclipse.che.ide.extension.machine.client.command.CommandConfiguration;
 import org.eclipse.che.ide.extension.machine.client.command.CommandType;
-import org.eclipse.che.ide.ui.WidgetFocusTracker;
 import org.eclipse.che.ide.ui.list.CategoriesList;
 import org.eclipse.che.ide.ui.list.Category;
 import org.eclipse.che.ide.ui.list.CategoryRenderer;
@@ -74,14 +72,13 @@ public class EditCommandsViewImpl extends Window implements EditCommandsView {
 
     private final EditCommandResources     commandResources;
     private final IconRegistry             iconRegistry;
-    private final WidgetFocusTracker       widgetFocusTracker;
     private final CoreLocalizationConstant coreLocale;
     private final Label                    hintLabel;
     private       Button                   cancelButton;
     private       Button                   saveButton;
     private       Button                   closeButton;
 
-    private final CategoryRenderer<CommandConfiguration> projectImporterRenderer =
+    private final CategoryRenderer<CommandConfiguration> commandConfigurationRenderer =
             new CategoryRenderer<CommandConfiguration>() {
                 @Override
                 public void renderElement(Element element, CommandConfiguration data) {
@@ -97,7 +94,7 @@ public class EditCommandsViewImpl extends Window implements EditCommandsView {
                 }
             };
 
-    private final Category.CategoryEventDelegate<CommandConfiguration> projectImporterDelegate =
+    private final Category.CategoryEventDelegate<CommandConfiguration> commandConfigurationDelegate =
             new Category.CategoryEventDelegate<CommandConfiguration>() {
                 @Override
                 public void onListItemClicked(Element listItemBase, CommandConfiguration itemData) {
@@ -137,13 +134,11 @@ public class EditCommandsViewImpl extends Window implements EditCommandsView {
                                    EditCommandResources commandResources,
                                    MachineLocalizationConstant machineLocale,
                                    CoreLocalizationConstant coreLocale,
-                                   IconRegistry iconRegistry,
-                                   WidgetFocusTracker widgetFocusTracker) {
+                                   IconRegistry iconRegistry) {
         this.commandResources = commandResources;
         this.machineLocale = machineLocale;
         this.coreLocale = coreLocale;
         this.iconRegistry = iconRegistry;
-        this.widgetFocusTracker = widgetFocusTracker;
 
         selectConfiguration = null;
         categories = new HashMap<>();
@@ -299,7 +294,7 @@ public class EditCommandsViewImpl extends Window implements EditCommandsView {
                 }
             }
             Category<CommandConfiguration> category =
-                    new Category<>(type.getId(), projectImporterRenderer, configurations, projectImporterDelegate);
+                    new Category<>(type.getId(), commandConfigurationRenderer, configurations, commandConfigurationDelegate);
             categoriesList.add(category);
         }
         list.clear();
@@ -401,13 +396,11 @@ public class EditCommandsViewImpl extends Window implements EditCommandsView {
         super.show();
         configurationName.setText("");
         configurationPreviewUrl.setText("");
-        trackFocusForWidgets();
     }
 
     @Override
     public void close() {
         this.hide();
-        unTrackFocusForWidgets();
     }
 
     @Override
@@ -508,27 +501,16 @@ public class EditCommandsViewImpl extends Window implements EditCommandsView {
     @Override
     protected void onClose() {
         setSelectedConfiguration(selectConfiguration);
-        unTrackFocusForWidgets();
     }
 
     @Override
     public boolean isCancelButtonInFocus() {
-        return widgetFocusTracker.isWidgetFocused(cancelButton);
+        return isWidgetFocused(cancelButton);
     }
 
     @Override
     public boolean isCloseButtonInFocus() {
-        return widgetFocusTracker.isWidgetFocused(closeButton);
-    }
-
-    private void trackFocusForWidgets() {
-        widgetFocusTracker.subscribe(cancelButton);
-        widgetFocusTracker.subscribe(closeButton);
-    }
-
-    private void unTrackFocusForWidgets() {
-        widgetFocusTracker.unSubscribe(cancelButton);
-        widgetFocusTracker.unSubscribe(closeButton);
+        return isWidgetFocused(closeButton);
     }
 
     interface EditCommandsViewImplUiBinder extends UiBinder<Widget, EditCommandsViewImpl> {

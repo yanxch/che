@@ -1459,10 +1459,14 @@ public interface Theme {
 
     /********************************************************************************************
      *
-     * Git output console
+     * VCS output console
      *
      ********************************************************************************************/
-    String gitConsoleStagedFilesColor();
-    String gitConsoleUnstagedFilesColor();
-    String gitConsoleErrorColor();
+    String vcsConsoleStagedFilesColor();
+    String vcsConsoleUnstagedFilesColor();
+    String vcsConsoleErrorColor();
+    String vcsConsoleModifiedFilesColor();
+    String vcsConsoleChangesLineNumbersColor();
+
+    String editorPreferenceCategoryBackgroundColor();
 }

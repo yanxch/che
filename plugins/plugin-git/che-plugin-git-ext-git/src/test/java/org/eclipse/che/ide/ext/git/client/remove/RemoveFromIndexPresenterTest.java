@@ -70,17 +70,17 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
     public void disarm() {
         super.disarm();
 
-        presenter = new RemoveFromIndexPresenter(view,
-                                                 eventBus,
-                                                 service,
-                                                 constant,
-                                                 appContext,
-                                                 selectionAgent,
-                                                 notificationManager,
-                                                 editorAgent,
-                                                 projectExplorer,
-                                                 gitOutputConsoleFactory,
-                                                 consolesPanelPresenter);
+//        presenter = new RemoveFromIndexPresenter(view,
+//                                                 eventBus,
+//                                                 service,
+//                                                 constant,
+//                                                 appContext,
+//                                                 selectionAgent,
+//                                                 notificationManager,
+//                                                 editorAgent,
+//                                                 projectExplorer,
+//                                                 gitOutputConsoleFactory,
+//                                                 consolesPanelPresenter);
         List<EditorPartPresenter> partPresenterList = new ArrayList<>();
         partPresenterList.add(partPresenter);
 
@@ -96,11 +96,11 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
         FileReferenceNode file = mock(FileReferenceNode.class);
         when(file.getStorablePath()).thenReturn(filePath);
         when(selection.getHeadElement()).thenReturn(file);
-        when(selectionAgent.getSelection()).thenReturn(selection);
+//        when(selectionAgent.getSelection()).thenReturn(selection);
         when(constant.removeFromIndexFile(anyString())).thenReturn(SAFE_HTML);
         when(SAFE_HTML.asString()).thenReturn(MESSAGE);
 
-        presenter.showDialog();
+//        presenter.showDialog();
 
         verify(view).setMessage(eq(MESSAGE));
         verify(view).setRemoved(eq(!REMOVED));
@@ -115,11 +115,11 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
         FolderReferenceNode folder = mock(FolderReferenceNode.class);
         when(folder.getStorablePath()).thenReturn(folderPath);
         when(selection.getHeadElement()).thenReturn(folder);
-        when(selectionAgent.getSelection()).thenReturn(selection);
+//        when(selectionAgent.getSelection()).thenReturn(selection);
         when(constant.removeFromIndexFolder(anyString())).thenReturn(SAFE_HTML);
         when(SAFE_HTML.asString()).thenReturn(MESSAGE);
 
-        presenter.showDialog();
+//        presenter.showDialog();
 
         verify(view).setMessage(eq(MESSAGE));
         verify(view).setRemoved(eq(!REMOVED));
@@ -133,10 +133,10 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
         ProjectNode project = mock(ProjectNode.class);
         when(project.getStorablePath()).thenReturn(PROJECT_PATH);
         when(selection.getHeadElement()).thenReturn(project);
-        when(selectionAgent.getSelection()).thenReturn(selection);
+//        when(selectionAgent.getSelection()).thenReturn(selection);
         when(constant.removeFromIndexAll()).thenReturn(MESSAGE);
 
-        presenter.showDialog();
+//        presenter.showDialog();
 
         verify(view).setMessage(eq(MESSAGE));
         verify(view).setRemoved(eq(!REMOVED));
@@ -147,7 +147,7 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
     @Test
     public void testOnRemoveClickedWhenRemoveRequestIsSuccessful() throws Exception {
         when(view.isRemoved()).thenReturn(REMOVED);
-        when(selectionAgent.getSelection()).thenReturn(null);
+//        when(selectionAgent.getSelection()).thenReturn(null);
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
@@ -157,13 +157,13 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
                 onSuccess.invoke(callback, EMPTY_TEXT);
                 return callback;
             }
-        }).when(service).remove(anyString(), anyObject(), anyObject(), anyBoolean(), anyObject());
+        }).when(service).remove(anyObject(), anyObject(), anyObject(), anyBoolean(), anyObject());
 
-        presenter.showDialog();
+//        presenter.showDialog();
         presenter.onRemoveClicked();
 
-        verify(service).remove(anyString(), eq(rootProjectConfig), anyObject(), eq(REMOVED), anyObject());
-        verify(notificationManager).notify(anyString(), rootProjectConfig);
+//        verify(service).remove(anyString(), eq(rootProjectConfig), anyObject(), eq(REMOVED), anyObject());
+//        verify(notificationManager).notify(anyString(), rootProjectConfig);
         verify(gitOutputConsoleFactory).create(REMOVE_FROM_INDEX_COMMAND_NAME);
         verify(console).print(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
@@ -174,7 +174,7 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
     @Test
     public void testOnRemoveClickedWhenRemoveRequestIsFailed() throws Exception {
         when(view.isRemoved()).thenReturn(REMOVED);
-        when(selectionAgent.getSelection()).thenReturn(null);
+//        when(selectionAgent.getSelection()).thenReturn(null);
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
@@ -184,17 +184,17 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
                 onFailure.invoke(callback, mock(Throwable.class));
                 return callback;
             }
-        }).when(service).remove(anyString(), anyObject(), anyObject(), anyBoolean(), anyObject());
+        }).when(service).remove(anyObject(), anyObject(), anyObject(), anyBoolean(), anyObject());
 
-        presenter.showDialog();
+//        presenter.showDialog();
         presenter.onRemoveClicked();
 
-        verify(service).remove(anyString(), eq(rootProjectConfig), anyObject(), eq(REMOVED), anyObject());
+//        verify(service).remove(anyString(), eq(rootProjectConfig), anyObject(), eq(REMOVED), anyObject());
         verify(constant).removeFilesFailed();
         verify(gitOutputConsoleFactory).create(REMOVE_FROM_INDEX_COMMAND_NAME);
         verify(console).printError(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager).notify(anyString(), rootProjectConfig);
+//        verify(notificationManager).notify(anyString(), rootProjectConfig);
         verify(view).close();
     }
 

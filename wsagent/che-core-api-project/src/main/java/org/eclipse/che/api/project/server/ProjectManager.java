@@ -295,12 +295,12 @@ public final class ProjectManager {
         return project;
     }
 
-    public RegisteredProject importProject(String path, SourceStorage sourceStorage) throws ServerException,
-                                                                                            IOException,
-                                                                                            ForbiddenException,
-                                                                                            UnauthorizedException,
-                                                                                            ConflictException,
-                                                                                            NotFoundException {
+    public RegisteredProject importProject(String path, SourceStorage sourceStorage, boolean rewrite) throws ServerException,
+                                                                                                             IOException,
+                                                                                                             ForbiddenException,
+                                                                                                             UnauthorizedException,
+                                                                                                             ConflictException,
+                                                                                                             NotFoundException {
         final ProjectImporter importer = importers.getImporter(sourceStorage.getType());
         if (importer == null) {
             throw new NotFoundException(String.format("Unable import sources project from '%s'. Sources type '%s' is not supported.",
@@ -313,18 +313,32 @@ public final class ProjectManager {
                 () -> new ProjectImportOutputWSLineConsumer(normalizePath, projectRegistry.getWorkspaceId(), 300);
 
         FolderEntry folder = asFolder(normalizePath);
+        if (folder != null && !rewrite) {
+            throw new ConflictException(String.format("Project %s already exists ", path));
+        }
 
         if (folder == null) {
             folder = getProjectsRoot().createFolder(normalizePath);
         }
 
-        importer.importSources(folder, sourceStorage, outputOutputConsumerFactory);
+        try {
+            importer.importSources(folder, sourceStorage, outputOutputConsumerFactory);
+        } catch (final Exception e) {
+            folder.remove();
+            throw e;
+        }
 
         final String name = folder.getPath().getName();
         WorkspaceConfig workspaceConfig = projectRegistry.getWorkspaceConfig();
         List<? extends ProjectConfig> projects = workspaceConfig.getProjects();
         for (ProjectConfig project : projects) {
             if (normalizePath.equals(project.getPath())) {
+                // TODO Needed for factory project importing with keepDir. It needs to find more appropriate solution
+                List<String> innerProjects = projectRegistry.getProjects(normalizePath);
+                for (String innerProject : innerProjects) {
+                    RegisteredProject registeredProject = projectRegistry.getProject(innerProject);
+                    projectRegistry.putProject(registeredProject, asFolder(registeredProject.getPath()), true, false);
+                }
                 return projectRegistry.putProject(project, folder, true, false);
             }
         }

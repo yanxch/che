@@ -36,7 +36,7 @@
 }
 
 .terminal-cursor {
-    background: #4EABFF;
+    background: blueIconColor;
 }
 
 .fullSize {
@@ -44,8 +44,7 @@
     height: 100% !important;
 }
 
-.machineConsole,
-.commandConsole {
+.machineConsole {
     background-color: outputBackgroundColor;
     -moz-user-select: text;
     -webkit-user-select: text;
@@ -60,21 +59,9 @@
     margin-bottom: 3px;
 }
 
-.machineConsole pre,
-.commandConsole pre {
+.machineConsole pre {
     font-family: outputFontFamily;
     font-size: fontSize;
-}
-
-.commandConsoleLines {
-    width: 100%;
-}
-
-.commandConsoleLines > pre {
-    width: 100%;
-    word-wrap: break-word;
-    padding: 0;
-    margin: 0;
 }
 
 .consoleToolbar {
@@ -117,7 +104,7 @@
 .outputsContainerConsoleTabPanel.outputsContainerConsoleTabSelected:before {
     left: 0;
     width: 100%;
-    border-top: 1px solid #47afdd !important;
+    border-top: 1px solid blueIconColor !important;
 }
 
 .outputsContainerConsoleTabLabel {
@@ -233,27 +220,35 @@
 .processTree .processTreeNode {
 }
 
-.processTree .devMachineLabel {
-    background-color: primaryHighlightColor;
+.dockerMachineLabel {
+    background-color: blueIconColor;
+}
+
+.differentMachineLabel {
+    background-color: redIconColor;
+}
+
+.dockerMachineLabel,
+.differentMachineLabel {
+    display: inline-block;
     color: processTreeDevLabel;
     text-transform: uppercase;
-    line-height: smallFontSize;
-    font-size: 9px;
-    padding: 1px 2px;
+    text-align: center;
     font-weight: bold;
-    border-radius: 1.5px;
-    padding-bottom: 0px;
-    margin-right: 5px;
-    margin-left: 3px;
-    margin-top: 0px;
-    margin-bottom: 0px;
+    line-height: 12px;
+    min-width: 22px;
+    font-size: 9px;
+    padding: 0;
+    border-radius: 2px;
+    margin: 0 5px 0 3px;
+    box-shadow: 1px 1px 2px treeTextShadow;
 }
 
 .processTree span {
     line-height: 18px;
 }
 
-.processTree .machineLabel {
+.processTree .nameLabel {
     font-weight: bold;
 }
 
@@ -397,16 +392,6 @@
     background-color: outputBackgroundColor;
 }
 
-div.processHeaderTitle {
-    font-size: fontSize;
-    font-family: outputFontFamily;
-    color: mainFontColor;
-}
-
-.processCommandValue {
-    color: successColor !important;
-}
-
 .processesPanelStopButtonForProcess {
     float: right;
     background-color: editorTabIconColor;
@@ -417,7 +402,6 @@ div.processHeaderTitle {
     border-radius: 2px;
     box-sizing: border-box;
     cursor: pointer;
-    display: none;
 }
 
 .processesPanelStopButtonForProcess:hover {
@@ -449,14 +433,6 @@ div.processHeaderTitle {
     opacity: 1;
 }
 
-.processTree span[running="false"] span {
-    color: gray;
-}
-
-.processTree div:HOVER > span[running="true"] .processesPanelStopButtonForProcess {
-    display: block;
-}
-
-.processTree div[selected="true"] > span[running="true"] .processesPanelStopButtonForProcess {
-    display: block;
+.hideStopButton .processesPanelStopButtonForProcess {
+    display: none;
 }

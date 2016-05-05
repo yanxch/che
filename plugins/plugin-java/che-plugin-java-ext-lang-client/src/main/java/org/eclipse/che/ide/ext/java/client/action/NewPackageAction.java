@@ -12,75 +12,64 @@ package org.eclipse.che.ide.ext.java.client.action;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.api.project.shared.dto.ItemReference;
 import org.eclipse.che.commons.annotation.Nullable;
+import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.app.CurrentProject;
-import org.eclipse.che.ide.api.project.node.HasStorablePath;
-import org.eclipse.che.ide.api.selection.Selection;
+import org.eclipse.che.ide.api.notification.NotificationManager;
+import org.eclipse.che.ide.api.resources.Container;
+import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.ext.java.client.JavaLocalizationConstant;
 import org.eclipse.che.ide.ext.java.client.JavaResources;
 import org.eclipse.che.ide.ext.java.client.JavaUtils;
-import org.eclipse.che.ide.ext.java.client.project.node.PackageNode;
-import org.eclipse.che.ide.ext.java.client.project.node.SourceFolderNode;
-import org.eclipse.che.ide.json.JsonHelper;
+import org.eclipse.che.ide.ext.java.client.resource.JavaSourceFolderMarker;
 import org.eclipse.che.ide.newresource.AbstractNewResourceAction;
-import org.eclipse.che.ide.project.node.FolderReferenceNode;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
+import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 import org.eclipse.che.ide.ui.dialogs.InputCallback;
 import org.eclipse.che.ide.ui.dialogs.input.InputDialog;
 import org.eclipse.che.ide.ui.dialogs.input.InputValidator;
 
 import javax.validation.constraints.NotNull;
 
+import static com.google.common.base.Preconditions.checkState;
+import static org.eclipse.che.ide.ext.java.client.util.JavaUtil.isJavaProject;
+
 /**
  * Action to create new Java package.
  *
  * @author Artem Zatsarynnyi
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class NewPackageAction extends AbstractNewResourceAction {
 
-    private static final String MAVEN = "maven";
-
-    private final AppContext appContext;
     private final InputValidator nameValidator = new NameValidator();
 
     @Inject
     public NewPackageAction(JavaResources javaResources,
                             JavaLocalizationConstant localizationConstant,
-                            AppContext appContex) {
+                            DialogFactory dialogFactory,
+                            CoreLocalizationConstant coreLocalizationConstant,
+                            EventBus eventBus,
+                            AppContext appContext,
+                            NotificationManager notificationManager) {
         super(localizationConstant.actionNewPackageTitle(),
               localizationConstant.actionNewPackageDescription(),
-              javaResources.packageItem());
-        this.appContext = appContex;
+              javaResources.packageItem(), dialogFactory, coreLocalizationConstant, eventBus, appContext, notificationManager);
     }
 
     @Override
     public void updateInPerspective(@NotNull ActionEvent e) {
-        CurrentProject project = appContext.getCurrentProject();
-        if (project == null || !MAVEN.equals(project.getRootProject().getType())) {
-            e.getPresentation().setEnabledAndVisible(false);
-            return;
-        }
+        final Resource[] resources = appContext.getResources();
+        final boolean inJavaProject = resources != null && resources.length == 1 && isJavaProject(resources[0].getRelatedProject());
 
-        Selection<?> selection = projectExplorer.getSelection();
-        if (selection == null) {
-            e.getPresentation().setEnabledAndVisible(false);
-            return;
-        }
-
-        e.getPresentation().setVisible(true);
-        e.getPresentation().setEnabled(selection.isSingleSelection() &&
-                (selection.getHeadElement() instanceof SourceFolderNode || selection.getHeadElement() instanceof PackageNode));
+        e.getPresentation().setEnabledAndVisible(inJavaProject && resources[0].getParentWithMarker(JavaSourceFolderMarker.ID).isPresent());
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-
-
         InputDialog inputDialog = dialogFactory.createInputDialog("New " + title, "Name:", new InputCallback() {
             @Override
             public void accepted(String value) {
@@ -91,31 +80,11 @@ public class NewPackageAction extends AbstractNewResourceAction {
     }
 
     private void onAccepted(String value) {
-        final FolderReferenceNode parent = (FolderReferenceNode)getResourceBasedNode();
-        if (parent == null) {
-            throw new IllegalStateException("No selected parent.");
-        }
+        final Resource resource = appContext.getResource();
 
-        final String path = parent.getStorablePath() + '/' + value.replace('.', '/');
+        checkState(resource instanceof Container, "Parent should be a container");
 
-        projectServiceClient.createFolder(appContext.getWorkspace().getId(), path, createCallback());
-    }
-
-    protected AsyncRequestCallback<ItemReference> createCallback() {
-        return new AsyncRequestCallback<ItemReference>(dtoUnmarshallerFactory.newUnmarshaller(ItemReference.class)) {
-            @Override
-            protected void onSuccess(final ItemReference itemReference) {
-                projectExplorer.getNodeByPath(new HasStorablePath.StorablePath(itemReference.getPath()), true).then(selectNode());
-            }
-
-            @Override
-            protected void onFailure(Throwable exception) {
-                String message = JsonHelper.parseJsonMessage(exception.getMessage());
-                dialogFactory.createMessageDialog("New package",
-                                                  message.contains("already exists") ? "Package already exists." : message,
-                                                  null).show();
-            }
-        };
+        ((Container)resource).newFolder(value.replace('.', '/'));
     }
 
     private class NameValidator implements InputValidator {

@@ -10,16 +10,14 @@
  *******************************************************************************/
 package org.eclipse.che.ide.actions;
 
+import com.google.common.base.Optional;
 import com.google.gwt.core.client.Callback;
 import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
-import org.eclipse.che.api.promises.client.Function;
-import org.eclipse.che.api.promises.client.FunctionException;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.promises.client.callback.CallbackPromiseHelper.Call;
 import org.eclipse.che.api.promises.client.js.JsPromiseError;
 import org.eclipse.che.api.promises.client.js.Promises;
@@ -30,21 +28,25 @@ import org.eclipse.che.ide.api.action.PromisableAction;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.event.ActivePartChangedEvent;
 import org.eclipse.che.ide.api.event.ActivePartChangedHandler;
+import org.eclipse.che.ide.api.event.FileEvent;
 import org.eclipse.che.ide.api.notification.NotificationManager;
-import org.eclipse.che.ide.api.project.node.HasStorablePath;
-import org.eclipse.che.ide.api.project.node.Node;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
-import org.eclipse.che.ide.project.node.FileReferenceNode;
+import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.workspace.Workspace;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.util.loging.Log;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import static org.eclipse.che.api.promises.client.callback.CallbackPromiseHelper.createFromCallback;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
+import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.OPEN;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 
 /**
+ * TODO maybe rename it to factory open file?
  * @author Sergii Leschenko
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class OpenFileAction extends Action implements PromisableAction {
@@ -54,20 +56,20 @@ public class OpenFileAction extends Action implements PromisableAction {
 
     private final EventBus                 eventBus;
     private final CoreLocalizationConstant localization;
-    private final ProjectExplorerPresenter projectExplorer;
     private final NotificationManager      notificationManager;
+    private final Workspace                workspace;
 
     private Callback<Void, Throwable> actionCompletedCallback;
 
     @Inject
     public OpenFileAction(EventBus eventBus,
                           CoreLocalizationConstant localization,
-                          ProjectExplorerPresenter projectExplorer,
-                          NotificationManager notificationManager) {
+                          NotificationManager notificationManager,
+                          Workspace workspace) {
         this.eventBus = eventBus;
         this.localization = localization;
-        this.projectExplorer = projectExplorer;
         this.notificationManager = notificationManager;
+        this.workspace = workspace;
     }
 
     @Override
@@ -83,59 +85,24 @@ public class OpenFileAction extends Action implements PromisableAction {
             return;
         }
 
-        projectExplorer.getNodeByPath(new HasStorablePath.StorablePath(pathToOpen), true)
-                       .then(selectNode())
-                       .then(openNode())
-                       .then(actionComplete())
-                       .catchError(onFailedToLocate(pathToOpen));
-    }
-
-    private Operation<PromiseError> onFailedToLocate(final String path) {
-        return new Operation<PromiseError>() {
+        workspace.getWorkspaceRoot().getFile(Path.valueOf(pathToOpen)).then(new Operation<Optional<File>>() {
             @Override
-            public void apply(PromiseError arg) throws OperationException {
-                notificationManager.notify(localization.unableOpenResource(path), FAIL, true);
+            public void apply(Optional<File> optionalFile) throws OperationException {
+                if (optionalFile.isPresent()) {
+                    if (actionCompletedCallback != null) {
+                        actionCompletedCallback.onSuccess(null);
+                    }
 
-                if (actionCompletedCallback != null) {
-                    actionCompletedCallback.onFailure(arg.getCause());
+                    eventBus.fireEvent(new FileEvent(optionalFile.get(), OPEN));
+                } else {
+                    if (actionCompletedCallback != null) {
+                        actionCompletedCallback.onFailure(null);
+                    }
+
+                    notificationManager.notify(localization.unableOpenResource(pathToOpen), FAIL, FLOAT_MODE);
                 }
             }
-        };
-    }
-
-    private Operation<Node> actionComplete() {
-        return new Operation<Node>() {
-            @Override
-            public void apply(Node arg) throws OperationException {
-                if (actionCompletedCallback != null) {
-                    actionCompletedCallback.onSuccess(null);
-                }
-            }
-        };
-    }
-
-    private Function<Node, Node> selectNode() {
-        return new Function<Node, Node>() {
-            @Override
-            public Node apply(Node node) throws FunctionException {
-                projectExplorer.select(node, false);
-
-                return node;
-            }
-        };
-    }
-
-    private Function<Node, Node> openNode() {
-        return new Function<Node, Node>() {
-            @Override
-            public Node apply(Node node) throws FunctionException {
-                if (node instanceof FileReferenceNode) {
-                    ((FileReferenceNode)node).actionPerformed();
-                }
-
-                return node;
-            }
-        };
+        });
     }
 
     @Override

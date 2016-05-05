@@ -17,6 +17,9 @@ public interface CoreLocalizationConstant extends Messages {
     @Key("createProjectFromTemplate.nameField")
     String createProjectFromTemplateName();
 
+    @Key("createProjectFromTemplate.project.exists")
+    String createProjectFromTemplateProjectExists(String projectName);
+
     @Key("extension.title")
     String extensionTitle();
 
@@ -144,9 +147,6 @@ public interface CoreLocalizationConstant extends Messages {
 
     @Key("projectWizard.titleText")
     String projectWizardTitleText();
-
-    @Key("projectWizard.createModule.titleText")
-    String projectWizardCreateModuleTitleText();
 
     @Key("projectWizard.defaultSaveButtonText")
     String projectWizardDefaultSaveButtonText();
@@ -559,6 +559,18 @@ public interface CoreLocalizationConstant extends Messages {
     @Key("workspace.config.undefined")
     String workspaceConfigUndefined();
 
+    @Key("workspace.id.undefined")
+    String workspaceIdUndefined();
+
+    @Key("workspace.get.failed")
+    String workspaceGetFailed();
+
+    @Key("workspace.not.ready")
+    String workspaceNotReady(String workspaceId);
+
+    @Key("workspace.not.running")
+    String workspaceNotRunning();
+
     @Key("start.ws.error.title")
     String startWsErrorTitle();
 
@@ -779,4 +791,13 @@ public interface CoreLocalizationConstant extends Messages {
 
     @Key("path.label")
     String pathLabel();
+
+    @Key("parent.directory")
+    String projectRoot();
+
+    @Key("action.convert.folder.to.project")
+    String actionConvertFolderToProject();
+
+    @Key("action.convert.folder.to.project.description")
+    String actionConvertFolderToProjectDescription();
 }

@@ -12,7 +12,6 @@ package org.eclipse.che.ide.extension.machine.client;
 
 import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.CssResource;
-import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.resources.client.TextResource;
 
 import org.vectomatic.dom.svg.ui.SVGResource;
@@ -96,11 +95,6 @@ public interface MachineResources extends ClientBundle {
         /** Returns the CSS class name for 'Machine' console toolbar. */
         String consoleToolbar();
 
-        String commandConsole();
-
-        /** Style for console scrollable area */
-        String commandConsoleLines();
-
         /** Returns the CSS class name for tab-panel in 'Outputs' console. */
         String outputsConsoleTabsPanel();
 
@@ -142,7 +136,9 @@ public interface MachineResources extends ClientBundle {
 
         String processTreeNode();
 
-        String devMachineLabel();
+        String differentMachineLabel();
+
+        String dockerMachineLabel();
 
         String machineStatus();
 
@@ -152,7 +148,7 @@ public interface MachineResources extends ClientBundle {
 
         String machineStatusPausedRight();
 
-        String machineLabel();
+        String nameLabel();
 
         String processIconPanel();
 
@@ -170,15 +166,12 @@ public interface MachineResources extends ClientBundle {
 
         String processOutputPanel();
 
-        String processHeaderTitle();
-
-        String processCommandValue();
-
         /** Returns the CSS class name for close button of process in 'Consoles' panel. */
         String processesPanelCloseButtonForProcess();
 
         /** Returns the CSS class name for stop button of process in 'Consoles' panel. */
         String processesPanelStopButtonForProcess();
 
+        String hideStopButton();
     }
 }

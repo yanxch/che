@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.java.client.refactoring.rename.wizard;
 
+import com.google.common.base.Optional;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import com.google.web.bindery.event.shared.EventBus;
 
@@ -19,19 +20,18 @@ import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.app.CurrentProject;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorInput;
-import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.Container;
+import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.ext.java.client.JavaLocalizationConstant;
-import org.eclipse.che.ide.ext.java.client.project.node.JavaFileNode;
-import org.eclipse.che.ide.ext.java.client.project.node.PackageNode;
 import org.eclipse.che.ide.ext.java.client.refactoring.RefactorInfo;
 import org.eclipse.che.ide.ext.java.client.refactoring.RefactoringUpdater;
 import org.eclipse.che.ide.ext.java.client.refactoring.move.MoveType;
@@ -39,6 +39,7 @@ import org.eclipse.che.ide.ext.java.client.refactoring.move.RefactoredItemType;
 import org.eclipse.che.ide.ext.java.client.refactoring.preview.PreviewPresenter;
 import org.eclipse.che.ide.ext.java.client.refactoring.rename.wizard.similarnames.SimilarNamesConfigurationPresenter;
 import org.eclipse.che.ide.ext.java.client.refactoring.service.RefactoringServiceClient;
+import org.eclipse.che.ide.ext.java.client.resource.JavaSourceFolderMarker;
 import org.eclipse.che.ide.ext.java.shared.dto.refactoring.ChangeCreationResult;
 import org.eclipse.che.ide.ext.java.shared.dto.refactoring.ChangeInfo;
 import org.eclipse.che.ide.ext.java.shared.dto.refactoring.CreateRenameRefactoring;
@@ -50,6 +51,7 @@ import org.eclipse.che.ide.ext.java.shared.dto.refactoring.RenameRefactoringSess
 import org.eclipse.che.ide.ext.java.shared.dto.refactoring.RenameSettings;
 import org.eclipse.che.ide.jseditor.client.texteditor.TextEditor;
 import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.ui.dialogs.CancelCallback;
 import org.eclipse.che.ide.ui.dialogs.ConfirmCallback;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
@@ -64,7 +66,6 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -82,7 +83,6 @@ import static org.mockito.Mockito.when;
 
 @RunWith(GwtMockitoTestRunner.class)
 public class RenamePresenterTest {
-    private final static String PROJECT_PATH = "projectPath";
     private final static String SESSION_ID   = "sessionId";
     private final static String TEXT         = "text.text";
 
@@ -115,11 +115,17 @@ public class RenamePresenterTest {
     private LoaderFactory                      loaderFactory;
 
     @Mock
-    private JavaFileNode             javaFileNode;
-    @Mock
     private TextEditor               activeEditor;
     @Mock
-    private PackageNode              packageNode;
+    private EditorInput editorInput;
+    @Mock
+    private File file;
+    @Mock
+    private Container container;
+    @Mock
+    private Container srcFolder;
+    @Mock
+    private Project project;
     @Mock
     private RefactoringSession       refactoringSession;
     @Mock
@@ -128,10 +134,6 @@ public class RenamePresenterTest {
     private RefactoringResult        refactoringStatus;
     @Mock
     private CreateRenameRefactoring  createRenameRefactoringDto;
-    @Mock
-    private CurrentProject           currentProject;
-    @Mock
-    private ProjectConfigDto         projectConfig;
     @Mock
     private PromiseError             promiseError;
     @Mock
@@ -169,21 +171,25 @@ public class RenamePresenterTest {
     @Before
     public void setUp() throws Exception {
         when(editorAgent.getActiveEditor()).thenReturn(activeEditor);
+        when(activeEditor.getEditorInput()).thenReturn(editorInput);
+        when(editorInput.getFile()).thenReturn(file);
+        when(file.getRelatedProject()).thenReturn(project);
+        when(file.getParentWithMarker(eq(JavaSourceFolderMarker.ID))).thenReturn(Optional.of(srcFolder));
+        when(file.getName()).thenReturn("A.java");
+        when(file.getFileExtension()).thenReturn("java");
+        when(file.getLocation()).thenReturn(Path.valueOf("/project/src/a/b/c/A.java"));
+        when(file.getResourceType()).thenReturn(Resource.FILE);
+        when(srcFolder.getLocation()).thenReturn(Path.valueOf("/project/src"));
+        when(project.getLocation()).thenReturn(Path.valueOf("/project"));
         when(dtoFactory.createDto(CreateRenameRefactoring.class)).thenReturn(createRenameRefactoringDto);
+        when(container.getLocation()).thenReturn(Path.valueOf("/project/src/a/b/c"));
+        when(container.getRelatedProject()).thenReturn(project);
         when(dtoFactory.createDto(RefactoringSession.class)).thenReturn(refactoringSession);
         when(dtoFactory.createDto(RenameSettings.class)).thenReturn(renameSettings);
         when(refactoringSession.getSessionId()).thenReturn(SESSION_ID);
-        when(appContext.getCurrentProject()).thenReturn(currentProject);
-        when(currentProject.getProjectConfig()).thenReturn(projectConfig);
-        when(javaFileNode.getParent()).thenReturn(javaFileNode);
-        when(javaFileNode.getName()).thenReturn(TEXT);
-        when(promiseError.getMessage()).thenReturn(TEXT);
         when(session.getOldName()).thenReturn(TEXT);
-        when(projectConfig.getPath()).thenReturn(PROJECT_PATH);
         when(session.getSessionId()).thenReturn(SESSION_ID);
         when(refactorService.createRenameRefactoring(createRenameRefactoringDto)).thenReturn(renameRefactoringSessionPromise);
-        List<?> selectedElements = Collections.singletonList(javaFileNode);
-        refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, selectedElements);
         when(session.getWizardType()).thenReturn(RenameRefactoringSession.RenameWizard.LOCAL_VARIABLE);
         when(renameRefactoringSessionPromise.then(Matchers.<Operation<RenameRefactoringSession>>anyObject()))
                 .thenReturn(renameRefactoringSessionPromise);
@@ -194,7 +200,6 @@ public class RenamePresenterTest {
         when(refactorService.setRenameSettings(renameSettings)).thenReturn(renameSettingsPromise);
         when(renameSettingsPromise.thenPromise(Matchers.<Function<Void, Promise<ChangeCreationResult>>>any()))
                 .thenReturn(changeCreationResultPromise);
-        when(refactorService.createChange(refactoringSession)).thenReturn(changeCreationResultPromise);
         when(changeCreationResultPromise.then(Matchers.<Operation<ChangeCreationResult>>any())).thenReturn(changeCreationResultPromise);
         when(changeCreationResultPromise.catchError(Matchers.<Operation<PromiseError>>anyObject())).thenReturn(changeCreationResultPromise);
         when(refactorService.applyRefactoring(refactoringSession)).thenReturn(refactoringStatusPromise);
@@ -216,25 +221,27 @@ public class RenamePresenterTest {
 
     @Test
     public void wizardShouldNotBeShowIfRenameRefactoringObjectWasNotCreated() throws Exception {
-        List<?> selectedElements = Collections.singletonList(javaFileNode);
-        RefactorInfo refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, selectedElements);
+        RefactorInfo refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, new Resource[]{file});
 
         renamePresenter.show(refactorInfo);
 
         verify(createRenameRefactoringDto).setRefactorLightweight(false);
         verify(createRenameRefactoringDto).setPath(anyString());
         verify(createRenameRefactoringDto).setType(COMPILATION_UNIT);
-        verify(createRenameRefactoringDto).setProjectPath(PROJECT_PATH);
+        verify(createRenameRefactoringDto).setProjectPath(eq("/project"));
 
         verify(refactorService).createRenameRefactoring(createRenameRefactoringDto);
         verify(renameRefactoringSessionPromise).catchError(promiseErrorCaptor.capture());
         promiseErrorCaptor.getValue().apply(promiseError);
-        verify(notificationManager).notify(anyString(), anyString(), any(StatusNotification.Status.class), anyBoolean());
+        verify(notificationManager).notify(anyString(), anyString(), any(StatusNotification.Status.class), any(DisplayMode.class));
     }
 
     @Test
     public void renameCompilationUnitWizardShouldBeShowCompilationUnit() throws Exception {
         when(session.getWizardType()).thenReturn(RenameRefactoringSession.RenameWizard.COMPILATION_UNIT);
+
+        RefactorInfo refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, new Resource[]{file});
+
         renamePresenter.show(refactorInfo);
 
         verifyPreparingRenameRefactoringDto();
@@ -257,6 +264,9 @@ public class RenamePresenterTest {
     @Test
     public void renamePackageWizardShouldBeShow() throws Exception {
         when(session.getWizardType()).thenReturn(RenameRefactoringSession.RenameWizard.PACKAGE);
+
+        RefactorInfo refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, new Resource[]{file});
+
         renamePresenter.show(refactorInfo);
 
         verifyPreparingRenameRefactoringDto();
@@ -279,6 +289,9 @@ public class RenamePresenterTest {
     @Test
     public void renameTypeWizardShouldBeShow() throws Exception {
         when(session.getWizardType()).thenReturn(RenameRefactoringSession.RenameWizard.TYPE);
+
+        RefactorInfo refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, new Resource[]{file});
+
         renamePresenter.show(refactorInfo);
 
         verifyPreparingRenameRefactoringDto();
@@ -301,6 +314,9 @@ public class RenamePresenterTest {
     @Test
     public void renameFieldWizardShouldBeShow() throws Exception {
         when(session.getWizardType()).thenReturn(RenameRefactoringSession.RenameWizard.FIELD);
+
+        RefactorInfo refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, new Resource[]{file});
+
         renamePresenter.show(refactorInfo);
 
         verifyPreparingRenameRefactoringDto();
@@ -321,6 +337,9 @@ public class RenamePresenterTest {
     @Test
     public void renameEnumConstantWizardShouldBeShow() throws Exception {
         when(session.getWizardType()).thenReturn(RenameRefactoringSession.RenameWizard.ENUM_CONSTANT);
+
+        RefactorInfo refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, new Resource[]{file});
+
         renamePresenter.show(refactorInfo);
 
         verifyPreparingRenameRefactoringDto();
@@ -341,6 +360,9 @@ public class RenamePresenterTest {
     @Test
     public void renameTypeParameterWizardShouldBeShow() throws Exception {
         when(session.getWizardType()).thenReturn(RenameRefactoringSession.RenameWizard.TYPE_PARAMETER);
+
+        RefactorInfo refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, new Resource[]{file});
+
         renamePresenter.show(refactorInfo);
 
         verifyPreparingRenameRefactoringDto();
@@ -360,6 +382,9 @@ public class RenamePresenterTest {
     @Test
     public void renameMethodWizardShouldBeShow() throws Exception {
         when(session.getWizardType()).thenReturn(RenameRefactoringSession.RenameWizard.METHOD);
+
+        RefactorInfo refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, new Resource[]{file});
+
         renamePresenter.show(refactorInfo);
 
         verifyPreparingRenameRefactoringDto();
@@ -379,6 +404,9 @@ public class RenamePresenterTest {
 
     @Test
     public void renameLocalVariableWizardShouldBeShow() throws Exception {
+
+        RefactorInfo refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, new Resource[]{file});
+
         renamePresenter.show(refactorInfo);
 
         verifyPreparingRenameRefactoringDto();
@@ -397,14 +425,7 @@ public class RenamePresenterTest {
 
     @Test
     public void renameLocalVariableWizardShouldBeShowedIfRefactoringInfoIsNull() throws Exception {
-        TextEditor editorPartPresenter = mock(TextEditor.class);
-        EditorInput editorInput = mock(EditorInput.class);
-        VirtualFile virtualFile = mock(VirtualFile.class);
-        when(editorAgent.getActiveEditor()).thenReturn(editorPartPresenter);
-        when(editorPartPresenter.getEditorInput()).thenReturn(editorInput);
-        when(editorPartPresenter.getCursorOffset()).thenReturn(2);
-        when(editorInput.getFile()).thenReturn(virtualFile);
-        when(virtualFile.getName()).thenReturn(TEXT);
+        when(activeEditor.getCursorOffset()).thenReturn(2);
 
         renamePresenter.show((RefactorInfo)null);
 
@@ -426,15 +447,13 @@ public class RenamePresenterTest {
 
     @Test
     public void renameProjectWizardShouldBeShowAsCompilationUnit() throws Exception {
-        List<?> selectedElements = Collections.singletonList(packageNode);
-        refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, selectedElements);
+        refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, new Resource[]{container});
         when(session.getWizardType()).thenReturn(RenameRefactoringSession.RenameWizard.COMPILATION_UNIT);
-        when(packageNode.getStorablePath()).thenReturn(TEXT);
 
         renamePresenter.show(refactorInfo);
 
         verify(createRenameRefactoringDto).setType(PACKAGE);
-        verify(createRenameRefactoringDto).setPath(TEXT);
+        verify(createRenameRefactoringDto).setPath("/project/src/a/b/c");
 
         verify(refactorService).createRenameRefactoring(createRenameRefactoringDto);
         verify(renameRefactoringSessionPromise).then(renameRefactoringSessionCaptor.capture());
@@ -464,7 +483,7 @@ public class RenamePresenterTest {
         verify(createRenameRefactoringDto).setRefactorLightweight(false);
         verify(createRenameRefactoringDto).setPath(anyString());
         verify(createRenameRefactoringDto).setType(COMPILATION_UNIT);
-        verify(createRenameRefactoringDto).setProjectPath(PROJECT_PATH);
+        verify(createRenameRefactoringDto).setProjectPath(eq("/project"));
     }
 
     @Test
@@ -510,25 +529,18 @@ public class RenamePresenterTest {
         verify(changeCreationResultPromise).catchError(promiseErrorCaptor.capture());
         promiseErrorCaptor.getValue().apply(promiseError);
         verify(promiseError).getMessage();
-        verify(notificationManager).notify(anyString(), anyString(), any(StatusNotification.Status.class), anyBoolean());
+        verify(notificationManager).notify(anyString(), anyString(), any(StatusNotification.Status.class), any(DisplayMode.class));
     }
 
     @Test
     public void changesShouldBeAppliedWithOkStatus() throws Exception {
+        RefactorInfo refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, new Resource[]{file});
+
         List<ChangeInfo> changes = new ArrayList<>();
         when(refactoringStatus.getChanges()).thenReturn(changes);
 
         when(changeCreationResult.isCanShowPreviewPage()).thenReturn(true);
         when(refactoringStatus.getSeverity()).thenReturn(0);
-        EditorPartPresenter openEditor = mock(EditorPartPresenter.class);
-        List<EditorPartPresenter> openEditors = new ArrayList<>();
-        EditorInput editorInput = mock(EditorInput.class);
-        VirtualFile virtualFile = mock(VirtualFile.class);
-        openEditors.add(openEditor);
-        when(editorAgent.getOpenedEditors()).thenReturn(openEditors);
-        when(openEditor.getEditorInput()).thenReturn(editorInput);
-        when(editorInput.getFile()).thenReturn(virtualFile);
-        when(virtualFile.getPath()).thenReturn(TEXT);
 
         renamePresenter.show(refactorInfo);
 
@@ -552,22 +564,15 @@ public class RenamePresenterTest {
 
         verify(refactoringStatus, times(2)).getSeverity();
         verify(view).hide();
-        verify(refactoringUpdater).updateAfterRefactoring(refactorInfo, changes);
+        verify(refactoringUpdater).updateAfterRefactoring(changes);
     }
 
     @Test
     public void changesShouldBeAppliedWithNotErrorStatus() throws Exception {
+        RefactorInfo refactorInfo = RefactorInfo.of(MoveType.REFACTOR_MENU, RefactoredItemType.COMPILATION_UNIT, new Resource[]{file});
+
         when(changeCreationResult.isCanShowPreviewPage()).thenReturn(true);
         when(refactoringStatus.getSeverity()).thenReturn(0);
-        EditorPartPresenter openEditor = mock(EditorPartPresenter.class);
-        List<EditorPartPresenter> openEditors = new ArrayList<>();
-        EditorInput editorInput = mock(EditorInput.class);
-        VirtualFile virtualFile = mock(VirtualFile.class);
-        openEditors.add(openEditor);
-        when(editorAgent.getOpenedEditors()).thenReturn(openEditors);
-        when(openEditor.getEditorInput()).thenReturn(editorInput);
-        when(editorInput.getFile()).thenReturn(virtualFile);
-        when(virtualFile.getPath()).thenReturn(TEXT);
 
         renamePresenter.show(refactorInfo);
 
@@ -590,7 +595,7 @@ public class RenamePresenterTest {
         refactoringStatusCaptor.getValue().apply(refactoringStatus);
 
         verify(view).hide();
-        verify(refactoringUpdater).updateAfterRefactoring(eq(refactorInfo), Matchers.<List<ChangeInfo>>anyObject());
+        verify(refactoringUpdater).updateAfterRefactoring(Matchers.<List<ChangeInfo>>anyObject());
     }
 
     @Test
@@ -635,7 +640,7 @@ public class RenamePresenterTest {
         verify(changeCreationResultPromise).catchError(promiseErrorCaptor.capture());
         promiseErrorCaptor.getValue().apply(promiseError);
         verify(promiseError).getMessage();
-        verify(notificationManager).notify(anyString(), anyString(), any(StatusNotification.Status.class), anyBoolean());
+        verify(notificationManager).notify(anyString(), anyString(), any(StatusNotification.Status.class), any(DisplayMode.class));
     }
 
     @Test
@@ -670,7 +675,7 @@ public class RenamePresenterTest {
 
         ConfirmDialog dialog = mock(ConfirmDialog.class);
         RefactoringStatusEntry statusEntry = mock(RefactoringStatusEntry.class);
-        List<RefactoringStatusEntry> entries = Arrays.asList(statusEntry);
+        List<RefactoringStatusEntry> entries = Collections.singletonList(statusEntry);
 
         when(refactoringStatus.getEntries()).thenReturn(entries);
         when(refactoringStatus.getSeverity()).thenReturn(2);

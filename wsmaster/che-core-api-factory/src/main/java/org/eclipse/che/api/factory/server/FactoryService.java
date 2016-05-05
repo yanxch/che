@@ -24,6 +24,7 @@ import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
+import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.rest.Service;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.factory.server.builder.FactoryBuilder;
@@ -33,7 +34,7 @@ import org.eclipse.che.api.factory.shared.dto.Factory;
 import org.eclipse.che.api.user.server.dao.UserDao;
 import org.eclipse.che.api.workspace.server.WorkspaceManager;
 import org.eclipse.che.api.workspace.server.model.impl.ProjectConfigImpl;
-import org.eclipse.che.api.workspace.server.model.impl.UsersWorkspaceImpl;
+import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.commons.env.EnvironmentContext;
 import org.eclipse.che.commons.lang.NameGenerator;
 import org.eclipse.che.commons.lang.Pair;
@@ -557,8 +558,8 @@ public class FactoryService extends Service {
                                    String path)
             throws ServerException, BadRequestException, NotFoundException, ForbiddenException {
         final String userId = EnvironmentContext.getCurrent().getUser().getId();
-        final UsersWorkspaceImpl usersWorkspace = workspaceManager.getWorkspace(workspace);
-        if (!usersWorkspace.getOwner().equals(userId)) {
+        final WorkspaceImpl usersWorkspace = workspaceManager.getWorkspace(workspace);
+        if (!usersWorkspace.getNamespace().equals(userId)) {
             throw new ForbiddenException("User '" + userId + "' doesn't have access to '" + usersWorkspace.getId() + "' workspace");
         }
         excludeProjectsWithoutLocation(usersWorkspace, path);
@@ -593,13 +594,20 @@ public class FactoryService extends Service {
      * Filters workspace projects, removes projects which don't have location set.
      * If all workspace projects don't have location throws {@link BadRequestException}.
      */
-    private void excludeProjectsWithoutLocation(UsersWorkspaceImpl usersWorkspace, String projectPath) throws BadRequestException {
+    private void excludeProjectsWithoutLocation(WorkspaceImpl usersWorkspace, String projectPath) throws BadRequestException {
         final boolean notEmptyPath = projectPath != null;
         //Condition for sifting valid project in user's workspace
-        Predicate<ProjectConfigImpl> predicate = projectConfig -> !(notEmptyPath && !projectPath.equals(projectConfig.getPath()))
-                                                                  && projectConfig.getSource() != null
-                                                                  && !isNullOrEmpty(projectConfig.getSource().getType())
-                                                                  && !isNullOrEmpty(projectConfig.getSource().getLocation());
+        Predicate<ProjectConfigImpl> predicate = projectConfig -> {
+            // if project is a subproject (it's path contains another project) , then location can be null
+            final boolean isSubProject = projectConfig.getPath().indexOf('/', 1) != -1;
+            final boolean hasNotEmptySource = projectConfig.getSource() != null
+                                           && projectConfig.getSource().getType() != null
+                                           && projectConfig.getSource().getLocation() != null;
+
+            return !(notEmptyPath && !projectPath.equals(projectConfig.getPath()))
+                   && (isSubProject ? true : hasNotEmptySource);
+        };
+
         //Filtered out projects by path and source storage presence.
         final List<ProjectConfigImpl> filtered = usersWorkspace.getConfig()
                                                                .getProjects()

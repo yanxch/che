@@ -10,29 +10,32 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.java.client.navigation.openimplementation;
 
+import com.google.common.base.Optional;
 import com.google.gwt.core.client.Scheduler;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.api.promises.client.Function;
-import org.eclipse.che.api.promises.client.FunctionException;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
-import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.api.promises.client.PromiseError;
+import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.editor.OpenEditorCallbackImpl;
-import org.eclipse.che.ide.api.project.node.HasStorablePath;
-import org.eclipse.che.ide.api.project.node.Node;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.Container;
+import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.resources.SyntheticFile;
+import org.eclipse.che.ide.api.resources.VirtualFile;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.ext.java.client.JavaLocalizationConstant;
 import org.eclipse.che.ide.ext.java.client.JavaResources;
 import org.eclipse.che.ide.ext.java.client.navigation.service.JavaNavigationService;
-import org.eclipse.che.ide.ext.java.client.project.node.JavaNodeManager;
-import org.eclipse.che.ide.ext.java.client.projecttree.JavaSourceFolderUtil;
+import org.eclipse.che.ide.ext.java.client.resource.JavaSourceFolderMarker;
+import org.eclipse.che.ide.ext.java.client.util.JavaUtil;
+import org.eclipse.che.ide.ext.java.shared.JarEntry;
 import org.eclipse.che.ide.ext.java.shared.dto.ImplementationsDescriptorDTO;
 import org.eclipse.che.ide.ext.java.shared.dto.Region;
 import org.eclipse.che.ide.ext.java.shared.dto.model.Member;
@@ -41,8 +44,7 @@ import org.eclipse.che.ide.jseditor.client.popup.PopupResources;
 import org.eclipse.che.ide.jseditor.client.position.PositionConverter;
 import org.eclipse.che.ide.jseditor.client.text.LinearRange;
 import org.eclipse.che.ide.jseditor.client.texteditor.EmbeddedTextEditorPresenter;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
-import org.eclipse.che.ide.project.node.FileReferenceNode;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.util.loging.Log;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -57,8 +59,8 @@ public class OpenImplementationPresenter {
     private final JavaNavigationService    service;
     private final AppContext               context;
     private final EditorAgent              editorAgent;
-    private final ProjectExplorerPresenter projectExplorer;
-    private final JavaNodeManager          javaNodeManager;
+    private final Workspace                workspace;
+    private final PromiseProvider          promises;
     private final DtoFactory               dtoFactory;
     private final JavaResources            javaResources;
     private final PopupResources           popupResources;
@@ -74,8 +76,8 @@ public class OpenImplementationPresenter {
                                        PopupResources popupResources,
                                        JavaLocalizationConstant locale,
                                        EditorAgent editorAgent,
-                                       ProjectExplorerPresenter projectExplorer,
-                                       JavaNodeManager javaNodeManager) {
+                                       Workspace workspace,
+                                       PromiseProvider promises) {
         this.service = javaNavigationService;
         this.context = context;
         this.dtoFactory = dtoFactory;
@@ -83,8 +85,8 @@ public class OpenImplementationPresenter {
         this.popupResources = popupResources;
         this.locale = locale;
         this.editorAgent = editorAgent;
-        this.projectExplorer = projectExplorer;
-        this.javaNodeManager = javaNodeManager;
+        this.workspace = workspace;
+        this.promises = promises;
     }
 
     /**
@@ -101,55 +103,88 @@ public class OpenImplementationPresenter {
         activeEditor = ((EmbeddedTextEditorPresenter)editorPartPresenter);
         final VirtualFile file = activeEditor.getEditorInput().getFile();
 
-        String projectPath = file.getProject().getProjectConfig().getPath();
-        String fqn = JavaSourceFolderUtil.getFQNForFile(file);
+        if (file instanceof Resource) {
+            final Project project = ((Resource)file).getRelatedProject();
 
-        Promise<ImplementationsDescriptorDTO> promise = service.getImplementations(projectPath, fqn, activeEditor.getCursorOffset());
-        promise.then(new Operation<ImplementationsDescriptorDTO>() {
-            @Override
-            public void apply(ImplementationsDescriptorDTO implementationsDescriptor) throws OperationException {
-                int overridingSize = implementationsDescriptor.getImplementations().size();
+            final Optional<Resource> srcFolder = ((Resource)file).getParentWithMarker(JavaSourceFolderMarker.ID);
 
-                String title = locale.openImplementationWindowTitle(implementationsDescriptor.getMemberName(), overridingSize);
-                NoImplementationWidget noImplementationWidget = new NoImplementationWidget(popupResources,
-                                                                                           javaResources,
-                                                                                           locale,
-                                                                                           OpenImplementationPresenter.this,
-                                                                                           title);
-                if (overridingSize == 1) {
-                    actionPerformed(implementationsDescriptor.getImplementations().get(0));
-                } else if (overridingSize > 1) {
-                    openOneImplementation(implementationsDescriptor,
-                                          noImplementationWidget,
-                                          (EmbeddedTextEditorPresenter)editorPartPresenter);
-                } else if (!isNullOrEmpty(implementationsDescriptor.getMemberName()) && overridingSize == 0) {
-                    showNoImplementations(noImplementationWidget, (EmbeddedTextEditorPresenter)editorPartPresenter);
-                }
+            if (!srcFolder.isPresent()) {
+                return;
             }
-        }).catchError(new Operation<PromiseError>() {
-            @Override
-            public void apply(PromiseError arg) throws OperationException {
-                Log.error(OpenImplementationPresenter.class, arg.getMessage());
-            }
-        });
+
+            final String fqn = JavaUtil.resolveFQN((Container)srcFolder.get(), (Resource)file);
+
+            service.getImplementations(project.getLocation(), fqn, activeEditor.getCursorOffset()).then(
+                    new Operation<ImplementationsDescriptorDTO>() {
+                        @Override
+                        public void apply(ImplementationsDescriptorDTO impls) throws OperationException {
+                            int overridingSize = impls.getImplementations().size();
+
+                            String title = locale.openImplementationWindowTitle(impls.getMemberName(), overridingSize);
+                            NoImplementationWidget noImplementationWidget = new NoImplementationWidget(popupResources,
+                                                                                                       javaResources,
+                                                                                                       locale,
+                                                                                                       OpenImplementationPresenter.this,
+                                                                                                       title);
+                            if (overridingSize == 1) {
+                                actionPerformed(impls.getImplementations().get(0));
+                            } else if (overridingSize > 1) {
+                                openOneImplementation(impls,
+                                                      noImplementationWidget,
+                                                      (EmbeddedTextEditorPresenter)editorPartPresenter);
+                            } else if (!isNullOrEmpty(impls.getMemberName()) && overridingSize == 0) {
+                                showNoImplementations(noImplementationWidget, (EmbeddedTextEditorPresenter)editorPartPresenter);
+                            }
+                        }
+                    });
+        }
+
     }
 
     public void actionPerformed(final Member member) {
         if (member.isBinary()) {
-            javaNodeManager.getClassNode(context.getCurrentProject().getProjectConfig(), member.getLibId(), member.getRootPath())
-                           .then(new Operation<Node>() {
-                               @Override
-                               public void apply(Node node) throws OperationException {
-                                   if (node instanceof VirtualFile) {
-                                       openFile((VirtualFile)node, member);
-                                   }
-                               }
-                           });
+
+            final Resource resource = context.getResource();
+
+            if (resource == null) {
+                return;
+            }
+
+            final Project project = resource.getRelatedProject();
+
+            service.getEntry(project.getLocation(), member.getLibId(), member.getRootPath())
+                   .then(new Operation<JarEntry>() {
+                       @Override
+                       public void apply(final JarEntry entry) throws OperationException {
+                           service.getContent(project.getLocation(), member.getLibId(), Path.valueOf(entry.getPath()))
+                                   .then(new Operation<String>() {
+                                       @Override
+                                       public void apply(String content) throws OperationException {
+                                           VirtualFile file = new SyntheticFile(entry.getName(), content, promises);
+                                           editorAgent.openEditor(file, new OpenEditorCallbackImpl() {
+                                               @Override
+                                               public void onEditorOpened(EditorPartPresenter editor) {
+                                                   setCursor(member.getFileRegion());
+                                               }
+                                           });
+                                       }
+                                   });
+                       }
+                   });
         } else {
-            projectExplorer.getNodeByPath(new HasStorablePath.StorablePath(member.getRootPath()))
-                           .then(selectNode())
-                           .then(openNode(member))
-                           .then(setCursor(member.getFileRegion()));
+            workspace.getWorkspaceRoot().getFile(member.getRootPath()).then(new Operation<Optional<File>>() {
+                @Override
+                public void apply(Optional<File> file) throws OperationException {
+                    if (file.isPresent()) {
+                        editorAgent.openEditor(file.get(), new OpenEditorCallbackImpl() {
+                            @Override
+                            public void onEditorOpened(EditorPartPresenter editor) {
+                                setCursor(member.getFileRegion());
+                            }
+                        });
+                    }
+                }
+            });
         }
         Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
             @Override
@@ -180,58 +215,7 @@ public class OpenImplementationPresenter {
         implementationWidget.asElement().getStyle().setWidth(600 + "px");
     }
 
-    /**
-     * Open implementation which describes by current member.
-     *
-     * @param member
-     *         description of opened implementation
-     */
-
-    private void openFile(VirtualFile result, final Member member) {
-        editorAgent.openEditor(result, new OpenEditorCallbackImpl() {
-            @Override
-            public void onEditorOpened(EditorPartPresenter editor) {
-                setCursorPosition(member.getFileRegion());
-            }
-        });
-    }
-
-    private Function<Node, Node> selectNode() {
-        return new Function<Node, Node>() {
-            @Override
-            public Node apply(Node node) throws FunctionException {
-                projectExplorer.select(node, false);
-
-                return node;
-            }
-        };
-    }
-
-    private Function<Node, Node> openNode(final Member member) {
-        return new Function<Node, Node>() {
-            @Override
-            public Node apply(Node node) throws FunctionException {
-                if (node instanceof FileReferenceNode) {
-                    openFile((VirtualFile)node, member);
-                }
-
-                return node;
-            }
-        };
-    }
-
-    private Function<Node, Node> setCursor(final Region region) {
-        return new Function<Node, Node>() {
-            @Override
-            public Node apply(Node node) throws FunctionException {
-                setCursorPosition(region);
-
-                return node;
-            }
-        };
-    }
-
-    private void setCursorPosition(final Region region) {
+    private void setCursor(final Region region) {
         if (!(editorAgent.getActiveEditor() instanceof EmbeddedTextEditorPresenter)) {
             return;
         }

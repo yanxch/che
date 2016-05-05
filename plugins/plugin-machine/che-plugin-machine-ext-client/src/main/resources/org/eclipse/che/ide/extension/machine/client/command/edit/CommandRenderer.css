@@ -28,6 +28,8 @@
 }
 
 .categoryHeader span {
+    position: relative;
+    top: 1px;
     display: inline;
     font-weight: bold;
     text-transform: uppercase;
@@ -35,12 +37,14 @@
 
 .categoryHeader span:first-child {
     text-align: center;
+    margin-left: 2px;
     height: 100%;
+    padding: 0px 2px;
 }
 
 .categoryHeader span:first-child svg {
     vertical-align: middle;
-    margin: 0 2px 3px 0;
+    margin: 0 4px 3px 0;
     fill: blueIconColor;
     stroke: blueIconColor;
 }
@@ -101,6 +105,18 @@ div.categorySubElementHeader[selected] .buttonArea span:hover > svg {
 .buttonArea {
     display: none;
     float: right;
+}
+
+.running {
+    width: 10px;
+    height: 10px;
+    background-color: #46af00;
+    border: 1px solid #7ed321;
+    border-radius: 5px;
+    box-sizing: border-box;
+    position: absolute;
+    left: 32px;
+    top: 4px;
 }
 
 input.filterPlaceholder::-webkit-input-placeholder {

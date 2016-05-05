@@ -1418,17 +1418,32 @@ public class LightTheme implements Theme {
     }
 
     @Override
-    public String gitConsoleStagedFilesColor() {
+    public String vcsConsoleStagedFilesColor() {
         return "green";
     }
 
     @Override
-    public String gitConsoleUnstagedFilesColor() {
+    public String vcsConsoleUnstagedFilesColor() {
         return "red";
     }
 
     @Override
-    public String gitConsoleErrorColor() {
+    public String vcsConsoleErrorColor() {
         return "red";
+    }
+
+    @Override
+    public String vcsConsoleModifiedFilesColor() {
+        return "#FF7F50";
+    }
+
+    @Override
+    public String vcsConsoleChangesLineNumbersColor() {
+        return "#66CCFF";
+    }
+
+    @Override
+    public String editorPreferenceCategoryBackgroundColor() {
+        return "rgba(27, 27, 27, 0.10)";
     }
 }

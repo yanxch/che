@@ -58,9 +58,22 @@
         <dependencySet>
             <useProjectArtifact>false</useProjectArtifact>
             <unpack>true</unpack>
-            <outputDirectory>lib</outputDirectory>
+            <outputDirectory>lib/linux_amd64</outputDirectory>
             <includes>
-                <include>org.eclipse.che.lib:che-websocket-terminal</include>
+                <include>org.eclipse.che.lib:che-websocket-terminal:zip:linux_amd64</include>
+            </includes>
+            <unpackOptions>
+                <excludes>
+                    <exclude>META-INF/**</exclude>
+                </excludes>
+            </unpackOptions>
+        </dependencySet>
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <unpack>true</unpack>
+            <outputDirectory>lib/linux_arm7</outputDirectory>
+            <includes>
+                <include>org.eclipse.che.lib:che-websocket-terminal:zip:linux_arm7</include>
             </includes>
             <unpackOptions>
                 <excludes>
@@ -206,12 +219,6 @@
             <source>${project.basedir}/src/assembly/bin/che-install-plugin.bat</source>
             <outputDirectory>bin</outputDirectory>
             <destName>che-install-plugin.bat</destName>
-            <fileMode>755</fileMode>
-        </file>
-        <file>
-            <source>${project.basedir}/src/assembly/tomcat/bin/setenv.sh</source>
-            <outputDirectory>tomcat/bin</outputDirectory>
-            <destName>setenv.sh</destName>
             <fileMode>755</fileMode>
         </file>
         <file>

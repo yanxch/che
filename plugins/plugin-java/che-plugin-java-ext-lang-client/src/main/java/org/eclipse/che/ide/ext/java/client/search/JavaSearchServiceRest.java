@@ -10,14 +10,12 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.java.client.search;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.ext.java.shared.dto.search.FindUsagesRequest;
 import org.eclipse.che.ide.ext.java.shared.dto.search.FindUsagesResponse;
 import org.eclipse.che.ide.rest.AsyncRequestFactory;
@@ -25,8 +23,6 @@ import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.ui.loaders.request.LoaderFactory;
 import org.eclipse.che.ide.ui.loaders.request.MessageLoader;
 
-import static org.eclipse.che.api.promises.client.callback.PromiseHelper.newCallback;
-import static org.eclipse.che.api.promises.client.callback.PromiseHelper.newPromise;
 import static org.eclipse.che.ide.MimeType.APPLICATION_JSON;
 import static org.eclipse.che.ide.rest.HTTPHeader.CONTENT_TYPE;
 
@@ -40,6 +36,7 @@ public class JavaSearchServiceRest implements JavaSearchService {
 
     private final AsyncRequestFactory    asyncRequestFactory;
     private final DtoUnmarshallerFactory unmarshallerFactory;
+    private final AppContext appContext;
     private       MessageLoader          loader;
     private final String                 pathToService;
 
@@ -47,25 +44,20 @@ public class JavaSearchServiceRest implements JavaSearchService {
     public JavaSearchServiceRest(AsyncRequestFactory asyncRequestFactory,
                                  DtoUnmarshallerFactory unmarshallerFactory,
                                  LoaderFactory loaderFactory,
-                                 @Named("cheExtensionPath") String extPath,
-                                 AppContext appContext) {
+                                 AppContext appContext,
+                                 Workspace workspace) {
         this.asyncRequestFactory = asyncRequestFactory;
         this.unmarshallerFactory = unmarshallerFactory;
+        this.appContext = appContext;
         this.loader = loaderFactory.newLoader();
-        this.pathToService = extPath + "/jdt/" + appContext.getWorkspace().getId() + "/search/";
+        this.pathToService = appContext.getDevMachine().getWsAgentBaseUrl() + "/jdt/" + workspace.getId() + "/search/";
     }
 
     @Override
     public Promise<FindUsagesResponse> findUsages(final FindUsagesRequest request) {
-        return newPromise(new AsyncPromiseHelper.RequestCall<FindUsagesResponse>() {
-            @Override
-            public void makeCall(AsyncCallback<FindUsagesResponse> callback) {
-
-                asyncRequestFactory.createPostRequest(pathToService + "find/usages", request)
-                                   .header(CONTENT_TYPE, APPLICATION_JSON)
-                                   .loader(loader)
-                                   .send(newCallback(callback, unmarshallerFactory.newUnmarshaller(FindUsagesResponse.class)));
-            }
-        });
+        return asyncRequestFactory.createPostRequest(pathToService + "find/usages", request)
+                                  .header(CONTENT_TYPE, APPLICATION_JSON)
+                                  .loader(loader)
+                                  .send(unmarshallerFactory.newUnmarshaller(FindUsagesResponse.class));
     }
 }

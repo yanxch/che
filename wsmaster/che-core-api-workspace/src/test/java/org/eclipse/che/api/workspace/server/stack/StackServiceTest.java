@@ -27,7 +27,6 @@ import org.eclipse.che.api.machine.server.recipe.PermissionsChecker;
 import org.eclipse.che.api.machine.shared.Permissible;
 import org.eclipse.che.api.machine.shared.dto.recipe.GroupDescriptor;
 import org.eclipse.che.api.machine.shared.dto.recipe.PermissionsDescriptor;
-import org.eclipse.che.api.workspace.server.model.stack.StackComponent;
 import org.eclipse.che.api.workspace.server.spi.StackDao;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceConfigImpl;
@@ -38,6 +37,7 @@ import org.eclipse.che.api.workspace.server.stack.image.StackIcon;
 import org.eclipse.che.api.workspace.shared.dto.stack.StackDto;
 import org.eclipse.che.api.workspace.shared.dto.stack.StackComponentDto;
 import org.eclipse.che.api.workspace.shared.dto.stack.StackSourceDto;
+import org.eclipse.che.api.workspace.shared.stack.StackComponent;
 import org.eclipse.che.commons.env.EnvironmentContext;
 import org.eclipse.che.commons.user.UserImpl;
 import org.eclipse.che.dto.server.DtoFactory;
@@ -126,7 +126,7 @@ public class StackServiceTest {
     private static final boolean IS_DEV              = true;
 
     private static final String MACHINE_SOURCE_LOCATION = "http://localhost:8080/ide/api/recipe/recipe_ubuntu/script";
-    private static final String MACHINE_SOURCE_TYPE     = "recipe";
+    private static final String MACHINE_SOURCE_TYPE     = "dockerfile";
 
     private static final String ICON_MEDIA_TYPE = "image/svg+xml";
 

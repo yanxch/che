@@ -17,7 +17,7 @@ import org.eclipse.che.ide.api.action.ActionManager;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorInput;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.statepersistance.dto.ActionDescriptor;
 import org.junit.Before;
@@ -109,11 +109,11 @@ public class OpenedFilesPersistenceComponentTest {
     public void shouldAddActionForActivatingLastFile() {
         configureOpenedEditors();
         when(editorAgent.getActiveEditor()).thenReturn(editorPartPresenter1);
-        when(editorAgent.getLastEditor()).thenReturn(editorPartPresenter2);
+//        when(editorAgent.getLastEditor()).thenReturn(editorPartPresenter2);
 
         List<ActionDescriptor> actionDescriptors = component.getActions();
 
-        assertEquals(3, actionDescriptors.size());
+        assertEquals(2, actionDescriptors.size());
     }
 
     private void configureOpenedEditors() {

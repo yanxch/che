@@ -12,47 +12,45 @@ package org.eclipse.che.ide.ext.git.client.pull;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.core.ErrorCodes;
 import org.eclipse.che.api.git.gwt.client.GitServiceClient;
 import org.eclipse.che.api.git.shared.Branch;
 import org.eclipse.che.api.git.shared.PullResponse;
 import org.eclipse.che.api.git.shared.Remote;
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
+import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.app.CurrentProject;
-import org.eclipse.che.ide.api.editor.EditorAgent;
-import org.eclipse.che.ide.api.editor.EditorPartPresenter;
-import org.eclipse.che.ide.api.event.FileContentUpdateEvent;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.ext.git.client.BranchSearcher;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsole;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsoleFactory;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
-import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
-import static org.eclipse.che.ide.util.ExceptionUtils.getErrorCode;
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_LOCAL;
 import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_REMOTE;
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.PROGRESS;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.SUCCESS;
-import static org.eclipse.che.ide.ext.git.client.remote.RemotePresenter.REMOTE_REPO_COMMAND_NAME;
 import static org.eclipse.che.ide.ext.git.client.compare.branchList.BranchListPresenter.BRANCH_LIST_COMMAND_NAME;
+import static org.eclipse.che.ide.ext.git.client.remote.RemotePresenter.REMOTE_REPO_COMMAND_NAME;
+import static org.eclipse.che.ide.util.ExceptionUtils.getErrorCode;
 
 /**
  * Presenter pulling changes from remote repository.
  *
  * @author Ann Zhuleva
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class PullPresenter implements PullView.ActionDelegate {
@@ -60,85 +58,67 @@ public class PullPresenter implements PullView.ActionDelegate {
 
     private static final String GREEN_COLOR = "lightgreen";
 
-    private final PullView                 view;
-    private final GitServiceClient         gitServiceClient;
-    private final EventBus                 eventBus;
-    private final GitLocalizationConstant  constant;
-    private final EditorAgent              editorAgent;
-    private final AppContext               appContext;
-    private final NotificationManager      notificationManager;
-    private final DtoUnmarshallerFactory   dtoUnmarshallerFactory;
-    private final DialogFactory            dialogFactory;
-    private final BranchSearcher           branchSearcher;
-    private final ProjectExplorerPresenter projectExplorer;
-    private final GitOutputConsoleFactory  gitOutputConsoleFactory;
-    private final ConsolesPanelPresenter   consolesPanelPresenter;
-    private       CurrentProject           project;
-    private final String                   workspaceId;
+    private final PullView                view;
+    private final GitServiceClient        service;
+    private final GitLocalizationConstant constant;
+    private final AppContext              appContext;
+    private final NotificationManager     notificationManager;
+    private final DialogFactory           dialogFactory;
+    private final BranchSearcher          branchSearcher;
+    private final GitOutputConsoleFactory gitOutputConsoleFactory;
+    private final ConsolesPanelPresenter  consolesPanelPresenter;
+    private final Workspace               workspace;
 
+    private Project project;
 
     @Inject
     public PullPresenter(PullView view,
-                         EditorAgent editorAgent,
-                         GitServiceClient gitServiceClient,
-                         EventBus eventBus,
+                         GitServiceClient service,
                          AppContext appContext,
                          GitLocalizationConstant constant,
                          NotificationManager notificationManager,
-                         DtoUnmarshallerFactory dtoUnmarshallerFactory,
                          DialogFactory dialogFactory,
                          BranchSearcher branchSearcher,
-                         ProjectExplorerPresenter projectExplorer,
                          GitOutputConsoleFactory gitOutputConsoleFactory,
-                         ConsolesPanelPresenter consolesPanelPresenter) {
+                         ConsolesPanelPresenter consolesPanelPresenter,
+                         Workspace workspace) {
         this.view = view;
         this.dialogFactory = dialogFactory;
         this.branchSearcher = branchSearcher;
-        this.projectExplorer = projectExplorer;
         this.gitOutputConsoleFactory = gitOutputConsoleFactory;
         this.consolesPanelPresenter = consolesPanelPresenter;
+        this.workspace = workspace;
         this.view.setDelegate(this);
-        this.gitServiceClient = gitServiceClient;
-        this.eventBus = eventBus;
+        this.service = service;
         this.constant = constant;
-        this.editorAgent = editorAgent;
         this.appContext = appContext;
         this.notificationManager = notificationManager;
-        this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
-        this.workspaceId = appContext.getWorkspaceId();
     }
 
-    /** Show dialog. */
-    public void showDialog() {
-        project = appContext.getCurrentProject();
-        updateRemotes();
+    public void showDialog(Project project) {
+        this.project = project;
+
+        view.setEnablePullButton(false);
+
+        service.remoteList(appContext.getDevMachine(), project.getLocation(), null, true)
+               .then(new Operation<List<Remote>>() {
+                   @Override
+                   public void apply(List<Remote> remotes) throws OperationException {
+                       updateBranches(LIST_REMOTE);
+                       view.setRepositories(remotes);
+                       view.setEnablePullButton(!remotes.isEmpty());
+                       view.showDialog();
+                   }
+               })
+               .catchError(new Operation<PromiseError>() {
+                   @Override
+                   public void apply(PromiseError error) throws OperationException {
+                       handleError(error.getCause(), REMOTE_REPO_COMMAND_NAME);
+                       view.setEnablePullButton(false);
+                   }
+               });
     }
 
-    /**
-     * Update the list of remote repositories for local one. If remote repositories are found, then update the list of branches (remote and
-     * local).
-     */
-    private void updateRemotes() {
-        view.setEnablePullButton(true);
-
-        gitServiceClient.remoteList(workspaceId, project.getRootProject(), null, true,
-                                    new AsyncRequestCallback<List<Remote>>(dtoUnmarshallerFactory.newListUnmarshaller(Remote.class)) {
-                                        @Override
-                                        protected void onSuccess(List<Remote> result) {
-                                            updateBranches(LIST_REMOTE);
-                                            view.setRepositories(result);
-                                            view.setEnablePullButton(!result.isEmpty());
-                                            view.showDialog();
-                                        }
-
-                                        @Override
-                                        protected void onFailure(Throwable exception) {
-                                            handleError(exception, REMOTE_REPO_COMMAND_NAME);
-                                            view.setEnablePullButton(false);
-                                        }
-                                    }
-                                   );
-    }
 
     /**
      * Update the list of branches.
@@ -147,85 +127,64 @@ public class PullPresenter implements PullView.ActionDelegate {
      *         is a remote mode
      */
     private void updateBranches(@NotNull final String remoteMode) {
-        gitServiceClient.branchList(workspaceId, project.getRootProject(), remoteMode,
-                                    new AsyncRequestCallback<List<Branch>>(dtoUnmarshallerFactory.newListUnmarshaller(Branch.class)) {
-                                        @Override
-                                        protected void onSuccess(List<Branch> result) {
-                                            if (LIST_REMOTE.equals(remoteMode)) {
-                                                view.setRemoteBranches(branchSearcher.getRemoteBranchesToDisplay(view.getRepositoryName(),
-                                                                                                                 result));
-                                                updateBranches(LIST_LOCAL);
-                                            } else {
-                                                view.setLocalBranches(branchSearcher.getLocalBranchesToDisplay(result));
-                                                for (Branch branch : result) {
-                                                    if (branch.isActive()) {
-                                                        view.selectRemoteBranch(branch.getDisplayName());
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                        }
 
-                                        @Override
-                                        protected void onFailure(Throwable exception) {
-                                            handleError(exception, BRANCH_LIST_COMMAND_NAME);
-                                            view.setEnablePullButton(false);
-                                        }
-                                    }
-                                   );
+        service.branchList(appContext.getDevMachine(), project.getLocation(), remoteMode).then(new Operation<List<Branch>>() {
+            @Override
+            public void apply(List<Branch> branches) throws OperationException {
+                if (LIST_REMOTE.equals(remoteMode)) {
+                    view.setRemoteBranches(branchSearcher.getRemoteBranchesToDisplay(view.getRepositoryName(), branches));
+                    updateBranches(LIST_LOCAL);
+                } else {
+                    view.setLocalBranches(branchSearcher.getLocalBranchesToDisplay(branches));
+                    for (Branch branch : branches) {
+                        if (branch.isActive()) {
+                            view.selectRemoteBranch(branch.getDisplayName());
+                            break;
+                        }
+                    }
+                }
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError error) throws OperationException {
+                handleError(error.getCause(), BRANCH_LIST_COMMAND_NAME);
+                view.setEnablePullButton(false);
+            }
+        });
     }
 
     /** {@inheritDoc} */
     @Override
     public void onPullClicked() {
-        String remoteName = view.getRepositoryName();
-        final String remoteUrl = view.getRepositoryUrl();
         view.close();
 
-        final List<EditorPartPresenter> openedEditors = editorAgent.getOpenedEditors();
-
         final StatusNotification notification =
-                notificationManager.notify(constant.pullProcess(), PROGRESS, true, project.getRootProject());
+                notificationManager.notify(constant.pullProcess(), PROGRESS, FLOAT_MODE);
 
-        gitServiceClient.pull(workspaceId, project.getRootProject(), getRefs(), remoteName,
-                              new AsyncRequestCallback<PullResponse>(dtoUnmarshallerFactory.newUnmarshaller(PullResponse.class)) {
-                                  @Override
-                                  protected void onSuccess(PullResponse result) {
-                                      GitOutputConsole console = gitOutputConsoleFactory.create(PULL_COMMAND_NAME);
-                                      console.print(result.getCommandOutput(), GREEN_COLOR);
-                                      consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-                                      notification.setStatus(SUCCESS);
-                                      if (result.getCommandOutput().contains("Already up-to-date")) {
-                                          notification.setTitle(constant.pullUpToDate());
-                                      } else {
-                                          refreshProjectNodesAndEditors(openedEditors);
-                                          notification.setTitle(constant.pullSuccess(remoteUrl));
-                                      }
-                                  }
-
-                                  @Override
-                                  protected void onFailure(Throwable exception) {
-                                      notification.setStatus(FAIL);
-                                      if (getErrorCode(exception) == ErrorCodes.MERGE_CONFLICT) {
-                                          refreshProjectNodesAndEditors(openedEditors);
-                                      }
-                                      handleError(exception, PULL_COMMAND_NAME);
-                                  }
-                              });
-    }
-
-    /**
-     * Refresh project.
-     *
-     * @param openedEditors
-     *         editors that corresponds to open files
-     */
-    private void refreshProjectNodesAndEditors(final List<EditorPartPresenter> openedEditors) {
-        projectExplorer.reloadChildren();
-        for (EditorPartPresenter partPresenter : openedEditors) {
-            final VirtualFile file = partPresenter.getEditorInput().getFile();
-            eventBus.fireEvent(new FileContentUpdateEvent(file.getPath()));
-        }
+        service.pull(appContext.getDevMachine(), project.getLocation(), getRefs(), view.getRepositoryName()).then(new Operation<PullResponse>() {
+            @Override
+            public void apply(PullResponse response) throws OperationException {
+                GitOutputConsole console = gitOutputConsoleFactory.create(PULL_COMMAND_NAME);
+                console.print(response.getCommandOutput(), GREEN_COLOR);
+                consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
+                notification.setStatus(SUCCESS);
+                if (response.getCommandOutput().contains("Already up-to-date")) {
+                    notification.setTitle(constant.pullUpToDate());
+                } else {
+                    project.synchronize();
+                    notification.setTitle(constant.pullSuccess(view.getRepositoryUrl()));
+                }
+            }
+        }).catchError(new Operation<PromiseError>() {
+            @Override
+            public void apply(PromiseError error) throws OperationException {
+                notification.setStatus(FAIL);
+                if (getErrorCode(error.getCause()) == ErrorCodes.MERGE_CONFLICT) {
+                    project.synchronize();
+                }
+                handleError(error.getCause(), PULL_COMMAND_NAME);
+            }
+        });
     }
 
     /** @return list of refs to fetch */
@@ -274,8 +233,8 @@ public class PullPresenter implements PullView.ActionDelegate {
 
         GitOutputConsole console = gitOutputConsoleFactory.create(commandName);
         console.printError(errorMessage);
-        consolesPanelPresenter.addCommandOutput(appContext.getDevMachineId(), console);
-        notificationManager.notify(errorMessage, FAIL, true, project.getRootProject());
+        consolesPanelPresenter.addCommandOutput(appContext.getDevMachine().getId(), console);
+        notificationManager.notify(errorMessage, FAIL, FLOAT_MODE);
     }
 
     /** {@inheritDoc} */

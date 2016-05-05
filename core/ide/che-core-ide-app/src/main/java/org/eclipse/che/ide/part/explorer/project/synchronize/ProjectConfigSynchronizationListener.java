@@ -26,7 +26,8 @@ import org.eclipse.che.ide.api.event.project.DeleteProjectEvent;
 import org.eclipse.che.ide.api.event.project.ProjectUpdatedEvent;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
-import org.eclipse.che.ide.api.project.node.Node;
+import org.eclipse.che.ide.api.data.tree.Node;
+import org.eclipse.che.ide.api.project.MutableProjectConfig;
 import org.eclipse.che.ide.api.wizard.Wizard;
 import org.eclipse.che.ide.project.node.ProjectNode;
 import org.eclipse.che.ide.projectimport.wizard.ProjectImporter;
@@ -40,6 +41,7 @@ import org.eclipse.che.ide.util.loging.Log;
 
 import java.util.List;
 
+import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 
 /**
@@ -63,7 +65,6 @@ public class ProjectConfigSynchronizationListener implements BeforeExpandNodeEve
     private final CancelCallback           cancelCallback;
     private final DtoUnmarshallerFactory   factory;
     private final AppContext               appContext;
-    private final String                   workspaceId;
 
     private ProjectConfigDto projectConfig;
 
@@ -86,8 +87,6 @@ public class ProjectConfigSynchronizationListener implements BeforeExpandNodeEve
         this.changeLocationWidget = changeLocationWidget;
         this.factory = factory;
         this.appContext = appContext;
-
-        this.workspaceId = appContext.getWorkspaceId();
 
         this.cancelCallback = new CancelCallback() {
             @Override
@@ -242,29 +241,29 @@ public class ProjectConfigSynchronizationListener implements BeforeExpandNodeEve
             public void onFailure(Throwable exception) {
                 Log.error(getClass(), exception);
             }
-        }, projectConfig);
+        }, new MutableProjectConfig(projectConfig));
     }
 
     private void deleteProject() {
-        projectService.delete(workspaceId, projectConfig.getPath(), new AsyncRequestCallback<Void>() {
+        projectService.delete(appContext.getDevMachine(), projectConfig.getPath(), new AsyncRequestCallback<Void>() {
             @Override
             protected void onSuccess(Void result) {
                 eventBus.fireEvent(new DeleteProjectEvent(projectConfig));
 
-                notificationManager.notify(locale.projectRemoved(projectConfig.getName()), StatusNotification.Status.SUCCESS, true);
+                notificationManager.notify(locale.projectRemoved(projectConfig.getName()), StatusNotification.Status.SUCCESS, FLOAT_MODE);
             }
 
             @Override
             protected void onFailure(Throwable exception) {
                 Log.error(getClass(), exception);
 
-                notificationManager.notify(locale.projectRemoveError(projectConfig.getName()), FAIL, true);
+                notificationManager.notify(locale.projectRemoveError(projectConfig.getName()), FAIL, FLOAT_MODE);
             }
         });
     }
 
     private void updateProject() {
-        projectService.updateProject(workspaceId,
+        projectService.updateProject(appContext.getDevMachine(),
                                      projectConfig.getPath(),
                                      projectConfig,
                                      new AsyncRequestCallback<ProjectConfigDto>(factory.newUnmarshaller(ProjectConfigDto.class)) {
@@ -277,7 +276,7 @@ public class ProjectConfigSynchronizationListener implements BeforeExpandNodeEve
                                          protected void onFailure(Throwable exception) {
                                              Log.error(getClass(), exception);
 
-                                             notificationManager.notify(locale.projectUpdateError(projectConfig.getName()), FAIL, true);
+                                             notificationManager.notify(locale.projectUpdateError(projectConfig.getName()), FAIL, FLOAT_MODE);
                                          }
                                      });
     }

@@ -22,13 +22,14 @@ import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.workspace.gwt.client.WorkspaceServiceClient;
-import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.actions.WorkspaceSnapshotCreator;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.preferences.PreferencesManager;
 import org.eclipse.che.ide.api.component.Component;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.statepersistance.dto.AppState;
@@ -72,7 +73,8 @@ public class DefaultWorkspaceComponent extends WorkspaceComponent implements Com
                                      PreferencesManager preferencesManager,
                                      DtoFactory dtoFactory,
                                      InitialLoadingInfo initialLoadingInfo,
-                                     WorkspaceSnapshotCreator snapshotCreator) {
+                                     WorkspaceSnapshotCreator snapshotCreator,
+                                     Workspace workspace) {
         super(workspaceServiceClient,
               createWorkspacePresenter,
               startWorkspacePresenter,
@@ -89,7 +91,8 @@ public class DefaultWorkspaceComponent extends WorkspaceComponent implements Com
               preferencesManager,
               dtoFactory,
               initialLoadingInfo,
-              snapshotCreator);
+              snapshotCreator,
+              workspace);
     }
 
     /** {@inheritDoc} */
@@ -97,9 +100,9 @@ public class DefaultWorkspaceComponent extends WorkspaceComponent implements Com
     public void start(final Callback<Component, Exception> callback) {
         this.callback = callback;
 
-        workspaceServiceClient.getWorkspaces(SKIP_COUNT, MAX_COUNT).then(new Operation<List<UsersWorkspaceDto>>() {
+        workspaceServiceClient.getWorkspaces(SKIP_COUNT, MAX_COUNT).then(new Operation<List<WorkspaceDto>>() {
             @Override
-            public void apply(List<UsersWorkspaceDto> workspaces) throws OperationException {
+            public void apply(List<WorkspaceDto> workspaces) throws OperationException {
                 if (workspaces.isEmpty()) {
                     createWorkspacePresenter.show(workspaces, callback);
                 } else {
@@ -107,10 +110,10 @@ public class DefaultWorkspaceComponent extends WorkspaceComponent implements Com
                     if (wsNameFromBrowser.isEmpty()) {
                         tryStartRecentWorkspaceIfExist(workspaces);
                     } else {
-                        for (UsersWorkspaceDto workspace : workspaces) {
+                        for (WorkspaceDto workspace : workspaces) {
                             if (wsNameFromBrowser.equals(workspace.getConfig().getName())) {
                                 Log.info(getClass(), "Starting workspace " + workspace.getConfig().getName());
-                                startWorkspaceById(workspace);
+                                startWorkspaceById(workspace, callback);
                                 return;
                             }
                         }
@@ -131,14 +134,14 @@ public class DefaultWorkspaceComponent extends WorkspaceComponent implements Com
     }
 
 
-    private void tryStartRecentWorkspaceIfExist(List<UsersWorkspaceDto> workspaces) {
+    private void tryStartRecentWorkspaceIfExist(List<WorkspaceDto> workspaces) {
         final String recentWorkspaceId = getRecentWorkspaceId();
         if (Strings.isNullOrEmpty(recentWorkspaceId)) {
             startWorkspacePresenter.show(workspaces, callback);
         } else {
-            for(UsersWorkspaceDto workspace : workspaces) {
+            for(WorkspaceDto workspace : workspaces) {
                 if (workspace.getId().equals(recentWorkspaceId)) {
-                    startWorkspaceById(workspace);
+                    startWorkspaceById(workspace, callback);
                     return;
                 }
             }

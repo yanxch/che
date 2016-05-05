@@ -28,9 +28,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.CoreLocalizationConstant;
-import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.search.selectpath.SelectPathPresenter;
-import org.eclipse.che.ide.ui.WidgetFocusTracker;
 import org.eclipse.che.ide.ui.window.Window;
 
 /**
@@ -48,7 +46,6 @@ public class FullTextSearchViewImpl extends Window implements FullTextSearchView
     Label                    errLabel;
     @UiField(provided = true)
     CoreLocalizationConstant locale;
-    private final AppContext appContext;
     @UiField
     TextBox  text;
     @UiField
@@ -68,18 +65,13 @@ public class FullTextSearchViewImpl extends Window implements FullTextSearchView
     private ActionDelegate delegate;
 
     private final SelectPathPresenter selectPathPresenter;
-    private final WidgetFocusTracker  widgetFocusTracker;
 
     @Inject
     public FullTextSearchViewImpl(CoreLocalizationConstant locale,
                                   final SelectPathPresenter selectPathPresenter,
-                                  FullTextSearchViewImplUiBinder uiBinder,
-                                  AppContext appContext,
-                                  WidgetFocusTracker widgetFocusTracker) {
+                                  FullTextSearchViewImplUiBinder uiBinder) {
         this.locale = locale;
-        this.appContext = appContext;
         this.selectPathPresenter = selectPathPresenter;
-        this.widgetFocusTracker = widgetFocusTracker;
 
         setTitle(locale.textSearchTitle());
 
@@ -88,6 +80,8 @@ public class FullTextSearchViewImpl extends Window implements FullTextSearchView
 
         createButtons();
         addHandlers();
+
+        directory.setReadOnly(true);
     }
 
     @Override
@@ -98,7 +92,6 @@ public class FullTextSearchViewImpl extends Window implements FullTextSearchView
     @Override
     public void close() {
         hide();
-        unTrackFocusForWidgets();
     }
 
     @Override
@@ -109,7 +102,7 @@ public class FullTextSearchViewImpl extends Window implements FullTextSearchView
         isUseDirectory.setValue(false);
         directory.setEnabled(false);
         selectPathButton.setEnabled(false);
-        directory.setText(appContext.getCurrentProject().getRootProject().getPath());
+        directory.setText("");
         filesMask.setText("*.*");
         directory.setText("/");
         errLabel.setText("");
@@ -122,7 +115,6 @@ public class FullTextSearchViewImpl extends Window implements FullTextSearchView
         }.schedule(100);
 
         super.show();
-        trackFocusForWidgets();
     }
 
     @Override
@@ -151,11 +143,6 @@ public class FullTextSearchViewImpl extends Window implements FullTextSearchView
     }
 
     @Override
-    protected void onClose() {
-        unTrackFocusForWidgets();
-    }
-
-    @Override
     protected void onEnterClicked() {
         delegate.onEnterClicked();
     }
@@ -172,29 +159,17 @@ public class FullTextSearchViewImpl extends Window implements FullTextSearchView
 
     @Override
     public boolean isAcceptButtonInFocus() {
-        return widgetFocusTracker.isWidgetFocused(acceptButton);
+        return isWidgetFocused(acceptButton);
     }
 
     @Override
     public boolean isCancelButtonInFocus() {
-        return widgetFocusTracker.isWidgetFocused(cancelButton);
+        return isWidgetFocused(cancelButton);
     }
 
     @Override
     public boolean isSelectPathButtonInFocus() {
-        return widgetFocusTracker.isWidgetFocused(selectPathButton);
-    }
-
-    private void trackFocusForWidgets() {
-        widgetFocusTracker.subscribe(acceptButton);
-        widgetFocusTracker.subscribe(cancelButton);
-        widgetFocusTracker.subscribe(selectPathButton);
-    }
-
-    private void unTrackFocusForWidgets() {
-        widgetFocusTracker.unSubscribe(acceptButton);
-        widgetFocusTracker.unSubscribe(cancelButton);
-        widgetFocusTracker.unSubscribe(selectPathButton);
+        return isWidgetFocused(selectPathButton);
     }
 
     @Override

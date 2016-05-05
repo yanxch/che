@@ -10,31 +10,28 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.git.client.delete;
 
-import com.googlecode.gwt.test.utils.GwtReflectionUtils;
-
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.ext.git.client.BaseTest;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.ui.window.Window;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
-import java.lang.reflect.Method;
-
+import static org.eclipse.che.ide.ext.git.client.delete.DeleteRepositoryPresenter.DELETE_REPO_COMMAND_NAME;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.eclipse.che.ide.ext.git.client.delete.DeleteRepositoryPresenter.DELETE_REPO_COMMAND_NAME;
 
 /**
  * Testing {@link DeleteRepositoryPresenter} functionality.
  *
  * @author Andrey Plotnikov
+ * @author Vlad Zhukovskyi
  */
 public class DeleteRepositoryPresenterTest extends BaseTest {
     private DeleteRepositoryPresenter presenter;
@@ -59,54 +56,42 @@ public class DeleteRepositoryPresenterTest extends BaseTest {
                                                   consolesPanelPresenter,
                                                   appContext,
                                                   notificationManager,
-                                                  projectServiceClient,
-                                                  dtoUnmarshallerFactory,
-                                                  eventBus);
+                                                  workspace);
     }
 
     @Test
     public void testDeleteRepositoryWhenDeleteRepositoryIsSuccessful() throws Exception {
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                Object[] arguments = invocation.getArguments();
-                AsyncRequestCallback<Void> callback = (AsyncRequestCallback<Void>)arguments[1];
-                Method onSuccess = GwtReflectionUtils.getMethod(callback.getClass(), "onSuccess");
-                onSuccess.invoke(callback, (Void)null);
-                return callback;
-            }
-        }).when(service).deleteRepository(anyString(), anyObject(), (AsyncRequestCallback<Void>)anyObject());
 
-        presenter.deleteRepository();
+        when(service.deleteRepository(anyObject(), any(Path.class))).thenReturn(voidPromise);
+        when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
+        when(voidPromise.catchError(any(Operation.class))).thenReturn(voidPromise);
 
-        verify(appContext).getCurrentProject();
-        verify(service).deleteRepository(anyString(), eq(rootProjectConfig), (AsyncRequestCallback<Void>)anyObject());
+        presenter.deleteRepository(project);
+
+        verify(voidPromise).then(voidPromiseCaptor.capture());
+        voidPromiseCaptor.getValue().apply(null);
+
         verify(gitOutputConsoleFactory).create(DELETE_REPO_COMMAND_NAME);
         verify(console).print(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager).notify(anyString(), rootProjectConfig);
+        verify(notificationManager).notify(anyString());
     }
 
     @Test
     public void testDeleteRepositoryWhenDeleteRepositoryIsFailed() throws Exception {
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                Object[] arguments = invocation.getArguments();
-                AsyncRequestCallback<Void> callback = (AsyncRequestCallback<Void>)arguments[1];
-                Method onFailure = GwtReflectionUtils.getMethod(callback.getClass(), "onFailure");
-                onFailure.invoke(callback, mock(Throwable.class));
-                return callback;
-            }
-        }).when(service).deleteRepository(anyString(), anyObject(), (AsyncRequestCallback<Void>)anyObject());
 
-        presenter.deleteRepository();
+        when(service.deleteRepository(anyObject(), any(Path.class))).thenReturn(voidPromise);
+        when(voidPromise.then(any(Operation.class))).thenReturn(voidPromise);
+        when(voidPromise.catchError(any(Operation.class))).thenReturn(voidPromise);
 
-        verify(appContext).getCurrentProject();
-        verify(service).deleteRepository(anyString(), eq(rootProjectConfig), (AsyncRequestCallback<Void>)anyObject());
+        presenter.deleteRepository(project);
+
+        verify(voidPromise).catchError(promiseErrorCaptor.capture());
+        promiseErrorCaptor.getValue().apply(promiseError);
+
         verify(gitOutputConsoleFactory).create(DELETE_REPO_COMMAND_NAME);
         verify(console).printError(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
-        verify(notificationManager).notify(anyString(), rootProjectConfig);
+        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyObject());
     }
 }

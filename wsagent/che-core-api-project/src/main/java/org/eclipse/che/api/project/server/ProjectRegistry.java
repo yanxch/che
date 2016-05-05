@@ -15,7 +15,7 @@ import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
-import org.eclipse.che.api.core.model.workspace.UsersWorkspace;
+import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.project.server.handlers.ProjectHandlerRegistry;
 import org.eclipse.che.api.project.server.handlers.ProjectInitHandler;
@@ -35,6 +35,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -60,7 +62,7 @@ public class ProjectRegistry {
                            VirtualFileSystemProvider vfsProvider,
                            ProjectTypeRegistry projectTypeRegistry,
                            ProjectHandlerRegistry handlers) throws ServerException {
-        this.projects = new HashMap<>();
+        this.projects = new ConcurrentHashMap<>();
         this.workspaceHolder = workspaceHolder;
         this.vfs = vfsProvider.getVirtualFileSystem();
         this.projectTypeRegistry = projectTypeRegistry;
@@ -70,13 +72,9 @@ public class ProjectRegistry {
 
     @PostConstruct
     public void initProjects() throws ConflictException, NotFoundException, ServerException, ForbiddenException {
-        final UsersWorkspace workspace = workspaceHolder.getWorkspace();
+        final Workspace workspace = workspaceHolder.getWorkspace();
 
-        List<? extends ProjectConfig> projectConfigs = workspace.getConfig().getProjects();
-
-        if (projectConfigs == null) {
-            projectConfigs = new ArrayList<>();
-        }
+        List<? extends ProjectConfig> projectConfigs = new ArrayList<>(workspace.getConfig().getProjects());
 
         // take all the projects from ws's config
         for (ProjectConfig projectConfig : projectConfigs) {
@@ -204,11 +202,18 @@ public class ProjectRegistry {
                                                           ConflictException,
                                                           NotFoundException {
         final RegisteredProject project = new RegisteredProject(folder, config, updated, detected, this.projectTypeRegistry);
-        projects.put(project.getPath(), project);
+        Optional<RegisteredProject> updatedProjectOptional = Optional.ofNullable(projects.put(project.getPath(), project));
 
         // check whether it isn't during #initProjects()
         if (initialized) {
-            workspaceHolder.updateProjects(projects.values());
+            if (updatedProjectOptional.isPresent()) {
+                workspaceHolder.updateProject(project);
+            } else {
+                workspaceHolder.addProject(project);
+            }
+        } else if (config == null) {
+            // initializing project from unconfigured folder during #initProjects()
+            workspaceHolder.addProject(project);
         }
 
         return project;
@@ -219,12 +224,15 @@ public class ProjectRegistry {
      *
      * @param path
      *         from where to remove
+     * @throws ServerException
      */
     void removeProjects(String path) throws ServerException {
-        projects.remove(path);
-        getProjects(path).forEach(projects::remove);
+        List<RegisteredProject> removed = new ArrayList<>();
+        Optional.ofNullable(projects.remove(path)).ifPresent(removed::add);
+        getProjects(path).forEach(p -> Optional.ofNullable(projects.remove(p))
+                                               .ifPresent(removed::add));
 
-        workspaceHolder.updateProjects(projects.values());
+        workspaceHolder.removeProjects(removed);
     }
 
     /*  ------------------------------------------ */

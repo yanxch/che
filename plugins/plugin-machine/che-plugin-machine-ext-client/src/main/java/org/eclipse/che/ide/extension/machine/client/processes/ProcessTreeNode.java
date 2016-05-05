@@ -65,8 +65,6 @@ public class ProcessTreeNode {
         this.icon = icon;
         this.children = children;
 
-        running = true;
-
         switch (type) {
             case MACHINE_NODE:
                 id = ((MachineDto)data).getId();
@@ -146,4 +144,19 @@ public class ProcessTreeNode {
         this.running = running;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ProcessTreeNode that = (ProcessTreeNode)o;
+
+        return id.equals(that.id);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 }

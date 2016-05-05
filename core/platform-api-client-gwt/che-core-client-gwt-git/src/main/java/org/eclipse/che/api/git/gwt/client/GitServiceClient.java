@@ -13,7 +13,7 @@ package org.eclipse.che.api.git.gwt.client;
 import org.eclipse.che.api.git.shared.Branch;
 import org.eclipse.che.api.git.shared.CheckoutRequest;
 import org.eclipse.che.api.git.shared.Commiters;
-import org.eclipse.che.api.git.shared.DiffRequest;
+import org.eclipse.che.api.git.shared.DiffRequest.DiffType;
 import org.eclipse.che.api.git.shared.GitUrlVendorInfo;
 import org.eclipse.che.api.git.shared.LogResponse;
 import org.eclipse.che.api.git.shared.MergeResult;
@@ -26,9 +26,11 @@ import org.eclipse.che.api.git.shared.Revision;
 import org.eclipse.che.api.git.shared.ShowFileContentResponse;
 import org.eclipse.che.api.git.shared.Status;
 import org.eclipse.che.api.git.shared.StatusFormat;
+import org.eclipse.che.api.machine.gwt.client.DevMachine;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.commons.annotation.Nullable;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.websocket.WebSocketException;
 import org.eclipse.che.ide.websocket.rest.RequestCallback;
@@ -58,12 +60,15 @@ public interface GitServiceClient {
      * @param callback
      *         callback
      * @throws WebSocketException
+     * @deprecated use {@link #add(String, Path, boolean, Path[])}
      */
-    void add(String workspaceId,
+    void add(DevMachine devMachine,
              ProjectConfigDto projectConfig,
              boolean update,
              List<String> filePattern,
              RequestCallback<Void> callback) throws WebSocketException;
+
+    Promise<Void> add(DevMachine devMachine, Path project, boolean update, Path[] paths);
 
     /**
      * Fetch changes from remote repository to local one (sends request over WebSocket).
@@ -88,13 +93,17 @@ public interface GitServiceClient {
      * @param callback
      *         callback
      * @throws WebSocketException
+     * @deprecated use {@link #fetch(String, Path, String, List, boolean)}
      */
-    void fetch(String workspaceId,
+    @Deprecated
+    void fetch(DevMachine devMachine,
                ProjectConfigDto project,
                String remote,
                List<String> refspec,
                boolean removeDeletedRefs,
                RequestCallback<String> callback) throws WebSocketException;
+
+    Promise<Void> fetch(DevMachine devMachine, Path project, String remote, List<String> refspec, boolean removeDeletedRefs);
 
     /**
      * Get the list of the branches. For now, all branches cannot be returned at once, so the parameter <code>remote</code> tells to get
@@ -107,11 +116,15 @@ public interface GitServiceClient {
      * @param mode
      *         get remote branches
      * @param callback
+     * @deprecated use {@link #branchList(String, Path, String)}
      */
-    void branchList(String workspaceId,
+    @Deprecated
+    void branchList(DevMachine devMachine,
                     ProjectConfigDto project,
                     @Nullable String mode,
                     AsyncRequestCallback<List<Branch>> callback);
+
+    Promise<List<Branch>> branchList(DevMachine devMachine, Path project, String mode);
 
     /**
      * Delete branch.
@@ -125,12 +138,16 @@ public interface GitServiceClient {
      * @param force
      *         force if <code>true</code> delete branch {@code name} even if it is not fully merged
      * @param callback
+     * @deprecated use {@link #branchDelete(String, Path, String, boolean)}
      */
-    void branchDelete(String workspaceId,
+    @Deprecated
+    void branchDelete(DevMachine devMachine,
                       ProjectConfigDto project,
                       String name,
                       boolean force,
                       AsyncRequestCallback<String> callback);
+
+    Promise<Void> branchDelete(DevMachine devMachine, Path project, String name, boolean force);
 
     /**
      * Checkout the branch with pointed name.
@@ -144,12 +161,16 @@ public interface GitServiceClient {
      * @param newName
      *         branch's new name
      * @param callback
+     * @deprecated use {@link #branchRename(String, Path, String, String)}
      */
-    void branchRename(String workspaceId,
+    @Deprecated
+    void branchRename(DevMachine devMachine,
                       ProjectConfigDto project,
                       String oldName,
                       String newName,
                       AsyncRequestCallback<String> callback);
+
+    Promise<Void> branchRename(DevMachine devMachine, Path project, String oldName, String newName);
 
     /**
      * Create new branch with pointed name.
@@ -164,19 +185,26 @@ public interface GitServiceClient {
      *         name of a commit at which to start the new branch
      * @param callback
      */
-    void branchCreate(String workspaceId,
+    @Deprecated
+    void branchCreate(DevMachine devMachine,
                       ProjectConfigDto project,
                       String name,
                       @Nullable String startPoint,
                       AsyncRequestCallback<Branch> callback);
 
+    Promise<Branch> branchCreate(DevMachine devMachine, Path project, String name, String startPoint);
+
     /**
      * Checkout the branch with pointed name.
+     * @deprecated {@link #checkout(String, Path, String, String, boolean, Path[], boolean)}
      */
-    void checkout(String workspaceId,
+    @Deprecated
+    void checkout(DevMachine devMachine,
                   ProjectConfigDto project,
                   CheckoutRequest checkoutRequest,
                   AsyncRequestCallback<String> callback);
+
+    Promise<Void> checkout(DevMachine devMachine, Path project, CheckoutRequest request);
 
     /**
      * Get the list of remote repositories for pointed by {@code projectConfig} parameter one.
@@ -193,7 +221,7 @@ public interface GitServiceClient {
      *
      * @deprecated instead of this method should use {@link GitServiceClient#remoteList(String, ProjectConfigDto, String, boolean)}
      */
-    void remoteList(String workspaceId,
+    void remoteList(DevMachine devMachine,
                     ProjectConfigDto projectConfig,
                     @Nullable String remoteName,
                     boolean verbose,
@@ -212,8 +240,12 @@ public interface GitServiceClient {
      *         If <code>true</code> show remote url and name otherwise show remote name
      * @return a promise that provides list {@link Remote} repositories for the {@code workspaceId}, {@code projectConfig},
      *         {@code remoteName}, {@code verbose} or rejects with an error.
+     * @deprecated use {@link #remoteList(String, Path, String, boolean)}
      */
-    Promise<List<Remote>> remoteList(String workspaceId, ProjectConfigDto projectConfig, @Nullable String remoteName, boolean verbose);
+    @Deprecated
+    Promise<List<Remote>> remoteList(DevMachine devMachine, ProjectConfigDto projectConfig, @Nullable String remoteName, boolean verbose);
+
+    Promise<List<Remote>> remoteList(DevMachine devMachine, Path project, String remote, boolean verbose);
 
     /**
      * Adds remote repository to the list of remote repositories.
@@ -228,7 +260,7 @@ public interface GitServiceClient {
      *         remote repository's URL
      * @param callback
      */
-    void remoteAdd(String workspaceId,
+    void remoteAdd(DevMachine devMachine,
                    ProjectConfigDto project,
                    String name,
                    String url,
@@ -244,11 +276,15 @@ public interface GitServiceClient {
      * @param name
      *         remote repository name to delete
      * @param callback
+     * @deprecated use {@link #remoteDelete(String, Path, String)}
      */
-    void remoteDelete(String workspaceId,
+    @Deprecated
+    void remoteDelete(DevMachine devMachine,
                       ProjectConfigDto project,
                       String name,
                       AsyncRequestCallback<String> callback);
+
+    Promise<Void> remoteDelete(DevMachine devMachine, Path project, String name);
 
     /**
      * Remove items from the working tree and the index.
@@ -263,7 +299,10 @@ public interface GitServiceClient {
      *         is for removal only from index
      * @param callback
      */
-    void remove(String workspaceId, ProjectConfigDto project, List<String> items, boolean cached, AsyncRequestCallback<String> callback);
+    @Deprecated
+    void remove(DevMachine devMachine, ProjectConfigDto project, List<String> items, boolean cached, AsyncRequestCallback<String> callback);
+
+    Promise<Void> remove(DevMachine devMachine, Path project, Path[] items, boolean cached);
 
     /**
      * Reset current HEAD to the specified state. There two types of the reset: <br>
@@ -283,13 +322,17 @@ public interface GitServiceClient {
      *         pattern of the files to reset the index. If <code>null</code> then reset the current branch head to [commit],
      *         else reset received files in index.
      * @param callback
+     * @deprecated use {@link #reset(String, Path, String, ResetRequest.ResetType, Path[])}
      */
-    void reset(String workspaceId,
+    @Deprecated
+    void reset(DevMachine devMachine,
                ProjectConfigDto project,
                String commit,
                @Nullable ResetRequest.ResetType resetType,
                @Nullable List<String> filePattern,
                AsyncRequestCallback<Void> callback);
+
+    Promise<Void> reset(DevMachine devMachine, Path project, String commit, ResetRequest.ResetType resetType, Path[] files);
 
     /**
      * Initializes new Git repository (over WebSocket).
@@ -302,8 +345,12 @@ public interface GitServiceClient {
      *         to create bare repository or not
      * @param callback
      *         callback
+     *         @deprecated use {@link #init(String, Path, boolean)}
      */
-    void init(String workspaceId, ProjectConfigDto project, boolean bare, RequestCallback<Void> callback) throws WebSocketException;
+    @Deprecated
+    void init(DevMachine devMachine, ProjectConfigDto project, boolean bare, RequestCallback<Void> callback) throws WebSocketException;
+
+    Promise<Void> init(DevMachine devMachine, Path project, boolean bare);
 
     /**
      * Pull (fetch and merge) changes from remote repository to local one (sends request over WebSocket).
@@ -326,12 +373,16 @@ public interface GitServiceClient {
      * @param callback
      *         callback
      * @throws WebSocketException
+     * @deprecated use {@link #pull(String, Path, String, String)}
      */
-    void pull(String workspaceId,
+    @Deprecated
+    void pull(DevMachine devMachine,
               ProjectConfigDto project,
               String refSpec,
               String remote,
               AsyncRequestCallback<PullResponse> callback);
+
+    Promise<PullResponse> pull(DevMachine devMachine, Path project, String refSpec, String remote);
 
     /**
      * Push changes from local repository to remote one (sends request over WebSocket).
@@ -353,7 +404,7 @@ public interface GitServiceClient {
      * @deprecated use {@link #push(String, ProjectConfigDto, List, String , boolean)}
      */
     @Deprecated
-    void push(String workspaceId,
+    void push(DevMachine devMachine,
               ProjectConfigDto project,
               List<String> refSpec,
               String remote, boolean force,
@@ -374,12 +425,17 @@ public interface GitServiceClient {
      * @param force
      *         push refuses to update a remote ref that is not an ancestor of the local ref used to overwrite it. If <code>true</code>
      *         disables the check. This can cause the remote repository to lose commits
+     * @deprecated use {@link #push(String, Path, List, String, boolean)}
      */
-    Promise<PushResponse> push(String wsId,
+    @Deprecated
+    Promise<PushResponse> push(DevMachine devMachine,
                                ProjectConfigDto project,
                                List<String> refSpec,
                                String remote,
                                boolean force);
+
+    Promise<PushResponse> push(DevMachine devMachine, Path project, List<String> refSpec, String remote, boolean force);
+
     /**
      * Clones one remote repository to local one (over WebSocket).
      *
@@ -395,7 +451,7 @@ public interface GitServiceClient {
      *         callback
      * @throws WebSocketException
      */
-    void cloneRepository(String workspaceId,
+    void cloneRepository(DevMachine devMachine,
                          ProjectConfigDto project,
                          String remoteUri,
                          String remoteName,
@@ -418,13 +474,17 @@ public interface GitServiceClient {
      * @param callback
      *         callback
      * @throws WebSocketException
+     * @deprecated use {@link #commit(String, Path, String, boolean, boolean)}
      */
-    void commit(String workspaceId,
+    @Deprecated
+    void commit(DevMachine devMachine,
                 ProjectConfigDto project,
                 String message,
                 boolean all,
                 boolean amend,
                 AsyncRequestCallback<Revision> callback);
+
+    Promise<Revision> commit(DevMachine devMachine, Path project, String message, boolean all, boolean amend);
 
     /**
      * Performs commit for the given files (ignoring git index).
@@ -442,13 +502,17 @@ public interface GitServiceClient {
      * @param callback
      *         callback
      * @throws WebSocketException
+     * @deprecated use {@link #commit(String, Path, String, Path[], boolean)}
      */
-    void commit(String workspaceId,
+    @Deprecated
+    void commit(DevMachine devMachine,
                 ProjectConfigDto projectConfig,
                 String message,
                 List<String> files,
                 boolean amend,
                 AsyncRequestCallback<Revision> callback);
+
+    Promise<Revision> commit(DevMachine devMachine, Path project, String message, Path[] files, boolean amend);
 
     /**
      * Performs commit changes from index to repository. The result of the commit is represented by {@link Revision}, which is returned by
@@ -463,11 +527,14 @@ public interface GitServiceClient {
      * @param callback
      *         callback for sending asynchronous response
      */
-    void config(String workspaceId,
+    @Deprecated
+    void config(DevMachine devMachine,
                 ProjectConfigDto projectConfig,
                 @Nullable List<String> entries,
                 boolean all,
                 AsyncRequestCallback<Map<String, String>> callback);
+
+    Promise<Map<String, String>> config(DevMachine devMachine, Path project, List<String> entries, boolean all);
 
     /**
      * Compare two commits, get the diff for pointed file(s) or for the whole project in text format.
@@ -489,16 +556,27 @@ public interface GitServiceClient {
      * @param commitB
      *         second commit to be compared
      * @param callback
+     * @deprecated use {@link #diff(String, Path, List, DiffType, boolean, int, String, String)}
      */
-    void diff(String workspaceId,
+    @Deprecated
+    void diff(DevMachine devMachine,
               ProjectConfigDto project,
               List<String> fileFilter,
-              DiffRequest.DiffType type,
+              DiffType type,
               boolean noRenames,
               int renameLimit,
               String commitA,
               String commitB,
               AsyncRequestCallback<String> callback);
+
+    Promise<String> diff(DevMachine devMachine,
+                         Path project,
+                         List<String> fileFilter,
+                         DiffType type,
+                         boolean noRenames,
+                         int renameLimit,
+                         String commitA,
+                         String commitB);
 
     /**
      * Compare commit with index or working tree (depends on {@code cached}), get the diff for pointed file(s) or for the whole project in
@@ -521,16 +599,27 @@ public interface GitServiceClient {
      * @param cached
      *         if <code>true</code> then compare commit with index, if <code>false</code>, then compare with working tree.
      * @param callback
+     * @deprecated use {@link #diff(String, Path, List, DiffType, boolean, int, String, boolean)}
      */
-    void diff(String workspaceId,
+    @Deprecated
+    void diff(DevMachine devMachine,
               ProjectConfigDto project,
               List<String> fileFilter,
-              DiffRequest.DiffType type,
+              DiffType type,
               boolean noRenames,
               int renameLimit,
               String commitA,
               boolean cached,
               AsyncRequestCallback<String> callback);
+
+    Promise<String> diff(DevMachine devMachine,
+                         Path project,
+                         List<String> files,
+                         DiffType type,
+                         boolean noRenames,
+                         int renameLimit,
+                         String commitA,
+                         boolean cached);
 
     /**
      * Get the file content from specified revision or branch.
@@ -546,7 +635,10 @@ public interface GitServiceClient {
      * @param callback
      *         callback for sending asynchronous response with file content
      */
-    void showFileContent(String workspaceId, ProjectConfigDto project, String file, String version, AsyncRequestCallback<ShowFileContentResponse> callback);
+    @Deprecated
+    void showFileContent(DevMachine devMachine, ProjectConfigDto project, String file, String version, AsyncRequestCallback<ShowFileContentResponse> callback);
+
+    Promise<ShowFileContentResponse> showFileContent(DevMachine devMachine, Path project, Path file, String version);
 
     /**
      * Get log of commits. The result is the list of {@link Revision}, which is returned by callback in
@@ -561,8 +653,12 @@ public interface GitServiceClient {
      * @param isTextFormat
      *         if <code>true</code> the loq response will be in text format
      * @param callback
+     * @deprecated use {@link #log(String, Path, Path[], boolean)}
      */
-    void log(String workspaceId, ProjectConfigDto project, List<String> fileFilter, boolean isTextFormat, AsyncRequestCallback<LogResponse> callback);
+    @Deprecated
+    void log(DevMachine devMachine, ProjectConfigDto project, List<String> fileFilter, boolean isTextFormat, AsyncRequestCallback<LogResponse> callback);
+
+    Promise<LogResponse> log(DevMachine devMachine, Path project, Path[] fileFilter, boolean plainText);
 
     /**
      * Merge the pointed commit with current HEAD.
@@ -574,8 +670,12 @@ public interface GitServiceClient {
      * @param commit
      *         commit's reference to merge with
      * @param callback
+     * @deprecated use {@link #merge(String, Path, String)}
      */
-    void merge(String workspaceId, ProjectConfigDto project, String commit, AsyncRequestCallback<MergeResult> callback);
+    @Deprecated
+    void merge(DevMachine devMachine, ProjectConfigDto project, String commit, AsyncRequestCallback<MergeResult> callback);
+
+    Promise<MergeResult> merge(DevMachine devMachine, Path project, String commit);
 
     /**
      * Gets the working tree status. The status of added, modified or deleted files is shown is written in {@link String}. The format may
@@ -607,8 +707,12 @@ public interface GitServiceClient {
      * @param format
      *         to show in short format or not
      * @param callback
+     * @deprecated use {@link #statusText(String, Path, StatusFormat)}
      */
-    void statusText(String workspaceId, ProjectConfigDto project, StatusFormat format, AsyncRequestCallback<String> callback);
+    @Deprecated
+    void statusText(DevMachine devMachine, ProjectConfigDto project, StatusFormat format, AsyncRequestCallback<String> callback);
+
+    Promise<String> statusText(DevMachine devMachine, Path project, StatusFormat format);
 
     /**
      * Gets the working tree status : list of untracked, changed not commited and changed not updated.
@@ -621,7 +725,7 @@ public interface GitServiceClient {
      * @deprecated use {@link #status(String, ProjectConfigDto)}
      */
     @Deprecated
-    void status(String workspaceId, ProjectConfigDto project, AsyncRequestCallback<Status> callback);
+    void status(DevMachine devMachine, ProjectConfigDto project, AsyncRequestCallback<Status> callback);
 
     /**
      * Returns the current working tree status.
@@ -631,8 +735,12 @@ public interface GitServiceClient {
      * @param project
      *         the project.
      * @return the promise which either resolves working tree status or rejects with an error
+     * @deprecated use {@link #getStatus(String, Path)}
      */
-    Promise<Status> status(String workspaceId, ProjectConfigDto project);
+    @Deprecated
+    Promise<Status> status(DevMachine devMachine, ProjectConfigDto project);
+
+    Promise<Status> getStatus(DevMachine devMachine, Path project);
 
     /**
      * Get the Git ReadOnly Url for the pointed item's location.
@@ -643,11 +751,17 @@ public interface GitServiceClient {
      *         project (root of GIT repository)
      * @param callback
      */
-    void getGitReadOnlyUrl(String workspaceId, ProjectConfigDto project, AsyncRequestCallback<String> callback);
+    @Deprecated
+    void getGitReadOnlyUrl(DevMachine devMachine, ProjectConfigDto project, AsyncRequestCallback<String> callback);
 
-    void getCommitters(String workspaceId, ProjectConfigDto project, AsyncRequestCallback<Commiters> callback);
+    Promise<String> getGitReadOnlyUrl(DevMachine devMachine, Path project);
 
-    void deleteRepository(String workspaceId, ProjectConfigDto project, AsyncRequestCallback<Void> callback);
+    void getCommitters(DevMachine devMachine, ProjectConfigDto project, AsyncRequestCallback<Commiters> callback);
 
-    void getUrlVendorInfo(String workspaceId, String vcsUrl, AsyncRequestCallback<GitUrlVendorInfo> callback);
+    @Deprecated
+    void deleteRepository(DevMachine devMachine, ProjectConfigDto project, AsyncRequestCallback<Void> callback);
+
+    Promise<Void> deleteRepository(DevMachine devMachine, Path project);
+
+    void getUrlVendorInfo(DevMachine devMachine, String vcsUrl, AsyncRequestCallback<GitUrlVendorInfo> callback);
 }

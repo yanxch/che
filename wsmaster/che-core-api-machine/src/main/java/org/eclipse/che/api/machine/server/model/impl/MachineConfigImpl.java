@@ -82,8 +82,12 @@ public class MachineConfigImpl implements MachineConfig {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     @Override
-    public MachineSource getSource() {
+    public MachineSourceImpl getSource() {
         return source;
     }
 
@@ -98,7 +102,7 @@ public class MachineConfigImpl implements MachineConfig {
     }
 
     @Override
-    public Limits getLimits() {
+    public LimitsImpl getLimits() {
         return limits;
     }
 
@@ -178,7 +182,13 @@ public class MachineConfigImpl implements MachineConfig {
         private Map<String, String>        envVariables;
 
         public MachineConfigImpl build() {
-            return new MachineConfigImpl(isDev, name, type, source, limits, servers, envVariables);
+            return new MachineConfigImpl(isDev,
+                                         name,
+                                         type,
+                                         source,
+                                         limits,
+                                         servers,
+                                         envVariables);
         }
 
         public MachineConfigImplBuilder fromConfig(MachineConfig machineConfig) {

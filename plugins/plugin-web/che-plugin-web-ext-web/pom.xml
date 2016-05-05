@@ -16,7 +16,7 @@
     <parent>
         <artifactId>che-plugin-web-parent</artifactId>
         <groupId>org.eclipse.che.plugin</groupId>
-        <version>4.0.0-GA-SNAPSHOT</version>
+        <version>4.3.0-RC1-SNAPSHOT</version>
     </parent>
     <artifactId>che-plugin-web-ext-web</artifactId>
     <packaging>jar</packaging>
@@ -70,6 +70,11 @@
         <dependency>
             <groupId>org.eclipse.che.core</groupId>
             <artifactId>che-core-ide-jseditor</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.che.core</groupId>
+            <artifactId>che-core-ide-ui</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

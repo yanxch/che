@@ -22,7 +22,7 @@ export class CreateProjectGithubCtrl {
    * @ngInject for Dependency injection
    */
   constructor (cheAPI, $rootScope, $http, $q, $window, $mdDialog, $location, $browser, $modal, $filter, GitHub, githubPopup, gitHubTokenStore,
-               cheBranding, githubOrganizationNameResolver) {
+               cheBranding, githubOrganizationNameResolver, $timeout, $scope) {
     this.cheAPI = cheAPI;
     this.$http = $http;
     this.$rootScope = $rootScope;
@@ -38,15 +38,12 @@ export class CreateProjectGithubCtrl {
     this.githubPopup = githubPopup;
     this.cheBranding = cheBranding;
     this.githubOrganizationNameResolver = githubOrganizationNameResolver;
+    this.$timeout = $timeout;
 
     this.productName = cheBranding.getName();
     var userAPI = cheAPI.getUser();
 
     this.user = userAPI.getUser();
-    this.user.$promise.then(() => {
-      this.currentUserId = this.user.id;
-      this.askLoad();
-    });
 
     this.currentTokenCheck = null;
     this.resolveOrganizationName = this.githubOrganizationNameResolver.resolve;
@@ -57,8 +54,27 @@ export class CreateProjectGithubCtrl {
     this.state = 'IDLE';
     this.isGitHubOAuthProviderAvailable = false;
 
-    this.cheAPI.getOAuthProvider().fetchOAuthProviders().then(() => {
+    let oAuthProviderPromise = this.cheAPI.getOAuthProvider().fetchOAuthProviders().then(() => {
       this.isGitHubOAuthProviderAvailable = this.cheAPI.getOAuthProvider().isOAuthProviderRegistered('github');
+    });
+
+    let tabOpenDefer = this.$q.defer();
+    $scope.$watch(() => {return this.isCurrentTab;}, (isVisible) => {
+      if (isVisible) {
+        tabOpenDefer.resolve();
+      }
+    });
+
+    // check token validity and load repositories
+    this.$q.all([
+      oAuthProviderPromise,
+      tabOpenDefer.promise,
+      this.user.$promise
+    ]).then(() => {
+      if (this.isGitHubOAuthProviderAvailable) {
+        this.currentUserId = this.user.id;
+        this.askLoad();
+      }
     });
   }
 
@@ -81,7 +97,7 @@ export class CreateProjectGithubCtrl {
       clickOutsideToClose: true,
       templateUrl: 'app/projects/create-project/github/oauth-dialog/no-github-oauth-dialog.html'
      });
-    
+
     return;
     }
 
@@ -177,8 +193,11 @@ export class CreateProjectGithubCtrl {
 
   selectRepository(gitHubRepository) {
     this.selectedRepository = gitHubRepository;
-    // broadcast event
-    this.$rootScope.$broadcast('create-project-github:selected');
+    this.$timeout(() => {
+      this.repositorySelectNotify();
+      // broadcast event
+      this.$rootScope.$broadcast('create-project-github:selected');
+    });
   }
 
 

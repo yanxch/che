@@ -10,20 +10,21 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.git.client.url;
 
-import com.googlecode.gwt.test.utils.GwtReflectionUtils;
-
 import org.eclipse.che.api.git.shared.Remote;
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.ext.git.client.BaseTest;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.when;
  *
  * @author Andrey Plotnikov
  * @author Oleksii Orel
+ * @author Vlad Zhukovskyi
  */
 public class ShowProjectGitReadOnlyUrlPresenterTest extends BaseTest {
 
@@ -54,44 +56,41 @@ public class ShowProjectGitReadOnlyUrlPresenterTest extends BaseTest {
     public void disarm() {
         super.disarm();
 
-        when(appContext.getWorkspaceId()).thenReturn("id");
-
         presenter = new ShowProjectGitReadOnlyUrlPresenter(view,
                                                            service,
                                                            appContext,
                                                            constant,
                                                            notificationManager,
-                                                           dtoUnmarshallerFactory,
                                                            gitOutputConsoleFactory,
-                                                           consolesPanelPresenter);
+                                                           consolesPanelPresenter,
+                                                           workspace);
+
+        when(service.getGitReadOnlyUrl(anyObject(), any(Path.class))).thenReturn(stringPromise);
+        when(stringPromise.then(any(Operation.class))).thenReturn(stringPromise);
+        when(stringPromise.catchError(any(Operation.class))).thenReturn(stringPromise);
+
+        when(service.remoteList(anyObject(), any(Path.class), anyString(), anyBoolean())).thenReturn(remoteListPromise);
+        when(remoteListPromise.then(any(Operation.class))).thenReturn(remoteListPromise);
+        when(remoteListPromise.catchError(any(Operation.class))).thenReturn(remoteListPromise);
     }
 
     @Test
     public void getGitReadOnlyUrlAsyncCallbackIsSuccess() throws Exception {
-        presenter.showDialog();
-        verify(service).getGitReadOnlyUrl(anyString(), anyObject(), asyncRequestCallbackGitReadOnlyUrlCaptor.capture());
-        AsyncRequestCallback<String> callback = asyncRequestCallbackGitReadOnlyUrlCaptor.getValue();
+        presenter.showDialog(project);
 
-        Method onSuccess = GwtReflectionUtils.getMethod(callback.getClass(), "onSuccess");
-        onSuccess.invoke(callback, LOCALE_URI);
+        verify(stringPromise).then(stringCaptor.capture());
+        stringCaptor.getValue().apply(LOCALE_URI);
 
-        verify(appContext).getCurrentProject();
-        verify(service).getGitReadOnlyUrl(anyString(), eq(rootProjectConfig), (AsyncRequestCallback<String>)anyObject());
         verify(view).setLocaleUrl(eq(LOCALE_URI));
     }
 
     @Test
     public void getGitReadOnlyUrlAsyncCallbackIsFailed() throws Exception {
-        presenter.showDialog();
-        verify(service).getGitReadOnlyUrl(anyString(), anyObject(), asyncRequestCallbackGitReadOnlyUrlCaptor.capture());
-        AsyncRequestCallback<String> callback = asyncRequestCallbackGitReadOnlyUrlCaptor.getValue();
+        presenter.showDialog(project);
 
-        Method onSuccess = GwtReflectionUtils.getMethod(callback.getClass(), "onFailure");
-        onSuccess.invoke(callback, mock(Throwable.class));
+        verify(stringPromise).catchError(promiseErrorCaptor.capture());
+        promiseErrorCaptor.getValue().apply(promiseError);
 
-        verify(appContext).getCurrentProject();
-        verify(service).getGitReadOnlyUrl(anyString(), eq(rootProjectConfig), (AsyncRequestCallback<String>)anyObject());
-        verify(notificationManager).notify(anyString(), rootProjectConfig);
         verify(console).printError(anyString());
         verify(constant).initFailed();
     }
@@ -100,36 +99,25 @@ public class ShowProjectGitReadOnlyUrlPresenterTest extends BaseTest {
     public void getGitRemoteListAsyncCallbackIsSuccess() throws Exception {
         final List<Remote> remotes = new ArrayList<>();
         remotes.add(mock(Remote.class));
-        presenter.showDialog();
-        verify(service)
-                .remoteList(anyString(), anyObject(), anyString(), anyBoolean(), asyncRequestCallbackRemoteListCaptor.capture());
-        AsyncRequestCallback<List<Remote>> callback = asyncRequestCallbackRemoteListCaptor.getValue();
 
-        Method onSuccess = GwtReflectionUtils.getMethod(callback.getClass(), "onSuccess");
-        onSuccess.invoke(callback, remotes);
+        presenter.showDialog(project);
 
-        verify(appContext).getCurrentProject();
-        verify(service).remoteList(anyString(), eq(rootProjectConfig), anyString(), eq(true), (AsyncRequestCallback<List<Remote>>)anyObject());
-        verify(view).setRemotes((List<Remote>)anyObject());
+        verify(remoteListPromise).then(remoteListCaptor.capture());
+        remoteListCaptor.getValue().apply(remotes);
+
+        verify(view).setRemotes(anyObject());
     }
 
     @Test
     public void getGitRemoteListAsyncCallbackIsFailed() throws Exception {
-        final List<Remote> remotes = new ArrayList<>();
-        remotes.add(mock(Remote.class));
-        presenter.showDialog();
-        verify(service)
-                .remoteList(anyString(), anyObject(), anyString(), anyBoolean(), asyncRequestCallbackRemoteListCaptor.capture());
-        AsyncRequestCallback<List<Remote>> callback = asyncRequestCallbackRemoteListCaptor.getValue();
+        presenter.showDialog(project);
 
-        Method onSuccess = GwtReflectionUtils.getMethod(callback.getClass(), "onFailure");
-        onSuccess.invoke(callback, mock(Throwable.class));
+        verify(remoteListPromise).catchError(promiseErrorCaptor.capture());
+        promiseErrorCaptor.getValue().apply(promiseError);
 
-        verify(appContext).getCurrentProject();
-        verify(service).remoteList(anyString(), eq(rootProjectConfig), anyString(), eq(true), (AsyncRequestCallback<List<Remote>>)anyObject());
         verify(view).setRemotes(null);
         verify(console).printError(anyString());
-        verify(notificationManager).notify(anyString(), rootProjectConfig);
+        verify(notificationManager).notify(anyString(), any(StatusNotification.Status.class), anyObject());
     }
 
     @Test

@@ -10,61 +10,61 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.java.client.editor;
 
+import com.google.common.base.Optional;
 import com.google.gwt.user.client.Timer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.api.promises.client.Function;
-import org.eclipse.che.api.promises.client.FunctionException;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
-import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
-import org.eclipse.che.ide.api.editor.OpenEditorCallbackImpl;
-import org.eclipse.che.ide.api.project.node.HasStorablePath;
-import org.eclipse.che.ide.api.project.node.Node;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.event.FileEvent;
+import org.eclipse.che.ide.api.resources.Container;
+import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.resources.SyntheticFile;
+import org.eclipse.che.ide.api.resources.VirtualFile;
+import org.eclipse.che.ide.api.workspace.Workspace;
 import org.eclipse.che.ide.ext.java.client.navigation.service.JavaNavigationService;
-import org.eclipse.che.ide.ext.java.client.project.node.JavaNodeManager;
-import org.eclipse.che.ide.ext.java.client.projecttree.JavaSourceFolderUtil;
+import org.eclipse.che.ide.ext.java.client.resource.JavaSourceFolderMarker;
+import org.eclipse.che.ide.ext.java.client.util.JavaUtil;
+import org.eclipse.che.ide.ext.java.shared.JarEntry;
 import org.eclipse.che.ide.ext.java.shared.OpenDeclarationDescriptor;
 import org.eclipse.che.ide.jseditor.client.text.LinearRange;
 import org.eclipse.che.ide.jseditor.client.texteditor.EmbeddedTextEditorPresenter;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
-import org.eclipse.che.ide.project.node.FileReferenceNode;
 import org.eclipse.che.ide.resource.Path;
-import org.eclipse.che.ide.rest.AsyncRequestCallback;
-import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
-import org.eclipse.che.ide.rest.Unmarshallable;
 import org.eclipse.che.ide.util.loging.Log;
+
+import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.OPEN;
 
 /**
  * @author Evgen Vidolob
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class OpenDeclarationFinder {
 
-    private final EditorAgent              editorAgent;
-    private final JavaNavigationService    navigationService;
-    private       DtoUnmarshallerFactory   factory;
-    private       AppContext               context;
-    private final ProjectExplorerPresenter projectExplorer;
-    private final JavaNodeManager          javaNodeManager;
+    private final EditorAgent           editorAgent;
+    private final JavaNavigationService navigationService;
+    private final Workspace             workspace;
+    private final EventBus              eventBus;
+    private final PromiseProvider       promises;
 
     @Inject
     public OpenDeclarationFinder(EditorAgent editorAgent,
                                  JavaNavigationService navigationService,
-                                 DtoUnmarshallerFactory factory,
-                                 AppContext context,
-                                 ProjectExplorerPresenter projectExplorer,
-                                 JavaNodeManager javaNodeManager) {
+                                 Workspace workspace,
+                                 EventBus eventBus,
+                                 PromiseProvider promises) {
         this.editorAgent = editorAgent;
-        this.factory = factory;
         this.navigationService = navigationService;
-        this.context = context;
-        this.projectExplorer = projectExplorer;
-        this.javaNodeManager = javaNodeManager;
+        this.workspace = workspace;
+        this.eventBus = eventBus;
+        this.promises = promises;
     }
 
     public void openDeclaration() {
@@ -77,29 +77,35 @@ public class OpenDeclarationFinder {
             Log.error(getClass(), "Open Declaration support only EmbeddedTextEditorPresenter as editor");
             return;
         }
-        EmbeddedTextEditorPresenter editor = ((EmbeddedTextEditorPresenter)activeEditor);
-        int offset = editor.getCursorOffset();
-        final VirtualFile file = editor.getEditorInput().getFile();
-        Unmarshallable<OpenDeclarationDescriptor> unmarshaller =
-                factory.newUnmarshaller(OpenDeclarationDescriptor.class);
-        navigationService
-                .findDeclaration(file.getProject().getProjectConfig().getPath(), JavaSourceFolderUtil.getFQNForFile(file), offset,
-                                 new AsyncRequestCallback<OpenDeclarationDescriptor>(unmarshaller) {
-                                     @Override
-                                     protected void onSuccess(OpenDeclarationDescriptor result) {
-                                         if (result != null) {
-                                             handleDescriptor(result);
-                                         }
-                                     }
 
-                                     @Override
-                                     protected void onFailure(Throwable exception) {
-                                         Log.error(OpenDeclarationFinder.class, exception);
-                                     }
-                                 });
+        final EmbeddedTextEditorPresenter editor = ((EmbeddedTextEditorPresenter)activeEditor);
+        final int offset = editor.getCursorOffset();
+        final VirtualFile file = editor.getEditorInput().getFile();
+
+        if (file instanceof Resource) {
+            final Project project = ((Resource)file).getRelatedProject();
+
+            final Optional<Resource> srcFolder = ((Resource)file).getParentWithMarker(JavaSourceFolderMarker.ID);
+
+            if (!srcFolder.isPresent()) {
+                return;
+            }
+
+            final String fqn = JavaUtil.resolveFQN((Container)srcFolder.get(), (Resource)file);
+
+            navigationService.findDeclaration(project.getLocation(), fqn, offset).then(new Operation<OpenDeclarationDescriptor>() {
+                @Override
+                public void apply(OpenDeclarationDescriptor result) throws OperationException {
+                    if (result != null) {
+                        handleDescriptor(project, result);
+                    }
+                }
+            });
+
+        }
     }
 
-    private void handleDescriptor(final OpenDeclarationDescriptor descriptor) {
+    private void handleDescriptor(final Project project, final OpenDeclarationDescriptor descriptor) {
         EditorPartPresenter openedEditor = editorAgent.getOpenedEditor(Path.valueOf(descriptor.getPath()));
         if (openedEditor != null) {
             editorAgent.activateEditor(openedEditor);
@@ -108,57 +114,28 @@ public class OpenDeclarationFinder {
         }
 
         if (descriptor.isBinary()) {
-            javaNodeManager.getClassNode(context.getCurrentProject().getProjectConfig(), descriptor.getLibId(), descriptor.getPath())
-                           .then(new Operation<Node>() {
-                               @Override
-                               public void apply(Node node) throws OperationException {
-                                   if (node instanceof VirtualFile) {
-                                       openFile((VirtualFile)node, descriptor);
-                                   }
-                               }
-                           });
+            navigationService.getEntry(project.getLocation(), descriptor.getLibId(), descriptor.getPath())
+                             .then(new Operation<JarEntry>() {
+                                 @Override
+                                 public void apply(final JarEntry entry) throws OperationException {
+                                     navigationService
+                                             .getContent(project.getLocation(), descriptor.getLibId(), Path.valueOf(entry.getPath()))
+                                             .then(new Operation<String>() {
+                                                 @Override
+                                                 public void apply(String content) throws OperationException {
+                                                     VirtualFile file = new SyntheticFile(entry.getName(), content, promises);
+                                                     eventBus.fireEvent(new FileEvent(file, OPEN));
+                                                 }
+                                             });
+                                 }
+                             });
         } else {
-            projectExplorer.getNodeByPath(new HasStorablePath.StorablePath(descriptor.getPath()))
-                           .then(selectNode())
-                           .then(openNode(descriptor));
-        }
-    }
-
-    protected Function<Node, Node> selectNode() {
-        return new Function<Node, Node>() {
-            @Override
-            public Node apply(Node node) throws FunctionException {
-                projectExplorer.select(node, false);
-
-                return node;
-            }
-        };
-    }
-
-    protected Function<Node, Node> openNode(final OpenDeclarationDescriptor descriptor) {
-        return new Function<Node, Node>() {
-            @Override
-            public Node apply(Node node) throws FunctionException {
-                if (node instanceof FileReferenceNode) {
-                    openFile((VirtualFile)node, descriptor);
-                }
-
-                return node;
-            }
-        };
-    }
-
-    private void openFile(VirtualFile result, final OpenDeclarationDescriptor descriptor) {
-        Log.info(getClass(), result.getPath());
-        EditorPartPresenter openedEditor = editorAgent.getOpenedEditor(Path.valueOf(result.getPath()));
-        if (openedEditor != null) {
-            editorAgent.activateEditor(openedEditor);
-            fileOpened(openedEditor, descriptor.getOffset());
-        } else {
-            editorAgent.openEditor(result, new OpenEditorCallbackImpl() {
+            workspace.getWorkspaceRoot().getFile(Path.valueOf(descriptor.getPath())).then(new Operation<Optional<File>>() {
                 @Override
-                public void onEditorOpened(EditorPartPresenter editor) {
-                    fileOpened(editor, descriptor.getOffset());
+                public void apply(Optional<File> file) throws OperationException {
+                    if (file.isPresent()) {
+                        eventBus.fireEvent(new FileEvent(file.get(), OPEN));
+                    }
                 }
             });
         }

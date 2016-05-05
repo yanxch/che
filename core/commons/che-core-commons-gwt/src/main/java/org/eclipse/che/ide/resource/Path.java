@@ -11,6 +11,7 @@
 package org.eclipse.che.ide.resource;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Objects;
 
 import java.util.Arrays;
 
@@ -407,10 +408,11 @@ public final class Path {
     private int computeHashCode() {
         int hash = device == null ? 17 : device.hashCode();
         int segmentCount = segments.length;
-        for (String segment : segments) {
+        for (int i = 0; i < segmentCount; i++) {
             //this function tends to given a fairly even distribution
-            hash = hash * 37 + segment.hashCode();
+            hash = hash * 37 + segments[i].hashCode();
         }
+
         return hash;
     }
 
@@ -578,7 +580,7 @@ public final class Path {
      * Computes the hash code for this object.
      */
     public int hashCode() {
-        return separators & HASH_MASK;
+        return Objects.hashCode(segments);
     }
 
     /**
@@ -1188,5 +1190,15 @@ public final class Path {
         String[] newSegments = new String[count];
         System.arraycopy(segments, 0, newSegments, 0, count);
         return new Path(device, newSegments, separators);
+    }
+
+    /**
+     * Returns a copy of this path with removed last segment.
+     *
+     * @return the new path
+     * @since 4.0.0-RC13
+     */
+    public Path parent() {
+        return this.removeLastSegments(1);
     }
 }
