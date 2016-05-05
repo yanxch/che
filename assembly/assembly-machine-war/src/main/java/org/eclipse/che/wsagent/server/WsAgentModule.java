@@ -60,7 +60,7 @@ public class WsAgentModule extends AbstractModule {
         bind(ApiInfoService.class);
 
         //TODO it's temporary solution. Ext war should not have binding for DAO.
-        bind(UserDao.class).to(LocalUserDaoImpl.class);
+        //bind(UserDao.class).to(LocalUserDaoImpl.class);
         bind(PreferenceDao.class).to(org.eclipse.che.api.local.RemotePreferenceDao.class);
 
         bind(OAuthTokenProvider.class).to(RemoteOAuthTokenProvider.class);
