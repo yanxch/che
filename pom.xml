@@ -355,6 +355,27 @@
                 <artifactId>che-websocket-terminal</artifactId>
                 <version>${che.lib.version}</version>
                 <type>zip</type>
+                <classifier>linux_i386</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.lib</groupId>
+                <artifactId>che-websocket-terminal</artifactId>
+                <version>${che.lib.version}</version>
+                <type>zip</type>
+                <classifier>linux_arm5</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.lib</groupId>
+                <artifactId>che-websocket-terminal</artifactId>
+                <version>${che.lib.version}</version>
+                <type>zip</type>
+                <classifier>linux_arm6</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.lib</groupId>
+                <artifactId>che-websocket-terminal</artifactId>
+                <version>${che.lib.version}</version>
+                <type>zip</type>
                 <classifier>linux_arm7</classifier>
             </dependency>
             <dependency>
