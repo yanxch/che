@@ -116,8 +116,7 @@ public class GitHubSshKeyUploader implements SshKeyUploader, OAuthCallback {
                          Window.Location.getProtocol() + "//" + Window.Location.getHost() + "/ws/" + appContext.getWorkspace()
                                                                                                                .getConfig()
                                                                                                                .getName();
-        JsOAuthWindow authWindow = new JsOAuthWindow(authUrl, "error.url", 500, 980, this);
-        authWindow.loginWithOAuth();
+        new JsOAuthWindow(authUrl, "error.url", 500, 980, this).login();
     }
 
     /** {@inheritDoc} */
@@ -130,4 +129,5 @@ public class GitHubSshKeyUploader implements SshKeyUploader, OAuthCallback {
             callback.onFailure(new Exception(constant.authorizationFailed()));
         }
     }
+
 }

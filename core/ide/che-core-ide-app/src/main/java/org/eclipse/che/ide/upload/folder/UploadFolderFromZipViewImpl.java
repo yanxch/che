@@ -64,7 +64,7 @@ public class UploadFolderFromZipViewImpl extends Window implements UploadFolderF
         setWidget(uploadFileViewBinder.createAndBindUi(this));
         bind();
 
-        btnCancel = createButton(locale.cancel(), "file-uploadFolder-cancel", new ClickHandler() {
+        btnCancel = createButton(locale.buttonCancel(), "file-uploadFolder-cancel", new ClickHandler() {
 
             @Override
             public void onClick(ClickEvent event) {

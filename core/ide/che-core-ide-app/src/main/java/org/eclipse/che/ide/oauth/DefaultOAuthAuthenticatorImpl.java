@@ -68,7 +68,7 @@ public class DefaultOAuthAuthenticatorImpl implements OAuth2Authenticator, OAuth
         dialogFactory.createConfirmDialog(localizationConstant.authorizationDialogTitle(), localizationConstant.authorizationDialogText(), new ConfirmCallback() {
             @Override
             public void accepted() {
-                showAuthWindow();
+                new JsOAuthWindow(authenticationUrl, "error.url", 500, 980, DefaultOAuthAuthenticatorImpl.this).login();
             }
         }, new CancelCallback() {
             @Override
@@ -83,15 +83,9 @@ public class DefaultOAuthAuthenticatorImpl implements OAuth2Authenticator, OAuth
         return "default";
     }
 
-
     @Override
     public void onAuthenticated(OAuthStatus authStatus) {
         callback.onSuccess(authStatus);
     }
 
-    private void showAuthWindow() {
-        JsOAuthWindow authWindow;
-        authWindow = new JsOAuthWindow(authenticationUrl, "error.url", 500, 980, this);
-        authWindow.loginWithOAuth();
-    }
 }

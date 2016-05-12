@@ -307,25 +307,6 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
         move(devMachine, source.toString(), sourceParent.toString(), newName, callback);
     }
 
-    @Override
-    public void importProject(DevMachine devMachine,
-                              String path,
-                              boolean force,
-                              SourceStorageDto sourceStorage,
-                              RequestCallback<Void> callback) {
-        final StringBuilder requestUrl = new StringBuilder("/project/" + devMachine.getId());
-        requestUrl.append("/import").append(normalizePath(path));
-        if (force) {
-            requestUrl.append("?force=true");
-        }
-
-        MessageBuilder builder = new MessageBuilder(POST, requestUrl.toString());
-        builder.data(dtoFactory.toJson(sourceStorage)).header(CONTENTTYPE, APPLICATION_JSON);
-        Message message = builder.build();
-
-        sendMessageToWS(message, callback);
-    }
-
     /**
      * Imports sources project.
      */
@@ -336,10 +317,9 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
         return PromiseHelper.newPromise(new AsyncPromiseHelper.RequestCall<Void>() {
             @Override
             public void makeCall(final AsyncCallback<Void> callback) {
-                final StringBuilder requestUrl = new StringBuilder("/project/" + devMachine);
-                requestUrl.append("/import").append(normalizePath(path));
+                String url = "/project/" + devMachine.getId() + "/import" + normalizePath(path);
+                MessageBuilder builder = new MessageBuilder(POST, url);
 
-                MessageBuilder builder = new MessageBuilder(POST, requestUrl.toString());
                 builder.data(dtoFactory.toJson(sourceStorage)).header(CONTENTTYPE, APPLICATION_JSON);
                 final Message message = builder.build();
                 wsAgentStateController.getMessageBus().then(new Operation<MessageBus>() {

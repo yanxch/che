@@ -65,7 +65,7 @@ public class ImportProjectWizardViewImpl extends Window implements ImportProject
 
         addButtonToFooter(importButton);
 
-        nextStepButton = createButton(locale.next(), "importProjectWizard-nextStepButton", new ClickHandler() {
+        nextStepButton = createButton(locale.buttonNext(), "importProjectWizard-nextStepButton", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 delegate.onNextClicked();
@@ -74,7 +74,7 @@ public class ImportProjectWizardViewImpl extends Window implements ImportProject
 
         addButtonToFooter(nextStepButton);
 
-        previousStepButton = createButton(locale.back(), "importProjectWizard-previousStepButton", new ClickHandler() {
+        previousStepButton = createButton(locale.buttonBack(), "importProjectWizard-previousStepButton", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 delegate.onBackClicked();

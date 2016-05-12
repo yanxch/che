@@ -117,7 +117,7 @@ public class PreferencesViewImpl extends Window implements PreferencesView {
     }
 
     private void createButtons() {
-        btnSave = createPrimaryButton(locale.save(), "window-preferences-storeChanges", new ClickHandler() {
+        btnSave = createPrimaryButton(locale.buttonSave(), "window-preferences-storeChanges", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 Log.debug(this.getClass(), "< SAVE");
@@ -135,7 +135,7 @@ public class PreferencesViewImpl extends Window implements PreferencesView {
         });
         addButtonToFooter(btnRefresh);
 
-        btnClose = createButton(locale.close(), "window-preferences-close", new ClickHandler() {
+        btnClose = createButton(locale.buttonClose(), "window-preferences-close", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 Log.debug(this.getClass(), "< CLOSE");
@@ -199,4 +199,5 @@ public class PreferencesViewImpl extends Window implements PreferencesView {
     public void selectPreference(PreferencePagePresenter preference) {
         list.selectElement(preference);
     }
+
 }

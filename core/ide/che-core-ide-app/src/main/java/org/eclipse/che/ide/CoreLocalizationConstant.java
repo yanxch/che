@@ -414,37 +414,37 @@ public interface CoreLocalizationConstant extends Messages {
     String startingMachine(String machineName);
 
     /* Buttons */
-    @Key("ok")
+    @Key("button.ok")
     String ok();
 
-    @Key("cancel")
-    String cancel();
+    @Key("button.cancel")
+    String buttonCancel();
 
-    @Key("open")
-    String open();
+    @Key("button.open")
+    String buttonOpen();
 
-    @Key("next")
-    String next();
+    @Key("button.next")
+    String buttonNext();
 
-    @Key("back")
-    String back();
+    @Key("button.back")
+    String buttonBack();
 
-    @Key("close")
-    String close();
+    @Key("button.close")
+    String buttonClose();
 
-    @Key("save")
-    String save();
+    @Key("button.save")
+    String buttonSave();
 
-    @Key("apply")
+    @Key("button.apply")
     String apply();
 
-    @Key("refresh")
+    @Key("button.refresh")
     String refresh();
 
-    @Key("delete")
-    String delete();
+    @Key("button.delete")
+    String buttonDelete();
 
-    @Key("print")
+    @Key("button.print")
     String print();
 
     @Key("projectProblem.title")

@@ -46,7 +46,10 @@ public class JsOAuthWindow {
         return authStatus;
     }
 
-    public void loginWithOAuth() {
+    /**
+     * Performs login.
+     */
+    public void login() {
         loginWithOAuth(authUrl, errUrl, popupHeight, popupWidth, clientHeight, clientWidth);
     }
 

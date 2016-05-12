@@ -70,7 +70,7 @@ final class ShowReferenceViewImpl extends Window implements ShowReferenceView {
     }
 
     private void addButtons() {
-        Button cancel = createButton(locale.cancel(), "copy-reference-cancel-button", new ClickHandler() {
+        Button cancel = createButton(locale.buttonCancel(), "copy-reference-cancel-button", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 hide();

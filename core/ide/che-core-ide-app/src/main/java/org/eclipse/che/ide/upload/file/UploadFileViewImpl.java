@@ -60,7 +60,7 @@ public class UploadFileViewImpl extends Window implements UploadFileView {
         setWidget(uploadFileViewBinder.createAndBindUi(this));
         bind();
 
-        btnCancel = createButton(locale.cancel(), "file-uploadFile-cancel", new ClickHandler() {
+        btnCancel = createButton(locale.buttonCancel(), "file-uploadFile-cancel", new ClickHandler() {
 
             @Override
             public void onClick(ClickEvent event) {

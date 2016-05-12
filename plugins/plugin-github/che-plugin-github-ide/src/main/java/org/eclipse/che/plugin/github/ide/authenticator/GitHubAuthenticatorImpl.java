@@ -112,7 +112,7 @@ public class GitHubAuthenticatorImpl implements OAuth2Authenticator, OAuthCallba
 
     @Override
     public void onAccepted() {
-        showAuthWindow();
+        new JsOAuthWindow(authenticationUrl != null ? authenticationUrl : getAuthUrl(), "error.url", 500, 980, this).login();
     }
 
     @Override
@@ -122,16 +122,6 @@ public class GitHubAuthenticatorImpl implements OAuth2Authenticator, OAuthCallba
             return;
         }
         callback.onSuccess(authStatus);
-    }
-
-    private void showAuthWindow() {
-        JsOAuthWindow authWindow;
-        if (authenticationUrl == null) {
-            authWindow = new JsOAuthWindow(getAuthUrl(), "error.url", 500, 980, this);
-        } else {
-            authWindow = new JsOAuthWindow(authenticationUrl, "error.url", 500, 980, this);
-        }
-        authWindow.loginWithOAuth();
     }
 
     private String getAuthUrl() {

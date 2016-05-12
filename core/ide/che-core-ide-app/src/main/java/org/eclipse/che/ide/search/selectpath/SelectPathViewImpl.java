@@ -98,7 +98,7 @@ public class SelectPathViewImpl extends Window implements SelectPathView {
 
         handler.bind(tree);
 
-        cancelButton = createButton(locale.cancel(), "select-path-cancel-button", new ClickHandler() {
+        cancelButton = createButton(locale.buttonCancel(), "select-path-cancel-button", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 hide();

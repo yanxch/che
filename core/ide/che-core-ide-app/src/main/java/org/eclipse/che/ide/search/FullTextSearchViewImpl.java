@@ -178,7 +178,7 @@ public class FullTextSearchViewImpl extends Window implements FullTextSearchView
     }
 
     private void createButtons() {
-        cancelButton = createButton(locale.cancel(), "search-cancel-button", new ClickHandler() {
+        cancelButton = createButton(locale.buttonCancel(), "search-cancel-button", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 close();

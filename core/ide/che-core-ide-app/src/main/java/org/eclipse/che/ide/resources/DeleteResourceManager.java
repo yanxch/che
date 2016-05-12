@@ -160,6 +160,8 @@ public class DeleteResourceManager {
 
                 dialogFactory.createConfirmDialog(localization.deleteDialogTitle(),
                                                   warningMessage,
+                                                  localization.buttonDelete(),
+                                                  localization.buttonCancel(),
                                                   onConfirm(resources, callback),
                                                   onCancel(callback)).show();
             }

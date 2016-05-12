@@ -144,19 +144,19 @@ public interface DialogFactory {
      *         the window title
      * @param content
      *         the window content
-     * @param okButtonLabel
-     *         new label for OK button
+     * @param confirmButtonLabel
+     *         new label for Confirm button
      * @param cancelButtonLabel
      *         new label for Cancel button
      * @param confirmCallback
-     *         the callback used on OK
+     *         the callback used on Confirm
      * @param cancelCallback
      *         the callback used on cancel
      * @return a {@link ConfirmDialog} instance
      */
     ConfirmDialog createConfirmDialog(@NotNull String title,
                                       @NotNull IsWidget content,
-                                      @NotNull @Assisted("okButtonLabel") String okButtonLabel,
+                                      @NotNull @Assisted("confirmButtonLabel") String confirmButtonLabel,
                                       @NotNull @Assisted("cancelButtonLabel") String cancelButtonLabel,
                                       @Nullable ConfirmCallback confirmCallback,
                                       @Nullable CancelCallback cancelCallback);

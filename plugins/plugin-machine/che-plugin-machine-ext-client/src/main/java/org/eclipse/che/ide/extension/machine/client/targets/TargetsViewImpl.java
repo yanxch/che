@@ -155,7 +155,7 @@ public class TargetsViewImpl extends Window implements TargetsView {
         }, KeyDownEvent.getType());
         targetsPanel.add(list);
 
-        closeButton = createButton(coreLocale.close(), "targets.button.close",
+        closeButton = createButton(coreLocale.buttonClose(), "targets.button.close",
                 new ClickHandler() {
                     @Override
                     public void onClick(ClickEvent event) {
@@ -164,7 +164,7 @@ public class TargetsViewImpl extends Window implements TargetsView {
                 });
         addButtonToFooter(closeButton);
 
-        saveButton = createButton(coreLocale.save(), "targets.button.save", new ClickHandler() {
+        saveButton = createButton(coreLocale.buttonSave(), "targets.button.save", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 delegate.onSaveClicked();
@@ -173,7 +173,7 @@ public class TargetsViewImpl extends Window implements TargetsView {
         saveButton.addStyleName(this.resources.windowCss().primaryButton());
         footer.add(saveButton);
 
-        cancelButton = createButton(coreLocale.cancel(), "targets.button.cancel", new ClickHandler() {
+        cancelButton = createButton(coreLocale.buttonCancel(), "targets.button.cancel", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 delegate.onCancelClicked();

@@ -80,7 +80,7 @@ public class ConfirmDialogPresenter implements ConfirmDialog, ConfirmDialogView.
     public ConfirmDialogPresenter(final @NotNull ConfirmDialogView view,
                                   final @NotNull @Assisted String title,
                                   final @NotNull @Assisted IsWidget content,
-                                  final @Nullable @Assisted("okButtonLabel") String okButtonLabel,
+                                  final @Nullable @Assisted("confirmButtonLabel") String confirmButtonLabel,
                                   final @Nullable @Assisted("cancelButtonLabel") String cancelButtonLabel,
                                   final @Nullable @Assisted ConfirmCallback confirmCallback,
                                   final @Nullable @Assisted CancelCallback cancelCallback) {
@@ -91,7 +91,7 @@ public class ConfirmDialogPresenter implements ConfirmDialog, ConfirmDialogView.
         this.cancelCallback = cancelCallback;
         this.view.setDelegate(this);
 
-        view.setOkButtonLabel(okButtonLabel);
+        view.setOkButtonLabel(confirmButtonLabel);
         view.setCancelButtonLabel(cancelButtonLabel);
     }
 

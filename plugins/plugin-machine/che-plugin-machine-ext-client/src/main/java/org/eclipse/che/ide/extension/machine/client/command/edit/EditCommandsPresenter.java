@@ -227,7 +227,7 @@ public class EditCommandsPresenter implements EditCommandsView.ActionDelegate {
         final ChoiceDialog dialog = dialogFactory.createChoiceDialog(
                 machineLocale.editCommandsSaveChangesTitle(),
                 machineLocale.editCommandsSaveChangesConfirmation(editedCommand.getName()),
-                coreLocale.save(),
+                coreLocale.buttonSave(),
                 machineLocale.editCommandsSaveChangesDiscard(),
                 saveCallback,
                 discardCallback);
@@ -386,7 +386,7 @@ public class EditCommandsPresenter implements EditCommandsView.ActionDelegate {
         final ChoiceDialog dialog = dialogFactory.createChoiceDialog(
                 machineLocale.editCommandsSaveChangesTitle(),
                 machineLocale.editCommandsSaveChangesConfirmation(editedCommand.getName()),
-                coreLocale.save(),
+                coreLocale.buttonSave(),
                 machineLocale.editCommandsSaveChangesDiscard(),
                 saveCallback,
                 discardCallback);

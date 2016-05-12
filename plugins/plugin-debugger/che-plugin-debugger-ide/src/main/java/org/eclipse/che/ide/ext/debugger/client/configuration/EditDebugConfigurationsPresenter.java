@@ -171,7 +171,7 @@ public class EditDebugConfigurationsPresenter implements EditDebugConfigurations
         final ChoiceDialog dialog = dialogFactory.createChoiceDialog(
                 locale.editConfigurationsSaveChangesTitle(),
                 locale.editConfigurationsSaveChangesConfirmation(editedConfiguration.getName()),
-                coreLocale.save(),
+                coreLocale.buttonSave(),
                 locale.editConfigurationsSaveChangesDiscard(),
                 saveCallback,
                 discardCallback);
@@ -266,7 +266,7 @@ public class EditDebugConfigurationsPresenter implements EditDebugConfigurations
         final ChoiceDialog dialog = dialogFactory.createChoiceDialog(
                 locale.editConfigurationsSaveChangesTitle(),
                 locale.editConfigurationsSaveChangesConfirmation(editedConfiguration.getName()),
-                coreLocale.save(),
+                coreLocale.buttonSave(),
                 locale.editConfigurationsSaveChangesDiscard(),
                 saveCallback,
                 discardCallback);

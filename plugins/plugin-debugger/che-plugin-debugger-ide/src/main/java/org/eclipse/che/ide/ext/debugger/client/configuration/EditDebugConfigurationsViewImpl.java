@@ -332,7 +332,7 @@ public class EditDebugConfigurationsViewImpl extends Window implements EditDebug
     }
 
     private void createButtons() {
-        saveButton = createButton(coreLocale.save(), "window-edit-debug-configurations-save", new ClickHandler() {
+        saveButton = createButton(coreLocale.buttonSave(), "window-edit-debug-configurations-save", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 delegate.onSaveClicked();
@@ -341,7 +341,7 @@ public class EditDebugConfigurationsViewImpl extends Window implements EditDebug
         saveButton.addStyleName(this.resources.windowCss().primaryButton());
         overFooter.add(saveButton);
 
-        cancelButton = createButton(coreLocale.cancel(), "window-edit-debug-configurations-cancel", new ClickHandler() {
+        cancelButton = createButton(coreLocale.buttonCancel(), "window-edit-debug-configurations-cancel", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 delegate.onCancelClicked();
@@ -349,7 +349,7 @@ public class EditDebugConfigurationsViewImpl extends Window implements EditDebug
         });
         overFooter.add(cancelButton);
 
-        closeButton = createButton(coreLocale.close(), "window-edit-debug-configurations-close",
+        closeButton = createButton(coreLocale.buttonClose(), "window-edit-debug-configurations-close",
                                    new ClickHandler() {
                                        @Override
                                        public void onClick(ClickEvent event) {

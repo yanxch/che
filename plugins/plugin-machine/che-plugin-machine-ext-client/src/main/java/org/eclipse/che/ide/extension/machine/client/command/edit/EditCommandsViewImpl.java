@@ -339,7 +339,7 @@ public class EditCommandsViewImpl extends Window implements EditCommandsView {
     }
 
     private void createButtons() {
-        saveButton = createButton(coreLocale.save(), "window-edit-configurations-save", new ClickHandler() {
+        saveButton = createButton(coreLocale.buttonSave(), "window-edit-configurations-save", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 delegate.onSaveClicked();
@@ -348,7 +348,7 @@ public class EditCommandsViewImpl extends Window implements EditCommandsView {
         saveButton.addStyleName(this.resources.windowCss().primaryButton());
         overFooter.add(saveButton);
 
-        cancelButton = createButton(coreLocale.cancel(), "window-edit-configurations-cancel", new ClickHandler() {
+        cancelButton = createButton(coreLocale.buttonCancel(), "window-edit-configurations-cancel", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 delegate.onCancelClicked();
@@ -356,7 +356,7 @@ public class EditCommandsViewImpl extends Window implements EditCommandsView {
         });
         overFooter.add(cancelButton);
 
-        closeButton = createButton(coreLocale.close(), "window-edit-configurations-close",
+        closeButton = createButton(coreLocale.buttonClose(), "window-edit-configurations-close",
                                    new ClickHandler() {
                                        @Override
                                        public void onClick(ClickEvent event) {

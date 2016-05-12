@@ -62,7 +62,7 @@ public class ProjectWizardViewImpl extends Window implements ProjectWizardView {
         saveButton.addStyleName(resources.Css().buttonLoader());
         addButtonToFooter(saveButton);
 
-        nextStepButton = createButton(locale.next(), "projectWizard-nextStepButton", new ClickHandler() {
+        nextStepButton = createButton(locale.buttonNext(), "projectWizard-nextStepButton", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 delegate.onNextClicked();
@@ -70,7 +70,7 @@ public class ProjectWizardViewImpl extends Window implements ProjectWizardView {
         });
         addButtonToFooter(nextStepButton);
 
-        previousStepButton = createButton(locale.back(), "projectWizard-previousStepButton", new ClickHandler() {
+        previousStepButton = createButton(locale.buttonBack(), "projectWizard-previousStepButton", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 delegate.onBackClicked();

@@ -252,6 +252,10 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
 
     @Override
     public Resource[] getResources() {
+        if (currentResources == null) {
+            return new Resource[0];
+        }
+
         return currentResources;
     }
 
