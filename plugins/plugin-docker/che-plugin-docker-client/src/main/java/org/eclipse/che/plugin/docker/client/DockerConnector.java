@@ -91,9 +91,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
+import java.util.concurrent.*;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.net.UrlEscapers.urlPathSegmentEscaper;
@@ -1147,26 +1146,31 @@ public class DockerConnector {
             try (InputStream responseStream = response.getInputStream()) {
                 JsonMessageReader<ProgressStatus> progressReader = new JsonMessageReader<>(responseStream, ProgressStatus.class);
 
-                final ValueHolder<String> imageIdHolder = new ValueHolder<>();
-                executeInSeparateThread(() -> {
-                    try {
-                        ProgressStatus progressStatus;
-                        while ((progressStatus = progressReader.next()) != null) {
-                            final String buildImageId = getBuildImageId(progressStatus);
-                            if (buildImageId != null) {
-                                imageIdHolder.set(buildImageId);
-                            }
-                            progressMonitor.updateProgress(progressStatus);
+                Future<Optional<String>> imageIdFuture = executor.submit(() -> {
+                    Optional<String> imageId = Optional.empty();
+                    ProgressStatus progressStatus;
+                    while ((progressStatus = progressReader.next()) != null) {
+                        final String buildImageId = getBuildImageId(progressStatus);
+                        if (buildImageId != null) {
+                            imageId = Optional.of(buildImageId);
                         }
-                    } catch (IOException e) {
-                        throw new RuntimeException(e.getLocalizedMessage(), e);
+                        progressMonitor.updateProgress(progressStatus);
                     }
+                    return imageId;
                 });
 
-                if (imageIdHolder.get() == null) {
-                    throw new IOException("Docker image build failed");
+                try {
+                    Optional<String> imageId = imageIdFuture.get();
+                    return imageId.orElseThrow(() -> new IOException("Docker image build failed"));
+                } catch (ExecutionException e) {
+                    Throwable cause = e.getCause();
+                    throw new IOException(cause.getLocalizedMessage(), e);
+                } catch (InterruptedException e) {
+                    if (!imageIdFuture.isDone()) {
+                        imageIdFuture.cancel(true);
+                    }
+                    throw e;
                 }
-                return imageIdHolder.get();
             }
         }
     }
@@ -1449,16 +1453,25 @@ public class DockerConnector {
             try (InputStream responseStream = response.getInputStream()) {
                 JsonMessageReader<ProgressStatus> progressReader = new JsonMessageReader<>(responseStream, ProgressStatus.class);
 
-                executeInSeparateThread(() -> {
-                    try {
-                        ProgressStatus progressStatus;
-                        while ((progressStatus = progressReader.next()) != null) {
-                            progressMonitor.updateProgress(progressStatus);
-                        }
-                    } catch (IOException e) {
-                        throw new RuntimeException(e.getLocalizedMessage(), e);
+                Future<?> future = executor.submit(() -> {
+                    ProgressStatus progressStatus;
+                    while ((progressStatus = progressReader.next()) != null) {
+                        progressMonitor.updateProgress(progressStatus);
                     }
+                    return null;
                 });
+
+                try {
+                    future.get();
+                } catch (ExecutionException e) {
+                    Throwable cause = e.getCause();
+                    throw new IOException(cause.getLocalizedMessage(), e);
+                } catch (InterruptedException e) {
+                    if (!future.isDone()) {
+                        future.cancel(true);
+                    }
+                    throw e;
+                }
             }
         }
     }
@@ -1656,6 +1669,8 @@ public class DockerConnector {
         }
     }
 
+    // todo use future
+    ///todo explain about unix socket and closed by interruption exception
     // TODO add comments to each line :)
 
     // todo check when closed by interruption exception is thrown
