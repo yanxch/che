@@ -23,4 +23,10 @@ public interface Location {
      * The line number in a file or in a class.
      */
     int getLineNumber();
+
+    boolean isExternalResource();
+
+    int getExternalResourceId();
+
+    String getProjectPath();
 }

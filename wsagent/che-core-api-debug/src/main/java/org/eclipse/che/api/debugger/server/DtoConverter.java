@@ -77,7 +77,10 @@ public final class DtoConverter {
 
     public static LocationDto asDto(Location location) {
         return newDto(LocationDto.class).withTarget(location.getTarget())
-                                        .withLineNumber(location.getLineNumber());
+                                        .withLineNumber(location.getLineNumber())
+                                        .withExternalResourceId(location.getExternalResourceId())
+                                        .withProjectPath(location.getProjectPath())
+                                        .withExternalResource(location.isExternalResource());
     }
 
     public static SimpleValueDto asDto(SimpleValue value) {

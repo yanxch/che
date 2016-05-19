@@ -12,20 +12,32 @@ package org.eclipse.che.api.debug.shared.model.impl;
 
 import org.eclipse.che.api.debug.shared.model.Location;
 
+import java.util.Objects;
+
 /**
  * @author Anatoliy Bazko
  */
 public class LocationImpl implements Location {
-    private final String target;
-    private final int    lineNumber;
+    private final String  target;
+    private final int     lineNumber;
+    private final boolean externalResource;
+    private final int     externalResourceId;
+    private final String  projectPath;
 
-    public LocationImpl(String target, int lineNumber) {
+    public LocationImpl(String target, int lineNumber, boolean externalResource, int externalResourceId, String projectPath) {
         this.target = target;
         this.lineNumber = lineNumber;
+        this.externalResource = externalResource;
+        this.externalResourceId = externalResourceId;
+        this.projectPath = projectPath;
+    }
+
+    public LocationImpl(String target, int lineNumber) {
+        this(target, lineNumber, false, 0, null);
     }
 
     public LocationImpl(String target) {
-        this(target, 0);
+        this(target, 0, false, 0, null);
     }
 
     @Override
@@ -39,14 +51,33 @@ public class LocationImpl implements Location {
     }
 
     @Override
+    public boolean isExternalResource() {
+        return externalResource;
+    }
+
+    @Override
+    public int getExternalResourceId() {
+        return externalResourceId;
+    }
+
+    @Override
+    public String getProjectPath() {
+        return projectPath;
+    }
+
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof LocationImpl)) return false;
 
         LocationImpl location = (LocationImpl)o;
 
-        if (lineNumber != location.lineNumber) return false;
-        return !(target != null ? !target.equals(location.target) : location.target != null);
+        return (lineNumber != location.lineNumber ||
+                externalResource != location.externalResource ||
+                externalResourceId != location.externalResourceId ||
+                Objects.equals(projectPath, location.projectPath) &&
+                !(target != null ? !target.equals(location.target) : location.target != null));
 
     }
 
@@ -54,6 +85,9 @@ public class LocationImpl implements Location {
     public int hashCode() {
         int result = target != null ? target.hashCode() : 0;
         result = 31 * result + lineNumber;
+        result = 31 * result + externalResourceId;
+        result = 31 * result + Objects.hashCode(externalResource);
+        result = 31 * result + Objects.hashCode(projectPath);
         return result;
     }
 }
