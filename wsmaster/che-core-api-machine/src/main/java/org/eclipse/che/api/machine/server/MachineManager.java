@@ -1004,6 +1004,8 @@ public class MachineManager {
 
         executor.shutdown();
 
+        // todo will be stopped by env engine - remove
+        /*
         final ExecutorService destroyMachinesExecutor =
                 Executors.newFixedThreadPool(2 * Runtime.getRuntime().availableProcessors(),
                                              new ThreadFactoryBuilder().setNameFormat("DestroyMachine-%d")
@@ -1033,7 +1035,7 @@ public class MachineManager {
             destroyMachinesExecutor.shutdownNow();
         } catch (MachineException e) {
             LOG.error(e.getLocalizedMessage(), e);
-        }
+        }*/
 
         try {
             if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
