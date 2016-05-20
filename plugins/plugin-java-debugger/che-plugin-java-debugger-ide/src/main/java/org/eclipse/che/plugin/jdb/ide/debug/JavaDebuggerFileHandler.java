@@ -120,7 +120,7 @@ public class JavaDebuggerFileHandler implements ActiveFileHandler {
         final NodeSettings nodeSettings = javaNodeManager.getJavaSettingsProvider().getSettings();
         final JavaNodeFactory javaNodeFactory = javaNodeManager.getJavaNodeFactory();
 
-        String className = prepareFQN(location.getTarget());
+        String className = extractOuterClassFqn(location.getTarget());
         final JarEntry jarEntry = dtoFactory.createDto(JarEntry.class);
         jarEntry.setPath(className);
         jarEntry.setName(className.substring(className.lastIndexOf(".") + 1) + ".class");
@@ -137,7 +137,7 @@ public class JavaDebuggerFileHandler implements ActiveFileHandler {
                             .then(new Operation<JarFileNode>() {
                                 @Override
                                 public void apply(final JarFileNode jarFileNode) throws OperationException {
-                                    AsyncCallback<VirtualFile> downloadSourceCallBack = new AsyncCallback<VirtualFile>() {
+                                    AsyncCallback<VirtualFile> downloadSourceCallback = new AsyncCallback<VirtualFile>() {
                                         HandlerRegistration handler;
 
                                         @Override
@@ -145,7 +145,7 @@ public class JavaDebuggerFileHandler implements ActiveFileHandler {
                                             if (jarFileNode.isContentGenerated()) {
                                                 handler = eventBus.addHandler(TYPE, new FileContentUpdatedEventHandler() {
                                                     @Override
-                                                    public void onFileSourceDownloaded(FileContentUpdatedEvent fileSourceDownloadedEvent) {
+                                                    public void onContentUpdated(FileContentUpdatedEvent fileSourceDownloadedEvent) {
                                                         handleActivateFile(jarFileNode, callback, location.getLineNumber());
                                                         handler.removeHandler();
                                                     }
@@ -160,7 +160,7 @@ public class JavaDebuggerFileHandler implements ActiveFileHandler {
                                             callback.onFailure(caught);
                                         }
                                     };
-                                    handleActivateFile(jarFileNode, downloadSourceCallBack, location.getLineNumber());
+                                    handleActivateFile(jarFileNode, downloadSourceCallback, location.getLineNumber());
                                 }
                             })
                             .catchError(new Operation<PromiseError>() {
@@ -171,10 +171,14 @@ public class JavaDebuggerFileHandler implements ActiveFileHandler {
                             });
     }
 
-    private String prepareFQN(String fqn) {
+    private String extractOuterClassFqn(String fqn) {
         //handle fqn in case nested classes
         if (fqn.contains("$")) {
             return fqn.substring(0, fqn.indexOf("$"));
+        }
+        //handle fqn in case lambda expressions
+        if (fqn.contains("$$")) {
+            return fqn.substring(0, fqn.indexOf("$$"));
         }
         return fqn;
     }

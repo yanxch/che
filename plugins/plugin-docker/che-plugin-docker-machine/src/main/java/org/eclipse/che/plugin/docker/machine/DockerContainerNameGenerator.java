@@ -12,7 +12,6 @@ package org.eclipse.che.plugin.docker.machine;
 
 import org.eclipse.che.api.core.model.machine.Machine;
 import org.eclipse.che.api.core.model.machine.MachineConfig;
-import org.eclipse.che.commons.subject.Subject;
 
 import java.util.Objects;
 import java.util.Optional;

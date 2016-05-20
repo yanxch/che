@@ -16,5 +16,5 @@ import com.google.gwt.event.shared.EventHandler;
  * @author Alexander Andrienko
  */
 public interface FileContentUpdatedEventHandler extends EventHandler {
-    void onFileSourceDownloaded(FileContentUpdatedEvent fileContentUpdatedEvent);
+    void onContentUpdated(FileContentUpdatedEvent fileContentUpdatedEvent);
 }

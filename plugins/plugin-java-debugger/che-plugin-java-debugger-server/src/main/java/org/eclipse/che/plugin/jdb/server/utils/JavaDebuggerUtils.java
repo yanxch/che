@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.jdb.server.utils;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.sun.istack.internal.NotNull;
+
 import org.eclipse.che.api.debug.shared.model.impl.LocationImpl;
 import org.eclipse.che.api.debugger.server.exceptions.DebuggerException;
 import org.eclipse.che.api.debug.shared.model.Location;
@@ -23,13 +26,13 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.core.search.TypeNameMatchRequestor;
-import org.eclipse.jdt.internal.ui.search.JavaSearchScopeFactory;
+import org.eclipse.core.runtime.NullProgressMonitor;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Java DebuggerUtil
+ * Class uses for find and handle important information from the Java Model.
  *
  * @author Alexander Andrienko
  */
@@ -49,7 +52,7 @@ public class JavaDebuggerUtils {
         if (types.isEmpty()) {
             throw new DebuggerException("Type with fully qualified name: " + fqn + " was not found");
         }
-        IType type = types.get(0);//we need handle few result!!!!
+        IType type = types.get(0);//TODO we need handle few result! It's temporary solution.
         if (type.isBinary()) {
             IClassFile classFile = type.getClassFile();
             int libId = classFile.getAncestor(IPackageFragmentRoot.PACKAGE_FRAGMENT_ROOT).hashCode();
@@ -62,28 +65,36 @@ public class JavaDebuggerUtils {
         }
     }
 
-    private Pair<char[][], char[][]> prepareFqnToSearch(String fqn) {
-        int lastDotIndex = fqn.trim().lastIndexOf('.');
+    @VisibleForTesting
+    protected Pair<char[][], char[][]> prepareFqnToSearch(@NotNull String fqn) {
+        String outerClassFqn = extractOuterClassFqn(fqn);
+        int lastDotIndex = outerClassFqn.trim().lastIndexOf('.');
 
         char[][] packages;
+        char[][] names;
         if (lastDotIndex == -1) {
             packages = new char[0][];
+            names = new char[][]{outerClassFqn.toCharArray()};
         } else {
             String packageLine = fqn.substring(0, lastDotIndex);
             packages = new char[][] {packageLine.toCharArray()};
-        }
 
-        char[][] names;
-        int nestedIndex = fqn.indexOf("$");
-        String name;
-        if (nestedIndex == -1) {
-            name = fqn.substring(lastDotIndex + 1, fqn.length());
-            names = new char[][] {name.toCharArray()};
-        } else {
-            name = fqn.substring(lastDotIndex + 1, nestedIndex);
-            names = new char[][] {name.toCharArray()};
+            String nameLine = fqn.substring(lastDotIndex + 1, outerClassFqn.length());
+            names = new char[][] {nameLine.toCharArray()};
         }
         return new Pair<>(packages, names);
+    }
+
+    private String extractOuterClassFqn(String fqn) {
+        //handle fqn in case nested classes
+        if (fqn.contains("$")) {
+            return fqn.substring(0, fqn.indexOf("$"));
+        }
+        //handle fqn in case lambda expressions
+        if (fqn.contains("$$")) {
+            return fqn.substring(0, fqn.indexOf("$$"));
+        }
+        return fqn;
     }
 
     private List<IType> findByFqn(char[][] packages, char[][] names) throws JavaModelException {
@@ -93,7 +104,7 @@ public class JavaDebuggerUtils {
 
         searchEngine.searchAllTypeNames(packages,
                                         names,
-                                        JavaSearchScopeFactory.getInstance().createWorkspaceScope(true),//todo check we can set scope JAVA
+                                        SearchEngine.createWorkspaceScope(),
                                         new TypeNameMatchRequestor() {
                                             @Override
                                             public void acceptTypeNameMatch(TypeNameMatch typeNameMatch) {
@@ -101,7 +112,7 @@ public class JavaDebuggerUtils {
                                             }
                                         },
                                         IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-                                        new org.eclipse.core.runtime.NullProgressMonitor());
+                                        new NullProgressMonitor());
         return result;
     }
 }

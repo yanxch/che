@@ -37,6 +37,6 @@ public class FileContentUpdatedEvent extends GwtEvent<FileContentUpdatedEventHan
 
     @Override
     protected void dispatch(FileContentUpdatedEventHandler handler) {
-        handler.onFileSourceDownloaded(this);
+        handler.onContentUpdated(this);
     }
 }
