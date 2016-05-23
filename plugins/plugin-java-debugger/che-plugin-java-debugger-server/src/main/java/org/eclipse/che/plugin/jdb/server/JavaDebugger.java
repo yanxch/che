@@ -29,6 +29,7 @@ import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.InvalidRequestStateException;
 import com.sun.jdi.request.StepRequest;
 
+import org.eclipse.che.api.debug.shared.model.LinePosition;
 import org.eclipse.che.api.debugger.server.Debugger;
 import org.eclipse.che.api.debugger.server.exceptions.DebuggerException;
 import org.eclipse.che.api.debug.shared.dto.BreakpointDto;
@@ -90,7 +91,7 @@ import static org.eclipse.che.dto.server.DtoFactory.newDto;
  * @author Valeriy Svydenko
  */
 public class JavaDebugger implements EventsHandler, Debugger {
-    private static final Logger LOG = LoggerFactory.getLogger(JavaDebugger.class);
+    private static final Logger            LOG          = LoggerFactory.getLogger(JavaDebugger.class);
     private static final JavaDebuggerUtils debuggerUtil = new JavaDebuggerUtils();
 
     private final String           host;
@@ -201,7 +202,7 @@ public class JavaDebugger implements EventsHandler, Debugger {
 
     @Override
     public void addBreakpoint(Breakpoint breakpoint) throws DebuggerException {
-        final String className = breakpoint.getLocation().getTarget();
+        final String className = findFQN(breakpoint);
         final int lineNumber = breakpoint.getLocation().getLineNumber();
         List<ReferenceType> classes = vm.classesByName(className);
         // it may mean that class doesn't loaded by a target JVM yet
@@ -250,6 +251,20 @@ public class JavaDebugger implements EventsHandler, Debugger {
             throw new DebuggerException(e.getMessage(), e);
         }
         LOG.debug("Add breakpoint: {}", location);
+    }
+
+    private String findFQN(Breakpoint breakpoint) throws DebuggerException {
+        final String parentFqn = breakpoint.getLocation().getTarget();
+        final String projectPath = breakpoint.getLocation().getProjectPath();
+        LinePosition linePosition = breakpoint.getLocation().getLinePosition();
+
+        if (projectPath == null || linePosition == null) {
+            return parentFqn;
+        }
+
+        int startCharOffset = linePosition.getStartCharOffset();
+        int endCharOffset = linePosition.getEndCharOffset();
+        return debuggerUtil.findFQNByPosition(projectPath, parentFqn, startCharOffset, endCharOffset);
     }
 
     private void deferBreakpoint(Breakpoint breakpoint) throws DebuggerException {

@@ -8,31 +8,19 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.debug.shared.model;
+package org.eclipse.che.api.debug.shared.dto;
 
-import org.eclipse.che.commons.annotation.Nullable;
+import org.eclipse.che.api.debug.shared.model.LinePosition;
+import org.eclipse.che.dto.shared.DTO;
 
-/**
- * @author Anatoliy Bazko
- */
-public interface Location {
-    /**
-     *  The target, e.g.: file, fqn, memory address etc.
-     */
-    String getTarget();
+@DTO
+public interface LinePositionDto extends LinePosition {
 
-    /**
-     * The line number in a file or in a class.
-     */
-    int getLineNumber();
+    void setStartCharOffset(int startOffset);
 
-    boolean isExternalResource();
+    LinePositionDto withStartCharOffset(int startOffset);
 
-    int getExternalResourceId();
+    void setEndCharOffset(int endOffset);
 
-    @Nullable
-    String getProjectPath();
-
-    @Nullable
-    LinePosition getLinePosition();
+    LinePositionDto withEndCharOffset(int endOffset);
 }

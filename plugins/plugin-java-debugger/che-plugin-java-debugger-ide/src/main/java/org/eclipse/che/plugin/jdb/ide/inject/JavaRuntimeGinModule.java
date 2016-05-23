@@ -16,9 +16,11 @@ import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.api.debug.DebugConfigurationType;
 import org.eclipse.che.ide.api.extension.ExtensionGinModule;
+import org.eclipse.che.plugin.debugger.ide.debug.ActiveFileHandler;
 import org.eclipse.che.plugin.jdb.ide.configuration.JavaDebugConfigurationPageView;
 import org.eclipse.che.plugin.jdb.ide.configuration.JavaDebugConfigurationPageViewImpl;
 import org.eclipse.che.plugin.jdb.ide.configuration.JavaDebugConfigurationType;
+import org.eclipse.che.plugin.jdb.ide.debug.JavaDebuggerFileHandler;
 
 /**
  * @author Andrey Plotnikov
@@ -31,5 +33,6 @@ public class JavaRuntimeGinModule extends AbstractGinModule {
     protected void configure() {
         GinMultibinder.newSetBinder(binder(), DebugConfigurationType.class).addBinding().to(JavaDebugConfigurationType.class);
         bind(JavaDebugConfigurationPageView.class).to(JavaDebugConfigurationPageViewImpl.class).in(Singleton.class);
+        bind(ActiveFileHandler.class).to(JavaDebuggerFileHandler.class);
     }
 }

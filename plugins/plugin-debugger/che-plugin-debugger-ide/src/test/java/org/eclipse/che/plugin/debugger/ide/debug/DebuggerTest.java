@@ -15,6 +15,7 @@ import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.debug.shared.dto.BreakpointDto;
 import org.eclipse.che.api.debug.shared.dto.DebugSessionDto;
+import org.eclipse.che.api.debug.shared.dto.LinePositionDto;
 import org.eclipse.che.api.debug.shared.dto.LocationDto;
 import org.eclipse.che.api.debug.shared.dto.StackFrameDumpDto;
 import org.eclipse.che.api.debug.shared.dto.SimpleValueDto;
@@ -25,11 +26,16 @@ import org.eclipse.che.api.debug.shared.dto.action.StepIntoActionDto;
 import org.eclipse.che.api.debug.shared.dto.action.StepOutActionDto;
 import org.eclipse.che.api.debug.shared.dto.action.StepOverActionDto;
 import org.eclipse.che.api.debug.shared.model.DebuggerInfo;
-import org.eclipse.che.api.debug.shared.model.Location;
 import org.eclipse.che.api.debug.shared.model.StackFrameDump;
 import org.eclipse.che.api.debug.shared.model.SimpleValue;
 import org.eclipse.che.api.debug.shared.model.Variable;
 import org.eclipse.che.api.debug.shared.model.VariablePath;
+import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+import org.eclipse.che.ide.api.app.CurrentProject;
+import org.eclipse.che.ide.api.editor.EditorAgent;
+import org.eclipse.che.ide.api.editor.document.Document;
+import org.eclipse.che.ide.api.editor.text.LinearRange;
+import org.eclipse.che.ide.api.editor.texteditor.TextEditor;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.api.promises.client.Function;
@@ -52,8 +58,6 @@ import org.eclipse.che.ide.util.storage.LocalStorageProvider;
 import org.eclipse.che.ide.websocket.MessageBusProvider;
 import org.eclipse.che.ide.websocket.rest.SubscriptionHandler;
 import org.eclipse.che.plugin.debugger.ide.BaseTest;
-import org.eclipse.che.plugin.debugger.ide.fqn.FqnResolver;
-import org.eclipse.che.plugin.debugger.ide.fqn.FqnResolverFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,7 +66,6 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +75,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -79,6 +83,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Testing {@link AbstractDebugger} functionality.
@@ -113,7 +118,7 @@ public class DebuggerTest extends BaseTest {
     @Mock
     private DebuggerManager       debuggerManager;
     @Mock
-    private FileTypeRegistry      fileTypeRegistry;
+    private EditorAgent        editorAgent;
 
     @Mock
     private Promise<Void>         promiseVoid;
@@ -123,19 +128,27 @@ public class DebuggerTest extends BaseTest {
     private PromiseError          promiseError;
 
     @Mock
-    private VirtualFile        file;
+    private VirtualFile      file;
     @Mock
-    private FqnResolverFactory fqnResolverFactory;
+    private LocalStorage     localStorage;
     @Mock
-    private LocalStorage       localStorage;
+    private DebuggerObserver observer;
     @Mock
-    private DebuggerObserver   observer;
+    private LocationDto      locationDto;
     @Mock
-    private LocationDto        locationDto;
+    private BreakpointDto    breakpointDto;
     @Mock
-    private BreakpointDto      breakpointDto;
+    private CurrentProject   currentProject;
     @Mock
-    private FqnResolver        fgnResolver;
+    private ProjectConfigDto projectConfig;
+    @Mock
+    private TextEditor       textEditor;
+    @Mock
+    private Document         document;
+    @Mock
+    private LinearRange      range;
+    @Mock
+    private LinePositionDto  linePositionDto;
 
     @Captor
     private ArgumentCaptor<WsAgentStateHandler>             extServerStateHandlerCaptor;
@@ -166,7 +179,22 @@ public class DebuggerTest extends BaseTest {
 
         doReturn(locationDto).when(dtoFactory).createDto(LocationDto.class);
         doReturn(breakpointDto).when(dtoFactory).createDto(BreakpointDto.class);
+        doReturn(breakpointDto).when(breakpointDto).withLocation(any());
+        doReturn(breakpointDto).when(breakpointDto).withEnabled(true);
         doReturn(locationDto).when(breakpointDto).getLocation();
+
+        when(locationDto.withLineNumber(anyInt())).thenReturn(locationDto);
+        when(locationDto.withTarget(anyString())).thenReturn(locationDto);
+        when(locationDto.withProjectPath(anyString())).thenReturn(locationDto);
+        when(locationDto.withLinePosition(any())).thenReturn(locationDto);
+
+        when(dtoFactory.createDto(LinePositionDto.class)).thenReturn(linePositionDto);
+        when(linePositionDto.withEndCharOffset(anyInt())).thenReturn(linePositionDto);
+        when(linePositionDto.withStartCharOffset(anyInt())).thenReturn(linePositionDto);
+
+        when(editorAgent.getOpenedEditor(any())).thenReturn(textEditor);
+        when(textEditor.getDocument()).thenReturn(document);
+        when(document.getLinearRangeForLine(anyInt())).thenReturn(range);
 
         doReturn(messageBus).when(messageBusProvider).getMachineMessageBus();
 
@@ -174,13 +202,14 @@ public class DebuggerTest extends BaseTest {
         doReturn(DEBUG_INFO).when(localStorage).getItem(AbstractDebugger.LOCAL_STORAGE_DEBUGGER_SESSION_KEY);
         doReturn(debugSessionDto).when(dtoFactory).createDtoFromJson(anyString(), eq(DebugSessionDto.class));
 
-        doReturn(fgnResolver).when(fqnResolverFactory).getResolver(anyString());
-        doReturn(FQN).when(fgnResolver).resolveFqn(file);
-
         doReturn(PATH).when(file).getPath();
 
+        when(appContext.getCurrentProject()).thenReturn(currentProject);
+        when(currentProject.getRootProject()).thenReturn(projectConfig);
+        when(projectConfig.getPath()).thenReturn(PATH);
+
         debugger = new TestDebugger(service, dtoFactory, localStorageProvider, messageBusProvider, eventBus,
-                                    activeFileHandler, debuggerManager, "id", appContext);
+                                    activeFileHandler, debuggerManager, "id", appContext, editorAgent);
         doReturn(promiseInfo).when(service).getSessionInfo(SESSION_ID);
         doReturn(promiseInfo).when(promiseInfo).then(any(Operation.class));
 
@@ -192,7 +221,6 @@ public class DebuggerTest extends BaseTest {
 
         FileType fileType = mock(FileType.class);
         doReturn("java").when(fileType).getExtension();
-        doReturn(fileType).when(fileTypeRegistry).getFileTypeByFile(eq(file));
     }
 
     @Test
@@ -378,11 +406,11 @@ public class DebuggerTest extends BaseTest {
 
         debugger.addBreakpoint(file, LINE_NUMBER);
 
-        verify(locationDto).setLineNumber(LINE_NUMBER + 1);
-        verify(locationDto).setTarget(FQN);
+        verify(locationDto).withLineNumber(LINE_NUMBER + 1);
+        verify(locationDto).withTarget(FQN);
 
-        verify(breakpointDto).setLocation(locationDto);
-        verify(breakpointDto).setEnabled(true);
+        verify(breakpointDto).withLocation(locationDto);
+        verify(breakpointDto).withEnabled(true);
 
         verify(promiseVoid).then(operationVoidCaptor.capture());
         operationVoidCaptor.getValue().apply(null);
@@ -565,7 +593,8 @@ public class DebuggerTest extends BaseTest {
                             ActiveFileHandler activeFileHandler,
                             DebuggerManager debuggerManager,
                             String id,
-                            AppContext appContext) {
+                            AppContext appContext,
+                            EditorAgent editorAgent) {
             super(service,
                   dtoFactory,
                   localStorageProvider,
@@ -574,7 +603,8 @@ public class DebuggerTest extends BaseTest {
                   activeFileHandler,
                   debuggerManager,
                   id,
-                  appContext);
+                  appContext,
+                  editorAgent);
         }
 
         @Override

@@ -11,6 +11,7 @@
 package org.eclipse.che.api.debug.shared.dto;
 
 import org.eclipse.che.api.debug.shared.model.Location;
+import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.dto.shared.DTO;
 
 /** @author andrew00x */
@@ -28,11 +29,18 @@ public interface LocationDto extends Location {
 
     LocationDto withExternalResource(boolean externalResource);
 
-    void setExternalResourceId(int externalResourceId);//todo maybe String here? it'll be more universally
+    void setExternalResourceId(int externalResourceId);
 
     LocationDto withExternalResourceId(int externalResourceId);
 
     void setProjectPath(String projectPath);
 
     LocationDto withProjectPath(String projectPath);
+
+    @Nullable
+    LinePositionDto getLinePosition();
+
+    void setLinePosition(LinePositionDto linePosition);
+
+    LocationDto withLinePosition(LinePositionDto linePosition);
 }

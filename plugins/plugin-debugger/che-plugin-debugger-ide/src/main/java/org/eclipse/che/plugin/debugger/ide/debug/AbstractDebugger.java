@@ -14,9 +14,14 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.web.bindery.event.shared.EventBus;
 
+import org.eclipse.che.api.debug.shared.dto.LinePositionDto;
 import org.eclipse.che.api.debug.shared.dto.SimpleValueDto;
 import org.eclipse.che.api.debug.shared.model.SimpleValue;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.app.CurrentProject;
+import org.eclipse.che.ide.api.editor.EditorAgent;
+import org.eclipse.che.ide.api.editor.text.LinearRange;
+import org.eclipse.che.ide.api.editor.texteditor.TextEditor;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.api.debug.shared.dto.BreakpointDto;
@@ -60,6 +65,7 @@ import org.eclipse.che.ide.debug.DebuggerManager;
 import org.eclipse.che.ide.debug.DebuggerObservable;
 import org.eclipse.che.ide.debug.DebuggerObserver;
 import org.eclipse.che.ide.dto.DtoFactory;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.HTTPStatus;
 import org.eclipse.che.ide.util.loging.Log;
 import org.eclipse.che.ide.util.storage.LocalStorage;
@@ -85,8 +91,8 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
     public static final String LOCAL_STORAGE_DEBUGGER_SESSION_KEY = "che-debugger-session";
     public static final String LOCAL_STORAGE_DEBUGGER_STATE_KEY   = "che-debugger-state";
 
-    protected final DtoFactory         dtoFactory;
-    protected final AppContext         appContext;
+    protected final DtoFactory dtoFactory;
+    protected final AppContext appContext;
 
     private final List<DebuggerObserver> observers;
     private final DebuggerServiceClient  service;
@@ -96,6 +102,7 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
     private final DebuggerManager        debuggerManager;
     private final String                 debuggerType;
     private final String                 eventChannel;
+    private final EditorAgent            editorAgent;
 
     private DebugSessionDto                       debugSessionDto;
     private Location                              currentLocation;
@@ -111,7 +118,8 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
                             ActiveFileHandler activeFileHandler,
                             DebuggerManager debuggerManager,
                             String type,
-                            AppContext appContext) {
+                            AppContext appContext,
+                            EditorAgent editorAgent) {
         this.service = service;
         this.dtoFactory = dtoFactory;
         this.localStorageProvider = localStorageProvider;
@@ -121,6 +129,7 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
         this.observers = new ArrayList<>();
         this.debuggerType = type;
         this.appContext = appContext;
+        this.editorAgent = editorAgent;
         this.eventChannel = debuggerType + ":events:";
 
         restoreDebuggerState();
@@ -312,19 +321,12 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
     @Override
     public void addBreakpoint(final VirtualFile file, final int lineNumber) {
         if (isConnected()) {
-            LocationDto locationDto = dtoFactory.createDto(LocationDto.class);
-            locationDto.setLineNumber(lineNumber + 1);
-
             String fqn = pathToFqn(file);
             if (fqn == null) {
                 return;
             }
-            locationDto.setTarget(fqn);
 
-            BreakpointDto breakpointDto = dtoFactory.createDto(BreakpointDto.class);
-            breakpointDto.setLocation(locationDto);
-            breakpointDto.setEnabled(true);
-
+            BreakpointDto breakpointDto = createBreakpoint(file, lineNumber, fqn);
             Promise<Void> promise = service.addBreakpoint(debugSessionDto.getId(), breakpointDto);
             promise.then(new Operation<Void>() {
                 @Override
@@ -346,6 +348,31 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
                 observer.onBreakpointAdded(breakpoint);
             }
         }
+    }
+
+    private BreakpointDto createBreakpoint(VirtualFile file, int lineNumber, String target) {
+        CurrentProject currentProject = appContext.getCurrentProject();
+        String projectPath = appContext.getCurrentProject().getRootProject().getPath();
+        if (currentProject != null) {
+            projectPath = appContext.getCurrentProject().getRootProject().getPath();
+        }
+
+        LocationDto locationDto = dtoFactory.createDto(LocationDto.class).withLineNumber(lineNumber + 1)
+                                                                         .withTarget(target)
+                                                                         .withProjectPath(projectPath)
+                                                                         .withLinePosition(getLinePosition(file, lineNumber));
+        return dtoFactory.createDto(BreakpointDto.class).withLocation(locationDto).withEnabled(true);
+    }
+
+    private LinePositionDto getLinePosition(VirtualFile file, int lineNumber) {
+        TextEditor textEditor = (TextEditor)editorAgent.getOpenedEditor(Path.valueOf(file.getPath()));
+
+        LinearRange range = textEditor.getDocument().getLinearRangeForLine(lineNumber);
+        int startCharacterCoordinate = range.getStartOffset();
+        int endCharacterCoordinate = range.getLength() + startCharacterCoordinate;
+
+        return dtoFactory.createDto(LinePositionDto.class).withStartCharOffset(startCharacterCoordinate)
+                                                          .withEndCharOffset(endCharacterCoordinate);
     }
 
     @Override

@@ -15,6 +15,7 @@ import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.debug.DebuggerServiceClient;
+import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.project.tree.VirtualFile;
 import org.eclipse.che.ide.debug.DebuggerDescriptor;
 import org.eclipse.che.ide.debug.DebuggerManager;
@@ -22,6 +23,8 @@ import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.util.storage.LocalStorageProvider;
 import org.eclipse.che.ide.websocket.MessageBusProvider;
 import org.eclipse.che.plugin.debugger.ide.debug.AbstractDebugger;
+import org.eclipse.che.plugin.debugger.ide.debug.ActiveFileHandler;
+
 import java.util.Map;
 
 import static org.eclipse.che.plugin.gdb.ide.GdbDebugger.ConnectionProperties.HOST;
@@ -42,9 +45,10 @@ public class GdbDebugger extends AbstractDebugger {
                        LocalStorageProvider localStorageProvider,
                        MessageBusProvider messageBusProvider,
                        EventBus eventBus,
-                       GdbDebuggerFileHandler activeFileHandler,//todo maybe this inject should be in the gin module and here interface?
+                       ActiveFileHandler activeFileHandler,
                        DebuggerManager debuggerManager,
-                       AppContext appContext) {
+                       AppContext appContext,
+                       EditorAgent editorAgent) {
 
         super(service,
               dtoFactory,
@@ -54,7 +58,8 @@ public class GdbDebugger extends AbstractDebugger {
               activeFileHandler,
               debuggerManager,
               ID,
-              appContext);
+              appContext,
+              editorAgent);
     }
 
     @Override

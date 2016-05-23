@@ -10,29 +10,12 @@
  *******************************************************************************/
 package org.eclipse.che.api.debug.shared.model;
 
-import org.eclipse.che.commons.annotation.Nullable;
+public interface LinePosition {
+    int getStartCharOffset();
 
-/**
- * @author Anatoliy Bazko
- */
-public interface Location {
-    /**
-     *  The target, e.g.: file, fqn, memory address etc.
-     */
-    String getTarget();
+    LinePosition withStartCharOffset(int startCharOffset);
 
-    /**
-     * The line number in a file or in a class.
-     */
-    int getLineNumber();
+    int getEndCharOffset();
 
-    boolean isExternalResource();
-
-    int getExternalResourceId();
-
-    @Nullable
-    String getProjectPath();
-
-    @Nullable
-    LinePosition getLinePosition();
+    LinePosition withEndCharOffset(int endCharOffset);
 }

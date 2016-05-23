@@ -16,6 +16,7 @@ import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.api.debug.DebugConfigurationType;
 import org.eclipse.che.ide.api.extension.ExtensionGinModule;
+import org.eclipse.che.plugin.debugger.ide.debug.ActiveFileHandler;
 import org.eclipse.che.plugin.gdb.ide.configuration.GdbConfigurationPageViewImpl;
 import org.eclipse.che.plugin.gdb.ide.configuration.GdbConfigurationType;
 import org.eclipse.che.plugin.gdb.ide.configuration.GdbConfigurationPageView;
@@ -30,5 +31,6 @@ public class GdbGinModule extends AbstractGinModule {
     protected void configure() {
         GinMultibinder.newSetBinder(binder(), DebugConfigurationType.class).addBinding().to(GdbConfigurationType.class);
         bind(GdbConfigurationPageView.class).to(GdbConfigurationPageViewImpl.class).in(Singleton.class);
+        bind(ActiveFileHandler.class).to(GdbDebuggerFileHandler.class);
     }
 }

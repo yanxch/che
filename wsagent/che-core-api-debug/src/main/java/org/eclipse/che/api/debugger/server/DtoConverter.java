@@ -15,6 +15,7 @@ import org.eclipse.che.api.debug.shared.dto.BreakpointDto;
 import org.eclipse.che.api.debug.shared.dto.DebugSessionDto;
 import org.eclipse.che.api.debug.shared.dto.DebuggerInfoDto;
 import org.eclipse.che.api.debug.shared.dto.FieldDto;
+import org.eclipse.che.api.debug.shared.dto.LinePositionDto;
 import org.eclipse.che.api.debug.shared.dto.LocationDto;
 import org.eclipse.che.api.debug.shared.dto.SimpleValueDto;
 import org.eclipse.che.api.debug.shared.dto.StackFrameDumpDto;
@@ -28,6 +29,7 @@ import org.eclipse.che.api.debug.shared.model.Breakpoint;
 import org.eclipse.che.api.debug.shared.model.DebugSession;
 import org.eclipse.che.api.debug.shared.model.DebuggerInfo;
 import org.eclipse.che.api.debug.shared.model.Field;
+import org.eclipse.che.api.debug.shared.model.LinePosition;
 import org.eclipse.che.api.debug.shared.model.Location;
 import org.eclipse.che.api.debug.shared.model.StackFrameDump;
 import org.eclipse.che.api.debug.shared.model.SimpleValue;
@@ -80,7 +82,13 @@ public final class DtoConverter {
                                         .withLineNumber(location.getLineNumber())
                                         .withExternalResourceId(location.getExternalResourceId())
                                         .withProjectPath(location.getProjectPath())
-                                        .withExternalResource(location.isExternalResource());
+                                        .withExternalResource(location.isExternalResource())
+                                        .withLinePosition(asDto(location.getLinePosition()));
+    }
+
+    public static LinePositionDto asDto(LinePosition linePosition) {
+        return linePosition == null ? null : newDto(LinePositionDto.class).withStartCharOffset(linePosition.getStartCharOffset())
+                                                                          .withEndCharOffset(linePosition.getEndCharOffset());
     }
 
     public static SimpleValueDto asDto(SimpleValue value) {

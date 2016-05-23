@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.api.debug.shared.model.impl;
 
+import org.eclipse.che.api.debug.shared.model.LinePosition;
 import org.eclipse.che.api.debug.shared.model.Location;
 
 import java.util.Objects;
@@ -18,26 +19,33 @@ import java.util.Objects;
  * @author Anatoliy Bazko
  */
 public class LocationImpl implements Location {
-    private final String  target;
-    private final int     lineNumber;
-    private final boolean externalResource;
-    private final int     externalResourceId;
-    private final String  projectPath;
+    private final String       target;
+    private final int          lineNumber;
+    private final boolean      externalResource;
+    private final int          externalResourceId;
+    private final String       projectPath;
+    private final LinePosition linePosition;
 
-    public LocationImpl(String target, int lineNumber, boolean externalResource, int externalResourceId, String projectPath) {
+    public LocationImpl(String target,
+                        int lineNumber,
+                        boolean externalResource,
+                        int externalResourceId,
+                        String projectPath,
+                        LinePosition linePosition) {
         this.target = target;
         this.lineNumber = lineNumber;
         this.externalResource = externalResource;
         this.externalResourceId = externalResourceId;
         this.projectPath = projectPath;
+        this.linePosition = linePosition;
     }
 
     public LocationImpl(String target, int lineNumber) {
-        this(target, lineNumber, false, 0, null);
+        this(target, lineNumber, false, 0, null, null);
     }
 
     public LocationImpl(String target) {
-        this(target, 0, false, 0, null);
+        this(target, 0, false, 0, null, null);
     }
 
     @Override
@@ -65,6 +73,10 @@ public class LocationImpl implements Location {
         return projectPath;
     }
 
+    @Override
+    public LinePosition getLinePosition() {
+        return linePosition;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -76,7 +88,8 @@ public class LocationImpl implements Location {
         return (lineNumber != location.lineNumber ||
                 externalResource != location.externalResource ||
                 externalResourceId != location.externalResourceId ||
-                Objects.equals(projectPath, location.projectPath) &&
+                Objects.equals(projectPath, location.projectPath) ||
+                Objects.equals(linePosition, linePosition) &&
                 !(target != null ? !target.equals(location.target) : location.target != null));
 
     }
@@ -88,6 +101,7 @@ public class LocationImpl implements Location {
         result = 31 * result + externalResourceId;
         result = 31 * result + Objects.hashCode(externalResource);
         result = 31 * result + Objects.hashCode(projectPath);
+        result = 31 * result + Objects.hashCode(linePosition);
         return result;
     }
 }
