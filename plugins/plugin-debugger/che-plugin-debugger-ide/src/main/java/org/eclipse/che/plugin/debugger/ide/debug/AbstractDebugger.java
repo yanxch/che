@@ -258,7 +258,7 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
         for (DebuggerObserver observer : observers) {
             String filePath = fqnToPath(locationDto);
             if (filePath != null) {
-                observer.onBreakpointActivated(fqnToPath(locationDto), locationDto.getLineNumber() - 1);
+                observer.onBreakpointActivated(filePath, locationDto.getLineNumber() - 1);
             }
         }
     }
