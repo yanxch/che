@@ -8,28 +8,13 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.debug.shared.model;
+package org.eclipse.che.ide.api.event;
+
+import com.google.gwt.event.shared.EventHandler;
 
 /**
- * @author Anatoliy Bazko
+ * @author Alexander Andrienko
  */
-public interface Location {
-    /**
-     *  The target, e.g.: file, fqn, memory address etc.
-     */
-    String getTarget();
-
-    /**
-     * The line number in a file or in a class.
-     */
-    int getLineNumber();
-
-    //todo add java docs
-    String getResourcePath();
-
-    boolean isExternalResource();
-
-    int getExternalResourceId();
-
-    String getProjectPath();
+public interface FileContentUpdatedEventHandler extends EventHandler {
+    void onContentUpdated(FileContentUpdatedEvent fileContentUpdatedEvent);
 }

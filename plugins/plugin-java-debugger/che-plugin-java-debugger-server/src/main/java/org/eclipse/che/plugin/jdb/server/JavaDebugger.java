@@ -49,7 +49,6 @@ import org.eclipse.che.api.debug.shared.model.action.StepOutAction;
 import org.eclipse.che.api.debug.shared.model.action.StepOverAction;
 import org.eclipse.che.api.debug.shared.model.impl.DebuggerInfoImpl;
 import org.eclipse.che.api.debug.shared.model.impl.FieldImpl;
-import org.eclipse.che.api.debug.shared.model.impl.LocationImpl;
 import org.eclipse.che.api.debug.shared.model.impl.SimpleValueImpl;
 import org.eclipse.che.api.debug.shared.model.impl.VariableImpl;
 import org.eclipse.che.api.debug.shared.model.impl.event.BreakpointActivatedEventImpl;
@@ -61,6 +60,7 @@ import org.eclipse.che.plugin.jdb.server.exceptions.DebuggerAbsentInformationExc
 import org.eclipse.che.plugin.jdb.server.expression.Evaluator;
 import org.eclipse.che.plugin.jdb.server.expression.ExpressionException;
 import org.eclipse.che.plugin.jdb.server.expression.ExpressionParser;
+import org.eclipse.che.plugin.jdb.server.utils.JavaDebuggerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +68,6 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -78,7 +77,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.eclipse.che.dto.server.DtoFactory.newDto;
 
 /**
  * Connects to JVM over Java Debug Wire Protocol handle its events. All methods of this class may throws
@@ -91,6 +89,7 @@ import static org.eclipse.che.dto.server.DtoFactory.newDto;
  */
 public class JavaDebugger implements EventsHandler, Debugger {
     private static final Logger LOG = LoggerFactory.getLogger(JavaDebugger.class);
+    private static final JavaDebuggerUtils debuggerUtil = new JavaDebuggerUtils();
 
     private final String           host;
     private final int              port;
@@ -357,27 +356,27 @@ public class JavaDebugger implements EventsHandler, Debugger {
             }
             for (JdiField f : currentFrame.getFields()) {
                 List<String> variablePath = asList(f.isStatic() ? "static" : "this", f.getName());
-                dump.getFields().add((FieldDto)newDto(FieldDto.class).withIsFinal(f.isFinal())
-                                                               .withIsStatic(f.isStatic())
-                                                               .withIsTransient(f.isTransient())
-                                                               .withIsVolatile(f.isVolatile())
-                                                               .withName(f.getName())
-                                                               .withExistInformation(existInformation)
-                                                               .withValue(f.getValue().getAsString())
-                                                               .withType(f.getTypeName())
-                                                                     .withVariablePath(newDto(VariablePathDto.class).withPath(variablePath))
-                                                               .withPrimitive(f.isPrimitive()));
+                dump.getFields().add(newDto(FieldDto.class).withIsFinal(f.isFinal())
+                                                           .withIsStatic(f.isStatic())
+                                                           .withIsTransient(f.isTransient())
+                                                           .withIsVolatile(f.isVolatile())
+                                                           .withName(f.getName())
+                                                           .withExistInformation(existInformation)
+                                                           .withValue(f.getValue().getAsString())
+                                                           .withType(f.getTypeName())
+                                                           .withVariablePath(newDto(VariablePathDto.class).withPath(variablePath))
+                                                           .withPrimitive(f.isPrimitive()));
             }
             for (JdiLocalVariable var : variables) {
                 dump.getVariables().add(newDto(VariableDto.class).withName(var.getName())
-                                                                   .withExistInformation(existInformation)
-                                                                   .withValue(var.getValue().getAsString())
-                                                                   .withType(var.getTypeName())
-                                                                   .withVariablePath(
-                                                                           newDto(VariablePathDto.class)
-                                                                                   .withPath(singletonList(var.getName()))
-                                                                   )
-                                                                   .withPrimitive(var.isPrimitive()));
+                                                                 .withExistInformation(existInformation)
+                                                                 .withValue(var.getValue().getAsString())
+                                                                 .withType(var.getTypeName())
+                                                                 .withVariablePath(
+                                                                         newDto(VariablePathDto.class)
+                                                                                 .withPath(singletonList(var.getName()))
+                                                                 )
+                                                                 .withPrimitive(var.isPrimitive()));
             }
             return dump;
         } finally {
@@ -559,7 +558,7 @@ public class JavaDebugger implements EventsHandler, Debugger {
         if (hitBreakpoint) {
             com.sun.jdi.Location jdiLocation = event.location();
 
-            Location location = new LocationImpl(jdiLocation.declaringType().name(), jdiLocation.lineNumber());
+            Location location = debuggerUtil.getLocation(jdiLocation);
             debuggerCallback.onEvent(new SuspendEventImpl(location));
         }
 
@@ -572,7 +571,7 @@ public class JavaDebugger implements EventsHandler, Debugger {
         setCurrentThread(event.thread());
         com.sun.jdi.Location jdiLocation = event.location();
 
-        Location location = new LocationImpl(jdiLocation.declaringType().name(), jdiLocation.lineNumber());
+        Location location = debuggerUtil.getLocation(jdiLocation);
         debuggerCallback.onEvent(new SuspendEventImpl(location));
         return false;
     }

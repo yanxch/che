@@ -36,6 +36,7 @@ import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
+import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.debug.Breakpoint;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
@@ -183,8 +184,8 @@ public class DebuggerTest extends BaseTest {
 
         doReturn(PATH).when(file).getPath();
 
-        debugger = new TestDebugger(service, dtoFactory, localStorageProvider, messageBusProvider, eventBus, fqnResolverFactory,
-                                    activeFileHandler, debuggerManager, fileTypeRegistry, "id");
+        debugger = new TestDebugger(service, dtoFactory, localStorageProvider, messageBusProvider, eventBus,
+                                    activeFileHandler, debuggerManager, "id");
         doReturn(promiseInfo).when(service).getSessionInfo(SESSION_ID);
         doReturn(promiseInfo).when(promiseInfo).then(any(Operation.class));
 
@@ -567,29 +568,27 @@ public class DebuggerTest extends BaseTest {
                             LocalStorageProvider localStorageProvider,
                             MessageBusProvider messageBusProvider,
                             EventBus eventBus,
-                            FqnResolverFactory fqnResolverFactory,
                             ActiveFileHandler activeFileHandler,
                             DebuggerManager debuggerManager,
-                            FileTypeRegistry fileTypeRegistry,
                             String id) {
             super(service,
                   dtoFactory,
                   localStorageProvider,
                   messageBusProvider,
                   eventBus,
-                  fqnResolverFactory,
                   activeFileHandler,
                   debuggerManager,
-                  fileTypeRegistry,
                   breakpointManager,
                   id);
         }
 
+        @Nullable
         @Override
-        protected List<String> fqnToPath(@NotNull Location location) {
-            return Collections.emptyList();
+        protected String fqnToPath(@NotNull Location location) {
+            return PATH;
         }
 
+        @Nullable
         @Override
         protected String pathToFqn(VirtualFile file) {
             return FQN;
