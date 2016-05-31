@@ -14,6 +14,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 
 import org.eclipse.che.api.core.NotFoundException;
@@ -44,14 +45,18 @@ import org.eclipse.che.plugin.docker.client.ProgressLineFormatterImpl;
 import org.eclipse.che.plugin.docker.client.ProgressMonitor;
 import org.eclipse.che.plugin.docker.client.json.ContainerConfig;
 import org.eclipse.che.plugin.docker.client.json.HostConfig;
+import org.eclipse.che.plugin.docker.client.params.AttachContainerParams;
+import org.eclipse.che.plugin.docker.client.params.CreateContainerParams;
 import org.eclipse.che.plugin.docker.client.params.PullParams;
 import org.eclipse.che.plugin.docker.client.params.RemoveImageParams;
+import org.eclipse.che.plugin.docker.client.params.StartContainerParams;
 import org.eclipse.che.plugin.docker.client.params.TagParams;
 import org.eclipse.che.plugin.docker.machine.node.DockerNode;
 import org.eclipse.che.plugin.docker.machine.node.WorkspaceFolderPathProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Named;
 import javax.ws.rs.core.UriBuilder;
 import java.io.File;
@@ -68,6 +73,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -95,6 +103,7 @@ public class DockerInstanceProvider implements InstanceProvider {
 
     private final DockerConnector                  docker;
     private final DockerInstanceStopDetector       dockerInstanceStopDetector;
+    private final ExecutorService                  executor;
     private final DockerContainerNameGenerator     containerNameGenerator;
     private final WorkspaceFolderPathProvider      workspaceFolderPathProvider;
     private final boolean                          doForcePullOnBuild;
@@ -182,6 +191,10 @@ public class DockerInstanceProvider implements InstanceProvider {
         } else {
             this.allMachinesExtraHosts = ObjectArrays.concat(allMachinesExtraHosts.split(","), dockerHost);
         }
+
+        executor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("MachineLogs-%d")
+                                                                           .setDaemon(false)
+                                                                           .build());
     }
 
     /**
@@ -537,9 +550,21 @@ public class DockerInstanceProvider implements InstanceProvider {
                                                                 .withHostConfig(hostConfig)
                                                                 .withEnv(env.toArray(new String[env.size()]));
 
-            final String containerId = docker.createContainer(config, containerName).getId();
+            final String containerId = docker.createContainer(CreateContainerParams.create(config)
+                                                                                   .withContainerName(containerName))
+                                             .getId();
 
-            docker.startContainer(containerId, null);
+            docker.startContainer(StartContainerParams.create(containerId));
+
+            executor.execute(() -> {
+                try {
+                    docker.attachContainer(AttachContainerParams.create(containerId)
+                                                                .withStream(true),
+                                           new LogMessagePrinter(outputConsumer));
+                } catch (IOException e) {
+                    LOG.error(e.getLocalizedMessage(), e);
+                }
+            });
 
             final DockerNode node = dockerMachineFactory.createNode(machine.getWorkspaceId(), containerId);
             if (machine.getConfig().isDev()) {
@@ -574,4 +599,20 @@ public class DockerInstanceProvider implements InstanceProvider {
                     .filter(path -> !Strings.isNullOrEmpty(path))
                     .collect(Collectors.toSet());
     }
+
+    @PreDestroy
+    private void cleanup() {
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+                if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                    LOG.warn("Unable terminate main pool");
+                }
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+        }
+    }
+
 }
