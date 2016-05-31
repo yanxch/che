@@ -446,6 +446,11 @@ class JGitConnection implements GitConnection {
             cloneCommand.setProgressMonitor(new BatchingProgressMonitor() {
                 @Override
                 protected void onUpdate(String taskName, int workCurr) {
+                    try {
+                        lineConsumer.writeLine(taskName + ": " + workCurr + " completed");
+                    } catch (IOException exception) {
+                        LOG.error(exception.getMessage(), exception);
+                    }
                 }
 
                 @Override
@@ -455,7 +460,7 @@ class JGitConnection implements GitConnection {
                 @Override
                 protected void onUpdate(String taskName, int workCurr, int workTotal, int percentDone) {
                     try {
-                        lineConsumer.writeLine(taskName + ": " + workCurr + " of " + workTotal + ", " + percentDone + "% done");
+                        lineConsumer.writeLine(taskName + ": " + workCurr + " of " + workTotal + " completed, " + percentDone + "% done");
                     } catch (IOException exception) {
                         LOG.error(exception.getMessage(), exception);
                     }
