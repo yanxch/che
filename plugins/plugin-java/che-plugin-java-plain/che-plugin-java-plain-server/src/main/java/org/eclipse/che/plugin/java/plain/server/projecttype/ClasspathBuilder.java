@@ -100,7 +100,6 @@ public class ClasspathBuilder {
                 }, IContainer.INCLUDE_PHANTOMS);
             } catch (CoreException e) {
                 LOG.warn("Can't read folder structure: " + libraryFolder.getFullPath().toString());
-                e.printStackTrace();
             }
         }
     }
