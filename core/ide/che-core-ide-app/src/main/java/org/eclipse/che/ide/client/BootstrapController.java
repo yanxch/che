@@ -39,6 +39,8 @@ import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.component.Component;
 import org.eclipse.che.ide.api.component.WsAgentComponent;
 import org.eclipse.che.ide.api.event.WindowActionEvent;
+import org.eclipse.che.ide.context.AppContextImpl;
+import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.statepersistance.AppStateManager;
 import org.eclipse.che.ide.util.loging.Log;
 import org.eclipse.che.ide.workspace.WorkspacePresenter;
@@ -51,6 +53,7 @@ import java.util.Map;
  *
  * @author Nikolay Zamosenchuk
  * @author Dmitry Shnurenko
+ * @author Vlad Zhukovskyi
  */
 @Singleton
 public class BootstrapController {
@@ -79,6 +82,7 @@ public class BootstrapController {
         this.appContext = appContext;
         this.workspaceService = workspaceService;
         this.wsAgentStateControllerProvider = wsAgentStateControllerProvider;
+
         appContext.setStartUpActions(StartUpActionsParser.getStartUpActions());
         dtoRegistrar.registerDtoProviders();
 
@@ -100,8 +104,12 @@ public class BootstrapController {
                     public void apply(WorkspaceDto ws) throws OperationException {
                         MachineDto devMachineDto = ws.getRuntime().getDevMachine();
                         DevMachine devMachine = new DevMachine(devMachineDto);
-                        appContext.setDevMachine(devMachine);
-                        appContext.setProjectsRoot(devMachineDto.getRuntime().projectsRoot());
+
+                        if (appContext instanceof AppContextImpl) {
+                            ((AppContextImpl)appContext).setDevMachine(devMachine);
+                            ((AppContextImpl)appContext).setProjectsRoot(Path.valueOf(devMachineDto.getRuntime().projectsRoot()));
+                        }
+
                         wsAgentStateControllerProvider.get().initialize(devMachine);
                         startWsAgentComponents(components.values().iterator());
                     }

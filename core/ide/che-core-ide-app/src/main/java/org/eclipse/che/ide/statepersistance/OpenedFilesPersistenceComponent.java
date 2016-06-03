@@ -75,11 +75,11 @@ public class OpenedFilesPersistenceComponent implements PersistenceComponent {
         final EditorAgent editorAgent = editorAgentProvider.get();
         final String openFileActionId = actionManager.getId(openFileAction);
         final EditorPartPresenter activeEditor = editorAgent.getActiveEditor();
-        final EditorPartPresenter lastOpenedEditor = editorAgent.getLastEditor();
+//        final EditorPartPresenter lastOpenedEditor = editorAgent.getLastEditor();
 
-        if (activeEditor != null && lastOpenedEditor != null) {
+        if (activeEditor != null/* && lastOpenedEditor != null*/) {
             final String activeFilePath = activeEditor.getEditorInput().getFile().getPath();
-            final String lastOpenedFilePath = lastOpenedEditor.getEditorInput().getFile().getPath();
+            final String lastOpenedFilePath = activeFilePath/*lastOpenedEditor.getEditorInput().getFile().getPath()*/;
             // save active file only if it's not the last opened file
             if (!activeFilePath.equals(lastOpenedFilePath)) {
                 actions.add(dtoFactory.createDto(ActionDescriptor.class)

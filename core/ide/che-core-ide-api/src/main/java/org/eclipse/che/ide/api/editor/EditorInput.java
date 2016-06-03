@@ -10,7 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.ide.api.editor;
 
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.VirtualFile;
+
 import org.vectomatic.dom.svg.ui.SVGResource;
 
 import javax.validation.constraints.NotNull;
@@ -22,7 +23,7 @@ import javax.validation.constraints.NotNull;
  * An editor input is passed to an editor via the <code>EditorPartPresenter.init</code> method.
  * </p>
  *
- * @author <a href="mailto:evidolob@exoplatform.com">Evgen Vidolob</a>
+ * @author Evgen Vidolob
  */
 public interface EditorInput {
 

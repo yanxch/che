@@ -28,9 +28,9 @@ import com.google.gwt.user.client.ui.impl.FocusImpl;
 
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.DelayedTask;
-import org.eclipse.che.ide.api.project.node.HasAction;
-import org.eclipse.che.ide.api.project.node.MutableNode;
-import org.eclipse.che.ide.api.project.node.Node;
+import org.eclipse.che.ide.api.data.tree.HasAction;
+import org.eclipse.che.ide.api.data.tree.MutableNode;
+import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.ui.smartTree.event.BeforeCollapseNodeEvent;
 import org.eclipse.che.ide.ui.smartTree.event.BeforeCollapseNodeEvent.HasBeforeCollapseItemHandlers;
 import org.eclipse.che.ide.ui.smartTree.event.BeforeExpandNodeEvent;
@@ -97,8 +97,6 @@ import static org.eclipse.che.ide.util.dom.Elements.disableTextSelection;
  * Following snippet displays how to initialize tree widget:
  * <pre>
  *     NodeUniqueKeyProvider idProvider = new NodeUniqueKeyProvider() {
- *         @NotNull
- *         @Override
  *         public String getKey(@NotNull Node item) {
  *             return String.valueOf(item.hashCode());
  *         }
@@ -275,6 +273,8 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
 
     private boolean focusConstrainScheduled = false;
 
+    private boolean focused = false;
+
     @UiConstructor
     public Tree(NodeStorage nodeStorage, NodeLoader nodeLoader) {
         this(nodeStorage, nodeLoader, GWT.<TreeStyles>create(TreeStyles.class));
@@ -446,7 +446,7 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
      *
      * @param node   node to expand/collapse
      * @param expand true if node should be expanded, otherwise false
-     * @see Tree#setExpanded(org.eclipse.che.ide.api.project.node.Node, boolean, boolean)
+     * @see Tree#setExpanded(Node, boolean, boolean)
      */
     public void setExpanded(Node node, boolean expand) {
         checkNotNull(node, NULL_NODE_MSG);
@@ -762,7 +762,6 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
             Map<String, NodeDescriptor> nodeMap = getNodeStorage().getNodeMap();
             for (NodeDescriptor nodeDescriptor : nodeMap.values()) {
                 nodeDescriptor.clearElements();
-                nodeDescriptor.reset();
             }
 
             nodesByDom.clear();
@@ -860,7 +859,6 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
 
         ((HasPresentation) node).getPresentation(true); //update presentation
         Element el = getPresentationRenderer().render(node, nodeDescriptor.getDomId(), getJoint(node), nodeStorage.getDepth(node) - 1);
-
         view.onElementChanged(nodeDescriptor, el);
     }
 
@@ -1039,6 +1037,8 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
                                 Element html = renderNode(visible.get(i), nodeStorage.getDepth(parent));
                                 Element rootContainer = view.getRootContainer(getNodeDescriptor(visible.get(i)));
                                 rootContainer.replaceChild(rootContainer.getFirstChildElement(), html);
+                            } else {
+                                refresh(visible.get(i));
                             }
                         }
                     }
@@ -1437,9 +1437,6 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
                     setExpanded(descriptor.getNode(), false);
                 }
                 moveFocus(nodeDescriptor.getRootContainer());
-                if (autoSelect) {
-                    selectionModel.select(parent, true);
-                }
             }
         }
 
@@ -1473,6 +1470,7 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
         Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
             @Override
             public void execute() {
+                getSelectionModel().fireSelectionChange();
                 if (contextMenuInvocationHandler != null && disableNativeContextMenu) {
                     contextMenuInvocationHandler.onInvokeContextMenu(x, y);
                 }
@@ -1482,10 +1480,12 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
 
     private void onFocus(Event event) {
         fireEvent(new FocusEvent());
+        focused = true;
     }
 
     private void onBlur(Event event) {
         fireEvent(new BlurEvent());
+        focused = false;
     }
 
     private void onScroll(Event event) {

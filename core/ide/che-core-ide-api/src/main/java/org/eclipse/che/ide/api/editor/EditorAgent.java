@@ -13,7 +13,7 @@ package org.eclipse.che.ide.api.editor;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import org.eclipse.che.commons.annotation.Nullable;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.resource.Path;
 
 import javax.validation.constraints.NotNull;
@@ -91,42 +91,6 @@ public interface EditorAgent {
      */
     @Nullable
     EditorPartPresenter getActiveEditor();
-
-    /**
-     * Get next editor by relation to active editor
-     * @return
-     */
-    @Nullable
-    EditorPartPresenter getNextEditor();
-
-    /**
-     * Get previous editor by relation to active editor
-     * @return
-     */
-    @Nullable
-    EditorPartPresenter getPreviousEditor();
-
-    /**
-     * Get last opened editor
-     * @return
-     */
-    @Nullable
-    EditorPartPresenter getLastEditor();
-
-    /**
-     * Get first opened editor
-     * @return
-     */
-    @Nullable
-    EditorPartPresenter getFirstEditor();
-
-    /**
-     * Updates editor node. This method replace old editor node to new one
-     *
-     * @param path editor path
-     * @param virtualFile new file for editor
-     */
-    void updateEditorNode(@NotNull String path, @NotNull VirtualFile virtualFile);
 
     interface OpenEditorCallback {
         void onEditorOpened(EditorPartPresenter editor);

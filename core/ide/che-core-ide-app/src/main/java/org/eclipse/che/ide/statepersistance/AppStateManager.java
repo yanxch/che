@@ -31,7 +31,6 @@ import org.eclipse.che.ide.api.event.WindowActionHandler;
 import org.eclipse.che.ide.api.parts.PerspectiveManager;
 import org.eclipse.che.ide.api.preferences.PreferencesManager;
 import org.eclipse.che.ide.dto.DtoFactory;
-import org.eclipse.che.ide.project.event.ProjectExplorerLoadedEvent;
 import org.eclipse.che.ide.statepersistance.dto.ActionDescriptor;
 import org.eclipse.che.ide.statepersistance.dto.AppState;
 import org.eclipse.che.ide.statepersistance.dto.WorkspaceState;
@@ -52,8 +51,7 @@ import java.util.Set;
 @Singleton
 public class AppStateManager implements WindowActionHandler,
                                         WorkspaceStoppedHandler,
-                                        WsAgentStateHandler,
-                                        ProjectExplorerLoadedEvent.ProjectExplorerLoadedHandler {
+                                        WsAgentStateHandler {
 
     /** The name of the property for the mappings in user preferences. */
     public static final String PREFERENCE_PROPERTY_NAME = "IdeAppState";
@@ -88,7 +86,6 @@ public class AppStateManager implements WindowActionHandler,
         eventBus.addHandler(WorkspaceStoppedEvent.TYPE, this);
         eventBus.addHandler(WindowActionEvent.TYPE, this);
         eventBus.addHandler(WsAgentStateEvent.TYPE, this);
-        eventBus.addHandler(ProjectExplorerLoadedEvent.getType(), this);
 
         readStateFromPreferences();
     }
@@ -131,10 +128,10 @@ public class AppStateManager implements WindowActionHandler,
     }
 
     private void persistWorkspaceState() {
-        appState.setRecentWorkspaceId(appContext.getWorkspace().getId());
+        appState.setRecentWorkspaceId(appContext.getDevMachine().getId());
 
         final WorkspaceState workspaceState = dtoFactory.createDto(WorkspaceState.class);
-        appState.getWorkspaces().put(appContext.getWorkspace().getId(), workspaceState);
+        appState.getWorkspaces().put(appContext.getDevMachine().getId(), workspaceState);
 
         final List<ActionDescriptor> actions = workspaceState.getActions();
         for (PersistenceComponent persistenceComponent : persistenceComponents) {
@@ -155,13 +152,8 @@ public class AppStateManager implements WindowActionHandler,
         });
     }
 
-    @Override
-    public void onProjectsLoaded(ProjectExplorerLoadedEvent event) {
-        restoreWorkspaceState();
-    }
-
     private void restoreWorkspaceState() {
-        final WorkspaceState workspaceState = appState.getWorkspaces().get(appContext.getWorkspace().getId());
+        final WorkspaceState workspaceState = appState.getWorkspaces().get(appContext.getDevMachine().getId());
         if (workspaceState == null) {
             return;
         }

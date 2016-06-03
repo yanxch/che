@@ -12,7 +12,7 @@ package org.eclipse.che.plugin.jdb.ide.fqn;
 
 import com.google.inject.Singleton;
 
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.plugin.debugger.ide.fqn.FqnResolver;
 
 import javax.validation.constraints.NotNull;
@@ -28,6 +28,6 @@ public class JavaClassFqnResolver implements FqnResolver {
     @NotNull
     @Override
     public String resolveFqn(@NotNull final VirtualFile file) {
-        return file.getPath();
+        return file.getLocation().toString();
     }
 }

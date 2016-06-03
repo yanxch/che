@@ -22,8 +22,8 @@ import org.eclipse.che.ide.api.editor.texteditor.HandlesUndoRedo;
 import org.eclipse.che.ide.api.editor.texteditor.UndoableEditor;
 
 import javax.validation.constraints.NotNull;
-import java.util.Arrays;
 
+import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
@@ -41,7 +41,7 @@ public class RedoAction extends AbstractPerspectiveAction {
     public RedoAction(EditorAgent editorAgent,
                       CoreLocalizationConstant localization,
                       Resources resources) {
-        super(Arrays.asList(PROJECT_PERSPECTIVE_ID),
+        super(singletonList(PROJECT_PERSPECTIVE_ID),
               localization.redoName(),
               localization.redoDescription(),
               null,
