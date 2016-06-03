@@ -37,7 +37,7 @@ import static java.util.Collections.unmodifiableMap;
  * @author Vlad Zhukovskyi
  * @see ContainerImpl
  * @see Project
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 class ProjectImpl extends ContainerImpl implements Project {

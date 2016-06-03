@@ -34,7 +34,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * This class is not intended to be extended by clients.
  *
  * @author Vlad Zhukovskyi
- * @since 4.0.0-RC7
+ * @since 4.4.0
  */
 @Beta
 public final class Path {
@@ -95,7 +95,7 @@ public final class Path {
      *
      * @param pathString
      *         the portable string path
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public static Path valueOf(String pathString) {
         return new Path(pathString);
@@ -121,7 +121,7 @@ public final class Path {
      * @param fullPath
      *         the string path
      * @see #isValidPath(String)
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path(String fullPath) {
         initialize(null, fullPath);
@@ -142,7 +142,7 @@ public final class Path {
      *         the string path
      * @see #isValidPath(String)
      * @see #setDevice(String)
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path(String device, String path) {
         initialize(device, path);
@@ -177,7 +177,7 @@ public final class Path {
      *         the file extension to append
      * @return the new path
      * @see #getFileExtension()
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path addFileExtension(String extension) {
         if (isRoot() || isEmpty() || hasTrailingSeparator())
@@ -201,7 +201,7 @@ public final class Path {
      * @return the new path
      * @see #hasTrailingSeparator()
      * @see #removeTrailingSeparator()
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path addTrailingSeparator() {
         if (hasTrailingSeparator() || isRoot()) {
@@ -226,7 +226,7 @@ public final class Path {
      * @param path
      *         the path to concatenate
      * @return the new path
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path append(Path path) {
         //optimize some easy cases
@@ -271,7 +271,7 @@ public final class Path {
      *         the string path to concatenate
      * @return the new path
      * @see #isValidPath(String)
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path append(String path) {
         //optimize addition of a single segment
@@ -305,7 +305,7 @@ public final class Path {
      * </p>
      *
      * @return true if the path was modified, and false otherwise
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     private boolean canonicalize() {
         //look for segments that need canonicalizing
@@ -513,7 +513,7 @@ public final class Path {
      *         the other object
      * @return <code>true</code> if the paths are equivalent,
      * and <code>false</code> if they are not
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public boolean equals(Object obj) {
         if (this == obj)
@@ -543,7 +543,7 @@ public final class Path {
      *
      * @return the device id, or <code>null</code>
      * @see #setDevice(String)
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public String getDevice() {
         return device;
@@ -562,7 +562,7 @@ public final class Path {
      *
      * @return the file extension or <code>null</code>
      * @see #addFileExtension(String)
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public String getFileExtension() {
         if (hasTrailingSeparator()) {
@@ -597,7 +597,7 @@ public final class Path {
      * separator, and <code>false</code> otherwise
      * @see #addTrailingSeparator()
      * @see #removeTrailingSeparator()
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public boolean hasTrailingSeparator() {
         return (separators & HAS_TRAILING) != 0;
@@ -651,7 +651,7 @@ public final class Path {
      *
      * @return <code>true</code> if this path is an absolute path,
      * and <code>false</code> otherwise
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public boolean isAbsolute() {
         //it's absolute if it has a leading separator
@@ -664,7 +664,7 @@ public final class Path {
      *
      * @return <code>true</code> if this path is empty,
      * and <code>false</code> otherwise
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public boolean isEmpty() {
         //true if no segments and no leading prefix
@@ -686,7 +686,7 @@ public final class Path {
      *         the other path
      * @return <code>true</code> if this path is a prefix of the given path,
      * and <code>false</code> otherwise
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public boolean isPrefixOf(Path anotherPath) {
         if (device == null) {
@@ -722,7 +722,7 @@ public final class Path {
      *
      * @return <code>true</code> if this path is a root path,
      * and <code>false</code> otherwise
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public boolean isRoot() {
         //must have no segments, a leading separator, and not be a UNC path.
@@ -736,7 +736,7 @@ public final class Path {
      * are not <code>Path.SEPARATOR</code>.
      *
      * @return boolean indicating if this path is UNC
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public boolean isUNC() {
         return device == null && (separators & IS_UNC) != 0;
@@ -757,7 +757,7 @@ public final class Path {
      * @return <code>true</code> if the given string is a valid path,
      * and <code>false</code> otherwise
      * @see #isValidSegment(String)
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public static boolean isValidPath(String path) {
         Path test = new Path(path);
@@ -782,7 +782,7 @@ public final class Path {
      *         the path segment to check
      * @return <code>true</code> if the given path segment is valid,
      * and <code>false</code> otherwise
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     protected static boolean isValidSegment(String segment) {
         int size = segment.length();
@@ -801,7 +801,7 @@ public final class Path {
      * <code>null</code> if it does not have any segments.
      *
      * @return the last segment of this path, or <code>null</code>
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public String lastSegment() {
         int len = segments.length;
@@ -814,7 +814,7 @@ public final class Path {
      * it is simply returned.
      *
      * @return the new path
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path makeAbsolute() {
         if (isAbsolute()) {
@@ -838,7 +838,7 @@ public final class Path {
      * If this path is relative, it is simply returned.
      *
      * @return the new path
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path makeRelative() {
         if (!isAbsolute()) {
@@ -861,7 +861,7 @@ public final class Path {
      *         The base path to make this path relative to
      * @return A path relative to the base path, or this path if it could
      * not be made relative to the given base
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path makeRelativeTo(Path base) {
         //can't make relative if devices are not equal
@@ -890,7 +890,7 @@ public final class Path {
      * @param toUNC
      *         true if converting to UNC, false otherwise
      * @return the new path, either in UNC form or not depending on the boolean parameter
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path makeUNC(boolean toUNC) {
         // if we are already in the right form then just return
@@ -915,7 +915,7 @@ public final class Path {
      * @param anotherPath
      *         the other path
      * @return the number of matching segments
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public int matchingFirstSegments(Path anotherPath) {
         checkNotNull(anotherPath);
@@ -945,7 +945,7 @@ public final class Path {
      *
      * @return the new path
      * @see #addFileExtension(String)
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path removeFileExtension() {
         String extension = getFileExtension();
@@ -969,7 +969,7 @@ public final class Path {
      * @param count
      *         the number of segments to remove
      * @return the new path
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path removeFirstSegments(int count) {
         if (count == 0)
@@ -1004,7 +1004,7 @@ public final class Path {
      * @param count
      *         the number of segments to remove
      * @return the new path
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path removeLastSegments(int count) {
         if (count == 0)
@@ -1033,7 +1033,7 @@ public final class Path {
      * @return the new path
      * @see #addTrailingSeparator()
      * @see #hasTrailingSeparator()
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path removeTrailingSeparator() {
         if (!hasTrailingSeparator()) {
@@ -1049,7 +1049,7 @@ public final class Path {
      * @param index
      *         the 0-based segment index
      * @return the specified segment, or <code>null</code>
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public String segment(int index) {
         if (index >= segments.length)
@@ -1064,7 +1064,7 @@ public final class Path {
      * </p>
      *
      * @return the number of segments
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public int segmentCount() {
         return segments.length;
@@ -1074,7 +1074,7 @@ public final class Path {
      * Returns the segments in this path in order.
      *
      * @return an array of string segments
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public String[] segments() {
         String[] segmentCopy = new String[segments.length];
@@ -1094,7 +1094,7 @@ public final class Path {
      *         the device id or <code>null</code>
      * @return a new path
      * @see #getDevice()
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path setDevice(String device) {
         if (device != null) {
@@ -1130,7 +1130,7 @@ public final class Path {
      * </p>
      *
      * @return a string representation of this path
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public String toString() {
         int resultSize = computeLength();
@@ -1182,7 +1182,7 @@ public final class Path {
      * @param count
      *         the segment number at which to truncate the path
      * @return the new path
-     * @since 4.0.0-RC5
+     * @since 4.4.0
      */
     public Path uptoSegment(int count) {
         if (count == 0)
@@ -1199,7 +1199,7 @@ public final class Path {
      * Returns a copy of this path with removed last segment.
      *
      * @return the new path
-     * @since 4.0.0-RC13
+     * @since 4.4.0
      */
     public Path parent() {
         return segmentCount() == 1 ? Path.ROOT : this.removeLastSegments(1);
@@ -1211,7 +1211,7 @@ public final class Path {
      * @param paths
      *         the input array of paths
      * @return the converted list
-     * @since 4.3.0
+     * @since 4.4.0
      */
     public static List<String> toList(Path[] paths) {
         if (paths == null || paths.length == 0) {

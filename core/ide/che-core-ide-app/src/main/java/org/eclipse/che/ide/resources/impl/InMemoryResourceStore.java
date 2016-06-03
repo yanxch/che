@@ -33,7 +33,7 @@ import static java.util.Arrays.copyOf;
  *
  * @author Vlad Zhukovskiy
  * @see ResourceStore
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 class InMemoryResourceStore implements ResourceStore {

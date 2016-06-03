@@ -51,7 +51,7 @@ import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
  *
  * @author Vlad Zhukovskiy
  * @see ClipboardManager
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 @Singleton

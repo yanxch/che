@@ -39,7 +39,7 @@ import java.util.Map;
  *
  * @author Vlad Zhukovskyi
  * @see AppContext#getProjects()
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public interface Project extends Container, ProjectConfig {
@@ -69,7 +69,7 @@ public interface Project extends Container, ProjectConfig {
      * @return the request to update the project
      * @see ProjectRequest
      * @see ProjectRequest#send()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     ProjectRequest update();
 
@@ -89,7 +89,7 @@ public interface Project extends Container, ProjectConfig {
      *
      * @return {@code true} if current project has problems, otherwise {@code false}
      * @see ProblemProjectMarker
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     boolean isProblem();
 
@@ -99,7 +99,7 @@ public interface Project extends Container, ProjectConfig {
      * Project may not be exists on file system, but workspace may has configured in the current workspace.
      *
      * @return {@code true} if project physically exists on the file system, otherwise {@code false}
-     * @since 4.3.0
+     * @since 4.4.0
      */
     boolean exists();
 
@@ -112,7 +112,7 @@ public interface Project extends Container, ProjectConfig {
      * Based on this information, current project may be configured in correct way.
      *
      * @return the {@link Promise} with source estimations
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<List<SourceEstimation>> resolve();
 
@@ -122,7 +122,7 @@ public interface Project extends Container, ProjectConfig {
      * @param type
      *         the project type to check
      * @return true if given project type is applicable to current project
-     * @since 4.3.0
+     * @since 4.4.0
      */
     boolean isTypeOf(String type);
 
@@ -134,7 +134,7 @@ public interface Project extends Container, ProjectConfig {
      * @param key
      *         the attribute name
      * @return first value for the given {@code key} or null if such attribute doesn't exist
-     * @since 4.3.0
+     * @since 4.4.0
      */
     String getAttribute(String key);
 
@@ -145,7 +145,7 @@ public interface Project extends Container, ProjectConfig {
      * @param key
      *         the attribute name
      * @return the list with values for the given {@code key} or null if such attribute doesn't exist
-     * @since 4.3.0
+     * @since 4.4.0
      */
     List<String> getAttributes(String key);
 
@@ -153,7 +153,7 @@ public interface Project extends Container, ProjectConfig {
      * Marker that describe problematic project.
      *
      * @see #isProblem()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     @Beta
     class ProblemProjectMarker implements Marker {
@@ -186,7 +186,7 @@ public interface Project extends Container, ProjectConfig {
      * Base interface for project update operation.
      *
      * @see Project#update()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     @Beta
     interface ProjectRequest extends Resource.Request<Project, ProjectConfig> {

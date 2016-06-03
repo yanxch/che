@@ -24,7 +24,7 @@ import static org.eclipse.che.ide.ext.java.client.util.JavaUtil.isJavaFile;
  * to the corresponding resource.
  *
  * @author Vlad Zhukovskiy
- * @since 4.1.0-RC1
+ * @since 4.4.0
  */
 @Singleton
 public class ClassInterceptor implements ResourceInterceptor {

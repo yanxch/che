@@ -36,7 +36,7 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Vlad Zhukovskyi
  * @see ResourceImpl
  * @see Container
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 abstract class ContainerImpl extends ResourceImpl implements Container {

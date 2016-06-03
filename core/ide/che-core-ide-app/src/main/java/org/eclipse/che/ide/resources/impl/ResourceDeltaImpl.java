@@ -23,7 +23,7 @@ import org.eclipse.che.ide.resource.Path;
  *
  * @author Vlad Zhukovskiy
  * @see ResourceDelta
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public class ResourceDeltaImpl implements ResourceDelta {

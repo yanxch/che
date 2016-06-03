@@ -25,7 +25,7 @@ import org.eclipse.che.ide.util.NameUtils;
  * Note. This interface is not intended to be implemented by clients.
  *
  * @author Vlad Zhukovskyi
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public interface Folder extends Container {
@@ -69,7 +69,7 @@ public interface Folder extends Container {
      * @see NameUtils#checkProjectName(String)
      * @see ProjectRequest
      * @see ProjectRequest#send()
-     * @since 4.0.0-RC14
+     * @since @since 4.4.0
      */
     ProjectRequest toProject();
 }

@@ -27,7 +27,7 @@ import org.eclipse.che.ide.resource.Path;
  * @author Vlad Zhukovskyi
  * @see VirtualFile
  * @see Container#getFile(Path)
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public interface File extends Resource, VirtualFile {
@@ -58,7 +58,7 @@ public interface File extends Resource, VirtualFile {
      *
      * @return a string file extension or {@code null}
      * @see #getName()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     String getExtension();
 
@@ -69,7 +69,7 @@ public interface File extends Resource, VirtualFile {
      * @return the name without extension
      * @see #getExtension()
      * @see #getName()
-     * @since 4.3.0
+     * @since 4.4.0
      */
     String getNameWithoutExtension();
 }

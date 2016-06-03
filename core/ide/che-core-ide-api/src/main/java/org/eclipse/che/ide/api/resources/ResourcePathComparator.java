@@ -19,7 +19,7 @@ import java.util.Comparator;
  *
  * @author Vlad Zhukovskiy
  * @see Resource#getName()
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public class ResourcePathComparator implements Comparator<Resource> {

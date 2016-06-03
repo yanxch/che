@@ -50,7 +50,7 @@ import static org.eclipse.che.api.promises.client.callback.AsyncPromiseHelper.cr
  *
  * @author Vlad Zhukovskiy
  * @see RevealResourceEvent
- * @since 4.1.0-RC1
+ * @since 4.4.0
  */
 @Singleton
 public class TreeResourceRevealer {

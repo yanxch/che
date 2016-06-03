@@ -44,7 +44,7 @@ public interface VirtualFile {
      * Path should always be non-null or non-empty.
      *
      * @return non-null unique path.
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     @Beta
     Path getLocation();

@@ -36,7 +36,7 @@ public interface AppContext {
      * Returns the workspace root container, which is holder of registered projects.
      *
      * @return the workspace root
-     * @since 4.3.0
+     * @since 4.4.0
      */
     @Beta
     Container getWorkspaceRoot();
@@ -47,7 +47,7 @@ public interface AppContext {
      *
      * @return the registered projects
      * @see Container#newProject()
-     * @since 4.3.0
+     * @since 4.4.0
      */
     @Beta
     Project[] getProjects();
@@ -65,7 +65,7 @@ public interface AppContext {
      * @return the resource in context
      * @see Resource
      * @see #getResources()
-     * @since 4.3.0
+     * @since 4.4.0
      */
     @Beta
     Resource getResource();
@@ -83,7 +83,7 @@ public interface AppContext {
      * @return the resource in context
      * @see Resource
      * @see #getResource()
-     * @since 4.3.0
+     * @since 4.4.0
      */
     @Beta
     Resource[] getResources();
@@ -97,7 +97,7 @@ public interface AppContext {
      *
      * @return the root project or {@code null}
      * @see Project
-     * @since 4.3.0
+     * @since 4.4.0
      */
     @Beta
     Project getRootProject();

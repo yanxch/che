@@ -19,7 +19,7 @@ import org.eclipse.che.ide.api.resources.Resource;
  *
  * @author Vlad Zhukovskiy
  * @see Resource#getMarker(String)
- * @since 4.1.0-RC1
+ * @since 4.4.0
  */
 @Beta
 public class PresentableTextMarker implements Marker {
@@ -42,7 +42,7 @@ public class PresentableTextMarker implements Marker {
      * Returns the human presentable text.
      *
      * @return the presentable text
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     public String getPresentableText() {
         return presentableText;

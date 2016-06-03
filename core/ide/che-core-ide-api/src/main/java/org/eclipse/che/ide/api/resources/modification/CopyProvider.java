@@ -34,7 +34,7 @@ import org.eclipse.che.ide.api.app.AppContext;
  * @author Vlad Zhukovskiy
  * @see ClipboardManager
  * @see ClipboardManager#getCopyProvider()
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public interface CopyProvider {
@@ -44,7 +44,7 @@ public interface CopyProvider {
      * @param appContext
      *         the application context
      * @return {@code true} if active resources can be copied, otherwise {@code false}
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     boolean isCopyEnable(AppContext appContext);
 
@@ -53,7 +53,7 @@ public interface CopyProvider {
      *
      * @param appContext
      *         the application context
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     void performCopy(AppContext appContext);
 }

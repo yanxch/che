@@ -38,7 +38,7 @@ import static org.eclipse.che.ide.api.resources.marker.Marker.UPDATED;
  *
  * @author Vlad Zhukovskyi
  * @see Resource
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 abstract class ResourceImpl implements Resource {

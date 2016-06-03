@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Utility class for svn based operations.
  *
  * @author Vlad Zhukovskiy
- * @since 4.3.0
+ * @since 4.4.0
  */
 public class SvnUtil {
 

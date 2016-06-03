@@ -52,7 +52,7 @@ public interface ProjectServiceClient {
      * @param content
      *         the file content
      * @return {@code Promise} with created {@code ItemReference}
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<ItemReference> createFile(DevMachine devMachine, Path path, String content);
 
@@ -66,7 +66,7 @@ public interface ProjectServiceClient {
      * @param path
      *         the folder path
      * @return {@code Promise} with created {@code ItemReference}
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<ItemReference> createFolder(DevMachine devMachine, Path path);
 
@@ -78,7 +78,7 @@ public interface ProjectServiceClient {
      * @param config
      *         the project configuration
      * @return {@code Promise} with created {@code ProjectConfigDto}
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<ProjectConfigDto> createProject(DevMachine devMachine, ProjectConfigDto config);
 
@@ -90,7 +90,7 @@ public interface ProjectServiceClient {
      * @param path
      *         the item path to request information
      * @return {@code Promise} with {@code ItemReference}
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<ItemReference> getItem(DevMachine devMachine, Path path);
 
@@ -121,7 +121,7 @@ public interface ProjectServiceClient {
      * @param path
      *         the file path to read
      * @return {@code Promise} with file content response
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<String> readFile(DevMachine devMachine, Path path);
 
@@ -135,7 +135,7 @@ public interface ProjectServiceClient {
      * @param content
      *         the file content
      * @return {@code Promise} with empty response
-     * @since 4.0.0-RC-9
+     * @since 4.4.0
      */
     Promise<Void> writeFile(DevMachine devMachine, Path path, String content);
 
@@ -147,7 +147,7 @@ public interface ProjectServiceClient {
      * @param path
      *         the path to be removed
      * @return {@code Promise} with empty response
-     * @since 4.0.0-RC-9
+     * @since 4.4.0
      */
     Promise<Void> delete(DevMachine devMachine, Path path);
 
@@ -167,7 +167,7 @@ public interface ProjectServiceClient {
      * @param overwrite
      *         overwrite target is such has already exists
      * @return {@code Promise} with empty response
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Void> copy(DevMachine devMachine, Path source, Path target, String newName, boolean overwrite);
 
@@ -187,7 +187,7 @@ public interface ProjectServiceClient {
      * @param overwrite
      *         overwrite target is such has already exists
      * @return {@code Promise} with empty response
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Void> move(DevMachine devMachine, Path source, Path target, String newName, boolean overwrite);
 
@@ -203,6 +203,7 @@ public interface ProjectServiceClient {
      * @param sourceStorage
      *         {@link SourceStorageDto}
      * @return a promise that will resolve when the project has been imported, or rejects with an error
+     * @since 4.4.0
      */
     Promise<Void> importProject(DevMachine devMachine, Path path, SourceStorageDto sourceStorage);
 
@@ -218,7 +219,7 @@ public interface ProjectServiceClient {
      * @param includeFiles
      *         include files into response
      * @return {@code Promise} with tree response
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<TreeElement> getTree(DevMachine devMachine, Path path, int depth, boolean includeFiles);
 
@@ -230,6 +231,7 @@ public interface ProjectServiceClient {
      * @param expression
      *         search query expression
      * @return a promise that will provide a list of {@link ItemReference}s, or rejects with an error
+     * @since 4.4.0
      */
     Promise<List<ItemReference>> search(DevMachine devMachine, QueryExpression expression);
 
@@ -242,6 +244,7 @@ public interface ProjectServiceClient {
      *         path of the project to resolve
      * @return a promise that will provide a list of {@code SourceEstimation} for the given {@code workspaceId} and {@code path},
      * or rejects with on error
+     * @since 4.4.0
      */
     Promise<List<SourceEstimation>> resolveSources(DevMachine devMachine, Path path);
 

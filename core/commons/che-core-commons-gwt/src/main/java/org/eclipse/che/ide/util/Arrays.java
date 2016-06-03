@@ -20,7 +20,7 @@ import static java.util.Arrays.copyOf;
  * Utility methods to operate with arrays.
  *
  * @author Vlad Zhukovskiy
- * @since 4.2.0
+ * @since 4.4.0
  */
 @Beta
 public class Arrays {
@@ -33,7 +33,7 @@ public class Arrays {
      * @param <T>
      *         any type of the given array
      * @return {@code true} if given array is null or empty, otherwise {@code false}
-     * @since 4.2.0
+     * @since 4.4.0
      */
     public static <T> boolean isNullOrEmpty(T[] array) {
         return array == null || array.length == 0;
@@ -51,7 +51,7 @@ public class Arrays {
      * @return the copy of given {@code array} with added {@code element}
      * @throws IllegalArgumentException
      *         in case if given {@code arrays} is null
-     * @since 4.2.0
+     * @since 4.4.0
      */
     public static <T> T[] add(T[] array, T element) {
         checkArgument(array != null, "Input array is null");

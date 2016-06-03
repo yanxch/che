@@ -58,7 +58,7 @@ import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
  * @see Resource
  * @see ContainerNode
  * @see FileNode
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public abstract class ResourceNode<R extends Resource> extends AbstractTreeNode implements HasDataObject<R>,

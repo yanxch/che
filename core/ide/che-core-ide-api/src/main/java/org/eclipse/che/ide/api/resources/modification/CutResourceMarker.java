@@ -18,7 +18,7 @@ import org.eclipse.che.ide.api.resources.marker.Marker;
  * Marker that indicates resource which is cut by {@link CutProvider}.
  *
  * @author Vlad Zhukovskiy
- * @since 4.1.0-RC1
+ * @since 4.4.0
  */
 @Beta
 public class CutResourceMarker implements Marker {

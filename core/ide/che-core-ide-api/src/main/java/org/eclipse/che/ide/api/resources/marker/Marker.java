@@ -28,7 +28,7 @@ import org.eclipse.che.ide.api.resources.Resource;
  * @see Resource#getMarkers()
  * @see Resource#addMarker(Marker)
  * @see Resource#deleteMarker(String)
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public interface Marker {
@@ -36,21 +36,21 @@ public interface Marker {
     /**
      * Kind constant (bit mask) indicating that the marker has been created to given resource.
      *
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     int CREATED = 0x1;
 
     /**
      * Kind constant (bit mask) indicating that the marker has been removed from given resource.
      *
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     int REMOVED = 0x2;
 
     /**
      * Kind constant (bit mask) indicating that the marker has been updated to given resource.
      *
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     int UPDATED = 0x4;
 
@@ -58,7 +58,7 @@ public interface Marker {
      * Returns the type of this marker. The returned marker type will not be {@code null}.
      *
      * @return the type of this marker
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     String getType();
 }

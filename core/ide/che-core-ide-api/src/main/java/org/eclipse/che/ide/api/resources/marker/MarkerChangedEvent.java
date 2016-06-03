@@ -25,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Vlad Zhukovskiy
  * @see Marker
- * @since 4.1.0-RC1
+ * @since 4.4.0
  */
 @Beta
 public class MarkerChangedEvent extends GwtEvent<MarkerChangedEvent.MarkerChangedHandler> {
@@ -43,7 +43,7 @@ public class MarkerChangedEvent extends GwtEvent<MarkerChangedEvent.MarkerChange
          * @param event
          *         instance of {@link MarkerChangedEvent}
          * @see MarkerChangedEvent
-         * @since 4.1.0-RC1
+         * @since 4.4.0
          */
         void onMarkerChanged(MarkerChangedEvent event);
     }
@@ -71,7 +71,7 @@ public class MarkerChangedEvent extends GwtEvent<MarkerChangedEvent.MarkerChange
      * Returns the resource which is the host of specified marker.
      *
      * @return the resource
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     public final Resource getResource() {
         return resource;
@@ -82,7 +82,7 @@ public class MarkerChangedEvent extends GwtEvent<MarkerChangedEvent.MarkerChange
      *
      * @return the marker
      * @see Marker
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     public Marker getMarker() {
         return marker;
@@ -95,7 +95,7 @@ public class MarkerChangedEvent extends GwtEvent<MarkerChangedEvent.MarkerChange
      * @see Marker#CREATED
      * @see Marker#REMOVED
      * @see Marker#UPDATED
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     public int getStatus() {
         return status;

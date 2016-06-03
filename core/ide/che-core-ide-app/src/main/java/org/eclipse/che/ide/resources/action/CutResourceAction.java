@@ -38,7 +38,7 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
  * @author Vlad Zhukovskiy
  * @see ClipboardManager
  * @see ClipboardManager#getCutProvider()
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Singleton
 public class CutResourceAction extends AbstractPerspectiveAction {

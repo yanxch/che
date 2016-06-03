@@ -52,7 +52,7 @@ public class JavaUtil {
      *         <ul>
      *         <li>Null resource occurred</li>
      *         </ul>
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     public static boolean isJavaFile(Resource resource) {
         checkArgument(resource != null, "Null resource occurred");
@@ -79,7 +79,7 @@ public class JavaUtil {
      *         <ul>
      *         <li>Null project occurred</li>
      *         </ul>
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     public static boolean isJavaProject(Project project) {
         checkArgument(project != null, "Null project occurred");
@@ -112,7 +112,7 @@ public class JavaUtil {
      *         <li>Null resource occurred</li>
      *         <li>Given base folder is not prefix of checked resource</li>
      *         </ul>
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     public static String resolveFQN(Container startPoint, Resource endPoint) {
         checkArgument(startPoint != null, "Null source folder occurred");

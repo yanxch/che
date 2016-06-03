@@ -49,7 +49,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Vlad Zhukovskiy
  * @see ResourceDelta
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public final class ResourceChangedEvent extends GwtEvent<ResourceChangedEvent.ResourceChangedHandler> {
@@ -61,7 +61,7 @@ public final class ResourceChangedEvent extends GwtEvent<ResourceChangedEvent.Re
      * <p/>
      * Third party components may implement this interface to handle resource changes event.
      *
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     public interface ResourceChangedHandler extends EventHandler {
 
@@ -73,7 +73,7 @@ public final class ResourceChangedEvent extends GwtEvent<ResourceChangedEvent.Re
          * @param event
          *         instance of {@link ResourceChangedEvent}
          * @see ResourceChangedEvent
-         * @since 4.0.0-RC14
+         * @since 4.4.0
          */
         void onResourceChanged(ResourceChangedEvent event);
     }
@@ -98,7 +98,7 @@ public final class ResourceChangedEvent extends GwtEvent<ResourceChangedEvent.Re
      *
      * @return the resource delta
      * @see ResourceDelta
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     public ResourceDelta getDelta() {
         return delta;

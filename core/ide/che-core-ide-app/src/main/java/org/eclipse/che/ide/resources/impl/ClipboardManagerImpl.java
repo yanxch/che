@@ -29,7 +29,7 @@ import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
  *
  * @author Vlad Zhukovskiy
  * @see ClipboardManager
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Singleton
 public class ClipboardManagerImpl implements ClipboardManager {

@@ -28,7 +28,7 @@ import static org.eclipse.che.plugin.maven.shared.MavenAttributes.POM_XML;
  * to the corresponding resource.
  *
  * @author Vlad Zhukovskiy
- * @since 4.1.0-RC1
+ * @since 4.4.0
  */
 @Singleton
 public class PomInterceptor implements ResourceInterceptor {

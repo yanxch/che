@@ -28,7 +28,7 @@ import java.util.Set;
  * @author Vlad Zhukovskiy
  * @see Container
  * @see ResourceNode
- * @since 4.1.0-RC1
+ * @since 4.4.0
  */
 @Beta
 public class ContainerNode extends ResourceNode<Container> {

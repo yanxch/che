@@ -25,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Usually, part which handles this event should check if it is focused at this moment and if so, process revealing the resource.
  *
  * @author Vlad Zhukovskiy
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public class RevealResourceEvent extends GwtEvent<RevealResourceEvent.RevealResourceHandler> {
@@ -43,7 +43,7 @@ public class RevealResourceEvent extends GwtEvent<RevealResourceEvent.RevealReso
          * @param event
          *         instance of {@link RevealResourceEvent}
          * @see RevealResourceEvent
-         * @since 4.0.0-RC14
+         * @since 4.4.0
          */
         void onRevealResource(RevealResourceEvent event);
     }
@@ -71,7 +71,7 @@ public class RevealResourceEvent extends GwtEvent<RevealResourceEvent.RevealReso
      * Returns the resource path which should be revealed.
      *
      * @return the resource path
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     public Path getLocation() {
         return location;

@@ -31,7 +31,7 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
  * Scrolls from resource in the context to the stored location in the Project View.
  *
  * @author Vlad Zhukovskiy
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 @Singleton

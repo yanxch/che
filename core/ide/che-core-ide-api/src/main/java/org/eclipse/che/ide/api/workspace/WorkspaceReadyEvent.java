@@ -26,7 +26,7 @@ import org.eclipse.che.ide.api.resources.Project;
  * By design this event is intended to initialize third party components with initial projects configuration.
  *
  * @author Vlad Zhukovskiy
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public class WorkspaceReadyEvent extends GwtEvent<WorkspaceReadyEvent.WorkspaceReadyHandler> {
@@ -43,7 +43,7 @@ public class WorkspaceReadyEvent extends GwtEvent<WorkspaceReadyEvent.WorkspaceR
          * @param event
          *         instance of {@link WorkspaceReadyEvent}
          * @see WorkspaceReadyEvent
-         * @since 4.0.0-RC14
+         * @since 4.4.0
          */
         void onWorkspaceReady(WorkspaceReadyEvent event);
     }
@@ -68,7 +68,7 @@ public class WorkspaceReadyEvent extends GwtEvent<WorkspaceReadyEvent.WorkspaceR
      *
      * @return the new workspace configuration
      * @see WorkspaceConfig
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     public Project[] getProjects() {
         return projects;

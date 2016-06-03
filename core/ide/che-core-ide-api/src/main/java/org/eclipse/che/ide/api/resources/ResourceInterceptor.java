@@ -20,7 +20,7 @@ import com.google.common.annotations.Beta;
  * resource or any other operations specific to the resource.
  *
  * @author Vlad Zhukovskiy
- * @since 4.1.0-RC1
+ * @since 4.4.0
  */
 @Beta
 public interface ResourceInterceptor {
@@ -31,7 +31,7 @@ public interface ResourceInterceptor {
      * @param resource
      *         the resource to intercept
      * @return the modified resource
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     Resource intercept(Resource resource);
 
@@ -39,7 +39,7 @@ public interface ResourceInterceptor {
      * Default implementation of {@link ResourceInterceptor} which is do nothing except returning given {@code resource}.
      *
      * @see ResourceInterceptor
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     class NoOpInterceptor implements ResourceInterceptor {
 

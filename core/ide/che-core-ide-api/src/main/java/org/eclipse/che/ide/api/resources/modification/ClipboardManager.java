@@ -19,7 +19,7 @@ import com.google.common.annotations.Beta;
  * @see CutProvider
  * @see CopyProvider
  * @see PasteProvider
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public interface ClipboardManager {
@@ -28,7 +28,7 @@ public interface ClipboardManager {
      *
      * @return the cut provider
      * @see CutProvider
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     CutProvider getCutProvider();
 
@@ -37,7 +37,7 @@ public interface ClipboardManager {
      *
      * @return the copy provider
      * @see CopyProvider
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     CopyProvider getCopyProvider();
 
@@ -46,7 +46,7 @@ public interface ClipboardManager {
      *
      * @return the paste provider
      * @see PasteProvider
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     PasteProvider getPasteProvider();
 }

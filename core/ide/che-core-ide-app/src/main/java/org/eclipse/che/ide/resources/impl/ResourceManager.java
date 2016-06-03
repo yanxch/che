@@ -89,7 +89,7 @@ import static org.eclipse.che.ide.util.NameUtils.checkProjectName;
  * @author Vlad Zhukovskiy
  * @see AppContext
  * @see AppContextImpl
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public final class ResourceManager {
@@ -170,7 +170,7 @@ public final class ResourceManager {
      *
      * @return the {@link Promise} with registered projects
      * @see Project
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     public Promise<Project[]> getWorkspaceProjects() {
         return ps.getProjects(devMachine).then(new Function<List<ProjectConfigDto>, Project[]>() {
@@ -221,7 +221,7 @@ public final class ResourceManager {
      *
      * @return the workspace container
      * @see Container
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     public Container getWorkspaceRoot() {
         return workspaceRoot;
@@ -246,7 +246,7 @@ public final class ResourceManager {
      * @see ResourceChangedEvent
      * @see ProjectRequest
      * @see Project#update()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     protected Promise<Project> update(final Path path, final ProjectRequest request) {
 

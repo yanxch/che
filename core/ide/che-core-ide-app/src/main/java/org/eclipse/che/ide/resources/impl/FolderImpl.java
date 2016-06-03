@@ -27,7 +27,7 @@ import org.eclipse.che.ide.resource.Path;
  * @author Vlad Zhukovskyi
  * @see ContainerImpl
  * @see Folder
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 class FolderImpl extends ContainerImpl implements Folder {

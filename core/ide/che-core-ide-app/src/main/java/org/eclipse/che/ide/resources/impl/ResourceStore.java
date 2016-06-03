@@ -27,7 +27,7 @@ import org.eclipse.che.ide.resource.Path;
  *
  * @author Vlad Zhukovskiy
  * @see InMemoryResourceStore
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 interface ResourceStore {
@@ -47,7 +47,7 @@ interface ResourceStore {
      *         <li>Null parent occurred</li>
      *         <li>Null resource occurred</li>
      *         </ul>
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     boolean register(Path parent, Resource resource);
 
@@ -65,7 +65,7 @@ interface ResourceStore {
      *         <ul>
      *         <li>Null path occurred</li>
      *         </ul>
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     void dispose(Path path, boolean withChildren);
 
@@ -82,7 +82,7 @@ interface ResourceStore {
      *         <ul>
      *         <li>Null path occurred</li>
      *         </ul>
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Optional<Resource> getResource(Path path);
 
@@ -99,7 +99,7 @@ interface ResourceStore {
      *         <ul>
      *         <li>Null path occurred</li>
      *         </ul>
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Optional<Resource[]> get(Path parent);
 
@@ -116,14 +116,14 @@ interface ResourceStore {
      *         <ul>
      *         <li>Null path occurred</li>
      *         </ul>
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Optional<Resource[]> getAll(Path parent);
 
     /**
      * Clears the store.
      *
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     void clear();
 }

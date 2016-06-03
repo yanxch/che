@@ -36,7 +36,7 @@ import org.eclipse.che.ide.util.NameUtils;
  * @see Folder
  * @see AppContext
  * @see AppContext#getWorkspaceRoot()
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public interface Container extends Resource {
@@ -57,7 +57,7 @@ public interface Container extends Resource {
      *         <li>Not a file</li>
      *         </ul>
      * @see #getContainer(Path)
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Optional<File>> getFile(Path relativePath);
 
@@ -77,7 +77,7 @@ public interface Container extends Resource {
      *         <li>Not a file</li>
      *         </ul>
      * @see #getContainer(Path)
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Optional<File>> getFile(String relativePath);
 
@@ -97,7 +97,7 @@ public interface Container extends Resource {
      *         <li>Not a container</li>
      *         </ul>
      * @see #getFile(Path)
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Optional<Container>> getContainer(Path relativePath);
 
@@ -117,7 +117,7 @@ public interface Container extends Resource {
      *         <li>Not a container</li>
      *         </ul>
      * @see #getFile(Path)
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Optional<Container>> getContainer(String relativePath);
 
@@ -143,7 +143,7 @@ public interface Container extends Resource {
      *
      * @return the {@code Promise} with array of members of this resource
      * @see #getChildren()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Resource[]> getChildren();
 
@@ -174,7 +174,7 @@ public interface Container extends Resource {
      *
      * @return the {@code Promise} with array of members of this resource
      * @see #getChildren()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Resource[]> getChildren(boolean force);
 
@@ -228,7 +228,7 @@ public interface Container extends Resource {
      * @see NameUtils#checkProjectName(String)
      * @see ProjectRequest
      * @see ProjectRequest#send()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     ProjectRequest newProject();
 
@@ -280,7 +280,7 @@ public interface Container extends Resource {
      * @see NameUtils#checkProjectName(String)
      * @see ProjectRequest
      * @see ProjectRequest#send()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     ProjectRequest importProject();
 
@@ -327,7 +327,7 @@ public interface Container extends Resource {
      *         <li>Resource already exists</li>
      *         </ul>
      * @see NameUtils#checkFolderName(String)
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Folder> newFolder(String name);
 
@@ -378,7 +378,7 @@ public interface Container extends Resource {
      *         <li>Resource already exists</li>
      *         </ul>
      * @see NameUtils#checkFileName(String)
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<File> newFile(String name, String content);
 
@@ -394,7 +394,7 @@ public interface Container extends Resource {
      * Method doesn't guarantees the sorted order of the returned resources.
      *
      * @return the array of resource which where affected by synchronize operation
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Resource[]> synchronize();
 
@@ -414,7 +414,7 @@ public interface Container extends Resource {
      *         </ul>
      * @see ExternalResourceDelta
      * @see ResourceDelta
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     Promise<ResourceDelta[]> synchronize(ResourceDelta... deltas);
 
@@ -434,7 +434,7 @@ public interface Container extends Resource {
      * @param contentMask
      *         the content entity mask
      * @return the {@link Promise} with array of found results
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Resource[]> search(String fileMask, String contentMask);
 
@@ -465,7 +465,7 @@ public interface Container extends Resource {
      *         <ul>
      *         <li>Invalid depth</li>
      *         </ul>
-     * @since 4.3.0
+     * @since 4.4.0
      */
     Promise<Resource[]> getTree(int depth);
 
@@ -483,7 +483,7 @@ public interface Container extends Resource {
      *         </ul>
      * @see SourceEstimation
      * @see ProjectType#getId()
-     * @since 4.3.0
+     * @since 4.4.0
      */
     Promise<SourceEstimation> estimate(String projectType);
 }

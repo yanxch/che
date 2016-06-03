@@ -51,7 +51,7 @@ import org.eclipse.che.ide.resource.Path;
  * @see Project
  * @see AppContext#getProjects()
  * @see AppContext#getWorkspaceRoot()
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public interface Resource extends Comparable<Resource> {
@@ -61,7 +61,7 @@ public interface Resource extends Comparable<Resource> {
      * @see Resource#getResourceType()
      * @see Resource#isFile()
      * @see File
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int FILE = 0x1;
 
@@ -71,7 +71,7 @@ public interface Resource extends Comparable<Resource> {
      * @see Resource#getResourceType()
      * @see Resource#isFolder()
      * @see Folder
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int FOLDER = 0x2;
 
@@ -81,7 +81,7 @@ public interface Resource extends Comparable<Resource> {
      * @see Resource#getResourceType()
      * @see Resource#isProject()
      * @see Project
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int PROJECT = 0x4;
 
@@ -91,7 +91,7 @@ public interface Resource extends Comparable<Resource> {
      * @return true if current resource is file based resource.
      * @see Resource#getResourceType()
      * @see Resource#FILE
-     * @since 4.3.0
+     * @since 4.4.0
      */
     boolean isFile();
 
@@ -101,7 +101,7 @@ public interface Resource extends Comparable<Resource> {
      * @return true if current resource is folder based resource.
      * @see Resource#getResourceType()
      * @see Resource#FOLDER
-     * @since 4.3.0
+     * @since 4.4.0
      */
     boolean isFolder();
 
@@ -111,7 +111,7 @@ public interface Resource extends Comparable<Resource> {
      * @return true if current resource is project based resource.
      * @see Resource#getResourceType()
      * @see Resource#PROJECT
-     * @since 4.3.0
+     * @since 4.4.0
      */
     boolean isProject();
 
@@ -159,7 +159,7 @@ public interface Resource extends Comparable<Resource> {
      *         </ul>
      * @see ResourceChangedEvent
      * @see Resource
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Resource> copy(Path destination);
 
@@ -211,7 +211,7 @@ public interface Resource extends Comparable<Resource> {
      *         </ul>
      * @see ResourceChangedEvent
      * @see Resource
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Resource> copy(Path destination, boolean force);
 
@@ -266,7 +266,7 @@ public interface Resource extends Comparable<Resource> {
      *         </ul>
      * @see ResourceChangedEvent
      * @see Resource
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Resource> move(Path destination);
 
@@ -323,7 +323,7 @@ public interface Resource extends Comparable<Resource> {
      *         </ul>
      * @see ResourceChangedEvent
      * @see Resource
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Resource> move(Path destination, boolean force);
 
@@ -357,7 +357,7 @@ public interface Resource extends Comparable<Resource> {
      *         <li>Workspace root is not allowed to be removed</li>
      *         </ul>
      * @see ResourceChangedEvent
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Promise<Void> delete();
 
@@ -367,7 +367,7 @@ public interface Resource extends Comparable<Resource> {
      *
      * @return the absolute path of this resource
      * @see Path
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Path getLocation();
 
@@ -376,7 +376,7 @@ public interface Resource extends Comparable<Resource> {
      * The name of a resource is synonymous with the last segment of its full (or project-relative) path.
      *
      * @return the name of the resource
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     String getName();
 
@@ -386,7 +386,7 @@ public interface Resource extends Comparable<Resource> {
      *
      * @return the resource parent {@link Container}
      * @see Container
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Optional<Container> getParent();
 
@@ -398,7 +398,7 @@ public interface Resource extends Comparable<Resource> {
      *
      * @return the {@link Optional} with related project
      * @see Project
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Optional<Project> getRelatedProject();
 
@@ -416,7 +416,7 @@ public interface Resource extends Comparable<Resource> {
      * @see #FILE
      * @see #FOLDER
      * @see #PROJECT
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int getResourceType();
 
@@ -431,7 +431,7 @@ public interface Resource extends Comparable<Resource> {
      *         <ul>
      *         <li>Workspace root doesn't have export URL</li>
      *         </ul>
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     String getURL();
 
@@ -449,7 +449,7 @@ public interface Resource extends Comparable<Resource> {
      *         </ul>
      * @see Marker#getType()
      * @see #getMarkers()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Optional<Marker> getMarker(String type);
 
@@ -459,7 +459,7 @@ public interface Resource extends Comparable<Resource> {
      *
      * @return the array of markers
      * @see #getMarker(String)
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Marker[] getMarkers();
 
@@ -478,7 +478,7 @@ public interface Resource extends Comparable<Resource> {
      *         <li>Null marker occurred</li>
      *         </ul>
      * @see MarkerChangedEvent
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     void addMarker(Marker marker);
 
@@ -498,7 +498,7 @@ public interface Resource extends Comparable<Resource> {
      *         </ul>
      * @see Marker#getType()
      * @see MarkerChangedEvent
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     boolean deleteMarker(String type);
 
@@ -513,7 +513,7 @@ public interface Resource extends Comparable<Resource> {
      *         <ul>
      *         <li>Invalid marker type occurred</li>
      *         </ul>
-     * @since 4.1.0-RC1
+     * @since 4.4.0
      */
     Optional<Resource> getParentWithMarker(String type);
 
@@ -533,7 +533,7 @@ public interface Resource extends Comparable<Resource> {
      * @param <O>
      *         the body which is used to construct the request
      * @see ProjectRequest
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     @Beta
     interface Request<R extends Resource, O> {
@@ -545,7 +545,7 @@ public interface Resource extends Comparable<Resource> {
          *         the request body
          * @return instance of current {@link Request}
          * @see #getBody()
-         * @since 4.0.0-RC14
+         * @since 4.4.0
          */
         Request<R, O> withBody(O object);
 
@@ -554,7 +554,7 @@ public interface Resource extends Comparable<Resource> {
          *
          * @return the request body
          * @see #withBody(Object)
-         * @since 4.0.0-RC14
+         * @since 4.4.0
          */
         O getBody();
 
@@ -568,7 +568,7 @@ public interface Resource extends Comparable<Resource> {
          * @see Container#newProject()
          * @see Container#importProject()
          * @see Project#update()
-         * @since 4.0.0-RC14
+         * @since 4.4.0
          */
         Promise<R> send();
     }

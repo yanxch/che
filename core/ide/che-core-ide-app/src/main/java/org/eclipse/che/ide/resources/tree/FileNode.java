@@ -32,7 +32,7 @@ import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.OPEN;
  * @author Vlad Zhukovskiy
  * @see File
  * @see ResourceNode
- * @since 4.1.0-RC1
+ * @since 4.4.0
  */
 @Beta
 public class FileNode extends ResourceNode<File> implements HasAction {

@@ -18,7 +18,7 @@ import org.eclipse.che.ide.resource.Path;
  * A resource delta represents changes in the state of concrete resource.
  *
  * @author Vlad Zhukovskiy
- * @since 4.0.0-RC14
+ * @since @since 4.4.0
  * @see ExternalResourceDelta
  */
 @Beta
@@ -30,7 +30,7 @@ public interface ResourceDelta {
      * Delta kind constant (bit mask) indicating that the resource has been added to its its parent.
      *
      * @see ResourceDelta#getKind()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int ADDED = 0x1;
 
@@ -38,7 +38,7 @@ public interface ResourceDelta {
      * Delta kind constant (bit mask) indicating that the resource has been removed from its parent.
      *
      * @see ResourceDelta#getKind()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int REMOVED = 0x2;
 
@@ -46,7 +46,7 @@ public interface ResourceDelta {
      * Delta kind constant (bit mask) indicating that the resource has been updated.
      *
      * @see ResourceDelta#getKind()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int UPDATED = 0x4;
 
@@ -56,7 +56,7 @@ public interface ResourceDelta {
      * Change constant (bit mask) indicating that the content of the resource has changed.
      *
      * @see ResourceDelta#getFlags()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int CONTENT = 0x100;
 
@@ -65,7 +65,7 @@ public interface ResourceDelta {
      * using {@link ResourceDelta#getFromPath()}
      *
      * @see ResourceDelta#getFlags()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int MOVED_FROM = 0x200;
 
@@ -74,7 +74,7 @@ public interface ResourceDelta {
      * using {@link ResourceDelta#getToPath()}
      *
      * @see ResourceDelta#getFlags()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int MOVED_TO = 0x400;
 
@@ -83,7 +83,7 @@ public interface ResourceDelta {
      * using {@link ResourceDelta#getFromPath()}
      *
      * @see ResourceDelta#getFlags()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int COPIED_FROM = 0x800;
 
@@ -91,7 +91,7 @@ public interface ResourceDelta {
      * Change constant (bit mask) indicating that the resource was generated after user actions, not automatically.
      *
      * @see ResourceDelta#getFlags()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int DERIVED = 0x1000;
 
@@ -103,7 +103,7 @@ public interface ResourceDelta {
      * @see #ADDED
      * @see #REMOVED
      * @see #UPDATED
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int getKind();
 
@@ -134,7 +134,7 @@ public interface ResourceDelta {
      * @see #getKind()
      * @see #getFromPath()
      * @see #getToPath()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     int getFlags();
 
@@ -145,7 +145,7 @@ public interface ResourceDelta {
      * @return instance of {@link Path} or {@code null}
      * @see #getToPath()
      * @see #getFlags()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Path getFromPath();
 
@@ -156,7 +156,7 @@ public interface ResourceDelta {
      * @return instance of {@link Path} or {@code null}
      * @see #getFromPath()
      * @see #getFlags()
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Path getToPath();
 
@@ -164,7 +164,7 @@ public interface ResourceDelta {
      * Returns a handle for the affected resource.
      *
      * @return the affected resource
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     Resource getResource();
 }

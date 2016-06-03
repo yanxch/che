@@ -45,7 +45,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Vlad Zhukovskiy
  * @see ResourceDelta
  * @see Container#synchronize(ResourceDelta...)
- * @since 4.1.0-RC1
+ * @since 4.4.0
  */
 @Beta
 public class ExternalResourceDelta implements ResourceDelta {

@@ -34,7 +34,7 @@ import org.eclipse.che.ide.api.app.AppContext;
  * @author Vlad Zhukovskiy
  * @see ClipboardManager
  * @see ClipboardManager#getCutProvider()
- * @since 4.0.0-RC14
+ * @since 4.4.0
  */
 @Beta
 public interface CutProvider {
@@ -44,7 +44,7 @@ public interface CutProvider {
      * @param appContext
      *         the application context
      * @return {@code true} if active resources can be cut, otherwise {@code false}
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     boolean isCutEnable(AppContext appContext);
 
@@ -53,7 +53,7 @@ public interface CutProvider {
      *
      * @param appContext
      *         the application context
-     * @since 4.0.0-RC14
+     * @since 4.4.0
      */
     void performCut(AppContext appContext);
 }
