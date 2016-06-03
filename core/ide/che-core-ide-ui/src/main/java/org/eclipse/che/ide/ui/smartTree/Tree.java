@@ -1240,14 +1240,21 @@ public class Tree extends FocusWidget implements HasBeforeExpandNodeHandlers,
             nodeDescriptor.setExpanded(false);
             view.collapse(nodeDescriptor);
 
-            update();
-
             fireEvent(new CollapseNodeEvent(node));
         }
 
-        if (deep) {
-            setExpandChildren(node, false);
+        nodeDescriptor.setLoaded(false);
+
+        for (Node toRemove : nodeStorage.getAllChildren(node)) {
+            nodeStorage.remove(toRemove);
         }
+
+        Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+            @Override
+            public void execute() {
+                update();
+            }
+        });
     }
 
     private String register(Node node) {

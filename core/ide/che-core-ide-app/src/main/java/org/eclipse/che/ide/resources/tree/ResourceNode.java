@@ -117,7 +117,7 @@ public abstract class ResourceNode<R extends Resource> extends AbstractTreeNode 
     protected Promise<List<Node>> getChildrenImpl() {
         checkState(getData() instanceof Container, "Not a container");
 
-        return ((Container)getData()).getChildren().then(new Function<Resource[], List<Node>>() {
+        return ((Container)getData()).getChildren(true).then(new Function<Resource[], List<Node>>() {
             @Override
             public List<Node> apply(Resource[] children) throws FunctionException {
                 if (children == null || children.length == 0) {

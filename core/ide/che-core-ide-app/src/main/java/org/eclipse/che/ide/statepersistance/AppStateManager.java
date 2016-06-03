@@ -20,6 +20,8 @@ import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
+import org.eclipse.che.ide.api.workspace.WorkspaceReadyEvent;
+import org.eclipse.che.ide.api.workspace.WorkspaceReadyEvent.WorkspaceReadyHandler;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedEvent;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedHandler;
 import org.eclipse.che.ide.api.action.Action;
@@ -51,7 +53,8 @@ import java.util.Set;
 @Singleton
 public class AppStateManager implements WindowActionHandler,
                                         WorkspaceStoppedHandler,
-                                        WsAgentStateHandler {
+                                        WsAgentStateHandler,
+                                        WorkspaceReadyHandler {
 
     /** The name of the property for the mappings in user preferences. */
     public static final String PREFERENCE_PROPERTY_NAME = "IdeAppState";
@@ -86,6 +89,7 @@ public class AppStateManager implements WindowActionHandler,
         eventBus.addHandler(WorkspaceStoppedEvent.TYPE, this);
         eventBus.addHandler(WindowActionEvent.TYPE, this);
         eventBus.addHandler(WsAgentStateEvent.TYPE, this);
+        eventBus.addHandler(WorkspaceReadyEvent.getType(), this);
 
         readStateFromPreferences();
     }
@@ -115,6 +119,11 @@ public class AppStateManager implements WindowActionHandler,
 
     @Override
     public void onWsAgentStarted(WsAgentStateEvent event) {
+    }
+
+    @Override
+    public void onWorkspaceReady(WorkspaceReadyEvent event) {
+        restoreWorkspaceState();
     }
 
     @Override
