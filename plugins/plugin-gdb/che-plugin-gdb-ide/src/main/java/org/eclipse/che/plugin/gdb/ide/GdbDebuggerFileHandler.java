@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.gdb.ide;
 
+import com.google.common.base.Optional;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.Inject;
@@ -18,18 +19,16 @@ import com.google.web.bindery.event.shared.EventBus;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.event.FileEvent;
-import org.eclipse.che.ide.api.project.node.HasStorablePath;
-import org.eclipse.che.ide.api.project.node.Node;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.plugin.debugger.ide.debug.ActiveFileHandler;
 import org.eclipse.che.ide.api.editor.document.Document;
 import org.eclipse.che.ide.api.editor.text.TextPosition;
 import org.eclipse.che.ide.api.editor.texteditor.TextEditorPresenter;
-import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
-import org.eclipse.che.ide.project.node.FileReferenceNode;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -43,17 +42,17 @@ import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.OPEN;
  */
 public class GdbDebuggerFileHandler implements ActiveFileHandler {
 
-    private final EditorAgent              editorAgent;
-    private final EventBus                 eventBus;
-    private final ProjectExplorerPresenter projectExplorer;
+    private final EditorAgent editorAgent;
+    private final EventBus    eventBus;
+    private final AppContext  appContext;
 
     @Inject
     public GdbDebuggerFileHandler(EditorAgent editorAgent,
                                   EventBus eventBus,
-                                  ProjectExplorerPresenter projectExplorer) {
+                                  AppContext appContext) {
         this.editorAgent = editorAgent;
         this.eventBus = eventBus;
-        this.projectExplorer = projectExplorer;
+        this.appContext = appContext;
     }
 
     @Override
@@ -101,19 +100,17 @@ public class GdbDebuggerFileHandler implements ActiveFileHandler {
 
         String filePath = filePaths.get(pathNumber);
 
-        projectExplorer.getNodeByPath(new HasStorablePath.StorablePath(filePath)).then(new Operation<Node>() {
+        appContext.getWorkspaceRoot().getFile(filePath).then(new Operation<Optional<File>>() {
             @Override
-            public void apply(final Node node) throws OperationException {
-                if (!(node instanceof FileReferenceNode)) {
-                    return;
+            public void apply(Optional<File> file) throws OperationException {
+                if (file.isPresent()) {
+                    handleActivateFile(file.get(), callback);
+                    eventBus.fireEvent(new FileEvent(file.get(), OPEN));
                 }
-
-                handleActivateFile((VirtualFile)node, callback);
-                eventBus.fireEvent(new FileEvent((VirtualFile)node, OPEN));
             }
         }).catchError(new Operation<PromiseError>() {
             @Override
-            public void apply(PromiseError error) throws OperationException {
+            public void apply(PromiseError arg) throws OperationException {
                 // try another path
                 openFile(className, filePaths, pathNumber + 1, callback);
             }

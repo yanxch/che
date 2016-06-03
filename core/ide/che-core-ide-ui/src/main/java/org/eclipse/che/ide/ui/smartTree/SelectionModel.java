@@ -27,8 +27,8 @@ import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
 
-import org.eclipse.che.ide.api.project.node.HasAction;
-import org.eclipse.che.ide.api.project.node.Node;
+import org.eclipse.che.ide.api.data.tree.HasAction;
+import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.ui.smartTree.handler.GroupingHandlerRegistration;
 import org.eclipse.che.ide.ui.smartTree.event.SelectionChangedEvent;
 import org.eclipse.che.ide.ui.smartTree.event.SelectionChangedEvent.HasSelectionChangedHandlers;
@@ -636,6 +636,11 @@ public class SelectionModel implements HasSelectionHandlers<Node>, HasBeforeSele
         }
 
         for (Node node : nodes) {
+
+            if (tree.getNodeDescriptor(node) == null) {
+                continue;
+            }
+
             boolean isSelected = isSelected(node);
             if (!suppressEvent && !isSelected) {
                 BeforeSelectionEvent<Node> evt = BeforeSelectionEvent.fire(this, node);
@@ -777,15 +782,7 @@ public class SelectionModel implements HasSelectionHandlers<Node>, HasBeforeSele
     }
 
     protected void onRemove(Node model) {
-        if (selectionStorage.remove(model)) {
-            if (lastSelectedNode == model) {
-                lastSelectedNode = null;
-            }
-            if (getLastFocused() == model) {
-                setLastFocused(null);
-            }
-            fireSelectionChange();
-        }
+        selectionStorage.remove(model);
     }
 
     public List<Node> getSelectedNodes() {

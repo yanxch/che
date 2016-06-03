@@ -34,6 +34,8 @@ import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.AsyncRequestFactory;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
+import org.eclipse.che.ide.rest.NoOpUnmarshaller;
+import org.eclipse.che.ide.rest.StringUnmarshaller;
 import org.eclipse.che.ide.ui.loaders.request.LoaderFactory;
 import org.eclipse.che.ide.websocket.Message;
 import org.eclipse.che.ide.websocket.MessageBuilder;
@@ -67,6 +69,12 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
     private final AsyncRequestFactory    asyncRequestFactory;
     private final DtoFactory             dtoFactory;
     private final DtoUnmarshallerFactory dtoUnmarshaller;
+
+    private static final NoOpUnmarshaller noOpUnmarshaller;
+
+    static {
+        noOpUnmarshaller = new NoOpUnmarshaller();
+    }
 
     @Inject
     protected ProjectServiceClientImpl(WsAgentStateController wsAgentStateController,
@@ -102,7 +110,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
     @Override
     public void getProject(DevMachine devMachine, String path, AsyncRequestCallback<ProjectConfigDto> callback) {
-        final String requestUrl = devMachine.getWsAgentBaseUrl() + "/project/" + normalizePath(path);
+        final String requestUrl = devMachine.getWsAgentBaseUrl() + "/project" + normalizePath(path);
         asyncRequestFactory.createGetRequest(requestUrl)
                            .header(ACCEPT, MimeType.APPLICATION_JSON)
                            .loader(loaderFactory.newLoader("Getting project..."))
@@ -152,6 +160,17 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
     }
 
     @Override
+    public Promise<SourceEstimation> estimate(DevMachine devMachine, Path path, String projectType) {
+        final String requestUrl =
+                devMachine.getWsAgentBaseUrl() + "/project/estimate" + normalizePath(path.toString()) +
+                "?type=" + projectType;
+        return asyncRequestFactory.createGetRequest(requestUrl)
+                                  .header(ACCEPT, MimeType.APPLICATION_JSON)
+                                  .loader(loaderFactory.newLoader("Estimating project..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(SourceEstimation.class));
+    }
+
+    @Override
     public void resolveSources(DevMachine devMachine, String path, AsyncRequestCallback<List<SourceEstimation>> callback) {
         final String requestUrl = devMachine.getWsAgentBaseUrl() + "/project/resolve" + normalizePath(path);
         asyncRequestFactory.createGetRequest(requestUrl)
@@ -161,14 +180,36 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
     }
 
     @Override
-    public Promise<List<SourceEstimation>> resolveSources(DevMachine devMachine, String path) {
-        final String requestUrl = devMachine.getWsAgentBaseUrl() + "/project/resolve" + normalizePath(path);
+    public Promise<List<SourceEstimation>> resolveSources(DevMachine devMachine, Path path) {
+        final String requestUrl =
+                devMachine.getWsAgentBaseUrl() + "/project/resolve" + normalizePath(path.toString());
         return asyncRequestFactory.createGetRequest(requestUrl)
                                   .header(ACCEPT, MimeType.APPLICATION_JSON)
                                   .loader(loaderFactory.newLoader("Resolving sources..."))
                                   .send(dtoUnmarshaller.newListUnmarshaller(SourceEstimation.class));
     }
 
+
+    @Override
+    public void getModules(DevMachine devMachine, String path, AsyncRequestCallback<List<ProjectConfigDto>> callback) {
+        final String requestUrl = devMachine.getWsAgentBaseUrl() + "/project/modules" + normalizePath(path);
+        asyncRequestFactory.createGetRequest(requestUrl)
+                           .header(ACCEPT, MimeType.APPLICATION_JSON)
+                           .loader(loaderFactory.newLoader("Getting modules..."))
+                           .send(callback);
+    }
+
+    @Override
+    public void createModule(DevMachine devMachine,
+                             String parentProjectPath,
+                             ProjectConfigDto projectConfig,
+                             AsyncRequestCallback<ProjectConfigDto> callback) {
+        final String requestUrl = devMachine.getWsAgentBaseUrl() + "/project" + normalizePath(parentProjectPath);
+        asyncRequestFactory.createPostRequest(requestUrl, projectConfig)
+                           .header(ACCEPT, MimeType.APPLICATION_JSON)
+                           .loader(loaderFactory.newLoader("Creating module..."))
+                           .send(callback);
+    }
 
     @Override
     public void updateProject(DevMachine devMachine,
@@ -184,8 +225,8 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
     }
 
     @Override
-    public Promise<ProjectConfigDto> updateProject(DevMachine devMachine, String path, ProjectConfigDto projectConfig) {
-        final String requestUrl = devMachine.getWsAgentBaseUrl() + "/project" + normalizePath(path);
+    public Promise<ProjectConfigDto> updateProject(DevMachine devMachine, Path path, ProjectConfigDto projectConfig) {
+        final String requestUrl = devMachine.getWsAgentBaseUrl() + "/project" + normalizePath(path.toString());
         return asyncRequestFactory.createRequest(PUT, requestUrl, projectConfig, false)
                                   .header(CONTENT_TYPE, MimeType.APPLICATION_JSON)
                                   .header(ACCEPT, MimeType.APPLICATION_JSON)
@@ -237,6 +278,16 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
         final String requestUrl = devMachine.getWsAgentBaseUrl() + "/project" + normalizePath(path);
         asyncRequestFactory.createRequest(DELETE, requestUrl, null, false)
                            .loader(loaderFactory.newLoader("Deleting project..."))
+                           .send(callback);
+    }
+
+    @Override
+    public void deleteModule(DevMachine devMachine, String pathToParent, String modulePath, AsyncRequestCallback<Void> callback) {
+        final String requestUrl =
+                devMachine.getWsAgentBaseUrl() + "/project/module" + normalizePath(pathToParent) + "?module=" +
+                modulePath;
+        asyncRequestFactory.createRequest(DELETE, requestUrl, null, false)
+                           .loader(loaderFactory.newLoader("Deleting module..."))
                            .send(callback);
     }
 
@@ -299,17 +350,13 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
      */
     @Override
     public Promise<Void> importProject(final DevMachine devMachine,
-                                       final String path,
-                                       final boolean force,
+                                       final Path path,
                                        final SourceStorageDto sourceStorage) {
         return PromiseHelper.newPromise(new AsyncPromiseHelper.RequestCall<Void>() {
             @Override
             public void makeCall(final AsyncCallback<Void> callback) {
                 final StringBuilder requestUrl = new StringBuilder("/project");
-                requestUrl.append("/import").append(normalizePath(path));
-                if (force) {
-                    requestUrl.append("?force=true");
-                }
+                requestUrl.append("/import").append(normalizePath(path.toString()));
 
                 MessageBuilder builder = new MessageBuilder(POST, requestUrl.toString());
                 builder.data(dtoFactory.toJson(sourceStorage)).header(CONTENTTYPE, APPLICATION_JSON);
@@ -422,5 +469,141 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
         }
 
         return path.startsWith("/") ? path : '/' + path;
+    }
+
+    @Override
+    public Promise<ProjectConfigDto> createProject(DevMachine devMachine, ProjectConfigDto config) {
+        final String requestUrl = devMachine.getWsAgentBaseUrl() + "/project";
+
+        return asyncRequestFactory.createPostRequest(requestUrl, config)
+                                  .header(ACCEPT, MimeType.APPLICATION_JSON)
+                                  .loader(loaderFactory.newLoader("Creating project..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(ProjectConfigDto.class));
+    }
+
+    @Override
+    public Promise<ItemReference> createFile(DevMachine devMachine, Path path, String content) {
+
+        final String requestUrl =
+                devMachine.getWsAgentBaseUrl() + "/project/file" + normalizePath(path.parent().toString()) +
+                "?name=" + path.lastSegment();
+
+        return asyncRequestFactory.createPostRequest(requestUrl, null)
+                                  .data(content)
+                                  .loader(loaderFactory.newLoader("Creating file..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(ItemReference.class));
+    }
+
+    @Override
+    public Promise<String> readFile(DevMachine devMachine, Path path) {
+        final String requestUrl =
+                devMachine.getWsAgentBaseUrl() + "/project/file" + normalizePath(path.toString());
+
+        return asyncRequestFactory.createGetRequest(requestUrl)
+                                  .loader(loaderFactory.newLoader("Loading file content..."))
+                                  .send(new StringUnmarshaller());
+    }
+
+    @Override
+    public Promise<Void> writeFile(DevMachine devMachine, Path path, String content) {
+        final String requestUrl =
+                devMachine.getWsAgentBaseUrl() + "/project/file" + normalizePath(path.toString());
+
+        return asyncRequestFactory.createRequest(PUT, requestUrl, null, false)
+                                  .data(content)
+                                  .loader(loaderFactory.newLoader("Updating file..."))
+                                  .send(noOpUnmarshaller);
+    }
+
+    @Override
+    public Promise<ItemReference> createFolder(DevMachine devMachine, Path path) {
+        final String requestUrl =
+                devMachine.getWsAgentBaseUrl() + "/project/folder" + normalizePath(path.toString());
+
+        return asyncRequestFactory.createPostRequest(requestUrl, null)
+                                  .loader(loaderFactory.newLoader("Creating folder..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(ItemReference.class));
+    }
+
+    @Override
+    public Promise<Void> delete(DevMachine devMachine, Path path) {
+        final String requestUrl = devMachine.getWsAgentBaseUrl() + "/project" + normalizePath(path.toString());
+
+        return asyncRequestFactory.createRequest(DELETE, requestUrl, null, false)
+                                  .loader(loaderFactory.newLoader("Deleting project..."))
+                                  .send(noOpUnmarshaller);
+    }
+
+    @Override
+    public Promise<Void> copy(DevMachine devMachine, Path source, Path target, String newName, boolean overwrite) {
+        final String requestUrl =
+                devMachine.getWsAgentBaseUrl() + "/project/copy" + normalizePath(source.toString()) + "?to=" +
+                target.toString();
+
+        final CopyOptions copyOptions = dtoFactory.createDto(CopyOptions.class);
+        copyOptions.setName(newName);
+        copyOptions.setOverWrite(overwrite);
+
+        return asyncRequestFactory.createPostRequest(requestUrl, copyOptions)
+                                  .loader(loaderFactory.newLoader("Copying..."))
+                                  .send(noOpUnmarshaller);
+    }
+
+    @Override
+    public Promise<Void> move(DevMachine devMachine, Path source, Path target, String newName, boolean overwrite) {
+        final String requestUrl =
+                devMachine.getWsAgentBaseUrl() + "/project/move" + normalizePath(source.toString()) + "?to=" +
+                target.toString();
+
+        final MoveOptions moveOptions = dtoFactory.createDto(MoveOptions.class);
+        moveOptions.setName(newName);
+        moveOptions.setOverWrite(overwrite);
+
+        return asyncRequestFactory.createPostRequest(requestUrl, moveOptions)
+                                  .loader(loaderFactory.newLoader("Moving..."))
+                                  .send(noOpUnmarshaller);
+    }
+
+    @Override
+    public Promise<TreeElement> getTree(DevMachine devMachine, Path path, int depth, boolean includeFiles) {
+        final String requestUrl =
+                devMachine.getWsAgentBaseUrl() + "/project/tree" + normalizePath(path.toString()) + "?depth=" +
+                depth + "&includeFiles=" +
+                includeFiles;
+
+        return asyncRequestFactory.createGetRequest(requestUrl)
+                                  .header(ACCEPT, MimeType.APPLICATION_JSON)
+                                  .loader(loaderFactory.newLoader("Reading structure..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(TreeElement.class));
+    }
+
+    @Override
+    public Promise<ItemReference> getItem(DevMachine devMachine, Path path) {
+        final String requestUrl =
+                devMachine.getWsAgentBaseUrl() + "/project/item" + normalizePath(path.toString());
+
+        return asyncRequestFactory.createGetRequest(requestUrl)
+                                  .header(ACCEPT, MimeType.APPLICATION_JSON)
+                                  .loader(loaderFactory.newLoader("Getting item..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(ItemReference.class));
+    }
+
+    @Override
+    public Promise<ProjectConfigDto> getProject(DevMachine devMachine, Path path) {
+        final String requestUrl = devMachine.getWsAgentBaseUrl() + "/project" + normalizePath(path.toString());
+        return asyncRequestFactory.createGetRequest(requestUrl)
+                                  .header(ACCEPT, MimeType.APPLICATION_JSON)
+                                  .loader(loaderFactory.newLoader("Getting project..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(ProjectConfigDto.class));
+    }
+
+    @Override
+    public Promise<ProjectConfigDto> updateProject(DevMachine devMachine, ProjectConfigDto descriptor) {
+        final String requestUrl = devMachine.getWsAgentBaseUrl() + "/project" + normalizePath(descriptor.getPath());
+        return asyncRequestFactory.createRequest(PUT, requestUrl, descriptor, false)
+                                  .header(CONTENT_TYPE, MimeType.APPLICATION_JSON)
+                                  .header(ACCEPT, MimeType.APPLICATION_JSON)
+                                  .loader(loaderFactory.newLoader("Updating project..."))
+                                  .send(dtoUnmarshaller.newUnmarshaller(ProjectConfigDto.class));
     }
 }

@@ -11,33 +11,37 @@
 package org.eclipse.che.ide.actions;
 
 import com.google.inject.Inject;
+
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.workspace.WorkspaceServiceClient;
-import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.action.Action;
 import org.eclipse.che.ide.api.action.ActionEvent;
-import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.parts.PerspectiveManager;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
  * The class contains business logic to stop workspace.
  *
  * @author Dmitry Shnurenko
+ * @author Vlad Zhukovskyi
  */
 public class StopMachineAction extends Action {
 
-    private final AppContext             appContext;
     private final WorkspaceServiceClient workspaceService;
+    private final AppContext             appContext;
 
     @Inject
     public StopMachineAction(CoreLocalizationConstant locale,
-                             AppContext appContext,
-                             WorkspaceServiceClient workspaceService) {
+                             WorkspaceServiceClient workspaceService,
+                             AppContext appContext) {
         super(locale.stopWsTitle(), locale.stopWsDescription(), null, null);
 
-        this.appContext = appContext;
         this.workspaceService = workspaceService;
+        this.appContext = appContext;
     }
 
     @Override
@@ -50,15 +54,15 @@ public class StopMachineAction extends Action {
         }
 
         event.getPresentation().setVisible(true);
-        event.getPresentation().setEnabled(appContext.getWorkspace() != null);
+        event.getPresentation().setEnabled(!isNullOrEmpty(appContext.getDevMachine().getId()));
     }
 
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent event) {
-        final WorkspaceDto workspace = appContext.getWorkspace();
+        checkNotNull(appContext.getDevMachine().getId(), "Workspace id should not be null");
 
-        workspaceService.stop(workspace.getId());
+        workspaceService.stop(appContext.getDevMachine().getId());
     }
 
 }

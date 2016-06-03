@@ -20,18 +20,17 @@ import com.google.gwt.event.dom.client.MouseOutEvent;
 import com.google.gwt.event.dom.client.MouseOutHandler;
 import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.CssResource;
-import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.UIObject;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Provider;
 
 import org.eclipse.che.ide.api.action.Action;
@@ -39,6 +38,7 @@ import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.action.ActionGroup;
 import org.eclipse.che.ide.api.action.ActionManager;
 import org.eclipse.che.ide.api.action.ActionSelectedHandler;
+import org.eclipse.che.ide.api.action.CustomComponentAction;
 import org.eclipse.che.ide.api.action.Presentation;
 import org.eclipse.che.ide.api.action.Separator;
 import org.eclipse.che.ide.api.action.ToggleAction;
@@ -273,9 +273,18 @@ public class PopupMenu extends Composite {
                     work++;
                 }
 
-                table.setHTML(i, work, "<nobr id=\"" + idPrefix + presentation.getText() + "\">" + presentation.getText() + "</nobr>");
+                if (menuItem instanceof CustomComponentAction) {
+                    CustomComponentAction customComponentAction = (CustomComponentAction)menuItem;
+                    Widget component = customComponentAction.createCustomComponent(presentation);
+                    table.setWidget(i, work, component);
+                } else {
+                    table.setHTML(i, work, "<nobr id=\"" + idPrefix + presentation.getText() + "\">" + presentation.getText() + "</nobr>");
+                }
+
                 table.getCellFormatter().setStyleName(i, work, presentation.isEnabled() ? POPUP_RESOURCES.popup().popupMenuTitleField()
-                                                                               : POPUP_RESOURCES.popup().popupMenuTitleFieldDisabled());
+                                                                                        : POPUP_RESOURCES.popup().popupMenuTitleFieldDisabled());
+
+
 
                 work++;
                 String hotKey = KeyMapUtil.getShortcutText(keyBindingAgent.getKeyBinding(actionManager.getId(menuItem)));

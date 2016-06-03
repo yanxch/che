@@ -15,11 +15,12 @@ import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.debug.shared.model.Location;
 import org.eclipse.che.ide.api.app.AppContext;
-import org.eclipse.che.ide.api.app.CurrentProject;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
 import org.eclipse.che.ide.api.debug.DebuggerServiceClient;
 import org.eclipse.che.ide.api.filetypes.FileTypeRegistry;
-import org.eclipse.che.ide.api.project.tree.VirtualFile;
+import org.eclipse.che.ide.api.resources.Project;
+import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.debug.DebuggerDescriptor;
 import org.eclipse.che.ide.debug.DebuggerManager;
 import org.eclipse.che.ide.dto.DtoFactory;
@@ -79,15 +80,17 @@ public class JavaDebugger extends AbstractDebugger {
 
     @Override
     protected List<String> fqnToPath(@NotNull Location location) {
-        CurrentProject currentProject = appContext.getCurrentProject();
+        final Resource resource = appContext.getResource();
 
-        if (currentProject == null) {
+        if (resource == null) {
             return Collections.emptyList();
         }
 
+        final Project project = resource.getRelatedProject().get();
+
         String pathSuffix = location.getTarget().replace(".", "/") + ".java";
 
-        List<String> sourceFolders = JavaSourceFolderUtil.getSourceFolders(currentProject);
+        List<String> sourceFolders = JavaSourceFolderUtil.getSourceFolders(project);
         List<String> filePaths = new ArrayList<>(sourceFolders.size() + 1);
 
         for (String sourceFolder : sourceFolders) {

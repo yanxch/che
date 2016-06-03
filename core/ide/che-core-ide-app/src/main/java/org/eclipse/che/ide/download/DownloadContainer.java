@@ -18,6 +18,8 @@ import com.google.inject.Singleton;
 /**
  * The purpose of this class is avoid opening a new window when downloading
  *
+ * TODO handle multiple files downloading
+ *
  * @author Roman Nikitenko
  */
 @Singleton

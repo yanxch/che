@@ -20,7 +20,7 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.Event;
 
-import org.eclipse.che.ide.api.project.node.Node;
+import org.eclipse.che.ide.api.data.tree.Node;
 
 /**
  * @author Vlad Zhukovskiy
@@ -291,6 +291,10 @@ public class TreeView {
     }
 
     private void setClassName(Element element, String cls, boolean add) {
+        if (element == null) {
+            return;
+        }
+
         if (add) {
             element.addClassName(cls);
         } else {
