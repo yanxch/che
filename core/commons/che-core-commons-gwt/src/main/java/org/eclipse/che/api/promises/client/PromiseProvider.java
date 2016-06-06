@@ -20,22 +20,81 @@ import org.eclipse.che.api.promises.client.js.Executor;
 import org.eclipse.che.api.promises.client.js.JsPromiseProvider;
 
 /**
+ * A smattering of useful methods to work with Promises.
+ *
  * @author Vlad Zhukovskyi
+ * @since 4.3.0
  */
 @Beta
 @ImplementedBy(JsPromiseProvider.class)
 public interface PromiseProvider {
+
+    /**
+     * Creates a new promise using the provided executor.
+     *
+     * @param conclusion
+     *         the executor
+     * @param <V>
+     *         the type of the promised value
+     * @return a promise
+     */
     <V> Promise<V> create(Executor<V> conclusion);
 
+    /**
+     * Creates a promise that resolves as soon as all the promises used as parameters are resolved or
+     * rejected as soon as the first rejection happens on one of the included promises.
+     * This is useful for aggregating results of multiple promises together.
+     *
+     * @param promises
+     *         the included promises
+     * @return a promise with an array of unit values as fulfillment value
+     */
     Promise<JsArrayMixed> all(ArrayOf<Promise<?>> promises);
 
+    /** @see {@link #all(ArrayOf)} */
     Promise<JsArrayMixed> all(final Promise<?>... promises);
 
+    /**
+     * Returns a promise that is rejected with the given reason.
+     *
+     * @param reason
+     *         the reason of promise rejection
+     * @param <U>
+     *         the type of the returned promise
+     * @return a promise
+     */
     <U> Promise<U> reject(PromiseError reason);
 
+    /**
+     * Returns a promise that is rejected with the given reason.
+     *
+     * @param message
+     *         the reason of promise rejection
+     * @param <U>
+     *         the type of the returned promise
+     * @return a promise
+     */
     <U> Promise<U> reject(String message);
 
+    /**
+     * Returns a promise that is rejected with the given reason.
+     *
+     * @param reason
+     *         the reason of promise rejection
+     * @param <U>
+     *         the type of the returned promise
+     * @return a promise
+     */
     <U> Promise<U> reject(Throwable reason);
 
+    /**
+     * Returns a promise that is resolved with the given {@code value}.
+     *
+     * @param value
+     *         the 'promised' value
+     * @param <U>
+     *         the type of the returned promise
+     * @return a promise that is resolved with the specified value
+     */
     <U> Promise<U> resolve(U value);
 }
