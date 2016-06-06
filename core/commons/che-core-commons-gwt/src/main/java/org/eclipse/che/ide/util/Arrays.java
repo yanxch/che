@@ -20,7 +20,7 @@ import static java.util.Arrays.copyOf;
  * Utility methods to operate with arrays.
  *
  * @author Vlad Zhukovskiy
- * @since 4.4.0
+ * @since 4.3.0
  */
 @Beta
 public class Arrays {
@@ -33,7 +33,7 @@ public class Arrays {
      * @param <T>
      *         any type of the given array
      * @return {@code true} if given array is null or empty, otherwise {@code false}
-     * @since 4.4.0
+     * @since 4.3.0
      */
     public static <T> boolean isNullOrEmpty(T[] array) {
         return array == null || array.length == 0;
@@ -51,7 +51,7 @@ public class Arrays {
      * @return the copy of given {@code array} with added {@code element}
      * @throws IllegalArgumentException
      *         in case if given {@code arrays} is null
-     * @since 4.4.0
+     * @since 4.3.0
      */
     public static <T> T[] add(T[] array, T element) {
         checkArgument(array != null, "Input array is null");
@@ -64,12 +64,42 @@ public class Arrays {
         return array;
     }
 
+    /**
+     * Checks if given {@code element} exists in {@code array}.
+     *
+     * @param array
+     *         arrays to check
+     * @param element
+     *         element to check for existence
+     * @param <T>
+     *         type of given {@code array}
+     * @return {@code true} if input {@code element} exists in array, otherwise {@code false}
+     * @throws IllegalArgumentException
+     *         in case if given {@code array} is null
+     * @since 4.3.0
+     */
     public static <T> boolean contains(T[] array, T element) {
         checkArgument(array != null, "Input array is null");
 
         return indexOf(array, element) != -1;
     }
 
+    /**
+     * Returns the index of the first occurrence of the specified element {@code o}
+     * in given {@code array}, or -1 if given {@code array} does not contain the element {@code o}.
+     *
+     * @param array
+     *         input array
+     * @param o
+     *         element to search for
+     * @param <T>
+     *         type of given {@code array}
+     * @return the index of the first occurrence of the specified element in
+     * this list, or -1 if this list does not contain the element
+     * @throws IllegalArgumentException
+     *         in case if given {@code array} is null
+     * @since 4.3.0
+     */
     public static <T> int indexOf(T[] array, T o) {
         checkArgument(array != null, "Input array is null");
 
@@ -87,6 +117,24 @@ public class Arrays {
         return -1;
     }
 
+    /**
+     * Retains only the elements in given {@code o1} array that are contained in the
+     * specified {@code o2}. In other words, removes from {@code o1} all
+     * of its elements that are not contained in the specified array {@code o2}.
+     *
+     * @param o1
+     *         input array
+     * @param o2
+     *         array containing elements to be retained in {@code o1}
+     * @param complement
+     *         true if operation should be performed with retain algorithm, false means that from {@code o1} should be removed all elements
+     *         that contains in {@code o2}
+     * @param <T>
+     *         type of given {@code o1} and {@code o2}
+     * @return copy of retained array
+     * @throws IllegalArgumentException
+     *         in case if given arrays null
+     */
     public static <T> T[] batchRemove(T[] o1, T[] o2, boolean complement) {
         checkArgument(o1 != null && o2 != null);
 
@@ -115,6 +163,21 @@ public class Arrays {
         }
     }
 
+    /**
+     * Removes the first occurrence of the specified {@code element} from the given {@code array},
+     * if it is present and returns the copy of modified array.
+     *
+     * @param array
+     *         the array from which {@code element} should be removed
+     * @param element
+     *         {@code element} to remove
+     * @param <T>
+     *         type of given {@code array}
+     * @return the copy of given {@code array} without removed {@code element}
+     * @throws IllegalArgumentException
+     *         in case if given {@code arrays} is null
+     * @since 4.3.0
+     */
     public static <T> T[] remove(T[] array, T element) {
         checkArgument(array != null, "Input array is null");
 
