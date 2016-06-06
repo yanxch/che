@@ -34,7 +34,6 @@ import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.AsyncRequestFactory;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
-import org.eclipse.che.ide.rest.NoOpUnmarshaller;
 import org.eclipse.che.ide.rest.StringUnmarshaller;
 import org.eclipse.che.ide.ui.loaders.request.LoaderFactory;
 import org.eclipse.che.ide.websocket.Message;
@@ -69,12 +68,6 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
     private final AsyncRequestFactory    asyncRequestFactory;
     private final DtoFactory             dtoFactory;
     private final DtoUnmarshallerFactory dtoUnmarshaller;
-
-    private static final NoOpUnmarshaller noOpUnmarshaller;
-
-    static {
-        noOpUnmarshaller = new NoOpUnmarshaller();
-    }
 
     @Inject
     protected ProjectServiceClientImpl(WsAgentStateController wsAgentStateController,
@@ -512,7 +505,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
         return asyncRequestFactory.createRequest(PUT, requestUrl, null, false)
                                   .data(content)
                                   .loader(loaderFactory.newLoader("Updating file..."))
-                                  .send(noOpUnmarshaller);
+                                  .send();
     }
 
     @Override
@@ -531,7 +524,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
         return asyncRequestFactory.createRequest(DELETE, requestUrl, null, false)
                                   .loader(loaderFactory.newLoader("Deleting project..."))
-                                  .send(noOpUnmarshaller);
+                                  .send();
     }
 
     @Override
@@ -546,7 +539,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
         return asyncRequestFactory.createPostRequest(requestUrl, copyOptions)
                                   .loader(loaderFactory.newLoader("Copying..."))
-                                  .send(noOpUnmarshaller);
+                                  .send();
     }
 
     @Override
@@ -561,7 +554,7 @@ public class ProjectServiceClientImpl implements ProjectServiceClient {
 
         return asyncRequestFactory.createPostRequest(requestUrl, moveOptions)
                                   .loader(loaderFactory.newLoader("Moving..."))
-                                  .send(noOpUnmarshaller);
+                                  .send();
     }
 
     @Override
