@@ -19,7 +19,7 @@ import static java.util.Arrays.copyOf;
 /**
  * Utility methods to operate with arrays.
  *
- * @author Vlad Zhukovskiy
+ * @author Vlad Zhukovskyi
  * @since 4.3.0
  */
 @Beta
@@ -134,6 +134,7 @@ public class Arrays {
      * @return copy of retained array
      * @throws IllegalArgumentException
      *         in case if given arrays null
+     * @since 4.3.0
      */
     public static <T> T[] batchRemove(T[] o1, T[] o2, boolean complement) {
         checkArgument(o1 != null && o2 != null);

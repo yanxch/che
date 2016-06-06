@@ -23,8 +23,6 @@ public class ArraysTest {
     private static final Object O1 = new Object();
     private static final Object O2 = new Object();
     private static final Object O3 = new Object();
-    private static final Object O4 = new Object();
-    private static final Object O5 = new Object();
 
     @Test
     public void arrayShouldCheckForEmptiness() throws Exception {
