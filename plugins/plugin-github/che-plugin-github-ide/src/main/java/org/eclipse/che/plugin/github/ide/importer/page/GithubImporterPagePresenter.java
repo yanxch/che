@@ -101,7 +101,7 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
     }
 
     @Override
-    public void projectNameChanged(@NotNull String name) {
+    public void onProjectNameChanged(@NotNull String name) {
         if (ignoreChanges) {
             return;
         }
@@ -124,7 +124,7 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
     }
 
     @Override
-    public void projectUrlChanged(@NotNull String url) {
+    public void onProjectUrlChanged(@NotNull String url) {
         if (ignoreChanges) {
             return;
         }
@@ -145,7 +145,7 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
     }
 
     @Override
-    public void projectDescriptionChanged(@NotNull String projectDescription) {
+    public void onProjectDescriptionChanged(@NotNull String projectDescription) {
         dataObject.setDescription(projectDescription);
         updateDelegate.updateControls();
     }
@@ -166,14 +166,14 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
     }
 
     @Override
-    public void keepDirectorySelected(boolean keepDirectory) {
+    public void onKeepDirectorySelected(boolean keepDirectory) {
         view.enableDirectoryNameField(keepDirectory);
 
         if (keepDirectory) {
             projectParameters().put("keepDir", view.getDirectoryName());
             dataObject.withType("blank");
             view.highlightDirectoryNameField(!NameUtils.checkProjectName(view.getDirectoryName()));
-            view.focusDirectoryNameFiend();
+            view.focusDirectoryNameField();
         } else {
             projectParameters().remove("keepDir");
             dataObject.withType(null);
@@ -182,7 +182,7 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
     }
 
     @Override
-    public void keepDirectoryNameChanged(@NotNull String directoryName) {
+    public void onKeepDirectoryNameChanged(@NotNull String directoryName) {
         if (view.keepDirectory()) {
             projectParameters().put("keepDir", directoryName);
             dataObject.withType("blank");
@@ -191,6 +191,27 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
             projectParameters().remove("keepDir");
             dataObject.withType(null);
             view.highlightDirectoryNameField(false);
+        }
+    }
+
+    @Override
+    public void onBranchCheckBoxSelected(boolean isSelected) {
+        view.enableBranchNameField(isSelected);
+
+        if (isSelected) {
+            projectParameters().put("branch", view.getBranchName());
+            view.focusBranchNameField();
+        } else {
+            projectParameters().remove("branch");
+        }
+    }
+
+    @Override
+    public void onBranchNameChanged(@NotNull String branchName) {
+        if (view.isBranchCheckBoxSelected()) {
+            projectParameters().put("branch", branchName);
+        } else {
+            projectParameters().remove("branch");
         }
     }
 
@@ -211,8 +232,11 @@ public class GithubImporterPagePresenter extends AbstractWizardPage<ProjectConfi
         view.setProjectUrl(dataObject.getSource().getLocation());
 
         view.setKeepDirectoryChecked(false);
+        view.setBranchCheckBoxSelected(false);
         view.setDirectoryName("");
+        view.setBranchName("");
         view.enableDirectoryNameField(false);
+        view.enableBranchNameField(false);
         view.highlightDirectoryNameField(false);
 
         view.setInputsEnableState(true);

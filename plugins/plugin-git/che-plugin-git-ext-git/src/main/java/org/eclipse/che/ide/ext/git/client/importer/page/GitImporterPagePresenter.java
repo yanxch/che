@@ -130,7 +130,7 @@ public class GitImporterPagePresenter extends AbstractWizardPage<ProjectConfigDt
             projectParameters().put("keepDir", view.getDirectoryName());
             dataObject.withType("blank");
             view.highlightDirectoryNameField(!NameUtils.checkProjectName(view.getDirectoryName()));
-            view.focusDirectoryNameFiend();
+            view.focusDirectoryNameField();
         } else {
             projectParameters().remove("keepDir");
             dataObject.withType(null);
@@ -157,6 +157,7 @@ public class GitImporterPagePresenter extends AbstractWizardPage<ProjectConfigDt
 
         if (view.isBranchName()) {
             projectParameters().put("branch", view.getBranchName());
+            view.focusBranchNameField();
         } else {
             projectParameters().remove("branch");
         }

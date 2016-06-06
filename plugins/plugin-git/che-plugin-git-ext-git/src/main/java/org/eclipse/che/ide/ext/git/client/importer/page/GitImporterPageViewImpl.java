@@ -256,6 +256,17 @@ public class GitImporterPageViewImpl extends Composite implements GitImporterPag
     }
 
     @Override
+    public void focusBranchNameField() {
+        Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+            @Override
+            public void execute() {
+                branch.setFocus(true);
+                branch.selectAll();
+            }
+        });
+    }
+
+    @Override
     public String getBranchName() {
         return branch.getValue();
     }
@@ -270,7 +281,7 @@ public class GitImporterPageViewImpl extends Composite implements GitImporterPag
     }
 
     @Override
-    public void focusDirectoryNameFiend() {
+    public void focusDirectoryNameField() {
         Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
             @Override
             public void execute() {
