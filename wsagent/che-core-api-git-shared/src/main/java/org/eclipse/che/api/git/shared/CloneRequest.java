@@ -50,11 +50,11 @@ public interface CloneRequest extends GitRequest {
     CloneRequest withRemoteName(String remoteName);
 
     /** @return true if 'Recursive' parameter enabled */
-    boolean getRecursiveEnabled();
+    boolean isRecursive();
 
-    void setRecursiveEnabled(boolean recursiveEnabled);
+    void setRecursive(boolean recursive);
 
-    CloneRequest withRecursiveEnabled(boolean recursiveEnabled);
+    CloneRequest withRecursive(boolean recursive);
 
     /**
      * @return time (in seconds) to wait without data transfer occurring before aborting fetching data from remote repository. If 0 then

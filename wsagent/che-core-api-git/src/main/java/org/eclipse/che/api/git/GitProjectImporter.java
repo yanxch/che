@@ -19,7 +19,6 @@ import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.UnauthorizedException;
 import org.eclipse.che.api.core.model.project.SourceStorage;
 import org.eclipse.che.api.core.notification.EventService;
-import org.eclipse.che.api.core.util.FileCleaner;
 import org.eclipse.che.api.core.util.LineConsumerFactory;
 import org.eclipse.che.api.git.shared.Branch;
 import org.eclipse.che.api.git.shared.BranchListRequest;
@@ -36,12 +35,9 @@ import org.eclipse.che.dto.server.DtoFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -207,7 +203,7 @@ public class GitProjectImporter implements ProjectImporter {
         final CloneRequest request = dtoFactory.createDto(CloneRequest.class)
                                                .withRemoteName(remoteName)
                                                .withRemoteUri(url)
-                                               .withRecursiveEnabled(recursiveEnabled);
+                                               .withRecursive(recursiveEnabled);
         git.clone(request);
     }
 

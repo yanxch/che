@@ -449,7 +449,7 @@ class JGitConnection implements GitConnection {
             CloneCommand cloneCommand = Git.cloneRepository()
                                            .setDirectory(new File(request.getWorkingDir()))
                                            .setRemote(request.getRemoteName())
-                                           .setCloneSubmodules(request.getRecursiveEnabled())
+                                           .setCloneSubmodules(request.isRecursive())
                                            .setURI(remoteUri);
             if (request.getBranchesToFetch().isEmpty()) {
                 cloneCommand.setCloneAllBranches(true);
