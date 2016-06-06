@@ -32,13 +32,13 @@ public interface PromiseProvider {
     /**
      * Creates a new promise using the provided executor.
      *
-     * @param conclusion
+     * @param executor
      *         the executor
      * @param <V>
      *         the type of the promised value
      * @return a promise
      */
-    <V> Promise<V> create(Executor<V> conclusion);
+    <V> Promise<V> create(Executor<V> executor);
 
     /**
      * Creates a promise that resolves as soon as all the promises used as parameters are resolved or
