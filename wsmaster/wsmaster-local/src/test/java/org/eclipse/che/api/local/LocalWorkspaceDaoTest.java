@@ -95,36 +95,38 @@ public class LocalWorkspaceDaoTest {
         recipe.setScript("FROM codenvy/jdk7\nCMD tail -f /dev/null");
 
         final MachineSourceImpl machineSource = new MachineSourceImpl("recipe").setLocation("recipe-url");
-        final MachineConfigImpl machineCfg1 = new MachineConfigImpl(true,
-                                                                    "dev-machine",
-                                                                    "machine-type",
-                                                                    machineSource,
-                                                                    new LimitsImpl(512),
-                                                                    Arrays.asList(new ServerConfImpl("ref1",
-                                                                                                     "8080",
-                                                                                                     "https",
-                                                                                                     "some/path"),
-                                                                                  new ServerConfImpl("ref2",
-                                                                                                     "9090/udp",
-                                                                                                     "someprotocol",
-                                                                                                     "/some/path")),
-                                                                    Collections.singletonMap("key1", "value1"),
-                                                                    Collections.emptyList());
-        final MachineConfigImpl machineCfg2 = new MachineConfigImpl(false,
-                                                                    "non-dev-machine",
-                                                                    "machine-type-2",
-                                                                    machineSource,
-                                                                    new LimitsImpl(2048),
-                                                                    Arrays.asList(new ServerConfImpl("ref1",
-                                                                                                     "8080",
-                                                                                                     "https",
-                                                                                                     "some/path"),
-                                                                                  new ServerConfImpl("ref2",
-                                                                                                     "9090/udp",
-                                                                                                     "someprotocol",
-                                                                                                     "/some/path")),
-                                                                    Collections.singletonMap("key1", "value1"),
-                                                                    Collections.emptyList());
+        final MachineConfigImpl machineCfg1 = MachineConfigImpl.builder()
+                                                       .setDev(true)
+                                                       .setName("dev-machine")
+                                                       .setType("machineType")
+                                                       .setSource(machineSource)
+                                                       .setLimits(new LimitsImpl(512))
+                                                       .setServers(Arrays.asList(new ServerConfImpl("ref1",
+                                                                                                    "8080",
+                                                                                                    "https",
+                                                                                                    "some/path"),
+                                                                                 new ServerConfImpl("ref2",
+                                                                                                    "9090/udp",
+                                                                                                    "someprotocol",
+                                                                                                    "/some/path")))
+                                                       .setEnvVariables(Collections.singletonMap("key1", "value1"))
+                                                       .setDependsOn(Collections.emptyList()).build();
+        final MachineConfigImpl machineCfg2 = MachineConfigImpl.builder()
+                                                               .setDev(false)
+                                                               .setName("non-dev-machine")
+                                                               .setType("machine-type-2")
+                                                               .setSource(machineSource)
+                                                               .setLimits(new LimitsImpl(2048))
+                                                               .setServers(Arrays.asList(new ServerConfImpl("ref1",
+                                                                                                            "8080",
+                                                                                                            "https",
+                                                                                                            "some/path"),
+                                                                                         new ServerConfImpl("ref2",
+                                                                                                            "9090/udp",
+                                                                                                            "someprotocol",
+                                                                                                            "/some/path")))
+                                                               .setEnvVariables(Collections.singletonMap("key1", "value1"))
+                                                               .setDependsOn(Collections.emptyList()).build();
 
         final EnvironmentImpl env1 = new EnvironmentImpl("my-environment", recipe, asList(machineCfg1, machineCfg2));
         final EnvironmentImpl env2 = new EnvironmentImpl("my-environment-2", recipe, singletonList(machineCfg1));

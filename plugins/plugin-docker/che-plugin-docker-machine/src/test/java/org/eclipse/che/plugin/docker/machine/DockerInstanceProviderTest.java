@@ -342,22 +342,30 @@ public class DockerInstanceProviderTest {
                                                                                           eq(MACHINE_NAME));
 
         final MachineSourceImpl machineSource = new MachineSourceImpl("type").setLocation("location");
-        final MachineImpl machine =
-                new MachineImpl(new MachineConfigImpl(false,
-                                                      MACHINE_NAME,
-                                                      "machineType",
-                                                      machineSource,
-                                                      new LimitsImpl(MEMORY_LIMIT_MB),
-                                                      asList(new ServerConfImpl("ref1", "8080", "https", null),
-                                                             new ServerConfImpl("ref2", "9090/udp", "someprotocol", null)),
-                                                      Collections.singletonMap("key1", "value1"),
-                                                      Collections.emptyList()),
-                                "machineId",
-                                WORKSPACE_ID,
-                                "envName",
-                                USER_NAME,
-                                MachineStatus.CREATING,
-                                null);
+        final MachineConfigImpl machineCfg1 = MachineConfigImpl.builder()
+                                                               .setDev(false)
+                                                               .setName(MACHINE_NAME)
+                                                               .setType("machineType")
+                                                               .setSource(machineSource)
+                                                               .setLimits(new LimitsImpl(MEMORY_LIMIT_MB))
+                                                               .setServers(asList(new ServerConfImpl("ref1",
+                                                                                                     "8080",
+                                                                                                     "https",
+                                                                                                     null),
+                                                                                  new ServerConfImpl("ref2",
+                                                                                                     "9090/udp",
+                                                                                                     "someprotocol",
+                                                                                                     null)))
+                                                               .setEnvVariables(Collections.singletonMap("key1", "value1"))
+                                                               .setDependsOn(Collections.emptyList())
+                                                               .build();
+        final MachineImpl machine = new MachineImpl(machineCfg1,
+                                                    "machineId",
+                                                    WORKSPACE_ID,
+                                                    "envName",
+                                                    USER_NAME,
+                                                    MachineStatus.CREATING,
+                                                    null);
 
 
         createInstanceFromSnapshot(machine);
@@ -381,22 +389,30 @@ public class DockerInstanceProviderTest {
                                                                                           eq(MACHINE_NAME));
 
         final MachineSourceImpl machineSource = new MachineSourceImpl(DOCKER_FILE_TYPE).setLocation("location");
-        final MachineImpl machine =
-                new MachineImpl(new MachineConfigImpl(false,
-                                                      MACHINE_NAME,
-                                                      "machineType",
-                                                      machineSource,
-                                                      new LimitsImpl(MEMORY_LIMIT_MB),
-                                                      asList(new ServerConfImpl("ref1", "8080", "https", null),
-                                                             new ServerConfImpl("ref2", "9090/udp", "someprotocol", null)),
-                                                      Collections.singletonMap("key1", "value1"),
-                                                      Collections.emptyList()),
-                                "machineId",
-                                WORKSPACE_ID,
-                                "envName",
-                                USER_NAME,
-                                MachineStatus.CREATING,
-                                null);
+        final MachineConfigImpl machineCfg1 = MachineConfigImpl.builder()
+                                                               .setDev(false)
+                                                               .setName(MACHINE_NAME)
+                                                               .setType("machineType")
+                                                               .setSource(machineSource)
+                                                               .setLimits(new LimitsImpl(MEMORY_LIMIT_MB))
+                                                               .setServers(asList(new ServerConfImpl("ref1",
+                                                                                                     "8080",
+                                                                                                     "https",
+                                                                                                     null),
+                                                                                  new ServerConfImpl("ref2",
+                                                                                                     "9090/udp",
+                                                                                                     "someprotocol",
+                                                                                                     null)))
+                                                               .setEnvVariables(Collections.singletonMap("key1", "value1"))
+                                                               .setDependsOn(Collections.emptyList())
+                                                               .build();
+        final MachineImpl machine = new MachineImpl(machineCfg1,
+                                                    "machineId",
+                                                    WORKSPACE_ID,
+                                                    "envName",
+                                                    USER_NAME,
+                                                    MachineStatus.CREATING,
+                                                    null);
 
         createInstanceFromRecipe(machine);
 
@@ -1922,20 +1938,21 @@ public class DockerInstanceProviderTest {
     }
 
     private MachineConfigImpl.MachineConfigImplBuilder getMachineConfigBuilder() {
-        return MachineConfigImpl.builder().fromConfig(new MachineConfigImpl(false,
-                                                                            MACHINE_NAME,
-                                                                            "machineType",
-                                                                            new MachineSourceImpl(DOCKER_FILE_TYPE).setContent("FROM codenvy"),
-                                                                            new LimitsImpl(MEMORY_LIMIT_MB),
-                                                                            asList(new ServerConfImpl("ref1",
-                                                                                                      "8080",
-                                                                                                      "https",
-                                                                                                      null),
-                                                                                   new ServerConfImpl("ref2",
-                                                                                                      "9090/udp",
-                                                                                                      "someprotocol",
-                                                                                                      null)),
-                                                                            Collections.singletonMap("key1", "value1"),
-                                                                            Collections.emptyList()));
+        return MachineConfigImpl.builder()
+                                .setDev(false)
+                                .setName(MACHINE_NAME)
+                                .setType("machineType")
+                                .setSource(new MachineSourceImpl(DOCKER_FILE_TYPE).setContent("FROM codenvy"))
+                                .setLimits(new LimitsImpl(MEMORY_LIMIT_MB))
+                                .setServers(asList(new ServerConfImpl("ref1",
+                                                                      "8080",
+                                                                      "https",
+                                                                      null),
+                                                   new ServerConfImpl("ref2",
+                                                                      "9090/udp",
+                                                                      "someprotocol",
+                                                                      null)))
+                                .setEnvVariables(Collections.singletonMap("key1", "value1"))
+                                .setDependsOn(Collections.emptyList());
     }
 }

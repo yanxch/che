@@ -1227,7 +1227,7 @@ public class DockerConnector {
         removeImage(params, dockerDaemonUri);
     }
 
-    private void removeImage(final RemoveImageParams params,URI dockerDaemonUri) throws IOException {
+    private void removeImage(final RemoveImageParams params, URI dockerDaemonUri) throws IOException {
         try (DockerConnection connection = connectionFactory.openConnection(dockerDaemonUri)
                                                             .method("DELETE")
                                                             .path("/images/" + params.getImage())) {

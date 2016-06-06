@@ -142,21 +142,22 @@ public class MachineManagerTest {
 
     @Test(expectedExceptions = BadRequestException.class, expectedExceptionsMessageRegExp = "Invalid machine name @name!")
     public void shouldThrowExceptionOnMachineCreationIfMachineNameIsInvalid() throws Exception {
-        MachineConfig machineConfig = new MachineConfigImpl(false,
-                                                            "@name!",
-                                                            "machineType",
-                                                            new MachineSourceImpl("Dockerfile").setLocation("location"),
-                                                            new LimitsImpl(1024),
-                                                            Arrays.asList(new ServerConfImpl("ref1",
+        MachineConfig machineConfig = MachineConfigImpl.builder()
+                                                       .setDev(false)
+                                                       .setName("@name!")
+                                                       .setType("machineType")
+                                                       .setSource(new MachineSourceImpl("Dockerfile").setLocation("location"))
+                                                       .setLimits(new LimitsImpl(1024))
+                                                       .setServers(Arrays.asList(new ServerConfImpl("ref1",
                                                                                              "8080",
                                                                                              "https",
                                                                                              "some/path"),
                                                                           new ServerConfImpl("ref2",
                                                                                              "9090/udp",
                                                                                              "someprotocol",
-                                                                                             "/some/path")),
-                                                            Collections.singletonMap("key1", "value1"),
-                                                            Collections.emptyList());
+                                                                                             "/some/path")))
+                                                       .setEnvVariables(Collections.singletonMap("key1", "value1"))
+                                                       .setDependsOn(Collections.emptyList()).build();
         String workspaceId = "wsId";
         String environmentName = "env1";
 
@@ -273,20 +274,21 @@ public class MachineManagerTest {
     }
 
     private MachineConfigImpl createMachineConfig() {
-        return new MachineConfigImpl(false,
-                                     "MachineName",
-                                     "docker",
-                                     new MachineSourceImpl("Dockerfile").setLocation("location"),
-                                     new LimitsImpl(1024),
-                                     Arrays.asList(new ServerConfImpl("ref1",
-                                                                      "8080",
-                                                                      "https",
-                                                                      "some/path"),
-                                                   new ServerConfImpl("ref2",
-                                                                      "9090/udp",
-                                                                      "someprotocol",
-                                                                      "/some/path")),
-                                     Collections.singletonMap("key1", "value1"),
-                                     Collections.emptyList());
+        return MachineConfigImpl.builder()
+                                .setDev(false)
+                                .setName("MachineName")
+                                .setType("docker")
+                                .setSource(new MachineSourceImpl("Dockerfile").setLocation("location"))
+                                .setLimits(new LimitsImpl(1024))
+                                .setServers(Arrays.asList(new ServerConfImpl("ref1",
+                                                                             "8080",
+                                                                             "https",
+                                                                             "some/path"),
+                                                          new ServerConfImpl("ref2",
+                                                                             "9090/udp",
+                                                                             "someprotocol",
+                                                                             "/some/path")))
+                                .setEnvVariables(Collections.singletonMap("key1", "value1"))
+                                .setDependsOn(Collections.emptyList()).build();
     }
 }

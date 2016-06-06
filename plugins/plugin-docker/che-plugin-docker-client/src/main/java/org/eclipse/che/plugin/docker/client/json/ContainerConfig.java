@@ -216,7 +216,7 @@ public class ContainerConfig {
         return this;
     }
 
-    public ContainerConfig withCmd(String... cmd) {
+    public ContainerConfig withCmd(String[] cmd) {
         this.cmd = cmd;
         return this;
     }

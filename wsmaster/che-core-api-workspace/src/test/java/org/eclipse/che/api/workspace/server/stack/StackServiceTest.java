@@ -158,21 +158,22 @@ public class StackServiceTest {
         MachineSourceImpl machineSource = new MachineSourceImpl(MACHINE_SOURCE_TYPE).setLocation(MACHINE_SOURCE_LOCATION);
         int limitMemory = 1000;
         LimitsImpl limits = new LimitsImpl(limitMemory);
-        MachineConfigImpl machineConfig = new MachineConfigImpl(IS_DEV,
-                                                                MACHINE_CONFIG_NAME,
-                                                                MACHINE_TYPE,
-                                                                machineSource,
-                                                                limits,
-                                                                Arrays.asList(new ServerConfImpl("ref1",
-                                                                                                 "8080",
-                                                                                                 "https",
-                                                                                                 "some/path"),
-                                                                              new ServerConfImpl("ref2",
-                                                                                                 "9090/udp",
-                                                                                                 "someprotocol",
-                                                                                                 "/some/path")),
-                                                                Collections.singletonMap("key1", "value1"),
-                                                                Collections.emptyList());
+        MachineConfigImpl machineConfig = MachineConfigImpl.builder()
+                                                       .setDev(IS_DEV)
+                                                       .setName(MACHINE_CONFIG_NAME)
+                                                       .setType(MACHINE_TYPE)
+                                                       .setSource(machineSource)
+                                                       .setLimits(limits)
+                                                       .setServers(Arrays.asList(new ServerConfImpl("ref1",
+                                                                                                    "8080",
+                                                                                                    "https",
+                                                                                                    "some/path"),
+                                                                                 new ServerConfImpl("ref2",
+                                                                                                    "9090/udp",
+                                                                                                    "someprotocol",
+                                                                                                    "/some/path")))
+                                                       .setEnvVariables(Collections.singletonMap("key1", "value1"))
+                                                       .setDependsOn(Collections.emptyList()).build();
         EnvironmentImpl environment = new EnvironmentImpl(ENVIRONMENT_NAME, null, Collections.singletonList(machineConfig));
 
         WorkspaceConfigImpl workspaceConfig = WorkspaceConfigImpl.builder()
