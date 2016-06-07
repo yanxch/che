@@ -45,7 +45,6 @@ public class CurrentProjectChangedEvent extends GwtEvent<CurrentProjectChangedHa
     }
 
     /** Returns descriptor of the project. */
-    @NotNull
     public Project getProject() {
         return project;
     }
