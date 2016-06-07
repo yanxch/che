@@ -11,6 +11,7 @@
 package org.eclipse.che.ide.projecttype.wizard;
 
 import com.google.gwt.resources.client.ClientBundle;
+import com.google.gwt.resources.client.CssResource;
 
 import org.eclipse.che.ide.projecttype.wizard.categoriespage.CategoriesPageViewImpl;
 

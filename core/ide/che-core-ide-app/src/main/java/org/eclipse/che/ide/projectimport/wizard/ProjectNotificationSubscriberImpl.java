@@ -15,13 +15,13 @@ import com.google.gwt.json.client.JSONParser;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.machine.WsAgentStateController;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.CoreLocalizationConstant;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.project.wizard.ProjectNotificationSubscriber;
@@ -49,7 +49,7 @@ public class ProjectNotificationSubscriberImpl implements ProjectNotificationSub
     private final Operation<PromiseError>  logErrorHandler;
     private final CoreLocalizationConstant locale;
     private final NotificationManager      notificationManager;
-    private final AppContext               appContext;
+    private final String                   workspaceId;
     private final Promise<MessageBus>      messageBusPromise;
 
     private String                      wsChannel;
@@ -59,12 +59,12 @@ public class ProjectNotificationSubscriberImpl implements ProjectNotificationSub
 
     @Inject
     public ProjectNotificationSubscriberImpl(CoreLocalizationConstant locale,
+                                             AppContext appContext,
                                              NotificationManager notificationManager,
-                                             WsAgentStateController wsAgentStateController,
-                                             AppContext appContext) {
+                                             WsAgentStateController wsAgentStateController) {
         this.locale = locale;
         this.notificationManager = notificationManager;
-        this.appContext = appContext;
+        this.workspaceId = appContext.getWorkspace().getId();
         this.messageBusPromise = wsAgentStateController.getMessageBus();
         this.logErrorHandler = new Operation<PromiseError>() {
             @Override
@@ -83,7 +83,7 @@ public class ProjectNotificationSubscriberImpl implements ProjectNotificationSub
     @Override
     public void subscribe(final String projectName, final StatusNotification existingNotification) {
         this.projectName = projectName;
-        this.wsChannel = "importProject:output:" + appContext.getDevMachine().getId() + ":" + projectName;
+        this.wsChannel = "importProject:output:" + workspaceId + ":" + projectName;
         this.notification = existingNotification;
         this.subscriptionHandler = new SubscriptionHandler<String>(new LineUnmarshaller()) {
             @Override
