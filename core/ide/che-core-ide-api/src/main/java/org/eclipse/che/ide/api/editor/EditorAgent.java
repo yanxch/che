@@ -41,6 +41,21 @@ public interface EditorAgent {
     void closeEditor(@NotNull final VirtualFile file);
 
     /**
+     * Open editor with given file and scroll to given line number, call callback when editor fully loaded and initialized.
+     * @param file the file to open
+     */
+    void openAndScrollEditor(final @NotNull VirtualFile file, final int lineNumber);
+
+    /**
+     * Open editor with given file and scroll to given line number, call callback when editor fully loaded and initialized.
+     * @param file the file to open
+     * @param callback
+     */
+    void openAndScrollEditor(final @NotNull VirtualFile file,
+                             final int lineNumber,
+                             @NotNull final OpenEditorCallback callback);
+
+    /**
      * Open editor with given file, call callback when editor fully loaded and initialized.
      * @param file the file to open
      * @param callback

@@ -20,6 +20,7 @@ import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
+import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.filetypes.FileType;
 import org.eclipse.che.ide.api.filetypes.FileTypeRegistry;
 import org.eclipse.che.ide.api.notification.NotificationManager;
@@ -90,6 +91,8 @@ public class DebuggerPresenterTest extends BaseTest {
     private WorkspaceAgent               workspaceAgent;
     @Mock
     private FileTypeRegistry             fileTypeRegistry;
+    @Mock
+    private EditorAgent                  editorAgent;
 
     @Mock
     private Debugger        debugger;
@@ -125,7 +128,7 @@ public class DebuggerPresenterTest extends BaseTest {
         doReturn(ERROR_MESSAGE).when(promiseError).getMessage();
 
         presenter = spy(new DebuggerPresenter(view, constant, breakpointManager, notificationManager, debuggerResources, debuggerToolbar,
-                                              debuggerManager, workspaceAgent));
+                                              debuggerManager, workspaceAgent, editorAgent));
         doNothing().when(presenter).showDebuggerPanel();
 
         presenter.onSelectedVariableElement(selectedVariable);

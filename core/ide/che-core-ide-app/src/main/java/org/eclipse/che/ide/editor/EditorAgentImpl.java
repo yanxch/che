@@ -15,9 +15,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
-import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
-import org.eclipse.che.ide.api.project.ProjectServiceClient;
 import org.eclipse.che.api.project.shared.dto.ItemReference;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.commons.annotation.Nullable;
@@ -31,6 +28,10 @@ import org.eclipse.che.ide.api.editor.EditorPartPresenter.EditorPartCloseHandler
 import org.eclipse.che.ide.api.editor.EditorProvider;
 import org.eclipse.che.ide.api.editor.EditorRegistry;
 import org.eclipse.che.ide.api.editor.OpenEditorCallbackImpl;
+import org.eclipse.che.ide.api.editor.document.Document;
+import org.eclipse.che.ide.api.editor.text.TextPosition;
+import org.eclipse.che.ide.api.editor.texteditor.HasReadOnlyProperty;
+import org.eclipse.che.ide.api.editor.texteditor.TextEditor;
 import org.eclipse.che.ide.api.event.ActivePartChangedEvent;
 import org.eclipse.che.ide.api.event.ActivePartChangedHandler;
 import org.eclipse.che.ide.api.event.FileEvent;
@@ -42,14 +43,16 @@ import org.eclipse.che.ide.api.event.project.DeleteProjectEvent;
 import org.eclipse.che.ide.api.event.project.DeleteProjectHandler;
 import org.eclipse.che.ide.api.filetypes.FileType;
 import org.eclipse.che.ide.api.filetypes.FileTypeRegistry;
+import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
+import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.parts.PartPresenter;
 import org.eclipse.che.ide.api.parts.PropertyListener;
 import org.eclipse.che.ide.api.parts.WorkspaceAgent;
+import org.eclipse.che.ide.api.project.ProjectServiceClient;
 import org.eclipse.che.ide.api.project.node.HasStorablePath;
 import org.eclipse.che.ide.api.project.tree.VirtualFile;
-import org.eclipse.che.ide.api.editor.texteditor.HasReadOnlyProperty;
 import org.eclipse.che.ide.project.event.ResourceNodeDeletedEvent;
 import org.eclipse.che.ide.project.event.ResourceNodeRenamedEvent;
 import org.eclipse.che.ide.project.node.FileReferenceNode;
@@ -292,6 +295,47 @@ public class EditorAgentImpl implements EditorAgent {
         EditorPartPresenter openedEditor = getOpenedEditor(Path.valueOf(file.getPath()));
         if (openedEditor != null) {
             editorClosed(openedEditor);
+        }
+    }
+
+    @Override
+    public void openAndScrollEditor(final @NotNull VirtualFile file, final int lineNumber) {
+        openAndScrollEditor(file, lineNumber, new OpenEditorCallbackImpl());
+    }
+
+    @Override
+    public void openAndScrollEditor(final @NotNull VirtualFile file,
+                                    final int lineNumber,
+                                    @NotNull final OpenEditorCallback callback) {
+
+        doOpen(file, new OpenEditorCallbackImpl() {
+            @Override
+            public void onEditorOpened(EditorPartPresenter editor) {
+                scrollEditor(editor, lineNumber);
+                callback.onEditorOpened(editor);
+            }
+
+            @Override
+            public void onEditorActivated(EditorPartPresenter editor) {
+                scrollEditor(editor, lineNumber);
+                callback.onEditorActivated(editor);
+            }
+
+            @Override
+            public void onInitializationFailed() {
+                callback.onInitializationFailed();
+            }
+        });
+    }
+
+    private void scrollEditor(EditorPartPresenter editor, int lineNumber) {
+        if (editor instanceof TextEditor) {
+            Document document = ((TextEditor)editor).getDocument();
+
+            if (document != null) {
+                TextPosition newPosition = new TextPosition(lineNumber, 0);
+                document.setCursorPosition(newPosition);
+            }
         }
     }
 

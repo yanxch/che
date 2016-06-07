@@ -42,6 +42,8 @@ public interface DebuggerView extends View<DebuggerView.ActionDelegate> {
          *         variable that is selected
          */
         void onSelectedVariableElement(@NotNull MutableVariable variable);
+
+        void onBreakpointDoubleClicked(Breakpoint breakpoint);
     }
 
     /**

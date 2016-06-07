@@ -29,6 +29,7 @@ import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.debug.Breakpoint;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
 import org.eclipse.che.ide.api.debug.BreakpointManagerObserver;
+import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.parts.PartStackType;
@@ -79,6 +80,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
     private final DebuggerView                 view;
     private final DebuggerManager              debuggerManager;
     private final WorkspaceAgent               workspaceAgent;
+    private final EditorAgent editorAgent;
 
     private MutableVariable    selectedVariable;
     private List<Variable>     variables;
@@ -93,12 +95,14 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
                              final DebuggerResources debuggerResources,
                              final @DebuggerToolbar ToolbarPresenter debuggerToolbar,
                              final DebuggerManager debuggerManager,
-                             final WorkspaceAgent workspaceAgent) {
+                             final WorkspaceAgent workspaceAgent,
+                             final EditorAgent editorAgent) {
         this.view = view;
         this.debuggerResources = debuggerResources;
         this.debuggerToolbar = debuggerToolbar;
         this.debuggerManager = debuggerManager;
         this.workspaceAgent = workspaceAgent;
+        this.editorAgent = editorAgent;
         this.view.setDelegate(this);
         this.view.setTitle(TITLE);
         this.constant = constant;
@@ -176,6 +180,11 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
     @Override
     public void onSelectedVariableElement(@NotNull MutableVariable variable) {
         this.selectedVariable = variable;
+    }
+
+    @Override
+    public void onBreakpointDoubleClicked(final Breakpoint breakpoint) {
+        editorAgent.openAndScrollEditor(breakpoint.getFile(), breakpoint.getLineNumber());
     }
 
     public void showDebuggerPanel() {

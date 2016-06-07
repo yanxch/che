@@ -107,7 +107,7 @@ public class DebuggerViewImpl extends BaseView<DebuggerView.ActionDelegate> impl
             }
 
             public void onListItemDoubleClicked(Element listItemBase, Breakpoint itemData) {
-                // TODO: implement 'go to breakpoint source' feature
+                delegate.onBreakpointDoubleClicked(itemData);
             }
         };
 
