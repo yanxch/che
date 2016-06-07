@@ -63,7 +63,7 @@ public class CreateProjectAction extends AbstractPerspectiveAction {
                     path = parent.get().getLocation();
                 } else {
                     wizard.show();
-                    return;       //TODO clean the code
+                    return;
                 }
             } else {
                 path = resource.getLocation();

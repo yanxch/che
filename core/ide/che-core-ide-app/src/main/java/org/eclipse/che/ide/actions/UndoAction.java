@@ -22,8 +22,8 @@ import org.eclipse.che.ide.api.editor.texteditor.HandlesUndoRedo;
 import org.eclipse.che.ide.api.editor.texteditor.UndoableEditor;
 
 import javax.validation.constraints.NotNull;
+import java.util.Arrays;
 
-import static java.util.Collections.singletonList;
 import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspective.PROJECT_PERSPECTIVE_ID;
 
 /**
@@ -40,7 +40,7 @@ public class UndoAction extends AbstractPerspectiveAction {
     public UndoAction(EditorAgent editorAgent,
                       CoreLocalizationConstant localization,
                       Resources resources) {
-        super(singletonList(PROJECT_PERSPECTIVE_ID), localization.undoName(), localization.undoDescription(), null, resources.undo());
+        super(Arrays.asList(PROJECT_PERSPECTIVE_ID), localization.undoName(), localization.undoDescription(), null, resources.undo());
         this.editorAgent = editorAgent;
     }
 

@@ -285,17 +285,9 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
                 element.setAttribute("project", project.getLocation().toString());
             }
 
-//            if (node instanceof HasStorablePath) {
-//                element.setAttribute("path", ((HasStorablePath)node).getStorablePath());
-//            }
-
             if (node instanceof HasAction) {
                 element.setAttribute("actionable", "true");
             }
-
-//            if (node instanceof HasProjectConfig) {
-//                element.setAttribute("project", ((HasProjectConfig)node).getProjectConfig().getPath());
-//            }
 
             if (node instanceof SyntheticNode<?>) {
                 element.setAttribute("synthetic", "true");

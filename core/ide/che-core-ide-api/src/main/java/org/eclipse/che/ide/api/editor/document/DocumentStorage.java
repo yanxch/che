@@ -10,13 +10,12 @@
  *******************************************************************************/
 package org.eclipse.che.ide.api.editor.document;
 
-
-import org.eclipse.che.ide.api.editor.EditorInput;
-import org.eclipse.che.ide.api.resources.VirtualFile;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.inject.ImplementedBy;
 
 import org.eclipse.che.commons.annotation.Nullable;
+import org.eclipse.che.ide.api.editor.EditorInput;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 
 import javax.validation.constraints.NotNull;
 
