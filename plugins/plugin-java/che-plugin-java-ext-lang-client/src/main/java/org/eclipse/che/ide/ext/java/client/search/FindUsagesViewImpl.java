@@ -12,7 +12,6 @@ package org.eclipse.che.ide.ext.java.client.search;
 
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
-import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
