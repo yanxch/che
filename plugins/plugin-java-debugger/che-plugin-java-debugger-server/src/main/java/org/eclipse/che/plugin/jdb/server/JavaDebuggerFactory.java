@@ -46,6 +46,11 @@ public class JavaDebuggerFactory implements DebuggerFactory {
             throw new DebuggerException("Can't establish connection: port property is unknown.");
         }
 
+        String projectPath = normalizedProps.get("PROJECT");
+        if (projectPath == null) {
+            throw new DebuggerException("Can't establish connection: project property is unknown.");
+        }
+
         int port;
         try {
             port = Integer.parseInt(portProp);
@@ -53,6 +58,6 @@ public class JavaDebuggerFactory implements DebuggerFactory {
             throw new DebuggerException("Unknown port property format: " + portProp);
         }
 
-        return new JavaDebugger(host, port, debuggerCallback);
+        return new JavaDebugger(host, port, projectPath, debuggerCallback);
     }
 }

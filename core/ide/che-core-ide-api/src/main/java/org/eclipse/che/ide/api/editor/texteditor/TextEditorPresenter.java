@@ -67,6 +67,7 @@ import org.eclipse.che.ide.api.editor.texteditor.EditorWidget.WidgetInitializedC
 import org.eclipse.che.ide.api.editor.texteditor.TextEditorPartView.Delegate;
 import org.eclipse.che.ide.api.event.FileContentUpdateEvent;
 import org.eclipse.che.ide.api.event.FileContentUpdateHandler;
+import org.eclipse.che.ide.api.event.FileContentUpdatedEvent;
 import org.eclipse.che.ide.api.event.FileEvent;
 import org.eclipse.che.ide.api.event.FileEventHandler;
 import org.eclipse.che.ide.api.hotkeys.HasHotKeyItems;
@@ -292,6 +293,7 @@ public class TextEditorPresenter<T extends EditorWidget> extends AbstractEditorP
                     @Override
                     public void onContentInitialized() {
                         document.setCursorPosition(currentCursor);
+                        generalEventBus.fireEvent(new FileContentUpdatedEvent(document.getFile()));
                     }
                 });
             }

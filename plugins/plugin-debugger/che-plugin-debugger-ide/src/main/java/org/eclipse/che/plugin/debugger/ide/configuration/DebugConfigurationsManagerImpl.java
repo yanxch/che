@@ -258,6 +258,7 @@ public class DebugConfigurationsManagerImpl implements DebugConfigurationsManage
         Map<String, String> connectionProperties = new HashMap<>(2 + debugConfiguration.getConnectionProperties().size());
         connectionProperties.put("HOST", debugConfiguration.getHost());
         connectionProperties.put("PORT", String.valueOf(debugConfiguration.getPort()));
+        connectionProperties.put("PROJECT", currentProjectPath);
 
         for (Map.Entry<String, String> entry : debugConfiguration.getConnectionProperties().entrySet()) {
             String newValue = entry.getValue().replace(currentProjectPathProvider.getKey(), currentProjectPath);
