@@ -109,11 +109,10 @@ public class OpenedFilesPersistenceComponentTest {
     public void shouldAddActionForActivatingLastFile() {
         configureOpenedEditors();
         when(editorAgent.getActiveEditor()).thenReturn(editorPartPresenter1);
-//        when(editorAgent.getLastEditor()).thenReturn(editorPartPresenter2);
 
         List<ActionDescriptor> actionDescriptors = component.getActions();
 
-        assertEquals(2, actionDescriptors.size());
+        assertEquals(3, actionDescriptors.size());
     }
 
     private void configureOpenedEditors() {
