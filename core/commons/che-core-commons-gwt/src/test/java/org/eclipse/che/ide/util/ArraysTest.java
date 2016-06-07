@@ -93,7 +93,7 @@ public class ArraysTest {
         final Object[] arr1 = new Object[]{O1, O2};
         final Object[] arr2 = new Object[]{O2, O3};
 
-        final Object[] result = Arrays.batchRemove(arr1, arr2, true);
+        final Object[] result = Arrays.removeAll(arr1, arr2, true);
 
         Assert.assertTrue(result.length == 1);
         Assert.assertTrue(Arrays.indexOf(result, O1) == -1);
@@ -106,7 +106,7 @@ public class ArraysTest {
         final Object[] arr1 = new Object[]{O1, O2};
         final Object[] arr2 = new Object[]{O2, O3};
 
-        final Object[] result = Arrays.batchRemove(arr1, arr2, false);
+        final Object[] result = Arrays.removeAll(arr1, arr2, false);
 
         Assert.assertTrue(result.length == 1);
         Assert.assertTrue(Arrays.indexOf(result, O1) == 0);
@@ -116,6 +116,6 @@ public class ArraysTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldCheckFailedRetainOperations() throws Exception {
-        Arrays.batchRemove(null, null, false);
+        Arrays.removeAll(null, null, false);
     }
 }

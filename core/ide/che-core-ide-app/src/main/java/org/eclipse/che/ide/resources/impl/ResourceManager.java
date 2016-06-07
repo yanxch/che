@@ -72,7 +72,7 @@ import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
-import static org.eclipse.che.ide.util.Arrays.batchRemove;
+import static org.eclipse.che.ide.util.Arrays.removeAll;
 import static org.eclipse.che.ide.util.NameUtils.checkFileName;
 import static org.eclipse.che.ide.util.NameUtils.checkFolderName;
 import static org.eclipse.che.ide.util.NameUtils.checkProjectName;
@@ -710,13 +710,13 @@ public final class ResourceManager {
                 if (descendants.isPresent()) {
                     Resource[] outdated = descendants.get();
 
-                    final Resource[] removed = batchRemove(outdated, reloaded, false);
+                    final Resource[] removed = removeAll(outdated, reloaded, false);
                     for (Resource resource : removed) {
                         store.dispose(resource.getLocation(), false);
                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, derived ? REMOVED | DERIVED : REMOVED)));
                     }
 
-                    final Resource[] added = batchRemove(reloaded, outdated, false);
+                    final Resource[] added = removeAll(reloaded, outdated, false);
                     for (Resource resource : added) {
                         store.register(resource.getLocation().parent(), resource);
 
@@ -729,7 +729,7 @@ public final class ResourceManager {
                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(intercepted, derived ? ADDED | DERIVED : ADDED)));
                     }
 
-                    final Resource[] updated = batchRemove(outdated, reloaded, true);
+                    final Resource[] updated = removeAll(outdated, reloaded, true);
                     for (Resource resource : updated) {
                         store.dispose(resource.getLocation(), false);
                         store.register(resource.getLocation().parent(), resource);

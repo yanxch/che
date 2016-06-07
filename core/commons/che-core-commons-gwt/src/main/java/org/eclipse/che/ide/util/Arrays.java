@@ -11,9 +11,10 @@
 package org.eclipse.che.ide.util;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Objects;
+import com.google.common.collect.ObjectArrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.lang.System.arraycopy;
 import static java.util.Arrays.copyOf;
 
 /**
@@ -79,14 +80,12 @@ public class Arrays {
      * @since 4.3.0
      */
     public static <T> boolean contains(T[] array, T element) {
-        checkArgument(array != null, "Input array is null");
-
         return indexOf(array, element) != -1;
     }
 
     /**
-     * Returns the index of the first occurrence of the specified element {@code o}
-     * in given {@code array}, or -1 if given {@code array} does not contain the element {@code o}.
+     * Returns the index of the first occurrence of the element {@code o} in given {@code array},
+     * or -1 if there is no such element exists.
      *
      * @param array
      *         input array
@@ -94,8 +93,7 @@ public class Arrays {
      *         element to search for
      * @param <T>
      *         type of given {@code array}
-     * @return the index of the first occurrence of the specified element in
-     * this list, or -1 if this list does not contain the element
+     * @return the index of the first occurrence of the specified element in this {@code array}, otherwise -1
      * @throws IllegalArgumentException
      *         in case if given {@code array} is null
      * @since 4.3.0
@@ -103,65 +101,45 @@ public class Arrays {
     public static <T> int indexOf(T[] array, T o) {
         checkArgument(array != null, "Input array is null");
 
-        if (o == null) {
-            for (int i = 0; i < array.length; i++) {
-                if (array[i] == null)
-                    return i;
-            }
-        } else {
-            for (int i = 0; i < array.length; i++) {
-                if (o.equals(array[i]))
-                    return i;
+        for (int index = 0; index < array.length; index++) {
+            if (Objects.equal(o, array[index])) {
+                return index;
             }
         }
+
         return -1;
     }
 
     /**
-     * Retains only the elements in given {@code o1} array that are contained in the
-     * specified {@code o2}. In other words, removes from {@code o1} all
-     * of its elements that are not contained in the specified array {@code o2}.
+     * Remove from array {@code o1} all elements which exists in {@code o2} if {@code retain} flag is set to {@code false}.
+     * If argument {@code retain} is set to {@code true}, then in result collection will be common elements from both arrays.
      *
      * @param o1
      *         input array
      * @param o2
-     *         array containing elements to be retained in {@code o1}
-     * @param complement
+     *         array, elements of which should be removed from the {@code o2} array
+     * @param retain
      *         true if operation should be performed with retain algorithm, false means that from {@code o1} should be removed all elements
      *         that contains in {@code o2}
      * @param <T>
      *         type of given {@code o1} and {@code o2}
-     * @return copy of retained array
+     * @return new array, which contains elements based on operation type
      * @throws IllegalArgumentException
      *         in case if given arrays null
      * @since 4.3.0
      */
-    public static <T> T[] batchRemove(T[] o1, T[] o2, boolean complement) {
-        checkArgument(o1 != null && o2 != null);
+    public static <T> T[] removeAll(T[] o1, T[] o2, boolean retain) {
+        checkArgument(o1 != null && o2 != null, "Input arrays are null");
 
-        int r = 0, w = 0;
+        T[] retained = retain ? ObjectArrays.newArray(o1, 0) : o1;
 
-        T[] o1Copy = copyOf(o1, o1.length);
-        T[] o2Copy = copyOf(o2, o2.length);
-
-        for (; r < o1Copy.length; r++)
-            if ((indexOf(o2Copy, o1Copy[r]) >= 0) == complement)
-                o1Copy[w++] = o1Copy[r];
-
-        if (r != o1Copy.length) {
-            arraycopy(o1Copy, r,
-                      o1Copy, w,
-                      o1Copy.length - r);
-            w += o1Copy.length - r;
+        for (int index = 0; index < o1.length; index++) {
+            if (indexOf(o2, o1[index]) != -1) {
+                retained = retain ? add(retained, o1[index]) : remove(retained, o1[index]);
+            }
         }
-        if (w != o1Copy.length) {
-            for (int i = w; i < o1Copy.length; i++)
-                o1Copy[i] = null;
 
-            return copyOf(o1Copy, w);
-        } else {
-            return copyOf(o1Copy, o1Copy.length);
-        }
+        return retained;
     }
 
     /**
