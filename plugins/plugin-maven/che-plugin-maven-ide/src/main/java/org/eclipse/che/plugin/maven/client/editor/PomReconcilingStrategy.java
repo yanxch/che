@@ -54,7 +54,7 @@ public class PomReconcilingStrategy implements ReconcilingStrategy {
 
     @Override
     public void setDocument(Document document) {
-        pomPath = document.getFile().getLocation().toString();
+        pomPath = document.getFile().getPath();
     }
 
     @Override

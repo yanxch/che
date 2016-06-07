@@ -106,7 +106,7 @@ public class MachinePanelPresenter extends BasePresenter implements MachinePanel
 
     /** Gets all machines and adds them to special place on view. */
     public Promise<List<MachineDto>> showMachines() {
-        return showMachines(appContext.getDevMachine().getId());
+        return showMachines(appContext.getWorkspace().getId());
     }
 
     private Promise<List<MachineDto>> showMachines(String workspaceId) {

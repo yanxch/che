@@ -24,6 +24,6 @@ public class NameComparator implements Comparator<Node> {
     /** {@inheritDoc} */
     @Override
     public int compare(Node o1, Node o2) {
-        return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
+        return o1.getName().compareTo(o2.getName());
     }
 }

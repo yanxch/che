@@ -18,8 +18,6 @@ import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.Resources;
-import org.eclipse.che.ide.api.event.project.ProjectReadyEvent;
-import org.eclipse.che.ide.api.event.project.ProjectReadyHandler;
 import org.eclipse.che.ide.api.mvp.View;
 import org.eclipse.che.ide.api.parts.HasView;
 import org.eclipse.che.ide.api.outputconsole.OutputConsole;
@@ -40,8 +38,7 @@ import java.util.List;
  */
 @Singleton
 public class OutputsContainerPresenter extends BasePresenter implements OutputsContainerView.ActionDelegate,
-                                                                        HasView,
-                                                                        ProjectReadyHandler {
+                                                                        HasView {
 
     private final MachineLocalizationConstant localizationConstant;
     private final DialogFactory               dialogFactory;
@@ -65,8 +62,6 @@ public class OutputsContainerPresenter extends BasePresenter implements OutputsC
         this.view.setDelegate(this);
 
         consoles = new ArrayList<>();
-
-        eventBus.addHandler(ProjectReadyEvent.TYPE, this);
     }
 
     /** Add {@code console} to the container. */
@@ -187,10 +182,4 @@ public class OutputsContainerPresenter extends BasePresenter implements OutputsC
 
         firePropertyChange(TITLE_PROPERTY);
     }
-
-    @Override
-    public void onProjectReady(ProjectReadyEvent event) {
-        firePropertyChange(TITLE_PROPERTY);
-    }
-
 }

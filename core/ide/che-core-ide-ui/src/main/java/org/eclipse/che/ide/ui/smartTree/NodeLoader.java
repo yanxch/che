@@ -26,7 +26,6 @@ import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.commons.annotation.Nullable;
-import org.eclipse.che.ide.DelayedTask;
 import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.api.data.tree.NodeInterceptor;
 import org.eclipse.che.ide.ui.smartTree.event.BeforeLoadEvent;
@@ -36,7 +35,6 @@ import org.eclipse.che.ide.ui.smartTree.event.LoadExceptionEvent;
 import org.eclipse.che.ide.ui.smartTree.event.LoaderHandler;
 import org.eclipse.che.ide.ui.smartTree.event.PostLoadEvent;
 import org.eclipse.che.ide.ui.smartTree.handler.GroupingHandlerRegistration;
-import org.eclipse.che.ide.ui.smartTree.presentation.HasPresentation;
 import org.eclipse.che.ide.util.loging.Log;
 
 import javax.validation.constraints.NotNull;

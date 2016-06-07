@@ -17,11 +17,11 @@ import javax.validation.constraints.NotNull;
 /**
  * The view of {@link CommitPresenter}.
  *
- * @author Andrey Plotnikov
+ * @author <a href="mailto:aplotnikov@codenvy.com">Andrey Plotnikov</a>
  */
 public interface CommitView extends View<CommitView.ActionDelegate> {
     /** Needs for delegate some function into Commit view. */
-    interface ActionDelegate {
+    public interface ActionDelegate {
         /** Performs any actions appropriate in response to the user having pressed the Commit button. */
         void onCommitClicked();
 

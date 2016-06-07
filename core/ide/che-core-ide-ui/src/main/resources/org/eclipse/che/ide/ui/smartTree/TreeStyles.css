@@ -45,9 +45,9 @@
     white-space: nowrap;
     vertical-align: middle;
     display: inline-block;
-    margin-top: -11px;
+    margin-top: -10px;
     font-size: 1em;
-    padding-left: 4px;
+    padding-left: 2px;
     text-shadow: projectExplorerPresentableTextShadow;
 }
 
@@ -55,11 +55,10 @@
     white-space: nowrap;
     vertical-align: middle;
     display: inline-block;
-    margin-top: -12px;
+    margin-top: -9px;
     margin-left: 5px;
     padding-right: 10px;
-    font-size: 0.9em;
-    color: dimgray;
+    font-size: 0.8em;
     text-shadow: projectExplorerInfoTextShadow;
 }
 
@@ -140,15 +139,4 @@
 
 @-moz-keyframes animate-stripes {
     0% {background-position: 0 0;} 100% {background-position: 60px 0;}
-}
-
-.infoTextContainer[warning]::after {
-    content: "\f071";
-    font-family: FontAwesome;
-    font-style: normal;
-    font-weight: normal;
-    text-decoration: inherit;
-    color: #E0B91D;
-    position: absolute;
-    top: 6px;
 }

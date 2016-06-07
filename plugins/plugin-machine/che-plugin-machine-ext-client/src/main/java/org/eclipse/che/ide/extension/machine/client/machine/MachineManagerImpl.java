@@ -281,7 +281,7 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
                                                .withLimits(limitsDto)
                                                .withType(machineType);
 
-        Promise<MachineDto> machinePromise = workspaceServiceClient.createMachine(appContext.getDevMachine().getId(), configDto);
+        Promise<MachineDto> machinePromise = workspaceServiceClient.createMachine(appContext.getWorkspace().getId(), configDto);
 
         machinePromise.then(new Operation<MachineDto>() {
             @Override

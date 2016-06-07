@@ -47,6 +47,6 @@ public class CreateSnapshotAction extends AbstractPerspectiveAction {
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        snapshotCreator.createSnapshot(appContext.getDevMachine().getId());
+        snapshotCreator.createSnapshot(appContext.getWorkspace().getId());
     }
 }
