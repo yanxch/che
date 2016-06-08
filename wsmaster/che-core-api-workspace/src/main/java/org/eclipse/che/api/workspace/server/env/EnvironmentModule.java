@@ -15,6 +15,7 @@ import com.google.inject.multibindings.MapBinder;
 
 import org.eclipse.che.api.workspace.server.env.impl.che.CheEnvironmentEngine;
 import org.eclipse.che.api.workspace.server.env.impl.che.CheEnvironmentValidator;
+import org.eclipse.che.api.workspace.server.env.impl.che.DependenciesBasedCheEnvStartStrategy;
 import org.eclipse.che.api.workspace.server.env.spi.EnvironmentEngine;
 import org.eclipse.che.api.workspace.server.env.spi.EnvironmentValidator;
 
@@ -31,5 +32,8 @@ public class EnvironmentModule extends AbstractModule {
         MapBinder<String, EnvironmentValidator> validators =
                 MapBinder.newMapBinder(binder(), String.class, EnvironmentValidator.class);
         validators.addBinding(CheEnvironmentEngine.ENVIRONMENT_TYPE).to(CheEnvironmentValidator.class);
+
+        bind(org.eclipse.che.api.workspace.server.env.impl.che.CheEnvStartStrategy.class)
+                .to(DependenciesBasedCheEnvStartStrategy.class);
     }
 }

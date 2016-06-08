@@ -47,11 +47,12 @@ public interface MachineConfig {
     Limits getLimits();
 
     /**
-     * List of machines from env current machine is linked with network.
+     * List of machines from env current machine is depends on.
      * <p/>
-     * Machine from link will be available to current machine by host equal to machine's name.
+     * Machine from depends on list will be available to current machine by host equal to machine's name.
+     * Machines from depends on list will be launched before machine that is dependent.
      */
-    List<String> getMachineLinks();
+    List<String> getDependsOn();
 
     /**
      * Get configuration of servers inside of machine.

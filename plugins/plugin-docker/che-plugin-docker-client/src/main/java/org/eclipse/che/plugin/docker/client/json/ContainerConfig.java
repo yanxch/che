@@ -29,7 +29,7 @@ public class ContainerConfig {
     private boolean          stdinOnce;
     private String[]         env;
     private String[]         cmd;
-    private String           entrypoint;
+    private String[]         entrypoint;
     private String           image;
     private boolean          networkDisabled;
     private String           macAddress;
@@ -280,15 +280,15 @@ public class ContainerConfig {
         return this;
     }
 
-    public String getEntrypoint() {
+    public String[] getEntrypoint() {
         return entrypoint;
     }
 
-    public void setEntrypoint(String entrypoint) {
+    public void setEntrypoint(String[] entrypoint) {
         this.entrypoint = entrypoint;
     }
 
-    public ContainerConfig withEntrypoint(String entrypoint) {
+    public ContainerConfig withEntrypoint(String[] entrypoint) {
         this.entrypoint = entrypoint;
         return this;
     }
@@ -372,7 +372,7 @@ public class ContainerConfig {
                ", stdinOnce=" + stdinOnce +
                ", env=" + Arrays.toString(env) +
                ", cmd=" + Arrays.toString(cmd) +
-               ", entrypoint='" + entrypoint + '\'' +
+               ", entrypoint='" + Arrays.toString(entrypoint) + '\'' +
                ", image='" + image + '\'' +
                ", networkDisabled=" + networkDisabled +
                ", macAddress='" + macAddress + '\'' +

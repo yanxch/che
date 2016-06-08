@@ -82,11 +82,11 @@ public interface MachineConfigDto extends MachineConfig, Hyperlinks {
     MachineConfigDto withEnvVariables(Map<String, String> envVariables);
 
     @Override
-    List<String> getMachineLinks();
+    List<String> getDependsOn();
 
-    void setMachineLinks(List<String> machineLinks);
+    void setDependsOn(List<String> dependsOn);
 
-    MachineConfigDto withMachineLinks(List<String> machineLinks);
+    MachineConfigDto withDependsOn(List<String> dependsOn);
 
     @Override
     MachineConfigDto withLinks(List<Link> links);

@@ -34,6 +34,7 @@ import org.eclipse.che.plugin.docker.client.ProgressLineFormatterImpl;
 import org.eclipse.che.plugin.docker.client.json.ContainerInfo;
 import org.eclipse.che.plugin.docker.client.params.CommitParams;
 import org.eclipse.che.plugin.docker.client.params.PushParams;
+import org.eclipse.che.plugin.docker.client.params.RemoveContainerParams;
 import org.eclipse.che.plugin.docker.client.params.RemoveImageParams;
 import org.eclipse.che.plugin.docker.machine.node.DockerNode;
 import org.slf4j.Logger;
@@ -272,16 +273,27 @@ public class DockerInstance extends AbstractInstance {
                 node.unbindWorkspace();
             }
 
+            try {
+                docker.disconnectContainerFromNetwork(getWorkspaceId(), container);
+
+                docker.removeNetwork(getWorkspaceId());
+            } catch (IOException e) {
+                LOG.warn(e.getLocalizedMessage());
+            }
+
             docker.killContainer(container);
 
-            docker.removeContainer(container, true, true);
+            docker.removeContainer(RemoveContainerParams.create(container)
+                                                        .withForce(true)
+                                                        .withRemoveVolumes(true));
         } catch (IOException e) {
             throw new MachineException(e.getLocalizedMessage());
         }
 
         try {
-            docker.removeImage(image, false);
-        } catch (IOException ignore) {
+            docker.removeImage(RemoveImageParams.create(image).withForce(false));
+        } catch (IOException e) {
+            LOG.warn(e.getLocalizedMessage());
         }
     }
 

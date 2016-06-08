@@ -40,7 +40,7 @@ public class MachineConfigImpl implements MachineConfig {
     private LimitsImpl           limits;
     private List<ServerConfImpl> servers;
     private Map<String, String>  envVariables;
-    private List<String>         links;
+    private List<String>         dependsOn;
 
     public MachineConfigImpl() {}
 
@@ -51,7 +51,7 @@ public class MachineConfigImpl implements MachineConfig {
                              Limits limits,
                              List<? extends ServerConf> servers,
                              Map<String, String> envVariables,
-                             List<String> links) {
+                             List<String> dependsOn) {
         this.isDev = isDev;
         this.name = name;
         this.type = type;
@@ -59,7 +59,7 @@ public class MachineConfigImpl implements MachineConfig {
         setServers(servers);
         setSource(source);
         setLimits(limits);
-        this.links = links;
+        this.dependsOn = dependsOn;
     }
 
     public MachineConfigImpl(MachineConfig machineCfg) {
@@ -70,7 +70,7 @@ public class MachineConfigImpl implements MachineConfig {
              machineCfg.getLimits(),
              machineCfg.getServers(),
              machineCfg.getEnvVariables(),
-             machineCfg.getMachineLinks());
+             machineCfg.getDependsOn());
     }
 
     @Override
@@ -149,15 +149,15 @@ public class MachineConfigImpl implements MachineConfig {
     }
 
     @Override
-    public List<String> getMachineLinks() {
-        if (links == null) {
-            links = new ArrayList<>();
+    public List<String> getDependsOn() {
+        if (dependsOn == null) {
+            dependsOn = new ArrayList<>();
         }
-        return links;
+        return dependsOn;
     }
 
-    public void setMachineLinks(List<String> links) {
-        this.links = links;
+    public void setDependsOn(List<String> dependsOn) {
+        this.dependsOn = dependsOn;
     }
 
     @Override
@@ -172,7 +172,7 @@ public class MachineConfigImpl implements MachineConfig {
                Objects.equals(type, other.type) &&
                Objects.equals(getServers(), other.getServers()) &&
                Objects.equals(getEnvVariables(), other.getEnvVariables()) &&
-               Objects.equals(getMachineLinks(), other.getMachineLinks());
+               Objects.equals(getDependsOn(), other.getDependsOn());
     }
 
     @Override
@@ -185,7 +185,7 @@ public class MachineConfigImpl implements MachineConfig {
         hash = hash * 31 + Objects.hashCode(limits);
         hash = hash * 31 + Objects.hashCode(getServers());
         hash = hash * 31 + Objects.hashCode(getEnvVariables());
-        hash = hash * 31 + Objects.hashCode(getMachineLinks());
+        hash = hash * 31 + Objects.hashCode(getDependsOn());
         return hash;
     }
 
@@ -199,7 +199,7 @@ public class MachineConfigImpl implements MachineConfig {
                ", limits=" + limits +
                ", servers=" + getServers() +
                ", envVariables=" + getEnvVariables() +
-               ", links=" + getMachineLinks() +
+               ", dependsOn=" + getDependsOn() +
                '}';
     }
 
@@ -217,7 +217,7 @@ public class MachineConfigImpl implements MachineConfig {
         private Limits                     limits;
         private List<? extends ServerConf> servers;
         private Map<String, String>        envVariables;
-        private List<String>               links;
+        private List<String>               dependsOn;
 
         public MachineConfigImpl build() {
             return new MachineConfigImpl(isDev,
@@ -227,7 +227,7 @@ public class MachineConfigImpl implements MachineConfig {
                                          limits,
                                          servers,
                                          envVariables,
-                                         links);
+                                         dependsOn);
         }
 
         public MachineConfigImplBuilder fromConfig(MachineConfig machineConfig) {
@@ -238,7 +238,7 @@ public class MachineConfigImpl implements MachineConfig {
             limits = machineConfig.getLimits();
             servers = machineConfig.getServers();
             envVariables = machineConfig.getEnvVariables();
-            links = machineConfig.getMachineLinks();
+            dependsOn = machineConfig.getDependsOn();
             return this;
         }
 
@@ -277,8 +277,8 @@ public class MachineConfigImpl implements MachineConfig {
             return this;
         }
 
-        public MachineConfigImplBuilder setMachineLinks(List<String> links) {
-            this.links = links;
+        public MachineConfigImplBuilder setDependsOn(List<String> dependsOn) {
+            this.dependsOn = dependsOn;
             return this;
         }
     }

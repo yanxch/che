@@ -405,17 +405,17 @@ public class WorkspaceRuntimes {
             for (int i = 0; i < STRIPED.size(); i++) {
                 STRIPED.getAt(i).writeLock().unlock();
             }
-            try {
-                if (!stopEnvExecutor.awaitTermination(50, TimeUnit.SECONDS)) {
-                    stopEnvExecutor.shutdownNow();
-                    if (!stopEnvExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
-                        LOG.warn("Unable terminate destroy machines pool");
-                    }
-                }
-            } catch (InterruptedException e) {
+        }
+        try {
+            if (!stopEnvExecutor.awaitTermination(50, TimeUnit.SECONDS)) {
                 stopEnvExecutor.shutdownNow();
-                Thread.currentThread().interrupt();
+                if (!stopEnvExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                    LOG.warn("Unable terminate destroy machines pool");
+                }
             }
+        } catch (InterruptedException e) {
+            stopEnvExecutor.shutdownNow();
+            Thread.currentThread().interrupt();
         }
     }
 

@@ -1004,39 +1004,6 @@ public class MachineManager {
 
         executor.shutdown();
 
-        // todo will be stopped by env engine - remove
-        /*
-        final ExecutorService destroyMachinesExecutor =
-                Executors.newFixedThreadPool(2 * Runtime.getRuntime().availableProcessors(),
-                                             new ThreadFactoryBuilder().setNameFormat("DestroyMachine-%d")
-                                                                       .setDaemon(false)
-                                                                       .build());
-        try {
-            for (MachineImpl machine : machineRegistry.getMachines()) {
-                destroyMachinesExecutor.execute(() -> {
-                    try {
-                        destroy(machine.getId(), false);
-                    } catch (NotFoundException ignore) {
-                        // it is ok, machine has been already destroyed
-                    } catch (Exception e) {
-                        LOG.warn(e.getMessage());
-                    }
-                });
-            }
-            destroyMachinesExecutor.shutdown();
-            if (!destroyMachinesExecutor.awaitTermination(50, TimeUnit.SECONDS)) {
-                destroyMachinesExecutor.shutdownNow();
-                if (!destroyMachinesExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
-                    LOG.warn("Unable terminate destroy machines pool");
-                }
-            }
-        } catch (InterruptedException e) {
-            interrupted = true;
-            destroyMachinesExecutor.shutdownNow();
-        } catch (MachineException e) {
-            LOG.error(e.getLocalizedMessage(), e);
-        }*/
-
         try {
             if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
                 executor.shutdownNow();
