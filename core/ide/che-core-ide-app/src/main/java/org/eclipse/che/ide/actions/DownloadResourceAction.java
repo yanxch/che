@@ -17,6 +17,7 @@ import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.machine.WsAgentURLModifier;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.download.DownloadContainer;
 
@@ -36,16 +37,19 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
 @Singleton
 public class DownloadResourceAction extends AbstractPerspectiveAction {
 
-    private final AppContext           appContext;
-    private final DownloadContainer    downloadContainer;
+    private final AppContext         appContext;
+    private final DownloadContainer  downloadContainer;
+    private final WsAgentURLModifier urlModifier;
 
     @Inject
     public DownloadResourceAction(AppContext appContext,
                                   CoreLocalizationConstant locale,
-                                  DownloadContainer downloadContainer) {
+                                  DownloadContainer downloadContainer,
+                                  WsAgentURLModifier urlModifier) {
         super(singletonList(PROJECT_PERSPECTIVE_ID), locale.downloadItemName(), locale.downloadItemDescription(), null, null);
         this.appContext = appContext;
         this.downloadContainer = downloadContainer;
+        this.urlModifier = urlModifier;
     }
 
     /** {@inheritDoc} */
@@ -55,7 +59,7 @@ public class DownloadResourceAction extends AbstractPerspectiveAction {
 
         checkState(resource != null, "Null resource occurred");
 
-        downloadContainer.setUrl(resource.getURL());
+        downloadContainer.setUrl(urlModifier.modify(resource.getURL()));
     }
 
     /** {@inheritDoc} */
