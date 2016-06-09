@@ -21,6 +21,9 @@ import {WorkspaceDetailsService} from './workspace-details/workspace-details.ser
 import {ExportWorkspaceController} from './workspace-details/export-workspace/export-workspace.controller';
 import {ExportWorkspace} from './workspace-details/export-workspace/export-workspace.directive';
 import {ExportWorkspaceDialogController} from  './workspace-details/export-workspace/dialog/export-workspace-dialog.controller';
+import {CloneWorkspaceController} from './workspace-details/clone-workspace/clone-workspace.controller';
+import {CloneWorkspace} from './workspace-details/clone-workspace/clone-workspace.directive';
+import {CloneWorkspaceDialogController} from './workspace-details/clone-workspace/dialog/clone-workspace-dialog.controller';
 import {WorkspaceDetailsProjects} from './workspace-details/workspace-projects/workspace-details-projects.directive';
 import {ReadyToGoStacksCtrl} from './create-workspace/select-stack/ready-to-go-stacks/ready-to-go-stacks.controller';
 import {ReadyToGoStacks} from './create-workspace/select-stack/ready-to-go-stacks/ready-to-go-stacks.directive';
@@ -68,6 +71,10 @@ export class WorkspacesConfig {
     register.controller('ExportWorkspaceDialogController', ExportWorkspaceDialogController);
     register.controller('ExportWorkspaceController', ExportWorkspaceController);
     register.directive('exportWorkspace', ExportWorkspace);
+
+    register.controller('CloneWorkspaceController', CloneWorkspaceController);
+    register.directive('cloneWorkspace', CloneWorkspace);
+    register.controller('CloneWorkspaceDialogController', CloneWorkspaceDialogController);
 
     register.controller('WorkspaceRecipeCtrl', WorkspaceRecipeCtrl);
     register.directive('cheWorkspaceRecipe', WorkspaceRecipe);
