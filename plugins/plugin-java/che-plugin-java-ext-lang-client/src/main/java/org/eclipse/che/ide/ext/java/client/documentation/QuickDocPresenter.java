@@ -17,6 +17,8 @@ import com.google.inject.Singleton;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
+import org.eclipse.che.ide.api.machine.WsAgentURLModifier;
+import org.eclipse.che.ide.ext.java.client.projecttree.JavaSourceFolderUtil;
 import org.eclipse.che.ide.api.editor.position.PositionConverter;
 import org.eclipse.che.ide.api.editor.texteditor.TextEditorPresenter;
 import org.eclipse.che.ide.api.resources.Container;
@@ -32,18 +34,20 @@ import org.eclipse.che.ide.util.loging.Log;
 @Singleton
 public class QuickDocPresenter implements QuickDocumentation, QuickDocView.ActionDelegate {
 
-
-    private QuickDocView view;
-    private AppContext   appContext;
-    private EditorAgent editorAgent;
+    private final QuickDocView       view;
+    private final AppContext         appContext;
+    private final EditorAgent        editorAgent;
+    private final WsAgentURLModifier agentURLDecorator;
 
     @Inject
     public QuickDocPresenter(QuickDocView view,
                              AppContext appContext,
-                             EditorAgent editorAgent) {
+                             EditorAgent editorAgent,
+                             WsAgentURLModifier linksDecorator) {
         this.view = view;
         this.appContext = appContext;
         this.editorAgent = editorAgent;
+        this.agentURLDecorator = linksDecorator;
     }
 
     @Override
@@ -75,8 +79,9 @@ public class QuickDocPresenter implements QuickDocumentation, QuickDocView.Actio
 
             final String fqn = JavaUtil.resolveFQN((Container)srcFolder.get(), resource);
 
-            view.show(appContext.getDevMachine().getWsAgentBaseUrl() + "/java/javadoc/find?fqn=" + fqn + "&projectpath=" +
-                      project.get().getLocation() + "&offset=" + offset, coordinates.getX(), coordinates.getY());
+            final String docUrl = appContext.getDevMachine().getWsAgentBaseUrl() + "/java/javadoc/find?fqn=" + fqn + "&projectpath=" + project.get().getLocation() + "&offset=" + offset;
+
+            view.show(agentURLDecorator.modify(docUrl), coordinates.getX(), coordinates.getY());
         }
 
 

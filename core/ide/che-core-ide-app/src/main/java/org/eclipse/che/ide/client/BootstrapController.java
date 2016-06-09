@@ -26,6 +26,7 @@ import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.ide.api.machine.DevMachine;
+import org.eclipse.che.ide.api.machine.WsAgentURLModifier;
 import org.eclipse.che.ide.api.machine.WsAgentStateController;
 import org.eclipse.che.api.machine.shared.dto.MachineDto;
 import org.eclipse.che.api.promises.client.Operation;
@@ -65,6 +66,7 @@ public class BootstrapController {
     private final AppContext                       appContext;
     private final WorkspaceServiceClient           workspaceService;
     private final Provider<WsAgentStateController> wsAgentStateControllerProvider;
+    private final WsAgentURLModifier               wsAgentURLModifier;
 
     @Inject
     public BootstrapController(Provider<WorkspacePresenter> workspaceProvider,
@@ -74,7 +76,8 @@ public class BootstrapController {
                                AppContext appContext,
                                DtoRegistrar dtoRegistrar,
                                WorkspaceServiceClient workspaceService,
-                               Provider<WsAgentStateController> wsAgentStateControllerProvider) {
+                               Provider<WsAgentStateController> wsAgentStateControllerProvider,
+                               WsAgentURLModifier wsAgentURLModifier) {
         this.workspaceProvider = workspaceProvider;
         this.extensionInitializer = extensionInitializer;
         this.eventBus = eventBus;
@@ -82,6 +85,7 @@ public class BootstrapController {
         this.appContext = appContext;
         this.workspaceService = workspaceService;
         this.wsAgentStateControllerProvider = wsAgentStateControllerProvider;
+        this.wsAgentURLModifier = wsAgentURLModifier;
 
         appContext.setStartUpActions(StartUpActionsParser.getStartUpActions());
         dtoRegistrar.registerDtoProviders();
@@ -111,6 +115,7 @@ public class BootstrapController {
                         }
 
                         wsAgentStateControllerProvider.get().initialize(devMachine);
+                        wsAgentURLModifier.initialize(devMachine);
                         startWsAgentComponents(components.values().iterator());
                     }
                 }).catchError(new Operation<PromiseError>() {
