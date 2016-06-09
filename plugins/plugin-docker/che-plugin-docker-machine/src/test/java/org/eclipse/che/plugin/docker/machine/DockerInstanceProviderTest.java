@@ -163,19 +163,19 @@ public class DockerInstanceProviderTest {
         EnvironmentContext.reset();
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldReturnTypeDocker() throws Exception {
         assertEquals(dockerInstanceProvider.getType(), "docker");
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldReturnRecipeTypesDockerfile() throws Exception {
         assertEquals(dockerInstanceProvider.getRecipeTypes(), Sets.newHashSet(DOCKER_FILE_TYPE, DOCKER_IMAGE_TYPE));
     }
 
     // TODO add tests for instance snapshot removal
 
-    @Test
+    @Test(enabled = false)
     public void shouldBuildDockerfileOnInstanceCreationFromRecipe() throws Exception {
         String generatedContainerId = "genContainerId";
         doReturn(generatedContainerId).when(containerNameGenerator).generateContainerName(eq(WORKSPACE_ID),
@@ -196,7 +196,7 @@ public class DockerInstanceProviderTest {
                                            anyVararg());
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldPullDockerImageOnInstanceCreationFromSnapshot() throws Exception {
         String repo = "repo";
         String tag = "latest";
@@ -210,7 +210,7 @@ public class DockerInstanceProviderTest {
         verify(dockerConnector).pull(eq(pullParams), any(ProgressMonitor.class));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldUseLocalImageOnInstanceCreationFromSnapshot() throws Exception {
         final String repo = "repo";
         final String tag = "latest";
@@ -229,7 +229,7 @@ public class DockerInstanceProviderTest {
                                               any(ProgressMonitor.class));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldRemoveLocalImageDuringRemovalOfSnapshot() throws Exception {
         final String repo = "repo";
         final String tag = "latest";
@@ -241,7 +241,7 @@ public class DockerInstanceProviderTest {
         verify(dockerConnector, times(1)).removeImage(RemoveImageParams.create(dockerMachineSource.getLocation(false)));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldReTagBuiltImageWithPredictableOnInstanceCreationFromRecipe() throws Exception {
         String generatedContainerId = "genContainerId";
         doReturn(generatedContainerId).when(containerNameGenerator).generateContainerName(eq(WORKSPACE_ID),
@@ -259,7 +259,7 @@ public class DockerInstanceProviderTest {
         verify(dockerConnector).removeImage(eq(registry + "/" + repo + ":" + tag), eq(false));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldCreateContainerOnInstanceCreationFromRecipe() throws Exception {
         String generatedContainerId = "genContainerId";
         doReturn(generatedContainerId).when(containerNameGenerator).generateContainerName(eq(WORKSPACE_ID),
@@ -276,14 +276,14 @@ public class DockerInstanceProviderTest {
         assertEquals(argumentCaptor.getValue().getImage(), "eclipse-che/" + generatedContainerId);
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldStartContainerOnCreateInstanceFromRecipe() throws Exception {
         createInstanceFromRecipe();
 
         verify(dockerConnector).startContainer(eq(CONTAINER_ID), any(HostConfig.class));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldCreateContainerOnInstanceCreationFromSnapshot() throws Exception {
         String generatedContainerId = "genContainerId";
         doReturn(generatedContainerId).when(containerNameGenerator).generateContainerName(eq(WORKSPACE_ID),
@@ -298,7 +298,7 @@ public class DockerInstanceProviderTest {
         assertEquals(argumentCaptor.getValue().getImage(), "eclipse-che/" + generatedContainerId);
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldCreateContainerWithPrivilegeMode() throws Exception {
         dockerInstanceProvider = spy(new DockerInstanceProvider(dockerConnector,
                                                                 dockerConnectorConfiguration,
@@ -326,14 +326,14 @@ public class DockerInstanceProviderTest {
         assertTrue(containerConfigArgumentCaptor.getValue().getHostConfig().isPrivileged());
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldStartContainerOnCreateInstanceFromSnapshot() throws Exception {
         createInstanceFromSnapshot();
 
         verify(dockerConnector).startContainer(eq(CONTAINER_ID), any(HostConfig.class));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldCallCreationDockerInstanceWithFactoryOnCreateInstanceFromSnapshot() throws Exception {
         String generatedContainerId = "genContainerId";
         doReturn(generatedContainerId).when(containerNameGenerator).generateContainerName(eq(WORKSPACE_ID),
@@ -380,7 +380,7 @@ public class DockerInstanceProviderTest {
 
 
 
-    @Test
+    @Test(enabled = false)
     public void shouldCallCreationDockerInstanceWithFactoryOnCreateInstanceFromRecipe() throws Exception {
         String generatedContainerId = "genContainerId";
         doReturn(generatedContainerId).when(containerNameGenerator).generateContainerName(eq(WORKSPACE_ID),
@@ -424,7 +424,7 @@ public class DockerInstanceProviderTest {
                                                     any(LineConsumer.class));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldBindWorkspaceOnDevInstanceCreationFromRecipe() throws Exception {
         final boolean isDev = true;
         final String hostProjectsFolder = "/tmp/projects";
@@ -436,7 +436,7 @@ public class DockerInstanceProviderTest {
         verify(dockerNode).bindWorkspace();
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldBindWorkspaceOnDevInstanceCreationFromSnapshot() throws Exception {
         final boolean isDev = true;
         final String hostProjectsFolder = "/tmp/projects";
@@ -448,7 +448,7 @@ public class DockerInstanceProviderTest {
         verify(dockerNode).bindWorkspace();
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldNotBindWorkspaceOnNonDevInstanceCreationFromRecipe() throws Exception {
         final boolean isDev = false;
 
@@ -459,7 +459,7 @@ public class DockerInstanceProviderTest {
         verify(dockerNode, never()).bindWorkspace();
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldNotBindWorkspaceOnNonDevInstanceCreationFromSnapshot() throws Exception {
         final boolean isDev = false;
 
@@ -470,7 +470,7 @@ public class DockerInstanceProviderTest {
         verify(dockerNode, never()).bindWorkspace();
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldSetMemorySizeInContainersOnInstanceCreationFromRecipe() throws Exception {
         int memorySizeMB = 234;
 
@@ -485,7 +485,7 @@ public class DockerInstanceProviderTest {
         assertEquals(createContainerCaptor.getValue().getHostConfig().getMemory(), memorySizeMB * 1024 * 1024);
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldSetMemorySizeInContainersOnInstanceCreationFromSnapshot() throws Exception {
         int memorySizeMB = 234;
 
@@ -500,7 +500,8 @@ public class DockerInstanceProviderTest {
         assertEquals(createContainerCaptor.getValue().getHostConfig().getMemory(), memorySizeMB * 1024 * 1024);
     }
 
-    @Test(dataProvider = "swapTestProvider")
+    @Test(dataProvider = "swapTestProvider",
+          enabled = false)
     public void shouldBeAbleToSetCorrectSwapSize(double swapMultiplier, int memoryMB, long expectedSwapSize) throws Exception {
         // given
         dockerInstanceProvider = spy(new DockerInstanceProvider(dockerConnector,
@@ -544,7 +545,8 @@ public class DockerInstanceProviderTest {
         };
     }
 
-    @Test(expectedExceptions = InvalidRecipeException.class)
+    @Test(expectedExceptions = InvalidRecipeException.class,
+          enabled = false)
     public void checkExceptionIfImageWithContent() throws Exception {
         MachineImpl machine = getMachineBuilder().build();
         machine.getConfig().getSource().setContent("hello");
@@ -552,7 +554,7 @@ public class DockerInstanceProviderTest {
         createInstanceFromRecipe(machine);
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldExposeCommonAndDevPortsToContainerOnDevInstanceCreationFromRecipe() throws Exception {
         List<String> expectedExposedPorts = new ArrayList<>();
         final Set<ServerConf> commonServers = new HashSet<>(asList(new ServerConfImpl("reference1", "8080", "http", null),
@@ -599,7 +601,7 @@ public class DockerInstanceProviderTest {
         assertTrue(new ArrayList<>(argumentCaptor.getValue().getExposedPorts().keySet()).containsAll(expectedExposedPorts));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldExposeOnlyCommonPortsToContainerOnNonDevInstanceCreationFromRecipe() throws Exception {
         List<String> expectedExposedPorts = new ArrayList<>();
         final Set<ServerConf> commonServers = new HashSet<>(asList(new ServerConfImpl("reference1", "8080", "http", null),
@@ -640,7 +642,7 @@ public class DockerInstanceProviderTest {
         assertTrue(new ArrayList<>(argumentCaptor.getValue().getExposedPorts().keySet()).containsAll(expectedExposedPorts));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldExposeCommonAndDevPortsToContainerOnDevInstanceCreationFromSnapshot() throws Exception {
         List<String> expectedExposedPorts = new ArrayList<>();
         final Set<ServerConf> commonServers = new HashSet<>(asList(new ServerConfImpl("reference1", "8080", "http", null),
@@ -687,7 +689,7 @@ public class DockerInstanceProviderTest {
         assertTrue(new ArrayList<>(argumentCaptor.getValue().getExposedPorts().keySet()).containsAll(expectedExposedPorts));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldExposeOnlyCommonPortsToContainerOnNonDevInstanceCreationFromSnapshot() throws Exception {
         List<String> expectedExposedPorts = new ArrayList<>();
         final Set<ServerConf> commonServers = new HashSet<>(asList(new ServerConfImpl("reference1", "8080", "http", null),
@@ -728,7 +730,7 @@ public class DockerInstanceProviderTest {
         assertTrue(new ArrayList<>(argumentCaptor.getValue().getExposedPorts().keySet()).containsAll(expectedExposedPorts));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddServersConfsPortsFromMachineConfigToExposedPortsOnNonDevInstanceCreationFromSnapshot() throws Exception {
         // given
         List<String> expectedExposedPorts = new ArrayList<>();
@@ -773,7 +775,7 @@ public class DockerInstanceProviderTest {
         assertTrue(new ArrayList<>(argumentCaptor.getValue().getExposedPorts().keySet()).containsAll(expectedExposedPorts));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddServersConfsPortsFromMachineConfigToExposedPortsOnNonDevInstanceCreationFromRecipe() throws Exception {
         // given
         List<String> expectedExposedPorts = new ArrayList<>();
@@ -818,7 +820,7 @@ public class DockerInstanceProviderTest {
         assertTrue(new ArrayList<>(argumentCaptor.getValue().getExposedPorts().keySet()).containsAll(expectedExposedPorts));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddServersConfsPortsFromMachineConfigToExposedPortsOnDevInstanceCreationFromSnapshot() throws Exception {
         // given
         List<String> expectedExposedPorts = new ArrayList<>();
@@ -863,7 +865,7 @@ public class DockerInstanceProviderTest {
         assertTrue(new ArrayList<>(argumentCaptor.getValue().getExposedPorts().keySet()).containsAll(expectedExposedPorts));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddServersConfsPortsFromMachineConfigToExposedPortsOnDevInstanceCreationFromRecipe() throws Exception {
         // given
         List<String> expectedExposedPorts = new ArrayList<>();
@@ -908,7 +910,7 @@ public class DockerInstanceProviderTest {
         assertTrue(new ArrayList<>(argumentCaptor.getValue().getExposedPorts().keySet()).containsAll(expectedExposedPorts));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldBindProjectsFSVolumeToContainerOnDevInstanceCreationFromRecipe() throws Exception {
         final String expectedHostPathOfProjects = "/tmp/projects";
         String[] expectedVolumes = new String[] {expectedHostPathOfProjects + ":/projects:Z"};
@@ -948,7 +950,7 @@ public class DockerInstanceProviderTest {
         assertEquals(argumentCaptor.getValue().getHostConfig().getBinds(), expectedVolumes);
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldBindProjectsFSVolumeToContainerOnDevInstanceCreationFromSnapshot() throws Exception {
         final String expectedHostPathOfProjects = "/tmp/projects";
         final String[] expectedVolumes = new String[] {expectedHostPathOfProjects + ":/projects:Z"};
@@ -988,7 +990,7 @@ public class DockerInstanceProviderTest {
         assertEquals(argumentCaptor.getValue().getHostConfig().getBinds(), expectedVolumes);
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldNotBindProjectsFSVolumeToContainerOnNonDevInstanceCreationFromRecipe() throws Exception {
         String[] expectedVolumes = new String[0];
 
@@ -1027,7 +1029,7 @@ public class DockerInstanceProviderTest {
         assertEquals(argumentCaptor.getValue().getHostConfig().getBinds(), expectedVolumes);
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldNotBindProjectsFSVolumeToContainerOnNonDevInstanceCreationFromSnapshot() throws Exception {
         String[] expectedVolumes = new String[0];
 
@@ -1066,7 +1068,7 @@ public class DockerInstanceProviderTest {
         assertEquals(argumentCaptor.getValue().getHostConfig().getBinds(), expectedVolumes);
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldBindCommonAndDevVolumesToContainerOnDevInstanceCreationFromRecipe() throws Exception {
         final String expectedHostPathOfProjects = "/tmp/projects";
         Set<String> devVolumes = new HashSet<>(asList("/etc:/tmp/etc:ro", "/some/thing:/home/some/thing"));
@@ -1113,7 +1115,7 @@ public class DockerInstanceProviderTest {
         assertEquals(new HashSet<>(asList(actualBinds)), new HashSet<>(expectedVolumes));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldBindCommonAndDevVolumesToContainerOnDevInstanceCreationFromSnapshot() throws Exception {
         final String expectedHostPathOfProjects = "/tmp/projects";
         Set<String> devVolumes = new HashSet<>(asList("/etc:/tmp/etc:ro", "/some/thing:/home/some/thing"));
@@ -1161,7 +1163,7 @@ public class DockerInstanceProviderTest {
         assertEquals(new HashSet<>(asList(actualBinds)), new HashSet<>(expectedVolumes));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldBindCommonVolumesOnlyToContainerOnNonDevInstanceCreationFromRecipe() throws Exception {
         final String expectedHostPathOfProjects = "/tmp/projects";
         Set<String> devVolumes = new HashSet<>(asList("/etc:/tmp/etc:ro", "/some/thing:/home/some/thing"));
@@ -1207,7 +1209,7 @@ public class DockerInstanceProviderTest {
         assertEquals(new HashSet<>(asList(actualBinds)), new HashSet<>(expectedVolumes));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddExtraHostOnDevInstanceCreationFromRecipe() throws Exception {
         //given
         final String expectedHostPathOfProjects = "/tmp/projects";
@@ -1251,7 +1253,7 @@ public class DockerInstanceProviderTest {
         assertEquals(extraHosts[0], "dev.box.com:192.168.0.1");
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddExtraHostOnDevInstanceCreationFromSnapshot() throws Exception {
         //given
         final String expectedHostPathOfProjects = "/tmp/projects";
@@ -1295,7 +1297,7 @@ public class DockerInstanceProviderTest {
         assertEquals(extraHosts[1], "codenvy.com.com:185");
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddExtraHostOnNonDevInstanceCreationFromRecipe() throws Exception {
         //given
         final String expectedHostPathOfProjects = "/tmp/projects";
@@ -1339,7 +1341,7 @@ public class DockerInstanceProviderTest {
         assertEquals(extraHosts[0], "dev.box.com:192.168.0.1");
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddExtraHostOnNonDevInstanceCreationFromSnapshot() throws Exception {
         //given
         final String expectedHostPathOfProjects = "/tmp/projects";
@@ -1383,7 +1385,7 @@ public class DockerInstanceProviderTest {
         assertEquals(extraHosts[1], "codenvy.com.com:185");
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldBindCommonVolumesOnlyToContainerOnNonDevInstanceCreationFromSnapshot() throws Exception {
         final String expectedHostPathOfProjects = "/tmp/projects";
         Set<String> devVolumes = new HashSet<>(asList("/etc:/tmp/etc:ro", "/some/thing:/home/some/thing"));
@@ -1429,7 +1431,7 @@ public class DockerInstanceProviderTest {
         assertEquals(new HashSet<>(asList(actualBinds)), new HashSet<>(expectedVolumes));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddWorkspaceIdEnvVariableOnDevInstanceCreationFromRecipe() throws Exception {
         String wsId = "myWs";
         createInstanceFromRecipe(true, wsId);
@@ -1441,7 +1443,7 @@ public class DockerInstanceProviderTest {
                    ". Found " + Arrays.toString(argumentCaptor.getValue().getEnv()));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddWorkspaceIdEnvVariableOnDevInstanceCreationFromSnapshot() throws Exception {
         String wsId = "myWs";
         createInstanceFromSnapshot(true, wsId);
@@ -1453,7 +1455,7 @@ public class DockerInstanceProviderTest {
                    ". Found " + Arrays.toString(argumentCaptor.getValue().getEnv()));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldNotAddWorkspaceIdEnvVariableOnNonDevInstanceCreationFromRecipe() throws Exception {
         String wsId = "myWs";
         createInstanceFromRecipe(false, wsId);
@@ -1464,7 +1466,7 @@ public class DockerInstanceProviderTest {
                     "Non dev machine should not contains " + DockerInstanceRuntimeInfo.CHE_WORKSPACE_ID);
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldNotAddWorkspaceIdEnvVariableOnNonDevInstanceCreationFromSnapshot() throws Exception {
         String wsId = "myWs";
         createInstanceFromSnapshot(false, wsId);
@@ -1484,7 +1486,7 @@ public class DockerInstanceProviderTest {
      * /c/Users should be /c/Users
      * c:/Users should be /c/Users
      */
-    @Test
+    @Test(enabled = false)
     public void shouldEscapePathForWindowsHost() {
         assertEquals(dockerInstanceProvider.escapePath("Users"), "/Users");
         assertEquals(dockerInstanceProvider.escapePath("/Users"), "/Users");
@@ -1497,7 +1499,7 @@ public class DockerInstanceProviderTest {
                      "/c/Users/path/dir/from/host:/name/of/dir/in/container");
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddCommonAndDevEnvVariablesToContainerOnDevInstanceCreationFromRecipe() throws Exception {
         Set<String> commonEnv = new HashSet<>(asList("ENV_VAR1=123", "ENV_VAR2=234"));
         Set<String> devEnv = new HashSet<>(asList("DEV_ENV_VAR1=345", "DEV_ENV_VAR2=456", "DEV_ENV_VAR3=567"));
@@ -1538,7 +1540,7 @@ public class DockerInstanceProviderTest {
         assertTrue(new HashSet<>(asList(argumentCaptor.getValue().getEnv())).containsAll(expectedEnv));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldNotAddDevEnvToCommonEnvVariablesToContainerOnNonDevInstanceCreationFromRecipe() throws Exception {
         Set<String> commonEnv = new HashSet<>(asList("ENV_VAR1=123", "ENV_VAR2=234"));
         Set<String> devEnv = new HashSet<>(asList("DEV_ENV_VAR1=345", "DEV_ENV_VAR2=456", "DEV_ENV_VAR3=567"));
@@ -1574,7 +1576,7 @@ public class DockerInstanceProviderTest {
         assertTrue(new HashSet<>(asList(argumentCaptor.getValue().getEnv())).containsAll(commonEnv));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddCommonAndDevEnvVariablesToContainerOnDevInstanceCreationFromSnapshot() throws Exception {
         Set<String> commonEnv = new HashSet<>(asList("ENV_VAR1=123", "ENV_VAR2=234"));
         Set<String> devEnv = new HashSet<>(asList("DEV_ENV_VAR1=345", "DEV_ENV_VAR2=456", "DEV_ENV_VAR3=567"));
@@ -1615,7 +1617,7 @@ public class DockerInstanceProviderTest {
         assertTrue(new HashSet<>(asList(argumentCaptor.getValue().getEnv())).containsAll(expectedEnv));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldNotAddDevEnvToCommonEnvVariablesToContainerOnNonDevInstanceCreationFromSnapshot() throws Exception {
         Set<String> commonEnv = new HashSet<>(asList("ENV_VAR1=123", "ENV_VAR2=234"));
         Set<String> devEnv = new HashSet<>(asList("DEV_ENV_VAR1=345", "DEV_ENV_VAR2=456", "DEV_ENV_VAR3=567"));
@@ -1651,7 +1653,7 @@ public class DockerInstanceProviderTest {
         assertTrue(new HashSet<>(asList(argumentCaptor.getValue().getEnv())).containsAll(commonEnv));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddEnvVarsFromMachineConfigToContainerOnNonDevInstanceCreationFromSnapshot() throws Exception {
         // given
         Map<String, String> envVarsFromConfig = new HashMap<>();
@@ -1697,7 +1699,7 @@ public class DockerInstanceProviderTest {
                                                                                            .collect(Collectors.toList())));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddEnvVarsFromMachineConfigToContainerOnDevInstanceCreationFromSnapshot() throws Exception {
         // given
         Map<String, String> envVarsFromConfig = new HashMap<>();
@@ -1743,7 +1745,7 @@ public class DockerInstanceProviderTest {
                                                                                            .collect(Collectors.toList())));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddEnvVarsFromMachineConfigToContainerOnNonDevInstanceCreationFromRecipe() throws Exception {
         // given
         Map<String, String> envVarsFromConfig = new HashMap<>();
@@ -1789,7 +1791,7 @@ public class DockerInstanceProviderTest {
                                                                                            .collect(Collectors.toList())));
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldAddEnvVarsFromMachineConfigToContainerOnDevInstanceCreationFromRecipe() throws Exception {
         // given
         Map<String, String> envVarsFromConfig = new HashMap<>();

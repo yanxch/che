@@ -83,20 +83,22 @@ public class FactoryBuilderTest {
         expected = dto.createDto(Factory.class);
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldBeAbleToValidateV4_0() throws Exception {
         factoryBuilder.checkValid(actual);
 
         verify(sourceProjectParametersValidator).validate(any(), eq(FactoryParameter.Version.V4_0));
     }
 
-    @Test(expectedExceptions = ApiException.class)
+    @Test(expectedExceptions = ApiException.class,
+          enabled = false)
     public void shouldNotValidateUnparseableFactory() throws ApiException, URISyntaxException {
         factoryBuilder.checkValid(null);
     }
 
     @Test(expectedExceptions = ApiException.class, dataProvider = "setByServerParamsProvider",
-          expectedExceptionsMessageRegExp = "You have provided an invalid parameter .* for this version of Factory parameters.*")
+          expectedExceptionsMessageRegExp = "You have provided an invalid parameter .* for this version of Factory parameters.*",
+          enabled = false)
     public void shouldNotAllowUsingParamsThatCanBeSetOnlyByServer(Factory factory)
             throws InvocationTargetException, IllegalAccessException, ApiException, NoSuchMethodException {
         factoryBuilder.checkValid(factory);
@@ -114,7 +116,8 @@ public class FactoryBuilderTest {
         };
     }
 
-    @Test(expectedExceptions = ApiException.class, dataProvider = "notValidParamsProvider")
+    @Test(expectedExceptions = ApiException.class, dataProvider = "notValidParamsProvider",
+          enabled = false)
     public void shouldNotAllowUsingNotValidParams(Factory factory)
             throws InvocationTargetException, IllegalAccessException, ApiException, NoSuchMethodException {
         factoryBuilder.checkValid(factory);
@@ -126,7 +129,7 @@ public class FactoryBuilderTest {
     }
 
 
-    @Test
+    @Test(enabled = false)
     public void shouldBeAbleToValidateV4_0WithTrackedParamsWithoutAccountIdIfOnPremisesIsEnabled() throws Exception {
         factoryBuilder = new FactoryBuilder(sourceProjectParametersValidator);
 
