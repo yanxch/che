@@ -29,7 +29,7 @@ public class MavenProjectInterceptor implements ResourceInterceptor {
 
     /** {@inheritDoc} */
     @Override
-    public Resource intercept(Resource resource) {
+    public void intercept(Resource resource) {
         if (resource.isProject() && ((Project)resource).isTypeOf(MAVEN_ID)) {
 
             final String artifact = ((Project)resource).getAttribute(ARTIFACT_ID);
@@ -38,7 +38,5 @@ public class MavenProjectInterceptor implements ResourceInterceptor {
                 resource.addMarker(new PresentableTextMarker(resource.getName() + " [" + artifact + "]"));
             }
         }
-
-        return resource;
     }
 }

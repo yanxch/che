@@ -31,11 +31,9 @@ public class ClassInterceptor implements ResourceInterceptor {
 
     /** {@inheritDoc} */
     @Override
-    public Resource intercept(Resource resource) {
+    public void intercept(Resource resource) {
         if (resource.isFile() && isJavaFile(resource)) {
             resource.addMarker(new PresentableTextMarker(((File)resource).getNameWithoutExtension()));
         }
-
-        return resource;
     }
 }

@@ -186,8 +186,7 @@ public class NodeLoader implements LoaderHandler.HasLoaderHandlers {
             @Override
             public boolean apply(Node loadedChild) {
                 for (NodeDescriptor nodeDescriptor : existed) {
-                    if (nodeDescriptor.getNode().getName().equals(loadedChild.getName())
-                        && nodeDescriptor.getNode().getClass().equals(loadedChild.getClass())) {
+                    if (nodeDescriptor.getNode().equals(loadedChild)) {
                         return false;
                     }
                 }
@@ -210,8 +209,7 @@ public class NodeLoader implements LoaderHandler.HasLoaderHandlers {
             public boolean apply(NodeDescriptor existedChild) {
                 boolean found = false;
                 for (Node loadedChild : loadedChildren) {
-                    if (loadedChild.getName().equals(existedChild.getNode().getName())
-                        && loadedChild.getClass().equals(existedChild.getNode().getClass())) {
+                    if (existedChild.getNode().equals(loadedChild)) {
                         found = true;
                     }
                 }

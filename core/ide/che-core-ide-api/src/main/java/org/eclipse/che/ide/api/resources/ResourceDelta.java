@@ -50,6 +50,14 @@ public interface ResourceDelta {
      */
     int UPDATED = 0x4;
 
+    /**
+     * Delta kind constant (bit mask) indicating that resource (usually container-based) has been synchronized.
+     *
+     * @see ResourceDelta#getKind()
+     * @since 4.4.0
+     */
+    int SYNCHRONIZED = 0x8;
+
     /* -- Constants which describe resource changes -- */
 
     /**

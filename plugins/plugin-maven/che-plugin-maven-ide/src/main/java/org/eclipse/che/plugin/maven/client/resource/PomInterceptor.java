@@ -35,12 +35,12 @@ public class PomInterceptor implements ResourceInterceptor {
 
     /** {@inheritDoc} */
     @Override
-    public Resource intercept(Resource resource) {
+    public void intercept(Resource resource) {
         if (resource.isFile() && POM_XML.equals(resource.getName())) {
             final Optional<Project> project = resource.getRelatedProject();
 
             if (!project.isPresent() || !project.get().isTypeOf(MAVEN_ID)) {
-                return resource;
+                return;
             }
 
             final String artifact = project.get().getAttribute(ARTIFACT_ID);
@@ -49,7 +49,5 @@ public class PomInterceptor implements ResourceInterceptor {
                 resource.addMarker(new PresentableTextMarker(artifact));
             }
         }
-
-        return resource;
     }
 }

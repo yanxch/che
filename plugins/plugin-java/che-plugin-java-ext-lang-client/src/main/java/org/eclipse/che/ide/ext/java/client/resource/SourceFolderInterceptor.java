@@ -34,7 +34,7 @@ import static org.eclipse.che.ide.ext.java.shared.ContentRoot.SOURCE;
 public class SourceFolderInterceptor implements ResourceInterceptor {
 
     @Override
-    public final Resource intercept(Resource resource) {
+    public final void intercept(Resource resource) {
         checkArgument(resource != null, "Null resource occurred");
 
         if (resource.isFolder()) {
@@ -46,13 +46,11 @@ public class SourceFolderInterceptor implements ResourceInterceptor {
                 for (Path path : getPaths(project.get(), getAttribute())) {
                     if (path.equals(resourcePath)) {
                         resource.addMarker(new SourceFolderMarker(getContentRoot()));
-                        return resource;
+                        return;
                     }
                 }
             }
         }
-
-        return resource;
     }
 
     protected ContentRoot getContentRoot() {

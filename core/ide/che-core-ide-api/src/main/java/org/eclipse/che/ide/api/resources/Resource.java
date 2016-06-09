@@ -503,6 +503,14 @@ public interface Resource extends Comparable<Resource> {
     boolean deleteMarker(String type);
 
     /**
+     * Delete all markers which is bound to current resource.
+     *
+     * @return true if all markers has been removed
+     * @since 4.4.0
+     */
+    boolean deleteAllMarkers();
+
+    /**
      * Returns the nearest parent resource which has given marker {@code type}.
      *
      * @param type

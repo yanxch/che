@@ -184,7 +184,7 @@ abstract class ContainerImpl extends ResourceImpl implements Container {
     /** {@inheritDoc} */
     @Override
     public Promise<Resource[]> getTree(int depth) {
-        return resourceManager.getRemoteResources(this, depth, true, false);
+        return resourceManager.getRemoteResources(this, depth, true);
     }
 
     @Override

@@ -10,13 +10,12 @@
  *******************************************************************************/
 package org.eclipse.che.ide.part.explorer.project;
 
+import com.google.common.base.MoreObjects;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.api.promises.client.Operation;
-import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.Resources;
@@ -54,6 +53,7 @@ import static org.eclipse.che.ide.api.resources.ResourceDelta.DERIVED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.SYNCHRONIZED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
 
 /**
@@ -74,26 +74,23 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
     private final SettingsProvider         settingsProvider;
     private final CoreLocalizationConstant locale;
     private final Resources                resources;
-    private final TreeResourceRevealer     revealer;
 
     private static final int PART_SIZE = 500;
 
     private boolean hiddenFilesAreShown;
 
     @Inject
-    public ProjectExplorerPresenter(ProjectExplorerView view,
+    public ProjectExplorerPresenter(final ProjectExplorerView view,
                                     EventBus eventBus,
                                     CoreLocalizationConstant locale,
                                     Resources resources,
-                                    ResourceNode.NodeFactory nodeFactory,
-                                    SettingsProvider settingsProvider,
-                                    TreeResourceRevealer revealer) {
+                                    final ResourceNode.NodeFactory nodeFactory,
+                                    final SettingsProvider settingsProvider) {
         this.view = view;
         this.nodeFactory = nodeFactory;
         this.settingsProvider = settingsProvider;
         this.locale = locale;
         this.resources = resources;
-        this.revealer = revealer;
         this.view.setDelegate(this);
 
         eventBus.addHandler(ResourceChangedEvent.getType(), this);
@@ -113,6 +110,9 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         final ResourceDelta delta = event.getDelta();
 
         switch (delta.getKind()) {
+            case SYNCHRONIZED:
+                onResourceSynchronized(delta.getResource());
+                break;
             case ADDED:
                 onResourceAdded(delta);
                 break;
@@ -122,6 +122,47 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
             case UPDATED:
                 onResourceUpdated(delta);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void onResourceSynchronized(Resource resource) {
+        final Tree tree = view.getTree();
+
+        final Node node = getNode(resource.getLocation());
+
+        if (node == null || !tree.isExpanded(node)) {
+            return;
+        }
+
+        final String oldId = tree.getNodeStorage().getKeyProvider().getKey(node);
+        ((ResourceNode)node).setData(resource);
+        tree.getNodeStorage().reIndexNode(oldId, node);
+        tree.refresh(node);
+
+        tree.getNodeLoader().loadChildren(node, true);
+    }
+
+    private Node getNode(Path path) {
+        final Tree tree = view.getTree();
+
+        for (final Node node : tree.getNodeStorage().getAll()) {
+            if (isNodeServesLocation(node, path)) {
+                return node;
+            }
+        }
+
+        return null;
+    }
+
+    private Node getParentNode(Path path) {
+        Node node = null;
+
+        while (node == null) {
+            path = path.parent();
+            node = getNode(path);
+        }
+
+        return node;
     }
 
     @SuppressWarnings("unchecked")
@@ -136,12 +177,12 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         final Resource resource = delta.getResource();
 
         if ((delta.getFlags() & (MOVED_FROM | MOVED_TO)) != 0) {
-            for (Node checkNode : tree.getNodeStorage().getAll()) {
-                if (checkNode instanceof ResourceNode && ((ResourceNode)checkNode).getData().getLocation().equals(delta.getFromPath())) {
-                    tree.getNodeStorage().remove(checkNode);
-                    break;
-                }
+
+            final Node node = MoreObjects.firstNonNull(getNode(delta.getFromPath()), getParentNode(delta.getFromPath()));
+            if (node != null && tree.isExpanded(node)) {
+                tree.getNodeLoader().loadChildren(node, true);
             }
+
         } else {
             //process root project
             if (resource.getLocation().segmentCount() == 1 && resource.getResourceType() == PROJECT) {
@@ -156,40 +197,21 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
             return;
         }
 
-        revealer.reveal(resource.getLocation());
+        final Node node = MoreObjects.firstNonNull(getNode(resource.getLocation()), getParentNode(resource.getLocation()));
+
+        if (node != null && tree.isExpanded(node)) {
+            tree.getNodeLoader().loadChildren(node, true);
+        }
     }
 
     @SuppressWarnings("unchecked")
     private void onResourceRemoved(final ResourceDelta delta) {
         final Tree tree = view.getTree();
 
-        //look for removed node from existing
-        for (final Node exist : tree.getNodeStorage().getAll()) {
-            if (isNodeServesLocation(exist, delta.getResource().getLocation())) {
+        final Node node = getParentNode(delta.getResource().getLocation());
 
-                tree.getNodeStorage().remove(exist);
-
-                Node toReveal = tree.getNodeStorage().getPreviousSibling(exist);
-
-                if (toReveal == null) {
-                    toReveal = tree.getNodeStorage().getNextSibling(exist);
-                }
-
-                if (toReveal == null) {
-                    toReveal = exist.getParent();
-                }
-
-                if (toReveal != null && toReveal instanceof ResourceNode) {
-                    revealer.reveal(((ResourceNode)toReveal).getData().getLocation()).then(new Operation<Node>() {
-                        @Override
-                        public void apply(Node node) throws OperationException {
-                            tree.getSelectionModel().select(node, false);
-                        }
-                    });
-                }
-
-                return;
-            }
+        if (node != null && tree.isExpanded(node)) {
+            tree.getNodeLoader().loadChildren(node, true);
         }
     }
 

@@ -33,7 +33,7 @@ public interface ResourceInterceptor {
      * @return the modified resource
      * @since 4.4.0
      */
-    Resource intercept(Resource resource);
+    void intercept(Resource resource);
 
     /**
      * Default implementation of {@link ResourceInterceptor} which is do nothing except returning given {@code resource}.
@@ -45,8 +45,8 @@ public interface ResourceInterceptor {
 
         /** {@inheritDoc} */
         @Override
-        public Resource intercept(Resource resource) {
-            return resource;
+        public void intercept(Resource resource) {
+//            stub
         }
     }
 }

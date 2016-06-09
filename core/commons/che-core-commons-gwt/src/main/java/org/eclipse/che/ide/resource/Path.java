@@ -1017,7 +1017,7 @@ public final class Path {
         int newSize = segments.length - count;
         String[] newSegments = new String[newSize];
         System.arraycopy(this.segments, 0, newSegments, 0, newSize);
-        return new Path(device, newSegments, separators);
+        return new Path(device, newSegments, separators & (HAS_LEADING | IS_UNC));
     }
 
     /**

@@ -12,6 +12,7 @@ package org.eclipse.che.ide.resources.impl;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
+import com.google.inject.ImplementedBy;
 
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.Resource;
@@ -30,26 +31,24 @@ import org.eclipse.che.ide.resource.Path;
  * @since 4.4.0
  */
 @Beta
+@ImplementedBy(InMemoryResourceStore.class)
 interface ResourceStore {
     /**
      * Register the given {@code resource} with parent path in storage.
      * <p/>
      * If {@code resource}'s parent is root path, then {@link Path#ROOT} should be used.
      *
-     * @param parent
-     *         the resource parent path
      * @param resource
      *         the resource to be registered
      * @return {@code true} if given resource hasn't registered before
      * @throws IllegalArgumentException
      *         if argument checking was failed, reasons include:
      *         <ul>
-     *         <li>Null parent occurred</li>
      *         <li>Null resource occurred</li>
      *         </ul>
      * @since 4.4.0
      */
-    boolean register(Path parent, Resource resource);
+    boolean register(Resource resource);
 
     /**
      * Dispose given {@code resource} and dispose children if {@code withChildren} was flagged as {@code true}.

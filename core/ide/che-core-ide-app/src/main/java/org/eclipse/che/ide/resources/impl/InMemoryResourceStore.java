@@ -13,13 +13,16 @@ package org.eclipse.che.ide.resources.impl;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.Resource;
+import org.eclipse.che.ide.api.resources.ResourceInterceptor;
 import org.eclipse.che.ide.resource.Path;
 
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Set;
 
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.of;
@@ -38,7 +41,6 @@ import static java.util.Arrays.copyOf;
 @Beta
 class InMemoryResourceStore implements ResourceStore {
 
-    Map<Path, Resource[]> memoryCache;
 
     private static final Resource[] EMPTY_RESOURCES = new Resource[0];
 
@@ -49,18 +51,27 @@ class InMemoryResourceStore implements ResourceStore {
         }
     };
 
-    public InMemoryResourceStore() {
+    private Map<Path, Resource[]> memoryCache;
+    private Set<ResourceInterceptor> resourceInterceptors;
+
+    @Inject
+    public InMemoryResourceStore(Set<ResourceInterceptor> resourceInterceptors) {
+        this.resourceInterceptors = resourceInterceptors;
+
         memoryCache = Maps.newHashMap();
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean register(Path parent, Resource resource) {
-        checkArgument(parent != null, "Null parent occurred");
+    public boolean register(Resource resource) {
         checkArgument(resource != null, "Null resource occurred");
+
+        final Path parent = resource.getLocation().segmentCount() == 1 ? Path.ROOT : resource.getLocation().parent();
 
         if (!memoryCache.containsKey(parent)) {
             memoryCache.put(parent, new Resource[]{resource});
+
+            intercept(resource);
 
             return true;
         } else {
@@ -70,6 +81,8 @@ class InMemoryResourceStore implements ResourceStore {
 
             if (index >= 0) { //update existing resource with new one
                 container[index] = resource;
+
+                intercept(resource);
 
                 return false;
             } else { //such resource doesn't exists, then simply add it
@@ -82,6 +95,8 @@ class InMemoryResourceStore implements ResourceStore {
 
                 memoryCache.put(parent, container);
 
+                intercept(resource);
+
                 return true;
             }
         }
@@ -93,7 +108,7 @@ class InMemoryResourceStore implements ResourceStore {
         checkArgument(path != null, "Null path occurred");
 
 
-        final Path parent = path.parent();
+        final Path parent = path.segmentCount() == 1 ? Path.ROOT : path.parent();
 
         Resource[] container = memoryCache.get(parent);
 
@@ -214,5 +229,15 @@ class InMemoryResourceStore implements ResourceStore {
     @Override
     public void clear() {
         memoryCache.clear();
+    }
+
+    private <R extends Resource> void intercept(R resource) {
+        checkArgument(resource != null, "Null resource occurred");
+
+        resource.deleteAllMarkers();
+
+        for (ResourceInterceptor interceptor : resourceInterceptors) {
+            interceptor.intercept(resource);
+        }
     }
 }

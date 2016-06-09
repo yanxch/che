@@ -21,6 +21,7 @@ import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.resources.marker.Marker;
 import org.eclipse.che.ide.resource.Path;
+import org.eclipse.che.ide.util.Arrays;
 
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.of;
@@ -45,8 +46,6 @@ abstract class ResourceImpl implements Resource {
 
     protected final ResourceManager resourceManager;
     protected final Path            path;
-
-    protected Project project;
 
     protected Marker[] markers = new Marker[0];
 
@@ -122,10 +121,6 @@ abstract class ResourceImpl implements Resource {
             return of((Project)this);
         }
 
-        if (project != null) {
-            return of(project);
-        }
-
         Optional<Container> optionalParent = getParent();
 
         if (!optionalParent.isPresent()) {
@@ -144,10 +139,7 @@ abstract class ResourceImpl implements Resource {
             parent = optionalParent.get();
         }
 
-        //caching related project
-        project = (Project)parent;
-
-        return of(project);
+        return of((Project)parent);
     }
 
     /** {@inheritDoc} */
@@ -234,6 +226,18 @@ abstract class ResourceImpl implements Resource {
             arraycopy(markers, index + 1, markers, index, numMoved);
         }
         markers = copyOf(markers, --size);
+
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean deleteAllMarkers() {
+        if (Arrays.isNullOrEmpty(markers)) {
+            return false;
+        }
+
+        markers = new Marker[0];
 
         return true;
     }

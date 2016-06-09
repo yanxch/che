@@ -51,6 +51,7 @@ import javax.validation.constraints.NotNull;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.ADDED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
 
 /**
  * Editor tab widget. Contains icon, title and close mark.
@@ -286,6 +287,18 @@ public class EditorTabWidget extends Composite implements EditorTab, ContextMenu
 
             if (file.getLocation().equals(movedFrom)) {
                 file = (VirtualFile)resource;
+            }
+        } else if (delta.getKind() == UPDATED) {
+            if (!delta.getResource().isFile()) {
+                return;
+            }
+
+            final Resource resource = delta.getResource();
+
+            if (file.getLocation().equals(resource.getLocation())) {
+                file = (VirtualFile)resource;
+
+                title.setText(file.getDisplayName());
             }
         }
     }
