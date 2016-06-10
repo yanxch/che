@@ -17,7 +17,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.ide.api.machine.RecipeServiceClient;
 import org.eclipse.che.api.machine.shared.dto.LimitsDto;
 import org.eclipse.che.api.machine.shared.dto.MachineConfigDto;
 import org.eclipse.che.api.machine.shared.dto.MachineSourceDto;
@@ -26,19 +25,23 @@ import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
-import org.eclipse.che.ide.api.workspace.WorkspaceServiceClient;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
-import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
+import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.ide.CoreLocalizationConstant;
-import org.eclipse.che.ide.workspace.DefaultWorkspaceComponent;
 import org.eclipse.che.ide.api.component.Component;
-import org.eclipse.che.ide.dto.DtoFactory;
+import org.eclipse.che.ide.api.machine.RecipeServiceClient;
+import org.eclipse.che.ide.api.workspace.WorkspaceServiceClient;
 import org.eclipse.che.ide.context.BrowserQueryFieldRenderer;
+import org.eclipse.che.ide.dto.DtoFactory;
+import org.eclipse.che.ide.workspace.DefaultWorkspaceComponent;
 import org.eclipse.che.ide.workspace.create.CreateWorkspaceView.HidePopupCallBack;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The class contains business logic which allow to create user workspace if it doesn't exist.
@@ -235,10 +238,12 @@ public class CreateWorkspacePresenter implements CreateWorkspaceView.ActionDeleg
                                      .withDev(true)
                                      .withLimits(dtoFactory.createDto(LimitsDto.class).withRam(2048)));
 
-        List<EnvironmentDto> environments = new ArrayList<>();
-        environments.add(dtoFactory.createDto(EnvironmentDto.class)
-                                   .withName(wsName)
-                                   .withMachineConfigs(machineConfigs));
+        Map<String, EnvironmentDto> environments = new HashMap<>();
+        environments.put(wsName, dtoFactory.createDto(EnvironmentDto.class)
+                                           .withRecipe(dtoFactory.createDto(EnvironmentRecipeDto.class)
+                                                                 .withType("opencompose")
+                                                                 .withContentType("application/json")
+                                                                 .withLocation(view.getRecipeUrl())));
 
         return dtoFactory.createDto(WorkspaceConfigDto.class)
                          .withName(wsName)

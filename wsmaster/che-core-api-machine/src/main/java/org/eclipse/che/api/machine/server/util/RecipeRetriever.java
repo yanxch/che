@@ -31,12 +31,8 @@ public class RecipeRetriever {
     /**
      * For recipe stored on an external location, needs to delegate.
      */
-    private RecipeDownloader recipeDownloader;
-
     @Inject
-    public RecipeRetriever(RecipeDownloader recipeDownloader) {
-        this.recipeDownloader = recipeDownloader;
-    }
+    private RecipeDownloader recipeDownloader;
 
     /**
      * Gets the recipe from a machine configuration

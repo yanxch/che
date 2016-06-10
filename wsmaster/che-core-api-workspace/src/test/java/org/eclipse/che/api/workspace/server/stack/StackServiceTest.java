@@ -23,7 +23,6 @@ import org.eclipse.che.api.machine.server.model.impl.LimitsImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineConfigImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineSourceImpl;
 import org.eclipse.che.api.machine.server.model.impl.ServerConfImpl;
-import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.stack.StackComponentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.stack.StackImpl;
@@ -174,13 +173,13 @@ public class StackServiceTest {
                                                                                                     "/some/path")))
                                                        .setEnvVariables(Collections.singletonMap("key1", "value1"))
                                                        .setDependsOn(Collections.emptyList()).build();
-        EnvironmentImpl environment = new EnvironmentImpl(ENVIRONMENT_NAME, null, Collections.singletonList(machineConfig));
+//        EnvironmentImpl environment = new EnvironmentImpl(ENVIRONMENT_NAME, null, Collections.singletonList(machineConfig));
 
         WorkspaceConfigImpl workspaceConfig = WorkspaceConfigImpl.builder()
                                                                  .setName(WORKSPACE_CONFIG_NAME)
                                                                  .setDefaultEnv(DEF_ENVIRONMENT_NAME)
                                                                  .setCommands(Collections.singletonList(command))
-                                                                 .setEnvironments(Collections.singletonList(environment))
+//                                                                 .setEnvironments(Collections.singletonList(environment))
                                                                  .build();
 
         stackSourceDto = newDto(StackSourceDto.class).withType(SOURCE_TYPE).withOrigin(SOURCE_ORIGIN);

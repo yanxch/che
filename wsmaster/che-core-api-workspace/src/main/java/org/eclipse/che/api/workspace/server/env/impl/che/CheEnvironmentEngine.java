@@ -53,7 +53,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * author Alexander Garagatyi
  */
 public class CheEnvironmentEngine implements EnvironmentEngine {
-    public final static String ENVIRONMENT_TYPE = "che";
+    public final static String ENVIRONMENT_TYPE = "opencompose";
 
     private static final Logger LOG = getLogger(CheEnvironmentEngine.class);
 
@@ -88,11 +88,14 @@ public class CheEnvironmentEngine implements EnvironmentEngine {
 
 
     @Override
-    public List<Machine> start(String workspaceId, Environment env, boolean recover)
+    public List<Machine> start(String workspaceId,
+                               Environment env,
+                               String envName,
+                               boolean recover)
             throws ServerException, NotFoundException, ConflictException, IllegalArgumentException {
 
         // check old and new environment format
-        List<MachineConfig> machineConfigs = cheEnvironmentValidator.parse(env);
+        List<MachineConfig> machineConfigs = cheEnvironmentValidator.parse(env.getRecipe());
 
         machineConfigs = startStrategy.order(machineConfigs);
 
@@ -108,7 +111,7 @@ public class CheEnvironmentEngine implements EnvironmentEngine {
             releaseWriteLock(workspaceId);
         }
 
-        startQueue(workspaceId, env.getName(), recover);
+        startQueue(workspaceId, envName, recover);
 
         acquireWriteLock(workspaceId);
         try {

@@ -23,12 +23,9 @@ import org.eclipse.che.api.machine.server.model.impl.LimitsImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineConfigImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineSourceImpl;
-import org.eclipse.che.api.machine.server.recipe.RecipeImpl;
 import org.eclipse.che.api.machine.shared.dto.event.MachineStatusEvent;
 import org.eclipse.che.api.workspace.server.WorkspaceRuntimes.RuntimeDescriptor;
 import org.eclipse.che.api.workspace.server.env.spi.EnvironmentEngine;
-import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
-import org.eclipse.che.api.workspace.server.model.impl.WorkspaceConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceRuntimeImpl;
 import org.eclipse.che.api.workspace.shared.dto.event.WorkspaceStatusEvent.EventType;
@@ -46,7 +43,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.RUNNING;
 import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.STARTING;
@@ -628,14 +624,15 @@ public class WorkspaceRuntimesTest {
                                                              .setName("non-dev")
                                                              .setDev(false)
                                                              .build();
-        final EnvironmentImpl environment = new EnvironmentImpl(ENV_NAME,
-                                                                new RecipeImpl(),
-                                                                asList(nonDevCfg, devCfg));
-        final WorkspaceConfigImpl wsConfig = WorkspaceConfigImpl.builder()
-                                                                .setName("test workspace")
-                                                                .setEnvironments(singletonList(environment))
-                                                                .setDefaultEnv(environment.getName())
-                                                                .build();
-        return new WorkspaceImpl(WORKSPACE_ID, "user123", wsConfig);
+//        final EnvironmentImpl environment = new EnvironmentImpl(ENV_NAME,
+//                                                                new RecipeImpl(),
+//                                                                asList(nonDevCfg, devCfg));
+//        final WorkspaceConfigImpl wsConfig = WorkspaceConfigImpl.builder()
+//                                                                .setName("test workspace")
+//                                                                .setEnvironments(singletonList(environment))
+//                                                                .setDefaultEnv(environment.getName())
+//                                                                .build();
+//        return new WorkspaceImpl(WORKSPACE_ID, "user123", wsConfig);
+        return null;
     }
 }

@@ -8,30 +8,13 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.workspace.shared.dto;
-
-import org.eclipse.che.api.core.model.workspace.Environment;
-import org.eclipse.che.dto.shared.DTO;
+package org.eclipse.che.api.workspace.server.env.impl.che.opencompose.model;
 
 import java.util.Map;
 
 /**
  * @author Alexander Garagatyi
  */
-@DTO
-public interface EnvironmentDto extends Environment {
-
-    @Override
-    EnvironmentRecipeDto getRecipe();
-
-    void setRecipe(EnvironmentRecipeDto recipe);
-
-    EnvironmentDto withRecipe(EnvironmentRecipeDto recipe);
-
-    @Override
-    Map<String, MachineConfig2Dto> getMachines();
-
-    void setMachines(Map<String, MachineConfig2Dto> machines);
-
-    EnvironmentDto withMachines(Map<String, MachineConfig2Dto> machines);
+public interface EnvironmentRecipeContent {
+    Map<String, ? extends Service> getServices();
 }

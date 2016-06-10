@@ -10,28 +10,39 @@
  *******************************************************************************/
 package org.eclipse.che.api.workspace.shared.dto;
 
-import org.eclipse.che.api.core.model.workspace.Environment;
+import org.eclipse.che.api.core.model.workspace.EnvironmentRecipe;
 import org.eclipse.che.dto.shared.DTO;
-
-import java.util.Map;
 
 /**
  * @author Alexander Garagatyi
  */
 @DTO
-public interface EnvironmentDto extends Environment {
+public interface EnvironmentRecipeDto extends EnvironmentRecipe {
+    @Override
+    String getType();
+
+    void setType(String type);
+
+    EnvironmentRecipeDto withType(String type);
 
     @Override
-    EnvironmentRecipeDto getRecipe();
+    String getContentType();
 
-    void setRecipe(EnvironmentRecipeDto recipe);
+    void setContentType(String contentType);
 
-    EnvironmentDto withRecipe(EnvironmentRecipeDto recipe);
+    EnvironmentRecipeDto withContentType(String contentType);
 
     @Override
-    Map<String, MachineConfig2Dto> getMachines();
+    String getContent();
 
-    void setMachines(Map<String, MachineConfig2Dto> machines);
+    void setContent(String content);
 
-    EnvironmentDto withMachines(Map<String, MachineConfig2Dto> machines);
+    EnvironmentRecipeDto withContent(String content);
+
+    @Override
+    String getLocation();
+
+    void setLocation(String location);
+
+    EnvironmentRecipeDto withLocation(String location);
 }

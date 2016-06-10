@@ -128,12 +128,12 @@ public class LocalWorkspaceDaoTest {
                                                                .setEnvVariables(Collections.singletonMap("key1", "value1"))
                                                                .setDependsOn(Collections.emptyList()).build();
 
-        final EnvironmentImpl env1 = new EnvironmentImpl("my-environment", recipe, asList(machineCfg1, machineCfg2));
-        final EnvironmentImpl env2 = new EnvironmentImpl("my-environment-2", recipe, singletonList(machineCfg1));
+//        final EnvironmentImpl env1 = new EnvironmentImpl("my-environment", recipe, asList(machineCfg1, machineCfg2));
+//        final EnvironmentImpl env2 = new EnvironmentImpl("my-environment-2", recipe, singletonList(machineCfg1));
 
-        final List<EnvironmentImpl> environments = new ArrayList<>();
-        environments.add(env1);
-        environments.add(env2);
+        final Map<String, EnvironmentImpl> environments = new HashMap<>();
+//        environments.add(env1);
+//        environments.add(env2);
 
         // projects
         final ProjectConfigImpl project1 = new ProjectConfigImpl();
@@ -171,7 +171,7 @@ public class LocalWorkspaceDaoTest {
                             .setId(generate("workspace", 16))
                             .setConfig(new WorkspaceConfigImpl("test-workspace-name",
                                                                "This is test workspace",
-                                                               env1.getName(),
+                                                               "my-environment",
                                                                commands,
                                                                projects,
                                                                environments))

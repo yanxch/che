@@ -15,6 +15,7 @@ import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.commons.annotation.Nullable;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Defines workspace configuration.
@@ -60,5 +61,5 @@ public interface WorkspaceConfig {
      * Returns workspace environments.
      * Workspace must contain at least 1 default environment and may contain N environments
      */
-    List<? extends Environment> getEnvironments();
+    Map<String, ? extends Environment> getEnvironments();
 }

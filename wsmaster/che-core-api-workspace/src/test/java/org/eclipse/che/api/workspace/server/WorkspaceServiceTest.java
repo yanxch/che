@@ -12,31 +12,24 @@ package org.eclipse.che.api.workspace.server;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.jayway.restassured.response.Response;
 
-import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.api.core.rest.ApiExceptionMapper;
-import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.core.rest.shared.dto.ServiceError;
 import org.eclipse.che.api.machine.server.MachineManager;
 import org.eclipse.che.api.machine.server.MachineServiceLinksInjector;
 import org.eclipse.che.api.machine.server.model.impl.CommandImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineConfigImpl;
-import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
-import org.eclipse.che.api.machine.server.model.impl.MachineRuntimeInfoImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineSourceImpl;
 import org.eclipse.che.api.machine.server.model.impl.ServerConfImpl;
-import org.eclipse.che.api.machine.server.model.impl.ServerImpl;
 import org.eclipse.che.api.machine.server.model.impl.SnapshotImpl;
 import org.eclipse.che.api.machine.shared.dto.CommandDto;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
-import org.eclipse.che.api.workspace.server.model.impl.WorkspaceRuntimeImpl;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
@@ -58,31 +51,16 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import static com.jayway.restassured.RestAssured.given;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.RUNNING;
 import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.STARTING;
-import static org.eclipse.che.api.machine.shared.Constants.WSAGENT_REFERENCE;
-import static org.eclipse.che.api.machine.shared.Constants.WSAGENT_WEBSOCKET_REFERENCE;
-import static org.eclipse.che.api.workspace.shared.Constants.GET_ALL_USER_WORKSPACES;
-import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_GET_SNAPSHOT;
-import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_GET_WORKSPACE_EVENTS_CHANNEL;
-import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_IDE_URL;
-import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_REMOVE_WORKSPACE;
-import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_SELF;
-import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_START_WORKSPACE;
-import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_STOP_WORKSPACE;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
 import static org.everrest.assured.JettyHttpServer.ADMIN_USER_NAME;
 import static org.everrest.assured.JettyHttpServer.ADMIN_USER_PASSWORD;
@@ -97,8 +75,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 /**
  * Tests for {@link WorkspaceService}.
@@ -467,7 +443,7 @@ public class WorkspaceServiceTest {
         final WorkspaceImpl workspace = createWorkspace(createConfigDto());
         when(wsManager.getWorkspace(workspace.getId())).thenReturn(workspace);
         when(wsManager.updateWorkspace(any(), any())).thenReturn(workspace);
-        final EnvironmentDto envDto = createEnvDto().withName("new-env");
+        final EnvironmentDto envDto = createEnvDto();
         final int envsSizeBefore = workspace.getConfig().getEnvironments().size();
 
         final Response response = given().auth()
@@ -499,7 +475,8 @@ public class WorkspaceServiceTest {
                                          .body(envDto)
                                          .when()
                                          .put(SECURE_PATH + "/workspace/" + workspace.getId()
-                                              + "/environment/" + envDto.getName());
+//                                              + "/environment/" + envDto.getName()
+                                         );
 
         assertEquals(response.getStatusCode(), 200);
         verify(validator).validateConfig(workspace.getConfig());
@@ -527,13 +504,13 @@ public class WorkspaceServiceTest {
     public void shouldDeleteEnvironment() throws Exception {
         final WorkspaceImpl workspace = createWorkspace(createConfigDto());
         when(wsManager.getWorkspace(workspace.getId())).thenReturn(workspace);
-        final EnvironmentImpl firstEnv = workspace.getConfig().getEnvironments().iterator().next();
+        final Map.Entry<String, EnvironmentImpl> firstEnv = workspace.getConfig().getEnvironments().entrySet().iterator().next();
 
         final Response response = given().auth()
                                          .basic(ADMIN_USER_NAME, ADMIN_USER_PASSWORD)
                                          .when()
                                          .delete(SECURE_PATH + "/workspace/" + workspace.getId()
-                                                 + "/environment/" + firstEnv.getName());
+                                                 + "/environment/" + firstEnv.getKey());
 
         assertEquals(response.getStatusCode(), 204);
         verify(wsManager).updateWorkspace(any(), any());
@@ -616,15 +593,14 @@ public class WorkspaceServiceTest {
         assertEquals(response.getStatusCode(), 204);
         verify(wsManager).updateWorkspace(any(), any());
     }
-
+/*
     @Test
     public void testWorkspaceLinks() throws Exception {
         // given
         final WorkspaceImpl workspace = createWorkspace(createConfigDto());
         EnvironmentImpl environment = workspace.getConfig()
-                                               .getEnvironment(workspace.getConfig().getDefaultEnv())
-                                               .get();
-        final WorkspaceRuntimeImpl runtime = new WorkspaceRuntimeImpl(environment.getName(), environment.getType());
+                                               .getEnvironments().get(workspace.getConfig().getDefaultEnv());
+        final WorkspaceRuntimeImpl runtime = new WorkspaceRuntimeImpl(workspace.getConfig().getDefaultEnv(), environment.getRecipe().getType());
         final MachineConfigImpl devCfg = environment
                                                   .getMachineConfigs()
                                                   .iterator()
@@ -676,7 +652,7 @@ public class WorkspaceServiceTest {
         assertNotNull(workspaceDto.getRuntime().getLink(LINK_REL_STOP_WORKSPACE), "Runtime doesn't contain stop link");
         assertNotNull(workspaceDto.getRuntime().getLink(WSAGENT_REFERENCE), "Runtime doesn't contain wsagent link");
         assertNotNull(workspaceDto.getRuntime().getLink(WSAGENT_WEBSOCKET_REFERENCE), "Runtime doesn't contain wsagent.websocket link");
-    }
+    }*/
 
     private static String unwrapError(Response response) {
         return unwrapDto(response, ServiceError.class).getMessage();
@@ -736,14 +712,15 @@ public class WorkspaceServiceTest {
                                                                                                     "path2")))
                                                               .setEnvVariables(singletonMap("key1", "value1"))
                                                               .build();
-        return DtoConverter.asDto(new EnvironmentImpl("dev-env", null, singletonList(devMachine)));
+//        return DtoConverter.asDto(new EnvironmentImpl("dev-env", null, singletonList(devMachine)));
+        return null;
     }
 
     private static WorkspaceConfigDto createConfigDto() {
         final WorkspaceConfigImpl config = WorkspaceConfigImpl.builder()
                                                               .setName("dev-workspace")
                                                               .setDefaultEnv("dev-env")
-                                                              .setEnvironments(singletonList(new EnvironmentImpl(createEnvDto())))
+//                                                              .setEnvironments(singletonList(new EnvironmentImpl(createEnvDto())))
                                                               .setCommands(new ArrayList<>(singleton(createCommandDto())))
                                                               .setProjects(new ArrayList<>(singleton(createProjectDto())))
                                                               .build();

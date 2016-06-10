@@ -10,10 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.api.core.model.workspace;
 
-import org.eclipse.che.api.core.model.machine.MachineConfig;
-import org.eclipse.che.api.core.model.machine.Recipe;
+import org.eclipse.che.api.core.model.machine.MachineConfig2;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * Defines environment for machines network.
@@ -21,39 +20,11 @@ import java.util.List;
  * @author gazarenkov
  */
 public interface Environment {
-
-    /**
-     * Returns environment display name. It is mandatory and unique per workspace
-     */
-    String getName();
-
     /**
      * Returns the recipe (the main script) to define this environment (compose, kubernetes pod).
      * Type of this recipe defines engine for composing machines network runtime
      */
-    @Deprecated
-    Recipe getRecipe();
+    EnvironmentRecipe getRecipe();
 
-    /**
-     * Returns list of Machine configs defined by this environment
-     * Note: it may happen that we are not able to provide this info for particular environment type
-     * or for particular time (for example this information may be reasonable accessible only when we start network or so)
-     * to investigate
-     */
-    @Deprecated
-    List<? extends MachineConfig> getMachineConfigs();
-
-    /**
-     * Returns type of environment, e.g. che, compose, opencompose, etc.
-     * It is mandatory and case insensitive.
-     */
-    String getType();
-
-    /**
-     * Returns configuration of environment.
-     * Content is implementation specific and depends on {@link #getType()}
-     */
-    String getConfig();
-
-    // TODO consider url types of environment, so we are able to provide an url to the env script instead of env script
+    Map<String, ? extends MachineConfig2> getMachines();
 }

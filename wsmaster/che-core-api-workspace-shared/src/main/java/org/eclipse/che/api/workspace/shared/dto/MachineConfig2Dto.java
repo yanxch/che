@@ -10,28 +10,34 @@
  *******************************************************************************/
 package org.eclipse.che.api.workspace.shared.dto;
 
-import org.eclipse.che.api.core.model.workspace.Environment;
+import org.eclipse.che.api.core.model.machine.MachineConfig2;
+import org.eclipse.che.api.core.rest.shared.dto.Hyperlinks;
+import org.eclipse.che.api.core.rest.shared.dto.Link;
+import org.eclipse.che.api.machine.shared.dto.ServerConfDto;
 import org.eclipse.che.dto.shared.DTO;
 
+import java.util.List;
 import java.util.Map;
 
 /**
  * @author Alexander Garagatyi
  */
 @DTO
-public interface EnvironmentDto extends Environment {
+public interface MachineConfig2Dto extends MachineConfig2, Hyperlinks {
+    @Override
+    List<String> getAgents();
+
+    void setAgents(List<String> agents);
+
+    MachineConfig2Dto withAgents(List<String> agents);
 
     @Override
-    EnvironmentRecipeDto getRecipe();
+    Map<String, ServerConfDto> getServers();
 
-    void setRecipe(EnvironmentRecipeDto recipe);
+    void setServers(Map<String, ServerConfDto>  servers);
 
-    EnvironmentDto withRecipe(EnvironmentRecipeDto recipe);
+    MachineConfig2Dto withServers(Map<String, ServerConfDto>  servers);
 
     @Override
-    Map<String, MachineConfig2Dto> getMachines();
-
-    void setMachines(Map<String, MachineConfig2Dto> machines);
-
-    EnvironmentDto withMachines(Map<String, MachineConfig2Dto> machines);
+    MachineConfig2Dto withLinks(List<Link> links);
 }

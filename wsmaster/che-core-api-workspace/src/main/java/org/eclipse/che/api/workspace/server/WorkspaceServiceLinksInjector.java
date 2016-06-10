@@ -14,7 +14,6 @@ import org.eclipse.che.api.core.rest.ServiceContext;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.core.rest.shared.dto.LinkParameter;
 import org.eclipse.che.api.machine.server.MachineServiceLinksInjector;
-import org.eclipse.che.api.machine.shared.dto.MachineConfigDto;
 import org.eclipse.che.api.machine.shared.dto.MachineDto;
 import org.eclipse.che.api.machine.shared.dto.ServerDto;
 import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
@@ -136,13 +135,13 @@ public class WorkspaceServiceLinksInjector {
                                                         cloneDto(channelParameter).withDefaultValue("workspace:" + workspace.getId()))));
 
         // add machine channels links to machines configs
-        workspace.getConfig()
-                 .getEnvironments()
-                 .stream()
-                 .forEach(environmentDto -> injectMachineChannelsLinks(environmentDto,
-                                                                       workspace.getId(),
-                                                                       workspaceChannelLink,
-                                                                       channelParameter));
+//        workspace.getConfig()
+//                 .getEnvironments()
+//                 .stream()
+//                 .forEach(environmentDto -> injectMachineChannelsLinks(environmentDto,
+//                                                                       workspace.getId(),
+//                                                                       workspaceChannelLink,
+//                                                                       channelParameter));
         // add links for running workspace
         injectRuntimeLinks(workspace, ideUri, uriBuilder);
         return workspace.withLinks(links);
@@ -241,12 +240,12 @@ public class WorkspaceServiceLinksInjector {
                                             String workspaceId,
                                             Link machineChannelLink,
                                             LinkParameter channelParameter) {
-        for (MachineConfigDto machineConfigDto : environmentDto.getMachineConfigs()) {
-            machineLinksInjector.injectMachineChannelsLinks(machineConfigDto,
-                                                            workspaceId,
-                                                            environmentDto.getName(),
-                                                            machineChannelLink,
-                                                            channelParameter);
-        }
+//        for (MachineConfigDto machineConfigDto : environmentDto.getMachineConfigs()) {
+//            machineLinksInjector.injectMachineChannelsLinks(machineConfigDto,
+//                                                            workspaceId,
+//                                                            environmentDto.getName(),
+//                                                            machineChannelLink,
+//                                                            channelParameter);
+//        }
     }
 }

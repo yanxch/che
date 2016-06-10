@@ -10,18 +10,14 @@
  *******************************************************************************/
 package org.eclipse.che.api.workspace.server.model.impl;
 
-import org.eclipse.che.api.core.model.machine.MachineConfig;
-import org.eclipse.che.api.core.model.machine.Recipe;
+import org.eclipse.che.api.core.model.machine.MachineConfig2;
 import org.eclipse.che.api.core.model.workspace.Environment;
-import org.eclipse.che.api.machine.server.model.impl.MachineConfigImpl;
-import org.eclipse.che.api.machine.server.recipe.RecipeImpl;
-import org.eclipse.che.commons.annotation.Nullable;
+import org.eclipse.che.api.core.model.workspace.EnvironmentRecipe;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
-
-import static java.util.stream.Collectors.toList;
+import java.util.stream.Collectors;
 
 /**
  * Data object for {@link Environment}.
@@ -30,85 +26,44 @@ import static java.util.stream.Collectors.toList;
  */
 public class EnvironmentImpl implements Environment {
 
-    private String                  name;
-    private RecipeImpl              recipe;
-    private List<MachineConfigImpl> machineConfigs;
+    private EnvironmentRecipeImpl           recipe;
+    private Map<String, MachineConfig2Impl> machines;
 
-    private String type;
-    private String config;
-
-    @Deprecated
-    public EnvironmentImpl(String name, Recipe recipe, List<? extends MachineConfig> machineConfigs) {
-        this.name = name;
+    public EnvironmentImpl(EnvironmentRecipe recipe, Map<String, ? extends MachineConfig2> machines) {
         if (recipe != null) {
-            this.recipe = new RecipeImpl(recipe);
+            this.recipe = new EnvironmentRecipeImpl(recipe);
         }
-        if (machineConfigs != null) {
-            this.machineConfigs = machineConfigs.stream()
-                                                .map(MachineConfigImpl::new)
-                                                .collect(toList());
-        }
-    }
-
-    public EnvironmentImpl(String name, String type, String config) {
-        this.name = name;
-        this.type = type;
-        this.config = config;
-    }
-
-    private EnvironmentImpl(String name, Recipe recipe, List<? extends MachineConfig> machineConfigs, String type, String config) {
-        this.name = name;
-        this.type = type;
-        this.config = config;
-        if (recipe != null) {
-            this.recipe = new RecipeImpl(recipe);
-        }
-        if (machineConfigs != null) {
-            this.machineConfigs = machineConfigs.stream()
-                                                .map(MachineConfigImpl::new)
-                                                .collect(toList());
-        }
+        this.machines = machines.entrySet()
+                                .stream()
+                                .collect(Collectors.toMap(Map.Entry::getKey,
+                                                          stringEntry ->  new MachineConfig2Impl(stringEntry.getValue())));
     }
 
     public EnvironmentImpl(Environment environment) {
-        this(environment.getName(),
-             environment.getRecipe(),
-             environment.getMachineConfigs(),
-             environment.getType(),
-             environment.getConfig());
+        this(environment.getRecipe(),
+             environment.getMachines());
     }
 
-    @Override
-    public String getName() {
-        return name;
-    }
 
     @Override
-    @Nullable
-    public Recipe getRecipe() {
+    public EnvironmentRecipeImpl getRecipe() {
         return recipe;
     }
 
+    public void setRecipe(EnvironmentRecipeImpl recipe) {
+        this.recipe = recipe;
+    }
+
     @Override
-    public List<MachineConfigImpl> getMachineConfigs() {
-        if (machineConfigs == null) {
-            machineConfigs = new ArrayList<>();
+    public Map<String, MachineConfig2Impl> getMachines() {
+        if (machines == null) {
+            machines = new HashMap<>();
         }
-        return machineConfigs;
+        return machines;
     }
 
-    @Override
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    @Override
-    public String getConfig() {
-        return config;
+    public void setMachines(Map<String, MachineConfig2Impl> machines) {
+        this.machines = machines;
     }
 
     @Override
@@ -116,26 +71,20 @@ public class EnvironmentImpl implements Environment {
         if (this == o) return true;
         if (!(o instanceof EnvironmentImpl)) return false;
         EnvironmentImpl that = (EnvironmentImpl)o;
-        return Objects.equals(name, that.name) &&
-               Objects.equals(recipe, that.recipe) &&
-               Objects.equals(machineConfigs, that.machineConfigs) &&
-               Objects.equals(type, that.type) &&
-               Objects.equals(config, that.config);
+        return Objects.equals(recipe, that.recipe) &&
+               Objects.equals(machines, that.machines);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, recipe, machineConfigs, type, config);
+        return Objects.hash(recipe, machines);
     }
 
     @Override
     public String toString() {
         return "EnvironmentImpl{" +
-               "name='" + name + '\'' +
-               ", recipe=" + recipe +
-               ", machineConfigs=" + machineConfigs +
-               ", type='" + type + '\'' +
-               ", config='" + config + '\'' +
+               "recipe=" + recipe +
+               ", machines=" + machines +
                '}';
     }
 }

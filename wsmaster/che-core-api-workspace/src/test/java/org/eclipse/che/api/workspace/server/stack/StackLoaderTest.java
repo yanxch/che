@@ -10,47 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.api.workspace.server.stack;
 
-import com.google.common.io.Resources;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import org.eclipse.che.api.core.ConflictException;
-import org.eclipse.che.api.core.NotFoundException;
-import org.eclipse.che.api.core.ServerException;
-import org.eclipse.che.api.core.rest.shared.dto.Link;
-import org.eclipse.che.api.machine.shared.dto.CommandDto;
-import org.eclipse.che.api.machine.shared.dto.LimitsDto;
-import org.eclipse.che.api.machine.shared.dto.MachineConfigDto;
-import org.eclipse.che.api.machine.shared.dto.MachineSourceDto;
-import org.eclipse.che.api.machine.shared.dto.ServerConfDto;
-import org.eclipse.che.api.workspace.server.model.impl.stack.StackImpl;
-import org.eclipse.che.api.workspace.server.spi.StackDao;
-import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.api.workspace.shared.dto.ProjectProblemDto;
-import org.eclipse.che.api.workspace.shared.dto.RecipeDto;
-import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
-import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
-import org.eclipse.che.api.workspace.shared.dto.stack.StackComponentDto;
-import org.eclipse.che.api.workspace.shared.dto.stack.StackDto;
-import org.mockito.Mock;
 import org.mockito.testng.MockitoTestNGListener;
 import org.testng.annotations.Listeners;
-import org.testng.annotations.Test;
-
-import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.eclipse.che.dto.server.DtoFactory.newDto;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 /**
  * Tests for {@link StackLoader}
@@ -59,7 +20,7 @@ import static org.mockito.Mockito.verify;
  */
 @Listeners(MockitoTestNGListener.class)
 public class StackLoaderTest {
-
+/*
     @Mock
     private StackDao stackDao;
 
@@ -187,5 +148,5 @@ public class StackLoaderTest {
         Gson GSON = new GsonBuilder().create();
 
         GSON.fromJson(stackDtoDescriptor.toString(), StackImpl.class);
-    }
+    }*/
 }

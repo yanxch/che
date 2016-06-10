@@ -148,7 +148,7 @@ public class WorkspaceRuntimes {
      * @throws ServerException
      *         when component {@link #isPreDestroyInvoked is stopped} or any
      *         other error occurs during environment start
-     * @see EnvironmentEngine#start(String, Environment, boolean)
+     * @see EnvironmentEngine#start(String, Environment, String, boolean)
      * @see WorkspaceStatus#STARTING
      * @see WorkspaceStatus#RUNNING
      */
@@ -158,8 +158,8 @@ public class WorkspaceRuntimes {
                                                            ConflictException,
                                                            NotFoundException {
         String workspaceId = workspace.getId();
-        final Optional<EnvironmentImpl> environmentOpt = workspace.getConfig().getEnvironment(envName);
-        if (!environmentOpt.isPresent()) {
+        EnvironmentImpl environment = workspace.getConfig().getEnvironments().get(envName);
+        if (environment == null) {
             throw new IllegalArgumentException(format("Workspace '%s' doesn't contain environment '%s'",
                                                       workspaceId,
                                                       envName));
@@ -168,15 +168,11 @@ public class WorkspaceRuntimes {
         // Environment copy constructor makes deep copy of objects graph
         // in this way machine configs also copied from incoming values
         // which means that original values won't affect the values in starting queue
-        final EnvironmentImpl environmentCopy = new EnvironmentImpl(environmentOpt.get());
-        // todo update all existing environments with type 'che'
-        if (environmentCopy.getType() == null) {
-            environmentCopy.setType("che");
-        }
+        final EnvironmentImpl environmentCopy = new EnvironmentImpl(environment);
 
-        EnvironmentEngine engine = envEngines.get(environmentCopy.getType());
+        EnvironmentEngine engine = envEngines.get(environmentCopy.getRecipe().getType());
         if (engine == null) {
-            throw new NotFoundException("Environment engine of type '" + environmentCopy.getType() + "' is not found");
+            throw new NotFoundException("Environment engine of type '" + environmentCopy.getRecipe().getType() + "' is not found");
         }
 
         // This check allows to exit with an appropriate exception before blocking on lock.
@@ -194,7 +190,7 @@ public class WorkspaceRuntimes {
             }
 
             // Create a new runtime descriptor and save it with 'STARTING' status
-            final RuntimeDescriptor descriptor = new RuntimeDescriptor(new WorkspaceRuntimeImpl(envName, environmentCopy.getType()));
+            final RuntimeDescriptor descriptor = new RuntimeDescriptor(new WorkspaceRuntimeImpl(envName, environmentCopy.getRecipe().getType()));
             descriptor.setRuntimeStatus(WorkspaceStatus.STARTING);
             descriptors.put(workspaceId, descriptor);
         } finally {
@@ -204,7 +200,7 @@ public class WorkspaceRuntimes {
         // todo should we declare that environment should start dev machine or not?
         ensurePreDestroyIsNotExecuted();
         publishEvent(EventType.STARTING, workspaceId, null);
-        List<Machine> machines = engine.start(workspaceId, environmentCopy, recover);
+        List<Machine> machines = engine.start(workspaceId, environmentCopy, envName, recover);
         List<MachineImpl> machinesImpls = machines.stream()
                                                   .map(MachineImpl::new)
                                                   .collect(Collectors.toList());

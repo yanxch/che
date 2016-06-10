@@ -22,8 +22,9 @@ import org.eclipse.che.api.machine.shared.dto.CommandDto;
 import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
 import org.eclipse.che.api.workspace.server.model.impl.stack.StackImpl;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
+import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
+import org.eclipse.che.api.workspace.shared.dto.MachineConfig2Dto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.api.workspace.shared.dto.RecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
@@ -35,8 +36,10 @@ import org.eclipse.che.api.workspace.shared.stack.Stack;
 import org.eclipse.che.api.workspace.shared.stack.StackSource;
 
 import java.util.List;
+import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
 
 /**
@@ -67,10 +70,11 @@ public final class DtoConverter {
                                                          .stream()
                                                          .map(DtoConverter::asDto)
                                                          .collect(toList());
-        final List<EnvironmentDto> environments = workspace.getEnvironments()
-                                                           .stream()
-                                                           .map(DtoConverter::asDto)
-                                                           .collect(toList());
+        final Map<String, EnvironmentDto> environments = workspace.getEnvironments()
+                                                                  .entrySet()
+                                                                  .stream()
+                                                                  .collect(toMap(Map.Entry::getKey,
+                                                                                 entry -> asDto(entry.getValue())));
 
         return newDto(WorkspaceConfigDto.class).withName(workspace.getName())
                                                .withDefaultEnv(workspace.getDefaultEnv())
@@ -140,22 +144,22 @@ public final class DtoConverter {
 
     /** Converts {@link Environment} to {@link EnvironmentDto}. */
     public static EnvironmentDto asDto(Environment env) {
-        final EnvironmentDto envDto = newDto(EnvironmentDto.class).withName(env.getName());
-        envDto.withMachineConfigs(env.getMachineConfigs()
-                                     .stream()
-                                     .map(org.eclipse.che.api.machine.server.DtoConverter::asDto)
-                                     .collect(toList()));
-        if (env.getRecipe() != null) {
-            envDto.withRecipe(newDto(RecipeDto.class).withType(env.getRecipe().getType())
-                                                     .withScript(env.getRecipe().getScript()));
-        }
-        return newDto(EnvironmentDto.class).withName(env.getName())
-                                           .withType(env.getType())
-                                           .withConfig(env.getConfig())
-                                           .withMachineConfigs(env.getMachineConfigs()
-                                                                  .stream()
-                                                                  .map(org.eclipse.che.api.machine.server.DtoConverter::asDto)
-                                                                  .collect(toList()));
+        return newDto(EnvironmentDto.class).withRecipe(newDto(EnvironmentRecipeDto.class)
+                                                               .withContent(env.getRecipe().getContent())
+                                                               .withContentType(env.getRecipe().getContentType())
+                                                               .withLocation(env.getRecipe().getLocation())
+                                                               .withType(env.getRecipe().getType()))
+                                           .withMachines(env.getMachines()
+                                                            .entrySet()
+                                                            .stream()
+                                                            .collect(toMap(Map.Entry::getKey,
+                                                                           entry -> newDto(MachineConfig2Dto.class)
+                                                                                   .withAgents(entry.getValue().getAgents())
+                                                                                   .withServers(entry.getValue()
+                                                                                                     .getServers()
+                                                                                                     .entrySet()
+                                                                                                     .stream()
+                                                                                                     .collect(toMap(Map.Entry::getKey, serverEntry -> org.eclipse.che.api.machine.server.DtoConverter.asDto(serverEntry.getValue())))))));
     }
 
     /** Converts {@link WorkspaceRuntime} to {@link WorkspaceRuntimeDto}. */

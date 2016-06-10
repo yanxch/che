@@ -1004,7 +1004,7 @@ public class FactoryServiceTest {
                                               .withPath("path")));
         wsConfig.setName("wsname");
         wsConfig.setDefaultEnv("env1");
-        wsConfig.setEnvironments(Collections.singletonList(dto.createDto(EnvironmentDto.class).withName("env1")));
+        wsConfig.setEnvironments(Collections.singletonMap("env1", dto.createDto(EnvironmentDto.class)));
         wsConfig.setCommands(Collections.singletonList(dto.createDto(CommandDto.class)
                                                           .withName("MCI")
                                                           .withType("mvn")
@@ -1052,7 +1052,7 @@ public class FactoryServiceTest {
                                                        .withLocation("location"))));
         wsConfig.setName("wsname");
         ws.setNamespace("id-2314");
-        wsConfig.setEnvironments(Collections.singletonList(dto.createDto(EnvironmentDto.class).withName("env1")));
+        wsConfig.setEnvironments(Collections.singletonMap("env1", dto.createDto(EnvironmentDto.class)));
         wsConfig.setDefaultEnv("env1");
         ws.setStatus(WorkspaceStatus.RUNNING);
         wsConfig.setCommands(Collections.singletonList(dto.createDto(CommandDto.class)
@@ -1232,7 +1232,7 @@ public class FactoryServiceTest {
                                         .withPath("/proj2")));
         wsConfig.setName("wsname");
         ws.setNamespace("id-2314");
-        wsConfig.setEnvironments(Collections.singletonList(dto.createDto(EnvironmentDto.class).withName("env1")));
+        wsConfig.setEnvironments(Collections.singletonMap("env1", dto.createDto(EnvironmentDto.class)));
         wsConfig.setDefaultEnv("env1");
         ws.setStatus(WorkspaceStatus.RUNNING);
         wsConfig.setCommands(Collections.singletonList(

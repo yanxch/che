@@ -24,7 +24,7 @@ import java.util.List;
 public interface EnvironmentEngine {
     String getType();
 
-    List<Machine> start(String workspaceId, Environment env, boolean recover) throws ServerException,
+    List<Machine> start(String workspaceId, Environment env, String envName, boolean recover) throws ServerException,
                                                                                      NotFoundException,
                                                                                      ConflictException;
 

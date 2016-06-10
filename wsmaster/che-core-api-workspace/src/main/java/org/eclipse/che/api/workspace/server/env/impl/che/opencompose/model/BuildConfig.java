@@ -8,19 +8,13 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.workspace.server.env.spi;
-
-import org.eclipse.che.api.core.BadRequestException;
-import org.eclipse.che.api.core.ServerException;
-import org.eclipse.che.api.core.model.workspace.Environment;
+package org.eclipse.che.api.workspace.server.env.impl.che.opencompose.model;
 
 /**
- * author Alexander Garagatyi
+ * @author Alexander Garagatyi
  */
-public interface EnvironmentValidator {
-    String getType();
+public interface BuildConfig {
+    String getContext();
 
-    void validate(Environment env) throws BadRequestException, ServerException;
-
-    Environment normalize(Environment env) throws BadRequestException, ServerException;
+    String getDockerfile();
 }

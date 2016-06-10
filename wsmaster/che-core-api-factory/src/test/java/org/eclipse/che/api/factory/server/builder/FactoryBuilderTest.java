@@ -31,7 +31,6 @@ import org.eclipse.che.api.machine.shared.dto.MachineSourceDto;
 import org.eclipse.che.api.machine.shared.dto.ServerConfDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.api.workspace.shared.dto.RecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.eclipse.che.dto.server.DtoFactory;
@@ -173,12 +172,13 @@ public class FactoryBuilderTest {
                                                                                .withType("maven")
                                                                                .withCommandLine("mvn test")))
                                                 .withDefaultEnv("env1")
-                                                .withEnvironments(singletonList(dto.createDto(EnvironmentDto.class)
-                                                                                   .withName("test")
-                                                                                   .withMachineConfigs(singletonList(machineConfig))
-                                                                                   .withRecipe(dto.createDto(RecipeDto.class)
-                                                                                                  .withType("sometype")
-                                                                                                  .withScript("some script"))));
+                                                .withEnvironments(singletonMap("test", dto.createDto(EnvironmentDto.class)
+//                                                                                   .withName("test")
+//                                                                                   .withMachineConfigs(singletonList(machineConfig))
+//                                                                                   .withRecipe(dto.createDto(RecipeDto.class)
+//                                                                                                  .withType("sometype")
+//                                                                                                  .withScript("some script")))
+                                                ));
         Ide ide = dto.createDto(Ide.class)
                      .withOnAppClosed(dto.createDto(OnAppClosed.class)
                                          .withActions(singletonList(dto.createDto(Action.class).withId("warnOnClose"))))
