@@ -11,12 +11,14 @@
 package org.eclipse.che.plugin.jdb.ide.debug;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.debug.shared.model.Location;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.debug.BreakpointFactory;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
+import org.eclipse.che.ide.api.debug.BreakpointRecipe;
 import org.eclipse.che.ide.api.debug.DebuggerServiceClient;
 import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.debug.DebuggerDescriptor;
@@ -53,7 +55,9 @@ public class JavaDebugger extends AbstractDebugger {
                         JavaDebuggerFileHandler javaDebuggerFileHandler,
                         DebuggerManager debuggerManager,
                         BreakpointManager breakpointManager,
-                        BreakpointFactory breakpointFactory) {
+                        BreakpointFactory breakpointFactory,
+                        @Named("JavaFileBreakpoint") BreakpointRecipe javaBreakpointRecipe,
+                        @Named("JarFileBreakpoint") BreakpointRecipe jarBreakpointRecipe) {
         super(service,
               dtoFactory,
               localStorageProvider,
@@ -64,6 +68,8 @@ public class JavaDebugger extends AbstractDebugger {
               breakpointManager,
               breakpointFactory,
               ID);
+        breakpointFactory.registerBreakpointRecipe(jarBreakpointRecipe);
+        breakpointFactory.registerBreakpointRecipe(javaBreakpointRecipe);
     }
 
     @Override

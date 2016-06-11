@@ -10,16 +10,14 @@
  *******************************************************************************/
 package org.eclipse.che.ide.api.debug;
 
-import org.eclipse.che.ide.api.resources.VirtualFile;
-
-import static org.eclipse.che.ide.api.debug.Breakpoint.Type;
-
 /**
- * @author Alexander Andrienko
+ * BreakpointRecipe used for adding special information which need for some debuggers.
+ *
+ *@author Alexander Andrienko
  */
-public interface BreakpointFactory {
-
-    void registerBreakpointRecipe(BreakpointRecipe breakpointRecipe);
-
-    Breakpoint create(Type type, int lineNumber, String path, VirtualFile file, boolean active);
+public interface BreakpointRecipe {
+    /***
+     * Add additional info to the breakpoint attributes.
+     */
+    void addAdditionalInfo(Breakpoint breakpoint);
 }

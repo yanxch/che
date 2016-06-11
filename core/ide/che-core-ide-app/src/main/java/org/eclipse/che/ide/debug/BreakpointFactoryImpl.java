@@ -12,11 +12,14 @@ package org.eclipse.che.ide.debug;
 
 import org.eclipse.che.ide.api.debug.Breakpoint;
 import org.eclipse.che.ide.api.debug.BreakpointFactory;
+import org.eclipse.che.ide.api.debug.BreakpointRecipe;
 import org.eclipse.che.ide.api.resources.VirtualFile;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,18 +28,26 @@ import java.util.Map;
 @Singleton
 public class BreakpointFactoryImpl implements BreakpointFactory {
 
+    private List<BreakpointRecipe> recipes;
+
     @Inject
     public BreakpointFactoryImpl() {
-
+        recipes = new ArrayList<>();
     }
 
     @Override
-    public void registerBreakpointRecipe() {
-
+    public void registerBreakpointRecipe(BreakpointRecipe breakpointRecipe) {
+        recipes.add(breakpointRecipe);
     }
 
     @Override
     public Breakpoint create(Breakpoint.Type type, int lineNumber, String path, VirtualFile file, boolean active) {
-        return new Breakpoint(type, lineNumber, path, file, active, new HashMap<String, Map<String, String>>());
+        Breakpoint breakpoint = new Breakpoint(type, lineNumber, path, file, active, new HashMap<String, Map<String, String>>());
+
+        for (BreakpointRecipe recipe: recipes) {
+            recipe.addAdditionalInfo(breakpoint);
+        }
+
+        return breakpoint;
     }
 }

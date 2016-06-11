@@ -18,7 +18,6 @@ import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.debug.Breakpoint;
-import org.eclipse.che.ide.api.debug.Breakpoint.Type;
 import org.eclipse.che.ide.api.debug.BreakpointFactory;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
 import org.eclipse.che.ide.api.debug.BreakpointManagerObservable;
@@ -522,11 +521,13 @@ public class BreakpointManagerImpl implements BreakpointManager,
                 dto.setLineNumber(breakpoint.getLineNumber());
                 dto.setFileProjectConfig(breakpoint.getFile().getProject().getProjectConfig());
                 dto.setActive(breakpoint.isActive());
+                dto.setAttr(breakpoint.getAttr());
 
                 allDtoBreakpoints.add(dto);
             }
 
             String data = dtoFactory.toJson(allDtoBreakpoints);
+            Log.info(getClass(), "****" + data);
             localStorage.setItem(LOCAL_STORAGE_BREAKPOINTS_KEY, data);
         }
     }

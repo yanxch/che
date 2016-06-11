@@ -14,6 +14,8 @@ import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.dto.shared.DTO;
 import org.eclipse.che.ide.api.debug.Breakpoint;
 
+import java.util.Map;
+
 /**
  * {@link DTO} object to preserve breakpoints between user's sessions.
  *
@@ -41,4 +43,8 @@ public interface BreakpointDto {
     void setFileProjectConfig(ProjectConfigDto projectConfig);
 
     ProjectConfigDto getFileProjectConfig();
+
+    Map<String, Map<String, String>> getAttr();
+
+    void setAttr(Map<String, Map<String, String>> attr);
 }
