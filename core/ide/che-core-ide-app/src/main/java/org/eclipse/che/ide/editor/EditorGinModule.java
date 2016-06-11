@@ -15,6 +15,7 @@ import com.google.gwt.inject.client.assistedinject.GinFactoryModuleBuilder;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
+import org.eclipse.che.ide.api.debug.BreakpointFactory;
 import org.eclipse.che.ide.api.editor.EditorProvider;
 import org.eclipse.che.ide.api.extension.ExtensionGinModule;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
@@ -22,6 +23,7 @@ import org.eclipse.che.ide.api.debug.BreakpointRenderer;
 import org.eclipse.che.ide.api.editor.codeassist.CodeAssistant;
 import org.eclipse.che.ide.api.editor.codeassist.CodeAssistantFactory;
 import org.eclipse.che.ide.api.editor.codeassist.CodeAssistantImpl;
+import org.eclipse.che.ide.debug.BreakpointFactoryImpl;
 import org.eclipse.che.ide.debug.BreakpointManagerImpl;
 import org.eclipse.che.ide.api.debug.BreakpointRendererFactory;
 import org.eclipse.che.ide.debug.BreakpointRendererImpl;
@@ -83,6 +85,7 @@ public class EditorGinModule extends AbstractGinModule {
                     .implement(BreakpointRenderer.class, BreakpointRendererImpl.class)
                     .build(BreakpointRendererFactory.class));
         bind(BreakpointManager.class).to(BreakpointManagerImpl.class).in(Singleton.class);
+        bind(BreakpointFactory.class).to(BreakpointFactoryImpl.class).in(Singleton.class);
 
         // bind the quick assist widget factory
         install(new GinFactoryModuleBuilder()

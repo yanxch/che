@@ -19,6 +19,7 @@ import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.debug.Breakpoint;
 import org.eclipse.che.ide.api.debug.Breakpoint.Type;
+import org.eclipse.che.ide.api.debug.BreakpointFactory;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
 import org.eclipse.che.ide.api.debug.BreakpointManagerObservable;
 import org.eclipse.che.ide.api.debug.BreakpointManagerObserver;
@@ -60,6 +61,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import static org.eclipse.che.ide.api.debug.Breakpoint.Type.BREAKPOINT;
+import static org.eclipse.che.ide.api.debug.Breakpoint.Type.CURRENT;
+
 /**
  * Implementation of {@link BreakpointManager} for editor.
  *
@@ -80,6 +84,7 @@ public class BreakpointManagerImpl implements BreakpointManager,
     private final DebuggerManager                 debuggerManager;
     private final DtoFactory                      dtoFactory;
     private final List<BreakpointManagerObserver> observers;
+    private final BreakpointFactory               factory;
 
     private Breakpoint currentBreakpoint;
 
@@ -87,12 +92,14 @@ public class BreakpointManagerImpl implements BreakpointManager,
     public BreakpointManagerImpl(final EditorAgent editorAgent,
                                  final DebuggerManager debuggerManager,
                                  final EventBus eventBus,
-                                 final DtoFactory dtoFactory) {
+                                 final DtoFactory dtoFactory,
+                                 final BreakpointFactory breakpointFactory) {
         this.editorAgent = editorAgent;
         this.breakpoints = new HashMap<>();
         this.debuggerManager = debuggerManager;
         this.dtoFactory = dtoFactory;
         this.observers = new ArrayList<>();
+        this.factory = breakpointFactory;
 
         this.debuggerManager.addObserver(this);
         registerEventHandlers(eventBus);
@@ -120,11 +127,7 @@ public class BreakpointManagerImpl implements BreakpointManager,
         }
 
         if (isLineNotEmpty(activeFile, lineNumber)) {
-            Breakpoint breakpoint = new Breakpoint(Type.BREAKPOINT,
-                                                   lineNumber,
-                                                   activeFile.getPath(),
-                                                   activeFile,
-                                                   false);
+            Breakpoint breakpoint = factory.create(BREAKPOINT, lineNumber, activeFile.getPath(), activeFile, false);
             addBreakpoint(breakpoint);
         }
     }
@@ -262,7 +265,7 @@ public class BreakpointManagerImpl implements BreakpointManager,
     }
 
     private void doSetCurrentBreakpoint(VirtualFile activeFile, int lineNumber) {
-        currentBreakpoint = new Breakpoint(Type.CURRENT, lineNumber, activeFile.getPath(), activeFile, true);
+        currentBreakpoint = factory.create(CURRENT, lineNumber, activeFile.getPath(), activeFile, true);
 
         BreakpointRenderer breakpointRenderer = getBreakpointRendererForFile(activeFile.getPath());
         if (breakpointRenderer != null) {
@@ -353,7 +356,7 @@ public class BreakpointManagerImpl implements BreakpointManager,
                 }
 
                 toRemove.add(breakpoint);
-                toAdd.add(new Breakpoint(breakpoint.getType(),
+                toAdd.add(factory.create(breakpoint.getType(),
                                          breakpoint.getLineNumber() + delta,
                                          breakpoint.getPath(),
                                          breakpoint.getFile(),
@@ -366,7 +369,7 @@ public class BreakpointManagerImpl implements BreakpointManager,
             }
             for (final Breakpoint breakpoint : toAdd) {
                 if (isLineNotEmpty(file, breakpoint.getLineNumber())) {
-                    addBreakpoint(new Breakpoint(breakpoint.getType(),
+                    addBreakpoint(factory.create(breakpoint.getType(),
                                                  breakpoint.getLineNumber(),
                                                  breakpoint.getPath(),
                                                  file,
@@ -548,10 +551,10 @@ public class BreakpointManagerImpl implements BreakpointManager,
                                                              .build();
 
             VirtualFile file = new VirtualFileImpl(virtualFileInfo);
-            if (dto.getType() == Type.CURRENT) {
+            if (dto.getType() == CURRENT) {
                 doSetCurrentBreakpoint(file, dto.getLineNumber());
             } else {
-                addBreakpoint(new Breakpoint(dto.getType(),
+                addBreakpoint(factory.create(dto.getType(),
                                              dto.getLineNumber(),
                                              dto.getPath(),
                                              file,
@@ -577,7 +580,7 @@ public class BreakpointManagerImpl implements BreakpointManager,
                 Breakpoint breakpoint = breakpointsForPath.get(i);
 
                 if (breakpoint.isActive()) {
-                    Breakpoint newInactiveBreakpoint = new Breakpoint(breakpoint.getType(),
+                    Breakpoint newInactiveBreakpoint = factory.create(breakpoint.getType(),
                                                                       breakpoint.getLineNumber(),
                                                                       breakpoint.getPath(),
                                                                       breakpoint.getFile(),
@@ -636,7 +639,7 @@ public class BreakpointManagerImpl implements BreakpointManager,
             Breakpoint breakpoint = breakpointsForPath.get(i);
 
             if (breakpoint.getLineNumber() == lineNumber) {
-                Breakpoint newActiveBreakpoint = new Breakpoint(breakpoint.getType(),
+                Breakpoint newActiveBreakpoint = factory.create(breakpoint.getType(),
                                                                 breakpoint.getLineNumber(),
                                                                 breakpoint.getPath(),
                                                                 breakpoint.getFile(),
