@@ -16,6 +16,8 @@ import org.eclipse.che.ide.api.resources.VirtualFile;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Alexander Andrienko
@@ -35,6 +37,6 @@ public class BreakpointFactoryImpl implements BreakpointFactory {
 
     @Override
     public Breakpoint create(Breakpoint.Type type, int lineNumber, String path, VirtualFile file, boolean active) {
-        return new Breakpoint(type, lineNumber, path, file, active);
+        return new Breakpoint(type, lineNumber, path, file, active, new HashMap<String, Map<String, String>>());
     }
 }

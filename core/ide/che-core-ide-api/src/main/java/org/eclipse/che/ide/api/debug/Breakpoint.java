@@ -12,6 +12,8 @@ package org.eclipse.che.ide.api.debug;
 
 import org.eclipse.che.ide.api.resources.VirtualFile;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -22,22 +24,25 @@ import java.util.Objects;
  * @author Anatoliy Bazko
  */
 public class Breakpoint {
-    protected int         lineNumber;
-    protected VirtualFile file;
-    private   Type        type;
-    private   String      path;
+    protected int                              lineNumber;
+    protected VirtualFile                      file;
+    private   Type                             type;
+    private   String                           path;
+    private   Map<String, Map<String, String>> attr;
 
     /**
      * Breakpoint becomes active if is added to a JVM, otherwise it is just a user mark.
      */
     private boolean active;
 
-    public Breakpoint(Type type, int lineNumber, String path, VirtualFile file, boolean active) {
+    //todo unmodificable map?
+    public Breakpoint(Type type, int lineNumber, String path, VirtualFile file, boolean active, Map<String, Map<String, String>> attr) {
         this.type = type;
         this.lineNumber = lineNumber;
         this.path = path;
         this.file = file;
         this.active = active;
+        this.attr = attr;
     }
 
     /**
@@ -71,6 +76,17 @@ public class Breakpoint {
         return file;
     }
 
+    /**
+     * Return map with additional information about breakpoint. Key of this map this is type of debugger which need additional information.
+     * Value this is the additional information map. //todo more detail why we do it
+     */
+    public Map<String, Map<String, String>> getAttr() {
+        if (attr == null) {
+            return new HashMap<>();
+        }
+        return attr;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -78,6 +94,7 @@ public class Breakpoint {
                .append(", type=").append(type)
                .append(", active=").append(active)
                .append(", path=").append(path)
+               .append(", attr=").append(attr)
                .append("]");
         return builder.toString();
     }

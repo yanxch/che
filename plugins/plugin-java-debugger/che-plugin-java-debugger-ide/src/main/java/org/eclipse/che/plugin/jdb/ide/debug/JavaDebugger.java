@@ -15,6 +15,7 @@ import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.debug.shared.model.Location;
 import org.eclipse.che.commons.annotation.Nullable;
+import org.eclipse.che.ide.api.debug.BreakpointFactory;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
 import org.eclipse.che.ide.api.debug.DebuggerServiceClient;
 import org.eclipse.che.ide.api.resources.VirtualFile;
@@ -51,7 +52,8 @@ public class JavaDebugger extends AbstractDebugger {
                         EventBus eventBus,
                         JavaDebuggerFileHandler javaDebuggerFileHandler,
                         DebuggerManager debuggerManager,
-                        BreakpointManager breakpointManager) {
+                        BreakpointManager breakpointManager,
+                        BreakpointFactory breakpointFactory) {
         super(service,
               dtoFactory,
               localStorageProvider,
@@ -60,6 +62,7 @@ public class JavaDebugger extends AbstractDebugger {
               javaDebuggerFileHandler,
               debuggerManager,
               breakpointManager,
+              breakpointFactory,
               ID);
     }
 

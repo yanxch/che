@@ -38,6 +38,7 @@ import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.debug.Breakpoint;
+import org.eclipse.che.ide.api.debug.BreakpointFactory;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
 import org.eclipse.che.ide.api.debug.DebuggerServiceClient;
 import org.eclipse.che.ide.api.filetypes.FileType;
@@ -66,6 +67,7 @@ import java.util.List;
 import java.util.Map;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.eclipse.che.ide.api.debug.Breakpoint.Type.BREAKPOINT;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -110,6 +112,8 @@ public class DebuggerTest extends BaseTest {
     private DebuggerManager       debuggerManager;
     @Mock
     private BreakpointManager     breakpointManager;
+    @Mock
+    private BreakpointFactory     breakpointFactory;
 
     @Mock
     private Promise<Void>         promiseVoid;
@@ -143,7 +147,7 @@ public class DebuggerTest extends BaseTest {
     private ArgumentCaptor<Operation<DebuggerInfo>>         argumentCaptorOperationJavaDebuggerInfo;
 
 
-    public final Breakpoint TEST_BREAKPOINT = new Breakpoint(Breakpoint.Type.BREAKPOINT, LINE_NUMBER, PATH, file, true);
+    public final Breakpoint TEST_BREAKPOINT = new Breakpoint(BREAKPOINT, LINE_NUMBER, PATH, file, true, Collections.emptyMap());
     public DebuggerDescriptor debuggerDescriptor;
 
     private AbstractDebugger debugger;
@@ -562,6 +566,7 @@ public class DebuggerTest extends BaseTest {
                   activeFileHandler,
                   debuggerManager,
                   breakpointManager,
+                  breakpointFactory,
                   id);
         }
 

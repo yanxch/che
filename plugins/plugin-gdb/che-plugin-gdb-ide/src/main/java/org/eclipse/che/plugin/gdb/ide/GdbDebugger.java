@@ -17,6 +17,7 @@ import org.eclipse.che.api.debug.shared.model.Location;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.app.CurrentProject;
+import org.eclipse.che.ide.api.debug.BreakpointFactory;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
 import org.eclipse.che.ide.api.debug.DebuggerServiceClient;
 import org.eclipse.che.ide.api.resources.VirtualFile;
@@ -53,7 +54,8 @@ public class GdbDebugger extends AbstractDebugger {
                        GdbDebuggerFileHandler activeFileHandler,
                        DebuggerManager debuggerManager,
                        BreakpointManager breakpointManager,
-                       AppContext appContext) {
+                       AppContext appContext,
+                       BreakpointFactory breakpointFactory) {
 
         super(service,
               dtoFactory,
@@ -63,6 +65,7 @@ public class GdbDebugger extends AbstractDebugger {
               activeFileHandler,
               debuggerManager,
               breakpointManager,
+              breakpointFactory,
               ID);
         this.appContext = appContext;
     }

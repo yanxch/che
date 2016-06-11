@@ -48,6 +48,7 @@ import org.eclipse.che.api.promises.client.js.JsPromiseError;
 import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.debug.Breakpoint;
+import org.eclipse.che.ide.api.debug.BreakpointFactory;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
 import org.eclipse.che.ide.api.debug.DebuggerServiceClient;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
@@ -74,6 +75,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.eclipse.che.ide.api.debug.Breakpoint.Type.BREAKPOINT;
+
 /**
  * The common debugger.
  *
@@ -92,9 +95,10 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
     private final EventBus               eventBus;
     private final ActiveFileHandler      activeFileHandler;
     private final DebuggerManager        debuggerManager;
-    private final BreakpointManager breakpointManager;
+    private final BreakpointManager      breakpointManager;
     private final String                 debuggerType;
     private final String                 eventChannel;
+    private final BreakpointFactory      breakpointFactory;
 
     private DebugSessionDto                       debugSessionDto;
     private Location                              currentLocation;
@@ -110,6 +114,7 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
                             ActiveFileHandler activeFileHandler,
                             DebuggerManager debuggerManager,
                             BreakpointManager breakpointManager,
+                            BreakpointFactory breakpointFactory,
                             String type) {
         this.service = service;
         this.dtoFactory = dtoFactory;
@@ -121,6 +126,7 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
         this.observers = new ArrayList<>();
         this.debuggerType = type;
         this.eventChannel = debuggerType + ":events:";
+        this.breakpointFactory = breakpointFactory;
 
         restoreDebuggerState();
         addHandlers(messageBusProvider);
@@ -332,7 +338,7 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
             promise.then(new Operation<Void>() {
                 @Override
                 public void apply(Void arg) throws OperationException {
-                    Breakpoint breakpoint = new Breakpoint(Breakpoint.Type.BREAKPOINT, lineNumber, file.getPath(), file, true);
+                    Breakpoint breakpoint = breakpointFactory.create(BREAKPOINT, lineNumber, file.getPath(), file, true);
                     for (DebuggerObserver observer : observers) {
                         observer.onBreakpointAdded(breakpoint);
                     }
@@ -344,7 +350,7 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
                 }
             });
         } else {
-            Breakpoint breakpoint = new Breakpoint(Breakpoint.Type.BREAKPOINT, lineNumber, file.getPath(), file, false);
+            Breakpoint breakpoint = breakpointFactory.create(BREAKPOINT, lineNumber, file.getPath(), file, false);
             for (DebuggerObserver observer : observers) {
                 observer.onBreakpointAdded(breakpoint);
             }
@@ -368,7 +374,7 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
                 @Override
                 public void apply(Void arg) throws OperationException {
                     for (DebuggerObserver observer : observers) {
-                        Breakpoint breakpoint = new Breakpoint(Breakpoint.Type.BREAKPOINT, lineNumber, file.getPath(), file, false);
+                        Breakpoint breakpoint = breakpointFactory.create(BREAKPOINT, lineNumber, file.getPath(), file, false);
                         observer.onBreakpointDeleted(breakpoint);
                     }
                 }
