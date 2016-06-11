@@ -10,12 +10,13 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.jdb.ide.breakpoint.recipe;
 
+import com.google.inject.Singleton;
+
 import org.eclipse.che.ide.api.debug.Breakpoint;
 import org.eclipse.che.ide.api.debug.BreakpointRecipe;
 import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.ext.java.client.project.node.JavaFileNode;
 
-import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 

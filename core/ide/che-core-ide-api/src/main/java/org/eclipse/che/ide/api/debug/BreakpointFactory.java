@@ -12,6 +12,8 @@ package org.eclipse.che.ide.api.debug;
 
 import org.eclipse.che.ide.api.resources.VirtualFile;
 
+import java.util.Map;
+
 import static org.eclipse.che.ide.api.debug.Breakpoint.Type;
 
 /**
@@ -22,4 +24,6 @@ public interface BreakpointFactory {
     void registerBreakpointRecipe(BreakpointRecipe breakpointRecipe);
 
     Breakpoint create(Type type, int lineNumber, String path, VirtualFile file, boolean active);
+
+    Breakpoint create(Type type, int lineNumber, String path, VirtualFile file, boolean active, Map<String, Map<String, String>> attr);
 }

@@ -583,6 +583,11 @@ public class DebuggerTest extends BaseTest {
         }
 
         @Override
+        protected String getTarget(Breakpoint breakpoint) {
+            return null;
+        }
+
+        @Override
         protected DebuggerDescriptor toDescriptor(Map<String, String> connectionProperties) {
             return debuggerDescriptor;
         }

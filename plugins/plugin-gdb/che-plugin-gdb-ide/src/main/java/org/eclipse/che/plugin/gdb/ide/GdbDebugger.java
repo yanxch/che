@@ -17,6 +17,7 @@ import org.eclipse.che.api.debug.shared.model.Location;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.app.CurrentProject;
+import org.eclipse.che.ide.api.debug.Breakpoint;
 import org.eclipse.che.ide.api.debug.BreakpointFactory;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
 import org.eclipse.che.ide.api.debug.DebuggerServiceClient;
@@ -92,6 +93,12 @@ public class GdbDebugger extends AbstractDebugger {
         String address = host + (port.isEmpty() || port.equals("0") ? ""
                                                                     : (":" + port));
         return new DebuggerDescriptor("", address);
+    }
+
+    @Nullable
+    @Override
+    protected String getTarget(Breakpoint breakpoint) {
+        return breakpoint.getFile().getName();
     }
 
     public enum ConnectionProperties {

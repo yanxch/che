@@ -16,6 +16,7 @@ import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.debug.shared.model.Location;
 import org.eclipse.che.commons.annotation.Nullable;
+import org.eclipse.che.ide.api.debug.Breakpoint;
 import org.eclipse.che.ide.api.debug.BreakpointFactory;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
 import org.eclipse.che.ide.api.debug.BreakpointRecipe;
@@ -94,6 +95,17 @@ public class JavaDebugger extends AbstractDebugger {
     protected DebuggerDescriptor toDescriptor(Map<String, String> connectionProperties) {
         String address = connectionProperties.get(HOST.toString()) + ":" + connectionProperties.get(PORT.toString());
         return new DebuggerDescriptor("", address);
+    }
+
+    @Nullable
+    @Override
+    protected String getTarget(Breakpoint breakpoint) {
+        String target = null;
+        Map<String, String> attr = breakpoint.getAttr().get(ID);
+        if (attr != null) {
+            target = attr.get("fqn");//todo  hardcode!!!
+        }
+        return target;
     }
 
     public enum ConnectionProperties {

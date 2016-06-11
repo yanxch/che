@@ -35,6 +35,7 @@ import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.rest.Unmarshallable;
 import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
+import org.eclipse.che.ide.util.loging.Log;
 import org.vectomatic.dom.svg.ui.SVGImage;
 
 import javax.validation.constraints.NotNull;
@@ -138,6 +139,7 @@ public class JarFileNode extends AbstractJarEntryNode implements VirtualFile, Ha
     /** {@inheritDoc} */
     @Override
     public Promise<String> getContent() {
+        Log.info(getClass(), getData().getType());
         return AsyncPromiseHelper.createFromAsyncRequest(new AsyncPromiseHelper.RequestCall<String>() {
             @Override
             public void makeCall(final AsyncCallback<String> callback) {

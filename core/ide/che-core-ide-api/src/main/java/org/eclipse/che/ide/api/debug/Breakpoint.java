@@ -35,7 +35,6 @@ public class Breakpoint {
      */
     private boolean active;
 
-    //todo unmodificable map?
     public Breakpoint(Type type, int lineNumber, String path, VirtualFile file, boolean active, Map<String, Map<String, String>> attr) {
         this.type = type;
         this.lineNumber = lineNumber;

@@ -359,7 +359,8 @@ public class BreakpointManagerImpl implements BreakpointManager,
                                          breakpoint.getLineNumber() + delta,
                                          breakpoint.getPath(),
                                          breakpoint.getFile(),
-                                         breakpoint.isActive()));
+                                         breakpoint.isActive(),
+                                         breakpoint.getAttr()));
             }
 
 
@@ -372,7 +373,8 @@ public class BreakpointManagerImpl implements BreakpointManager,
                                                  breakpoint.getLineNumber(),
                                                  breakpoint.getPath(),
                                                  file,
-                                                 false));
+                                                 false,
+                                                 breakpoint.getAttr()));
                 }
             }
         }
@@ -523,12 +525,13 @@ public class BreakpointManagerImpl implements BreakpointManager,
                 dto.setActive(breakpoint.isActive());
                 dto.setAttr(breakpoint.getAttr());
 
+                Log.info(getClass(), dto);
                 allDtoBreakpoints.add(dto);
             }
 
             String data = dtoFactory.toJson(allDtoBreakpoints);
-            Log.info(getClass(), "****" + data);
             localStorage.setItem(LOCAL_STORAGE_BREAKPOINTS_KEY, data);
+            Log.info(getClass(), "%%%%" + localStorage.getItem(LOCAL_STORAGE_BREAKPOINTS_KEY));
         }
     }
 
@@ -559,7 +562,8 @@ public class BreakpointManagerImpl implements BreakpointManager,
                                              dto.getLineNumber(),
                                              dto.getPath(),
                                              file,
-                                             dto.isActive()));
+                                             dto.isActive(),
+                                             dto.getAttr()));
             }
         }
     }
@@ -585,7 +589,8 @@ public class BreakpointManagerImpl implements BreakpointManager,
                                                                       breakpoint.getLineNumber(),
                                                                       breakpoint.getPath(),
                                                                       breakpoint.getFile(),
-                                                                      false);
+                                                                      false,
+                                                                      breakpoint.getAttr());
                     breakpointsForPath.set(i, newInactiveBreakpoint);
 
                     BreakpointRenderer breakpointRenderer = getBreakpointRendererForFile(breakpoint.getPath());
@@ -620,13 +625,7 @@ public class BreakpointManagerImpl implements BreakpointManager,
             breakpointRenderer.setBreakpointActive(breakpoint.getLineNumber(), breakpoint.isActive());
         }
 
-        for (Breakpoint breakPOINT: getBreakpointList()) {
-            Log.info(getClass(), "before"  + breakPOINT);
-        }
         preserveBreakpoints();
-        for (Breakpoint breakPOINT: getBreakpointList()) {
-            Log.info(getClass(), "after"  + breakPOINT);
-        }
     }
 
     @Override
@@ -644,7 +643,8 @@ public class BreakpointManagerImpl implements BreakpointManager,
                                                                 breakpoint.getLineNumber(),
                                                                 breakpoint.getPath(),
                                                                 breakpoint.getFile(),
-                                                                true);
+                                                                true,
+                                                                breakpoint.getAttr());
                 breakpointsForPath.set(i, newActiveBreakpoint);
                 preserveBreakpoints();
 

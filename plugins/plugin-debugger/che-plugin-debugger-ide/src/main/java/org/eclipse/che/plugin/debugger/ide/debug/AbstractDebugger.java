@@ -453,8 +453,7 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
             locationDto.setLineNumber(b.getLineNumber() + 1);
             locationDto.setResourcePath(b.getPath());
 
-            String target = pathToFqn(b.getFile());
-            Log.info(getClass(), target == null);
+            String target = getTarget(b);
             if (target != null) {
                 locationDto.setTarget(target);
 
@@ -740,4 +739,7 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
     abstract protected String pathToFqn(VirtualFile file);
 
     abstract protected DebuggerDescriptor toDescriptor(Map<String, String> connectionProperties);
+
+    @Nullable
+    abstract protected String getTarget(Breakpoint breakpoint);
 }
