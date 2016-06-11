@@ -47,6 +47,7 @@ import org.eclipse.che.ide.project.node.FolderReferenceNode;
 import org.eclipse.che.ide.project.node.ItemReferenceBasedNode;
 import org.eclipse.che.ide.project.node.ResourceBasedNode;
 import org.eclipse.che.ide.resource.Path;
+import org.eclipse.che.ide.util.loging.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -615,7 +616,13 @@ public class BreakpointManagerImpl implements BreakpointManager,
             breakpointRenderer.setBreakpointActive(breakpoint.getLineNumber(), breakpoint.isActive());
         }
 
+        for (Breakpoint breakPOINT: getBreakpointList()) {
+            Log.info(getClass(), "before"  + breakPOINT);
+        }
         preserveBreakpoints();
+        for (Breakpoint breakPOINT: getBreakpointList()) {
+            Log.info(getClass(), "after"  + breakPOINT);
+        }
     }
 
     @Override
