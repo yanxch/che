@@ -22,6 +22,8 @@ import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.ext.java.client.JavaLocalizationConstant;
 
+import static org.eclipse.che.ide.ext.java.shared.Constants.JAVAC;
+
 /**
  * Group for the actions which are configured build path.
  *
@@ -49,6 +51,6 @@ public class MarkDirectoryAsGroup extends DefaultActionGroup {
 
         final Optional<Project> project = resource.getRelatedProject();
 
-        e.getPresentation().setEnabledAndVisible(project.isPresent() && project.get().isTypeOf("plainJava"));
+        e.getPresentation().setEnabledAndVisible(project.isPresent() && project.get().isTypeOf(JAVAC));
     }
 }

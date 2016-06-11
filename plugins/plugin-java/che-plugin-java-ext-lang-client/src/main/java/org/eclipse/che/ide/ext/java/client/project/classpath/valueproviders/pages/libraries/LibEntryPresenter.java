@@ -37,6 +37,7 @@ import java.util.TreeMap;
 
 import static org.eclipse.che.ide.ext.java.shared.ClasspathEntryKind.CONTAINER;
 import static org.eclipse.che.ide.ext.java.shared.ClasspathEntryKind.LIBRARY;
+import static org.eclipse.che.ide.ext.java.shared.Constants.JAVAC;
 
 /**
  * The page for the information about libraries which are including into classpath.
@@ -91,7 +92,7 @@ public class LibEntryPresenter extends AbstractClasspathPagePresenter implements
 
         final Optional<Project> project = resource.getRelatedProject();
 
-        isPlainJava = "plainJava".equals(project.get().getType());
+        isPlainJava = JAVAC.equals(project.get().getType());
 
         setReadOnlyMod();
 
