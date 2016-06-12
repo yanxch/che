@@ -34,6 +34,7 @@ import org.eclipse.che.plugin.debugger.ide.debug.AbstractDebugger;
 import javax.validation.constraints.NotNull;
 import java.util.Map;
 
+import static org.eclipse.che.plugin.jdb.ide.breakpoint.recipe.JavaFileBreakpointRecipe.FQN;
 import static org.eclipse.che.plugin.jdb.ide.debug.JavaDebugger.ConnectionProperties.HOST;
 import static org.eclipse.che.plugin.jdb.ide.debug.JavaDebugger.ConnectionProperties.PORT;
 
@@ -103,7 +104,7 @@ public class JavaDebugger extends AbstractDebugger {
         String target = null;
         Map<String, String> attr = breakpoint.getAttr().get(ID);
         if (attr != null) {
-            target = attr.get("fqn");//todo  hardcode!!!
+            target = attr.get(FQN);
         }
         return target;
     }

@@ -14,13 +14,13 @@ import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.ide.api.machine.MachineServiceClient;
 import org.eclipse.che.api.machine.shared.dto.MachineDto;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.debug.DebugConfiguration;
 import org.eclipse.che.ide.api.debug.DebugConfigurationPage;
+import org.eclipse.che.ide.api.machine.MachineServiceClient;
 import org.eclipse.che.ide.extension.machine.client.inject.factories.EntityFactory;
 import org.eclipse.che.ide.extension.machine.client.machine.Machine;
 import org.eclipse.che.ide.extension.machine.client.perspective.widgets.machine.appliance.server.Server;
@@ -72,6 +72,12 @@ public class JavaDebugConfigurationPagePresenter implements JavaDebugConfigurati
 
         originHost = configuration.getHost();
         originPort = configuration.getPort();
+
+        configuration.getConnectionProperties().put(SOURCE_PATH_CONNECTION_PROPERTY, getDefaultProjectSourcePath());
+    }
+
+    private String getDefaultProjectSourcePath() {
+        return KEY;
     }
 
     @Override
@@ -83,8 +89,6 @@ public class JavaDebugConfigurationPagePresenter implements JavaDebugConfigurati
         view.setHost(host);
         view.setPort(editedConfiguration.getPort());
         view.setDevHost("localhost".equals(host));
-
-        editedConfiguration.getConnectionProperties().put(SOURCE_PATH_CONNECTION_PROPERTY, KEY);
 
         setPortsList();
     }
