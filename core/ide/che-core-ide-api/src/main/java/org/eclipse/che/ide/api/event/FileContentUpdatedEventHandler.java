@@ -8,28 +8,13 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.ext.java.shared;
+package org.eclipse.che.ide.api.event;
 
-import org.eclipse.che.dto.shared.DTO;
+import com.google.gwt.event.shared.EventHandler;
 
 /**
- * @author Evgen Vidolob
+ * @author Alexander Andrienko
  */
-@DTO
-public interface JarEntry {
-    enum JarEntryType {
-        PACKAGE, FOLDER, CLASS_FILE, FILE
-    }
-
-    JarEntryType getType();
-
-    void setType(JarEntryType type);
-
-    String getName();
-
-    void setName(String name);
-
-    String getPath();
-
-    void setPath(String path);
+public interface FileContentUpdatedEventHandler extends EventHandler {
+    void onContentUpdated(FileContentUpdatedEvent fileContentUpdatedEvent);
 }

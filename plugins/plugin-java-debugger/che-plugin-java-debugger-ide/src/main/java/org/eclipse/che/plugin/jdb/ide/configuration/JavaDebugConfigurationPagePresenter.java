@@ -30,6 +30,8 @@ import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.eclipse.che.ide.extension.machine.client.command.valueproviders.CurrentProjectPathProvider.KEY;
+
 /**
  * Page allows to edit Java debug configuration.
  *
@@ -38,6 +40,8 @@ import java.util.List;
 @Singleton
 public class JavaDebugConfigurationPagePresenter implements JavaDebugConfigurationPageView.ActionDelegate,
                                                             DebugConfigurationPage<DebugConfiguration> {
+
+    private static final String SOURCE_PATH_CONNECTION_PROPERTY = "SOURCE";
 
     private final JavaDebugConfigurationPageView view;
     private final MachineServiceClient           machineServiceClient;
@@ -68,6 +72,8 @@ public class JavaDebugConfigurationPagePresenter implements JavaDebugConfigurati
 
         originHost = configuration.getHost();
         originPort = configuration.getPort();
+
+        configuration.getConnectionProperties().put(SOURCE_PATH_CONNECTION_PROPERTY, KEY);
     }
 
     @Override

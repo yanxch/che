@@ -37,7 +37,7 @@ public class CurrentProjectPathProvider implements CommandPropertyValueProvider,
                                                    CurrentProjectChangedHandler,
                                                    WsAgentStateHandler {
 
-    private static final String KEY = "${current.project.path}";
+    public static final String KEY = "${current.project.path}";
 
     private final AppContext appContext;
 
