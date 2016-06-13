@@ -67,7 +67,7 @@ public class JavaDebuggerUtils {
             Pair<char[][], char[][]> fqnPair = prepareFqnToSearch(fqn);
 
             IJavaProject project = MODEL.getJavaProject(projectPath);
-            IJavaSearchScope searchScope = SearchEngine.createJavaSearchScope(new IJavaElement[]{project});
+            IJavaSearchScope searchScope = SearchEngine.createJavaSearchScope(new IJavaElement[]{project}, true);
 
             types = findTypeByFqn(fqnPair.first, fqnPair.second, searchScope);
 

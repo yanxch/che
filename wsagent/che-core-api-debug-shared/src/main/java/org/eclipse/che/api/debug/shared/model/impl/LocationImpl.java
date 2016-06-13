@@ -85,13 +85,12 @@ public class LocationImpl implements Location {
 
         LocationImpl location = (LocationImpl)o;
 
-        return (lineNumber != location.lineNumber ||
-                externalResource != location.externalResource ||
-                Objects.equals(resourcePath ,location.resourcePath) ||
-                externalResourceId != location.externalResourceId ||
-                Objects.equals(resourceProjectPath, location.resourceProjectPath) &&
-                !(target != null ? !target.equals(location.target) : location.target != null));
-
+        return lineNumber == location.lineNumber &&
+               externalResourceId == location.externalResourceId &&
+               externalResource == location.externalResource &&
+               Objects.equals(resourcePath ,location.resourcePath) &&
+               Objects.equals(resourceProjectPath, location.resourceProjectPath) &&
+               !(target != null ? !target.equals(location.target) : location.target != null);
     }
 
     @Override
@@ -100,7 +99,7 @@ public class LocationImpl implements Location {
         result = 31 * result + lineNumber;
         result = 31 * result + externalResourceId;
         result = 31 * result + Objects.hashCode(resourcePath);
-        result = 31 * result + Objects.hashCode(externalResource);
+        result = 31 * result + (externalResource ? 1 : 0);
         result = 31 * result + Objects.hashCode(resourceProjectPath);
         return result;
     }
