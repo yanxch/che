@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.eclipse.che.ide.api.project.type.wizard.ProjectWizardMode.CREATE;
 import static org.eclipse.che.ide.api.project.type.wizard.ProjectWizardMode.UPDATE;
 import static org.eclipse.che.ide.api.project.type.wizard.ProjectWizardRegistrar.WIZARD_MODE_KEY;
@@ -188,7 +189,8 @@ public class CategoriesPagePresenter extends AbstractWizardPage<MutableProjectCo
         selectPathPresenter.show(new Resource[]{appContext.getWorkspaceRoot()}, false, new SelectionPathHandler() {
             @Override
             public void onPathSelected(Path path) {
-                dataObject.setPath(path.append(dataObject.getName()).toString());
+                originParent = path;
+                dataObject.setPath(!isNullOrEmpty(dataObject.getName()) ? path.append(dataObject.getName()).toString() : path.toString());
                 view.setParentPath(path);
             }
 

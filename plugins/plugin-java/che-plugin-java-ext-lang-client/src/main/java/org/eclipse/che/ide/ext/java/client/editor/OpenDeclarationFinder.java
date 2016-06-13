@@ -26,10 +26,10 @@ import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.File;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
-import org.eclipse.che.ide.api.resources.SyntheticFile;
 import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.ext.java.client.navigation.service.JavaNavigationService;
 import org.eclipse.che.ide.ext.java.client.resource.SourceFolderMarker;
+import org.eclipse.che.ide.ext.java.client.tree.JavaNodeFactory;
 import org.eclipse.che.ide.ext.java.client.util.JavaUtil;
 import org.eclipse.che.ide.ext.java.shared.JarEntry;
 import org.eclipse.che.ide.ext.java.shared.OpenDeclarationDescriptor;
@@ -49,14 +49,17 @@ public class OpenDeclarationFinder {
     private final EditorAgent           editorAgent;
     private final JavaNavigationService navigationService;
     private final AppContext            appContext;
+    private       JavaNodeFactory       javaNodeFactory;
 
     @Inject
     public OpenDeclarationFinder(EditorAgent editorAgent,
                                  JavaNavigationService navigationService,
-                                 AppContext appContext) {
+                                 AppContext appContext,
+                                 JavaNodeFactory javaNodeFactory) {
         this.editorAgent = editorAgent;
         this.navigationService = navigationService;
         this.appContext = appContext;
+        this.javaNodeFactory = javaNodeFactory;
     }
 
     public void openDeclaration() {
@@ -114,10 +117,8 @@ public class OpenDeclarationFinder {
                                              .then(new Operation<ClassContent>() {
                                                  @Override
                                                  public void apply(ClassContent content) throws OperationException {
-                                                     final String clazz = entry.getName().substring(0, entry.getName().indexOf('.'));
-                                                     final VirtualFile file = new SyntheticFile(entry.getName(),
-                                                                                                clazz,
-                                                                                                content.getContent());
+                                                     final VirtualFile file = javaNodeFactory
+                                                             .newJarFileNode(entry, descriptor.getLibId(), project.getLocation(), null);
                                                      editorAgent.openEditor(file, new OpenEditorCallbackImpl() {
                                                          @Override
                                                          public void onEditorOpened(final EditorPartPresenter editor) {
@@ -126,7 +127,9 @@ public class OpenDeclarationFinder {
                                                                  public void execute() {
                                                                      if (editor instanceof TextEditorPresenter) {
                                                                          ((TextEditorPresenter)editor).getDocument().setSelectedRange(
-                                                                                 LinearRange.createWithStart(descriptor.getOffset()).andLength(0), true);
+                                                                                 LinearRange.createWithStart(descriptor.getOffset())
+                                                                                            .andLength(0), true);
+                                                                         editor.activate();
                                                                      }
                                                                  }
                                                              });
@@ -150,6 +153,7 @@ public class OpenDeclarationFinder {
                                         if (editor instanceof TextEditorPresenter) {
                                             ((TextEditorPresenter)editor).getDocument().setSelectedRange(
                                                     LinearRange.createWithStart(descriptor.getOffset()).andLength(0), true);
+                                            editor.activate();
                                         }
                                     }
                                 });
