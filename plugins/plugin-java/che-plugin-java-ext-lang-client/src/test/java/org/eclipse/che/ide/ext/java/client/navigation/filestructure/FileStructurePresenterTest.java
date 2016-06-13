@@ -16,7 +16,6 @@ import org.eclipse.che.api.promises.client.Function;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
-import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorInput;
@@ -69,8 +68,6 @@ public class FileStructurePresenterTest {
     private MessageLoader         loader;
     @Mock
     private LoaderFactory         loaderFactory;
-    @Mock
-    private PromiseProvider       promiseProvider;
 
     @Mock
     private TextEditorPresenter      editorPartPresenter;
@@ -135,8 +132,7 @@ public class FileStructurePresenterTest {
                                                javaNavigationService,
                                                context,
                                                editorAgent,
-                                               loaderFactory,
-                                               promiseProvider);
+                                               loaderFactory);
     }
 
     @Test

@@ -19,7 +19,6 @@ import com.google.web.bindery.event.shared.EventBus;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
-import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
@@ -57,7 +56,6 @@ public class JavaDebuggerFileHandler implements ActiveFileHandler {
     private final EventBus              eventBus;
     private final JavaNavigationService service;
     private final AppContext            appContext;
-    private final PromiseProvider       promises;
 
     @Inject
     public JavaDebuggerFileHandler(DebuggerManager debuggerManager,
@@ -65,15 +63,13 @@ public class JavaDebuggerFileHandler implements ActiveFileHandler {
                                    DtoFactory dtoFactory,
                                    EventBus eventBus,
                                    JavaNavigationService service,
-                                   AppContext appContext,
-                                   PromiseProvider promises) {
+                                   AppContext appContext) {
         this.debuggerManager = debuggerManager;
         this.editorAgent = editorAgent;
         this.dtoFactory = dtoFactory;
         this.eventBus = eventBus;
         this.service = service;
         this.appContext = appContext;
-        this.promises = promises;
     }
 
     @Override
@@ -167,7 +163,7 @@ public class JavaDebuggerFileHandler implements ActiveFileHandler {
             @Override
             public void apply(ClassContent content) throws OperationException {
                 VirtualFile file =
-                        new SyntheticFile(className.substring(className.lastIndexOf(".") + 1) + ".class", content.getContent(), promises);
+                        new SyntheticFile(className.substring(className.lastIndexOf(".") + 1) + ".class", content.getContent());
 
                 handleActivateFile(file, callback);
                 eventBus.fireEvent(new FileEvent(file, OPEN));

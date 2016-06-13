@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ui.smartTree;
 
+import com.google.common.collect.Lists;
 import com.google.gwt.dom.client.Element;
 
 import org.eclipse.che.ide.api.data.tree.MutableNode;
@@ -78,7 +79,7 @@ public class NodeDescriptor {
             Collections.sort(getChildren(), nodeStorage.buildFullComparator());
         } else {
             int actualIndex = index == 0 ? 0 : (getChildren().indexOf(getChildren().get(index - 1)) + 1);
-            getChildren().addAll(actualIndex, children);
+            getChildren().addAll(actualIndex, Lists.reverse(children));
         }
 
         for (NodeDescriptor child : children) {

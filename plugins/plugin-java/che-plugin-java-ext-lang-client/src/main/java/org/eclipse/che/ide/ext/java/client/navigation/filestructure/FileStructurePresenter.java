@@ -18,7 +18,6 @@ import com.google.inject.Singleton;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
-import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
@@ -56,7 +55,6 @@ public class FileStructurePresenter implements FileStructure.ActionDelegate {
     private final JavaNavigationService javaNavigationService;
     private final AppContext            context;
     private final EditorAgent           editorAgent;
-    private final PromiseProvider       promises;
     private final MessageLoader         loader;
 
     private TextEditorPresenter activeEditor;
@@ -68,13 +66,11 @@ public class FileStructurePresenter implements FileStructure.ActionDelegate {
                                   JavaNavigationService javaNavigationService,
                                   AppContext context,
                                   EditorAgent editorAgent,
-                                  LoaderFactory loaderFactory,
-                                  PromiseProvider promises) {
+                                  LoaderFactory loaderFactory) {
         this.view = view;
         this.javaNavigationService = javaNavigationService;
         this.context = context;
         this.editorAgent = editorAgent;
-        this.promises = promises;
         this.loader = loaderFactory.newLoader();
         this.view.setDelegate(this);
     }
@@ -149,7 +145,10 @@ public class FileStructurePresenter implements FileStructure.ActionDelegate {
                                                  .then(new Operation<ClassContent>() {
                                                      @Override
                                                      public void apply(ClassContent content) throws OperationException {
-                                                         VirtualFile file = new SyntheticFile(entry.getName(), content.getContent(), promises);
+                                                         final String clazz = entry.getName().substring(0, entry.getName().indexOf('.'));
+                                                         final VirtualFile file = new SyntheticFile(entry.getName(),
+                                                                                                    clazz,
+                                                                                                    content.getContent());
                                                          editorAgent.openEditor(file, new OpenEditorCallbackImpl() {
                                                              @Override
                                                              public void onEditorOpened(EditorPartPresenter editor) {

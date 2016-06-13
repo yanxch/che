@@ -17,7 +17,6 @@ import com.google.inject.Singleton;
 
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
-import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
@@ -59,7 +58,6 @@ public class OpenImplementationPresenter {
     private final JavaNavigationService    service;
     private final AppContext               context;
     private final EditorAgent              editorAgent;
-    private final PromiseProvider          promises;
     private final DtoFactory               dtoFactory;
     private final JavaResources            javaResources;
     private final PopupResources           popupResources;
@@ -74,8 +72,7 @@ public class OpenImplementationPresenter {
                                        JavaResources javaResources,
                                        PopupResources popupResources,
                                        JavaLocalizationConstant locale,
-                                       EditorAgent editorAgent,
-                                       PromiseProvider promises) {
+                                       EditorAgent editorAgent) {
         this.service = javaNavigationService;
         this.context = context;
         this.dtoFactory = dtoFactory;
@@ -83,7 +80,6 @@ public class OpenImplementationPresenter {
         this.popupResources = popupResources;
         this.locale = locale;
         this.editorAgent = editorAgent;
-        this.promises = promises;
     }
 
     /**
@@ -157,7 +153,8 @@ public class OpenImplementationPresenter {
                                    .then(new Operation<ClassContent>() {
                                        @Override
                                        public void apply(ClassContent content) throws OperationException {
-                                           VirtualFile file = new SyntheticFile(entry.getName(), content.getContent(), promises);
+                                           final String clazz = entry.getName().substring(0, entry.getName().indexOf('.'));
+                                           final VirtualFile file = new SyntheticFile(entry.getName(), clazz, content.getContent());
                                            editorAgent.openEditor(file, new OpenEditorCallbackImpl() {
                                                @Override
                                                public void onEditorOpened(EditorPartPresenter editor) {

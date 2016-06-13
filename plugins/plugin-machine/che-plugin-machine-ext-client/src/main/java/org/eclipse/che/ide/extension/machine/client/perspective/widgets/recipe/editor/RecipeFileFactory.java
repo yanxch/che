@@ -31,11 +31,7 @@ public class RecipeFileFactory {
     public static final String NAME = "Dockerfile";
     public static final String PATH = "machine_recipe";
 
-    private final PromiseProvider promises;
-
-    @Inject
-    public RecipeFileFactory(PromiseProvider promises) {
-        this.promises = promises;
+    public RecipeFileFactory() {
     }
 
     /**
@@ -54,7 +50,7 @@ public class RecipeFileFactory {
 
     @NotNull
     private VirtualFile newInstance(@NotNull String content, @NotNull String name, @NotNull String path) {
-        return new SyntheticFile(name, content, promises);
+        return new SyntheticFile(name, content);
     }
 
 }

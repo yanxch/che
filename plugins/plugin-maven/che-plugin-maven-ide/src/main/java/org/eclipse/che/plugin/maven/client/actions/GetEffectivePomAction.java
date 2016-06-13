@@ -16,7 +16,6 @@ import com.google.inject.Singleton;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
-import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.app.AppContext;
@@ -50,7 +49,6 @@ public class GetEffectivePomAction extends AbstractPerspectiveAction {
     private final NotificationManager      notificationManager;
     private final MavenServerServiceClient mavenServerServiceClient;
     private final AppContext               appContext;
-    private final PromiseProvider promises;
 
     @Inject
     public GetEffectivePomAction(MavenLocalizationConstant constant,
@@ -58,8 +56,7 @@ public class GetEffectivePomAction extends AbstractPerspectiveAction {
                                  EditorAgent editorAgent,
                                  NotificationManager notificationManager,
                                  MavenServerServiceClient mavenServerServiceClient,
-                                 AppContext appContext,
-                                 PromiseProvider promises) {
+                                 AppContext appContext) {
         super(Collections.singletonList(PROJECT_PERSPECTIVE_ID),
               constant.actionGetEffectivePomTitle(),
               constant.actionGetEffectivePomDescription(),
@@ -69,7 +66,6 @@ public class GetEffectivePomAction extends AbstractPerspectiveAction {
         this.notificationManager = notificationManager;
         this.mavenServerServiceClient = mavenServerServiceClient;
         this.appContext = appContext;
-        this.promises = promises;
     }
 
 
@@ -95,7 +91,9 @@ public class GetEffectivePomAction extends AbstractPerspectiveAction {
         mavenServerServiceClient.getEffectivePom(project.getLocation().toString()).then(new Operation<String>() {
             @Override
             public void apply(String content) throws OperationException {
-                editorAgent.openEditor(new SyntheticFile(project.getAttributes().get(MavenAttributes.ARTIFACT_ID).get(0) + " [effective pom]", content, promises));
+                editorAgent.openEditor(new SyntheticFile("pom.xml",
+                                                         project.getAttributes().get(MavenAttributes.ARTIFACT_ID).get(0) + " [effective pom]",
+                                                         content));
             }
         }).catchError(new Operation<PromiseError>() {
             @Override

@@ -20,7 +20,6 @@ import com.google.inject.assistedinject.Assisted;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.data.tree.HasAction;
@@ -65,7 +64,6 @@ public class MatchNode extends AbstractPresentationNode implements HasAction {
     private       CompilationUnit       compilationUnit;
     private       ClassFile             classFile;
     private final JavaNavigationService service;
-    private final PromiseProvider       promises;
 
     @Inject
     public MatchNode(TreeStyles styles,
@@ -75,8 +73,7 @@ public class MatchNode extends AbstractPresentationNode implements HasAction {
                      @Assisted Match match,
                      @Nullable @Assisted CompilationUnit compilationUnit,
                      @Nullable @Assisted ClassFile classFile,
-                     JavaNavigationService service,
-                     PromiseProvider promises) {
+                     JavaNavigationService service) {
         this.styles = styles;
         this.resources = resources;
         this.editorAgent = editorAgent;
@@ -85,7 +82,6 @@ public class MatchNode extends AbstractPresentationNode implements HasAction {
         this.compilationUnit = compilationUnit;
         this.classFile = classFile;
         this.service = service;
-        this.promises = promises;
     }
 
     @Override
@@ -174,7 +170,8 @@ public class MatchNode extends AbstractPresentationNode implements HasAction {
                    .then(new Operation<ClassContent>() {
                        @Override
                        public void apply(ClassContent content) throws OperationException {
-                           VirtualFile file = new SyntheticFile(Path.valueOf(className.replace('.', '/')).lastSegment(), content.getContent(), promises);
+                           final VirtualFile file = new SyntheticFile(Path.valueOf(className.replace('.', '/')).lastSegment(),
+                                                                      content.getContent());
                            editorAgent.openEditor(file, new OpenEditorCallbackImpl() {
                                @Override
                                public void onEditorOpened(EditorPartPresenter editor) {

@@ -15,7 +15,6 @@ import com.google.gwtmockito.GwtMockitoTestRunner;
 
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorInput;
@@ -76,8 +75,6 @@ public class OpenImplementationPresenterTest {
     private PopupResources           popupResources;
     @Mock
     private JavaLocalizationConstant locale;
-    @Mock
-    private PromiseProvider          promiseProvider;
 
     //other mocks
 
@@ -136,8 +133,7 @@ public class OpenImplementationPresenterTest {
                                                     javaResources,
                                                     popupResources,
                                                     locale,
-                                                    editorAgent,
-                                                    promiseProvider);
+                                                    editorAgent);
     }
 
     @Test

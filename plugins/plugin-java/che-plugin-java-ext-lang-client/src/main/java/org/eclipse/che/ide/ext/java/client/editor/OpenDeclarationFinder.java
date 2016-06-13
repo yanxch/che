@@ -11,18 +11,17 @@
 package org.eclipse.che.ide.ext.java.client.editor;
 
 import com.google.common.base.Optional;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.Timer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
-import org.eclipse.che.api.promises.client.PromiseProvider;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
-import org.eclipse.che.ide.api.event.FileEvent;
+import org.eclipse.che.ide.api.editor.OpenEditorCallbackImpl;
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.File;
 import org.eclipse.che.ide.api.resources.Project;
@@ -40,8 +39,6 @@ import org.eclipse.che.ide.ext.java.shared.dto.ClassContent;
 import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.util.loging.Log;
 
-import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.OPEN;
-
 /**
  * @author Evgen Vidolob
  * @author Vlad Zhukovskyi
@@ -52,20 +49,14 @@ public class OpenDeclarationFinder {
     private final EditorAgent           editorAgent;
     private final JavaNavigationService navigationService;
     private final AppContext            appContext;
-    private final EventBus              eventBus;
-    private final PromiseProvider       promises;
 
     @Inject
     public OpenDeclarationFinder(EditorAgent editorAgent,
                                  JavaNavigationService navigationService,
-                                 AppContext appContext,
-                                 EventBus eventBus,
-                                 PromiseProvider promises) {
+                                 AppContext appContext) {
         this.editorAgent = editorAgent;
         this.navigationService = navigationService;
         this.appContext = appContext;
-        this.eventBus = eventBus;
-        this.promises = promises;
     }
 
     public void openDeclaration() {
@@ -123,18 +114,47 @@ public class OpenDeclarationFinder {
                                              .then(new Operation<ClassContent>() {
                                                  @Override
                                                  public void apply(ClassContent content) throws OperationException {
-                                                     VirtualFile file = new SyntheticFile(entry.getName(), content.getContent(), promises);
-                                                     eventBus.fireEvent(new FileEvent(file, OPEN));
+                                                     final String clazz = entry.getName().substring(0, entry.getName().indexOf('.'));
+                                                     final VirtualFile file = new SyntheticFile(entry.getName(),
+                                                                                                clazz,
+                                                                                                content.getContent());
+                                                     editorAgent.openEditor(file, new OpenEditorCallbackImpl() {
+                                                         @Override
+                                                         public void onEditorOpened(final EditorPartPresenter editor) {
+                                                             Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+                                                                 @Override
+                                                                 public void execute() {
+                                                                     if (editor instanceof TextEditorPresenter) {
+                                                                         ((TextEditorPresenter)editor).getDocument().setSelectedRange(
+                                                                                 LinearRange.createWithStart(descriptor.getOffset()).andLength(0), true);
+                                                                     }
+                                                                 }
+                                                             });
+                                                         }
+                                                     });
                                                  }
                                              });
                                  }
                              });
         } else {
-            appContext.getWorkspaceRoot().getFile(Path.valueOf(descriptor.getPath())).then(new Operation<Optional<File>>() {
+            appContext.getWorkspaceRoot().getFile(descriptor.getPath()).then(new Operation<Optional<File>>() {
                 @Override
                 public void apply(Optional<File> file) throws OperationException {
                     if (file.isPresent()) {
-                        eventBus.fireEvent(new FileEvent(file.get(), OPEN));
+                        editorAgent.openEditor(file.get(), new OpenEditorCallbackImpl() {
+                            @Override
+                            public void onEditorOpened(final EditorPartPresenter editor) {
+                                Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+                                    @Override
+                                    public void execute() {
+                                        if (editor instanceof TextEditorPresenter) {
+                                            ((TextEditorPresenter)editor).getDocument().setSelectedRange(
+                                                    LinearRange.createWithStart(descriptor.getOffset()).andLength(0), true);
+                                        }
+                                    }
+                                });
+                            }
+                        });
                     }
                 }
             });

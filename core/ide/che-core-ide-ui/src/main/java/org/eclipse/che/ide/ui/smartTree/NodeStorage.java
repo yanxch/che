@@ -423,12 +423,9 @@ public class NodeStorage implements StoreHandlers.HasStoreHandlers {
                     }
                 }
             } else {
-                int i = index;
-                int childrenSize = children.size();
-                for (int j = 0; j < childrenSize; j++) {
-                    if (currentChildren.get(i) == children.get(j)) {
-                        addedChildren.add(children.get(j));
-                        i++;
+                for (NodeDescriptor currentChild : currentChildren) {
+                    if (children.contains(currentChild.getNode())) {
+                        addedChildren.add(currentChild.getNode());
                     }
                 }
             }

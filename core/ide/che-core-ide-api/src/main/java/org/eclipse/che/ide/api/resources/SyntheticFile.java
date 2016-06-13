@@ -15,7 +15,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.api.promises.client.PromiseProvider;
+import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.ide.resource.Path;
 
 /**
@@ -31,14 +31,18 @@ import org.eclipse.che.ide.resource.Path;
 @Beta
 public class SyntheticFile implements VirtualFile {
 
-    private       String          name;
-    private       String          content;
-    private final PromiseProvider promiseProvider;
+    private String name;
+    private String content;
+    private String displayName;
 
-    public SyntheticFile(String name, String content, PromiseProvider promiseProvider) {
+    public SyntheticFile(String name, String content) {
+        this(name, name, content);
+    }
+
+    public SyntheticFile(String name, String displayName, String content) {
         this.name = name;
+        this.displayName = displayName;
         this.content = content;
-        this.promiseProvider = promiseProvider;
     }
 
     @Override
@@ -58,7 +62,7 @@ public class SyntheticFile implements VirtualFile {
 
     @Override
     public String getDisplayName() {
-        return name;
+        return displayName;
     }
 
     @Override
@@ -78,7 +82,7 @@ public class SyntheticFile implements VirtualFile {
 
     @Override
     public Promise<String> getContent() {
-        return promiseProvider.resolve(content);
+        return Promises.resolve(content);
     }
 
     @Override
@@ -105,9 +109,5 @@ public class SyntheticFile implements VirtualFile {
         return MoreObjects.toStringHelper(this)
                           .add("name", name)
                           .toString();
-    }
-
-    interface Factory {
-        SyntheticFile newFile(String name, String content);
     }
 }
