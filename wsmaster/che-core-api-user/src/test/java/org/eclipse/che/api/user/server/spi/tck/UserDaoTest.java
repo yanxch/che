@@ -33,6 +33,7 @@ import java.util.List;
 
 import static java.util.Arrays.asList;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 /**
  * Tests {@link UserDao} contract.
@@ -329,6 +330,7 @@ public class UserDaoTest {
     }
 
     private static void assertEqualsNoPassword(User actual, User expected) {
+        assertNotNull(actual, "Expected not-null user");
         assertEquals(actual.getId(), expected.getId());
         assertEquals(actual.getEmail(), expected.getEmail());
         assertEquals(actual.getName(), expected.getName());

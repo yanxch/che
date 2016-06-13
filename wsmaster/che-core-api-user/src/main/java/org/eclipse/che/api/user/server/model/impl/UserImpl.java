@@ -30,6 +30,8 @@ public class UserImpl implements User {
     private String       password;
     private List<String> aliases;
 
+    public UserImpl() {}
+
     public UserImpl(String id) {
         this.id = id;
     }
