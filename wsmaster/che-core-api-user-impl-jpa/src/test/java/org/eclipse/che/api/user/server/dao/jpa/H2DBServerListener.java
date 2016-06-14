@@ -10,10 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.api.user.server.dao.jpa;
 
+import org.eclipse.che.commons.test.tck.AbstractTestListener;
 import org.eclipse.persistence.config.TargetServer;
 import org.testng.ITestContext;
-import org.testng.ITestListener;
-import org.testng.ITestResult;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -31,7 +30,7 @@ import static org.eclipse.persistence.config.PersistenceUnitProperties.TRANSACTI
 /**
  * @author Yevhenii Voevodin
  */
-public class H2DBServerListener implements ITestListener {
+public class H2DBServerListener extends AbstractTestListener {
 
     public static final String ENTITY_MANAGER_FACTORY_ATTR_NAME = "entityManagerFactory";
 
@@ -55,19 +54,4 @@ public class H2DBServerListener implements ITestListener {
     public void onFinish(ITestContext context) {
         managerFactory.close();
     }
-
-    @Override
-    public void onTestStart(ITestResult result) {}
-
-    @Override
-    public void onTestSuccess(ITestResult result) {}
-
-    @Override
-    public void onTestFailure(ITestResult result) {}
-
-    @Override
-    public void onTestSkipped(ITestResult result) {}
-
-    @Override
-    public void onTestFailedButWithinSuccessPercentage(ITestResult result) {}
 }

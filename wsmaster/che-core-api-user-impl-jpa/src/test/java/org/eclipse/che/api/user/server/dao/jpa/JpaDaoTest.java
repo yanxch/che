@@ -1,4 +1,4 @@
-package org.eclipse.che.api.user.server.dao.jpa;/*******************************************************************************
+/*******************************************************************************
  * Copyright (c) 2012-2016 Codenvy, S.A.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -8,7 +8,9 @@ package org.eclipse.che.api.user.server.dao.jpa;/*******************************
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
+package org.eclipse.che.api.user.server.dao.jpa;
 
+import org.eclipse.che.api.user.server.model.impl.UserImpl;
 import org.eclipse.persistence.config.TargetServer;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -16,9 +18,13 @@ import org.testng.annotations.Test;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.Arrays.asList;
 import static javax.persistence.spi.PersistenceUnitTransactionType.RESOURCE_LOCAL;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_DRIVER;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_PASSWORD;
@@ -46,8 +52,16 @@ public class JpaDaoTest {
 
     @Test
     public void test() throws Exception {
-        final EntityManager entityManager = factory.createEntityManager();
-        entityManager.getTransaction().begin();
-        entityManager.getTransaction().commit();
+        final EntityManager manager = factory.createEntityManager();
+        manager.getTransaction().begin();
+        manager.persist(new UserImpl("id", "email", "name", "password", asList("alias1", "alias2")));
+        manager.getTransaction().commit();
+
+        final CriteriaBuilder cb = manager.getCriteriaBuilder();
+        final CriteriaQuery<UserImpl> query = cb.createQuery(UserImpl.class);
+        final Root<UserImpl> root = query.from(UserImpl.class);
+        query.select(root).where(cb.isMember("alias", root.get("aliases")));
+
+        System.out.println();
     }
 }

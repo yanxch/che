@@ -18,7 +18,7 @@
 
     <description>XML Mapping file</description>
 
-    <entity class="org.eclipse.che.api.user.server.model.impl.UserImpl">
+    <entity class="org.eclipse.che.api.user.server.model.impl.UserImpl" name="User">
         <table name="USER"/>
         <attributes>
             <id name="id"/>

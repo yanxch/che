@@ -22,9 +22,7 @@ import javax.inject.Singleton;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import javax.persistence.NoResultException;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -55,28 +53,68 @@ public class JpaUserDao implements UserDao {
             manager.persist(user);
             manager.getTransaction().commit();
         } catch (EntityExistsException x) {
-            // TODO make more concrete
+            // TODO make it more concrete
             throw new ConflictException("User with such id/name/email/alias already exists");
         } catch (RuntimeException x) {
-            throw new ServerException("TODO");
+            throw new ServerException(x.getLocalizedMessage(), x);
         } finally {
             manager.close();
         }
     }
 
     @Override
-    public void update(UserImpl user) throws NotFoundException, ServerException, ConflictException {
-
+    public void update(UserImpl update) throws NotFoundException, ServerException, ConflictException {
+        requireNonNull(update, "Required non-null update");
+        final EntityManager manager = factory.createEntityManager();
+        try {
+            manager.getTransaction().begin();
+            final UserImpl user = manager.find(UserImpl.class, update.getId());
+            if (user == null) {
+                throw new NotFoundException(format("Couldn't update user with id '%s' because it doesn't exist", update.getId()));
+            }
+            manager.remove(update.getId());
+            manager.persist(user);
+            manager.getTransaction().commit();
+        } catch (RuntimeException x) {
+            throw new ServerException(x.getLocalizedMessage(), x);
+        } finally {
+            manager.close();
+        }
     }
 
     @Override
     public void remove(String id) throws ServerException, ConflictException {
-
+        requireNonNull(id, "Required non-null id");
+        final EntityManager manager = factory.createEntityManager();
+        try {
+            manager.getTransaction().begin();
+            final UserImpl user = manager.find(UserImpl.class, id);
+            if (user != null) {
+                manager.remove(user);
+            }
+            manager.getTransaction().commit();
+        } catch (RuntimeException x) {
+            throw new ServerException(x.getLocalizedMessage(), x);
+        } finally {
+            manager.close();
+        }
     }
 
     @Override
     public UserImpl getByAlias(String alias) throws NotFoundException, ServerException {
-        return null;
+        requireNonNull(alias, "Required non-null alias");
+        final EntityManager manager = factory.createEntityManager();
+        try {
+            return manager.createQuery("SELECT u FROM User u WHERE :alias in (u.aliases)", UserImpl.class)
+                          .setParameter("alias", alias)
+                          .getSingleResult();
+        } catch (NoResultException x) {
+            throw new NotFoundException(format("User with alias '%s' doesn't exist", alias));
+        } catch (RuntimeException x) {
+            throw new ServerException(x.getLocalizedMessage(), x);
+        } finally {
+            manager.close();
+        }
     }
 
     @Override
@@ -90,7 +128,7 @@ public class JpaUserDao implements UserDao {
             }
             return user;
         } catch (RuntimeException x) {
-            throw new ServerException(x.getMessage(), x);
+            throw new ServerException(x.getLocalizedMessage(), x);
         } finally {
             manager.close();
         }
@@ -101,17 +139,13 @@ public class JpaUserDao implements UserDao {
         requireNonNull(name, "Required non-null name");
         final EntityManager manager = factory.createEntityManager();
         try {
-            final CriteriaBuilder cb = manager.getCriteriaBuilder();
-            final CriteriaQuery<UserImpl> query = cb.createQuery(UserImpl.class);
-            final Root<UserImpl> root = query.from(UserImpl.class);
-            query.select(root).where(cb.equal(root.get("name"), name));
-            final UserImpl user = manager.createQuery(query).getSingleResult();
-            if (user == null) {
-                throw new NotFoundException(format("User with name '%s' doesn't exist", name));
-            }
-            return user;
+            return manager.createQuery("SELECT u FROM User u WHERE u.name = :name", UserImpl.class)
+                          .setParameter("name", name)
+                          .getSingleResult();
+        } catch (NoResultException x) {
+            throw new NotFoundException(format("User with name '%s' doesn't exist", name));
         } catch (RuntimeException x) {
-            throw new ServerException(x.getMessage(), x);
+            throw new ServerException(x.getLocalizedMessage(), x);
         } finally {
             manager.close();
         }
@@ -122,17 +156,13 @@ public class JpaUserDao implements UserDao {
         requireNonNull(email, "Required non-null email");
         final EntityManager manager = factory.createEntityManager();
         try {
-            final CriteriaBuilder cb = manager.getCriteriaBuilder();
-            final CriteriaQuery<UserImpl> query = cb.createQuery(UserImpl.class);
-            final Root<UserImpl> root = query.from(UserImpl.class);
-            query.select(root).where(cb.equal(root.get("email"), email));
-            final UserImpl user = manager.createQuery(query).getSingleResult();
-            if (user == null) {
-                throw new NotFoundException(format("User with email '%s' doesn't exist", email));
-            }
-            return user;
+            return manager.createQuery("SELECT u FROM User u WHERE u.email = :email", UserImpl.class)
+                          .setParameter("email", email)
+                          .getSingleResult();
+        } catch (NoResultException x) {
+            throw new NotFoundException(format("User with email '%s' doesn't exist", email));
         } catch (RuntimeException x) {
-            throw new ServerException(x.getMessage(), x);
+            throw new ServerException(x.getLocalizedMessage(), x);
         } finally {
             manager.close();
         }

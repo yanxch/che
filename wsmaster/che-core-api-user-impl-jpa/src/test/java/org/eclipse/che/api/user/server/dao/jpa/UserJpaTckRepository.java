@@ -37,7 +37,7 @@ public class UserJpaTckRepository implements TckRepository<UserImpl> {
     public void removeAll() throws TckRepositoryException {
         final EntityManager manager = factory.createEntityManager();
         manager.getTransaction().begin();
-        manager.createQuery("DELETE FROM UserImpl").executeUpdate();
+        manager.createQuery("DELETE FROM User").executeUpdate();
         manager.getTransaction().commit();
         manager.close();
     }
