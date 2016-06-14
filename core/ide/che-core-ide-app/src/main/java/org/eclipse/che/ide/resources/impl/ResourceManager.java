@@ -170,7 +170,7 @@ public final class ResourceManager {
      * @since 4.4.0
      */
     public Promise<Project[]> getWorkspaceProjects() {
-        return ps.getProjects(devMachine).then(new Function<List<ProjectConfigDto>, Project[]>() {
+        return ps.getProjects().then(new Function<List<ProjectConfigDto>, Project[]>() {
             @Override
             public Project[] apply(List<ProjectConfigDto> dtoConfigs) throws FunctionException {
                 store.clear();
@@ -259,7 +259,7 @@ public final class ResourceManager {
                                                .withAttributes(request.getBody().getAttributes())
                                                .withSource(sourceDto);
 
-        return ps.updateProject(devMachine, dto).thenPromise(new Function<ProjectConfigDto, Promise<Project>>() {
+        return ps.updateProject(dto).thenPromise(new Function<ProjectConfigDto, Promise<Project>>() {
             @Override
             public Promise<Project> apply(ProjectConfigDto reference) throws FunctionException {
 
@@ -306,7 +306,7 @@ public final class ResourceManager {
                     checkArgument(checkFolderName(name), "Invalid folder name");
                 }
 
-                return ps.createFolder(devMachine, parent.getLocation().append(name)).thenPromise(new Function<ItemReference, Promise<Folder>>() {
+                return ps.createFolder(parent.getLocation().append(name)).thenPromise(new Function<ItemReference, Promise<Folder>>() {
                     @Override
                     public Promise<Folder> apply(final ItemReference reference) throws FunctionException {
 
@@ -354,7 +354,7 @@ public final class ResourceManager {
                 checkState(!resource.isPresent(), "Resource already exists");
                 checkArgument(!parent.getLocation().isRoot(), "Failed to create file in workspace root");
 
-                return ps.createFile(devMachine, parent.getLocation().append(name), content).then(new Function<ItemReference, File>() {
+                return ps.createFile(parent.getLocation().append(name), content).then(new Function<ItemReference, File>() {
                     @Override
                     public File apply(ItemReference reference) throws FunctionException {
                         final Link contentUrl = reference.getLink(GET_CONTENT_REL);
@@ -396,13 +396,13 @@ public final class ResourceManager {
                     return update(path, createRequest);
                 }
 
-                return ps.createProject(devMachine, dto).thenPromise(new Function<ProjectConfigDto, Promise<Project>>() {
+                return ps.createProject(dto).thenPromise(new Function<ProjectConfigDto, Promise<Project>>() {
                     @Override
                     public Promise<Project> apply(ProjectConfigDto config) throws FunctionException {
                         final Project newResource = resourceFactory.newProjectImpl(config, ResourceManager.this);
                         store.register(newResource);
 
-                        return ps.getProjects(devMachine).then(new Function<List<ProjectConfigDto>, Project>() {
+                        return ps.getProjects().then(new Function<List<ProjectConfigDto>, Project>() {
                             @Override
                             public Project apply(List<ProjectConfigDto> updatedConfiguration) throws FunctionException {
 
@@ -436,7 +436,7 @@ public final class ResourceManager {
                                                                     .withLocation(sourceStorage.getLocation())
                                                                     .withParameters(sourceStorage.getParameters());
 
-                return ps.importProject(devMachine, path, sourceStorageDto).then(new Function<Void, Project>() {
+                return ps.importProject(path, sourceStorageDto).then(new Function<Void, Project>() {
                     @Override
                     public Project apply(Void ignored) throws FunctionException {
 
@@ -463,11 +463,11 @@ public final class ResourceManager {
             public Promise<Resource> apply(Optional<Resource> resource) throws FunctionException {
                 checkState(!resource.isPresent() || force, "Cannot create '" + destination.toString() + "'. Resource already exists.");
 
-                return ps.move(devMachine, source.getLocation(), destination.parent(), destination.lastSegment(), force)
+                return ps.move(source.getLocation(), destination.parent(), destination.lastSegment(), force)
                          .thenPromise(new Function<Void, Promise<Resource>>() {
                              @Override
                              public Promise<Resource> apply(Void ignored) throws FunctionException {
-                                 return ps.getItem(devMachine, destination).thenPromise(new Function<ItemReference, Promise<Resource>>() {
+                                 return ps.getItem(destination).thenPromise(new Function<ItemReference, Promise<Resource>>() {
                                      @Override
                                      public Promise<Resource> apply(ItemReference reference) throws FunctionException {
 
@@ -523,12 +523,12 @@ public final class ResourceManager {
             public Promise<Resource> apply(Optional<Resource> resource) throws FunctionException {
                 checkState(!resource.isPresent() || force, "Cannot create '" + destination.toString() + "'. Resource already exists.");
 
-                return ps.copy(devMachine, source.getLocation(), destination.parent(), destination.lastSegment(), force)
+                return ps.copy(source.getLocation(), destination.parent(), destination.lastSegment(), force)
                          .thenPromise(new Function<Void, Promise<Resource>>() {
                              @Override
                              public Promise<Resource> apply(Void ignored) throws FunctionException {
 
-                                 return ps.getItem(devMachine, destination).then(new Function<ItemReference, Resource>() {
+                                 return ps.getItem(destination).then(new Function<ItemReference, Resource>() {
                                      @Override
                                      public Resource apply(ItemReference reference) throws FunctionException {
                                          final Resource copiedResource = newResourceFrom(reference);
@@ -549,7 +549,7 @@ public final class ResourceManager {
     protected Promise<Void> delete(final Resource resource) {
         checkArgument(!resource.getLocation().isRoot(), "Workspace root is not allowed to be moved");
 
-        return ps.delete(devMachine, resource.getLocation()).then(new Function<Void, Void>() {
+        return ps.deleteItem(resource.getLocation()).then(new Function<Void, Void>() {
             @Override
             public Void apply(Void ignored) throws FunctionException {
                 store.dispose(resource.getLocation(), true);
@@ -563,11 +563,11 @@ public final class ResourceManager {
     protected Promise<Void> write(final File file, String content) {
         checkArgument(content != null, "Null content occurred");
 
-        return ps.writeFile(devMachine, file.getLocation(), content);
+        return ps.setFileContent(file.getLocation(), content);
     }
 
     protected Promise<String> read(File file) {
-        return ps.readFile(devMachine, file.getLocation());
+        return ps.getFileContent(file.getLocation());
     }
 
     Promise<Resource[]> getRemoteResources(final Container container, final int depth, boolean includeFiles) {
@@ -579,7 +579,7 @@ public final class ResourceManager {
 
         final Optional<Resource[]> descendants = store.getAll(container.getLocation());
 
-        return ps.getTree(devMachine, container.getLocation(), depth, includeFiles).then(new Function<TreeElement, Resource[]>() {
+        return ps.getTree(container.getLocation(), depth, includeFiles).then(new Function<TreeElement, Resource[]>() {
             @Override
             public Resource[] apply(TreeElement tree) throws FunctionException {
 
@@ -822,7 +822,7 @@ public final class ResourceManager {
     }
 
     protected Promise<Resource[]> synchronize(final Container container) {
-        return ps.getProjects(devMachine).thenPromise(new Function<List<ProjectConfigDto>, Promise<Resource[]>>() {
+        return ps.getProjects().thenPromise(new Function<List<ProjectConfigDto>, Promise<Resource[]>>() {
             @Override
             public Promise<Resource[]> apply(List<ProjectConfigDto> updatedConfiguration) throws FunctionException {
                 cachedConfigs = updatedConfiguration.toArray(new ProjectConfigDto[updatedConfiguration.size()]);
@@ -1022,7 +1022,7 @@ public final class ResourceManager {
             queryExpression.setPath(container.getLocation().toString());
         }
 
-        return ps.search(devMachine, queryExpression).thenPromise(new Function<List<ItemReference>, Promise<Resource[]>>() {
+        return ps.search(queryExpression).thenPromise(new Function<List<ItemReference>, Promise<Resource[]>>() {
             @Override
             public Promise<Resource[]> apply(final List<ItemReference> references) throws FunctionException {
                 if (references.isEmpty()) {
@@ -1087,7 +1087,7 @@ public final class ResourceManager {
         checkArgument(projectType != null, "Null project type");
         checkArgument(!projectType.isEmpty(), "Empty project type");
 
-        return ps.estimate(devMachine, container.getLocation(), projectType);
+        return ps.estimate(container.getLocation(), projectType);
     }
 
     void notifyMarkerChanged(Resource resource, Marker marker, int status) {
@@ -1107,7 +1107,7 @@ public final class ResourceManager {
     }
 
     public Promise<List<SourceEstimation>> resolve(Project project) {
-        return ps.resolveSources(devMachine, project.getLocation());
+        return ps.resolveSources(project.getLocation());
     }
 
     interface ResourceVisitor {
