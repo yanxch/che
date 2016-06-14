@@ -38,6 +38,7 @@ import org.eclipse.che.commons.lang.IoUtil;
 import org.eclipse.che.plugin.docker.client.DockerConnector;
 import org.eclipse.che.plugin.docker.client.DockerConnectorConfiguration;
 import org.eclipse.che.plugin.docker.client.DockerFileException;
+import org.eclipse.che.plugin.docker.client.DockerRegistryCredentialsReader;
 import org.eclipse.che.plugin.docker.client.Dockerfile;
 import org.eclipse.che.plugin.docker.client.DockerfileParser;
 import org.eclipse.che.plugin.docker.client.ProgressLineFormatterImpl;
@@ -95,6 +96,7 @@ public class DockerInstanceProvider implements InstanceProvider {
     public static final String DOCKER_IMAGE_TYPE = "image";
 
     private final DockerConnector                  docker;
+    private final DockerRegistryCredentialsReader  dockerCredentials;
     private final DockerInstanceStopDetector       dockerInstanceStopDetector;
     private final DockerContainerNameGenerator     containerNameGenerator;
     private final WorkspaceFolderPathProvider      workspaceFolderPathProvider;
@@ -117,6 +119,7 @@ public class DockerInstanceProvider implements InstanceProvider {
     @Inject
     public DockerInstanceProvider(DockerConnector docker,
                                   DockerConnectorConfiguration dockerConnectorConfiguration,
+                                  DockerRegistryCredentialsReader dockerCredentials,
                                   DockerMachineFactory dockerMachineFactory,
                                   DockerInstanceStopDetector dockerInstanceStopDetector,
                                   DockerContainerNameGenerator containerNameGenerator,
@@ -135,6 +138,7 @@ public class DockerInstanceProvider implements InstanceProvider {
                                   @Named("machine.docker.snapshot_use_registry") boolean snapshotUseRegistry,
                                   @Named("machine.docker.memory_swap_multiplier") double memorySwapMultiplier) throws IOException {
         this.docker = docker;
+        this.dockerCredentials = dockerCredentials;
         this.dockerMachineFactory = dockerMachineFactory;
         this.dockerInstanceStopDetector = dockerInstanceStopDetector;
         this.containerNameGenerator = containerNameGenerator;
@@ -392,7 +396,7 @@ public class DockerInstanceProvider implements InstanceProvider {
             };
             docker.buildImage(imageName,
                               progressMonitor,
-                              null,
+                              dockerCredentials.getDockerCredentialsFromUserPreferences(),
                               doForcePullOnBuild,
                               memoryLimit,
                               memorySwapLimit,
@@ -419,7 +423,8 @@ public class DockerInstanceProvider implements InstanceProvider {
         }
         PullParams pullParams = PullParams.create(dockerMachineSource.getRepository())
                                           .withTag(tag)
-                                          .withRegistry(dockerMachineSource.getRegistry());
+                                          .withRegistry(dockerMachineSource.getRegistry())
+                                          .withAuthConfigs(dockerCredentials.getDockerCredentialsFromUserPreferences());
         try {
             final ProgressLineFormatterImpl progressLineFormatter = new ProgressLineFormatterImpl();
             docker.pull(pullParams,

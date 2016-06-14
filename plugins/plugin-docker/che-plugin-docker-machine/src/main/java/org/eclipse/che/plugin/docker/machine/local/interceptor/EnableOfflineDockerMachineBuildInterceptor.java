@@ -17,8 +17,10 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.eclipse.che.api.core.util.LineConsumer;
 import org.eclipse.che.plugin.docker.client.DockerConnector;
 import org.eclipse.che.plugin.docker.client.DockerFileException;
+import org.eclipse.che.plugin.docker.client.DockerRegistryCredentialsReader;
 import org.eclipse.che.plugin.docker.client.Dockerfile;
 import org.eclipse.che.plugin.docker.client.ProgressLineFormatterImpl;
+import org.eclipse.che.plugin.docker.client.params.PullParams;
 import org.eclipse.che.plugin.docker.client.parser.DockerImageIdentifier;
 import org.eclipse.che.plugin.docker.client.parser.DockerImageIdentifierParser;
 import org.slf4j.Logger;
@@ -39,6 +41,8 @@ public class EnableOfflineDockerMachineBuildInterceptor implements MethodInterce
 
     @Inject
     DockerConnector dockerConnector;
+    @Inject
+    DockerRegistryCredentialsReader dockerCredentials;
 
     @Override
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
@@ -65,9 +69,11 @@ public class EnableOfflineDockerMachineBuildInterceptor implements MethodInterce
 
         DockerImageIdentifier imageIdentifier = DockerImageIdentifierParser.parse(image);
         final ProgressLineFormatterImpl progressLineFormatter = new ProgressLineFormatterImpl();
-        dockerConnector.pull(imageIdentifier.getRepository(),
-                             MoreObjects.firstNonNull(imageIdentifier.getTag(), "latest"),
-                             imageIdentifier.getRegistry(),
+
+        dockerConnector.pull(PullParams.create(imageIdentifier.getRepository())
+                                       .withTag(MoreObjects.firstNonNull(imageIdentifier.getTag(), "latest"))
+                                       .withRegistry(imageIdentifier.getRegistry())
+                                       .withAuthConfigs(dockerCredentials.getDockerCredentialsFromUserPreferences()),
                              currentProgressStatus -> {
                                  try {
                                      creationLogsOutput.writeLine(progressLineFormatter.format(currentProgressStatus));
