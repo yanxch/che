@@ -36,6 +36,7 @@ import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
+import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.debug.Breakpoint;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
@@ -43,6 +44,7 @@ import org.eclipse.che.ide.api.debug.DebuggerServiceClient;
 import org.eclipse.che.ide.api.filetypes.FileType;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
+import org.eclipse.che.ide.api.project.node.HasProjectConfig;
 import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.debug.DebuggerDescriptor;
 import org.eclipse.che.ide.debug.DebuggerManager;
@@ -77,6 +79,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Testing {@link AbstractDebugger} functionality.
@@ -362,16 +365,34 @@ public class DebuggerTest extends BaseTest {
 
     @Test
     public void testAddBreakpoint() throws Exception {
+        HasProjectConfig.ProjectConfig projectConfig = mock(HasProjectConfig.ProjectConfig.class);
+        ProjectConfigDto projectConfigDto = mock(ProjectConfigDto.class);
+
         doReturn(promiseVoid).when(service).addBreakpoint(SESSION_ID, breakpointDto);
         doReturn(promiseVoid).when(promiseVoid).then((Operation<Void>)any());
+        when(file.getProject()).thenReturn(projectConfig);
+        when(projectConfig.getProjectConfig()).thenReturn(projectConfigDto);
+        when(projectConfigDto.getPath()).thenReturn(PATH);
+        when(file.getPath()).thenReturn(PATH);
+        when(locationDto.withLineNumber(LINE_NUMBER + 1)).thenReturn(locationDto);
+        when(locationDto.withResourcePath(PATH)).thenReturn(locationDto);
+        when(locationDto.withResourceProjectPath(PATH)).thenReturn(locationDto);
+        when(locationDto.withTarget(anyString())).thenReturn(locationDto);
+        when(breakpointDto.withLocation(locationDto)).thenReturn(breakpointDto);
+        when(breakpointDto.withEnabled(true)).thenReturn(breakpointDto);
 
         debugger.addBreakpoint(file, LINE_NUMBER);
 
-        verify(locationDto).setLineNumber(LINE_NUMBER + 1);
-        verify(locationDto).setTarget(FQN);
+        verify(locationDto).withLineNumber(LINE_NUMBER + 1);
+        verify(locationDto).withTarget(FQN);
+        verify(locationDto).withResourcePath(PATH);
+        verify(locationDto).withResourceProjectPath(PATH);
+        verify(projectConfig).getProjectConfig();
+        verify(projectConfigDto).getPath();
+        verify(file).getPath();
 
-        verify(breakpointDto).setLocation(locationDto);
-        verify(breakpointDto).setEnabled(true);
+        verify(breakpointDto).withLocation(locationDto);
+        verify(breakpointDto).withEnabled(true);
 
         verify(promiseVoid).then(operationVoidCaptor.capture());
         operationVoidCaptor.getValue().apply(null);

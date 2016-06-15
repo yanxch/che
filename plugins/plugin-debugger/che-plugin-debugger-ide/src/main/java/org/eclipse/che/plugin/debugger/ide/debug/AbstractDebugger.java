@@ -314,19 +314,18 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
     @Override
     public void addBreakpoint(final VirtualFile file, final int lineNumber) {
         if (isConnected()) {
-            LocationDto locationDto = dtoFactory.createDto(LocationDto.class);
-            locationDto.setLineNumber(lineNumber + 1);
-            locationDto.setResourcePath(file.getPath());
-
             String fqn = pathToFqn(file);
             if (fqn == null) {
                 return;
             }
-            locationDto.setTarget(fqn);
 
-            BreakpointDto breakpointDto = dtoFactory.createDto(BreakpointDto.class);
-            breakpointDto.setLocation(locationDto);
-            breakpointDto.setEnabled(true);
+            String fileProjectPath = file.getProject().getProjectConfig().getPath();
+            LocationDto locationDto = dtoFactory.createDto(LocationDto.class).withLineNumber(lineNumber + 1)
+                                                                             .withTarget(fqn)
+                                                                             .withResourcePath(file.getPath())
+                                                                             .withResourceProjectPath(fileProjectPath);
+
+            BreakpointDto breakpointDto = dtoFactory.createDto(BreakpointDto.class).withLocation(locationDto).withEnabled(true);
 
             Promise<Void> promise = service.addBreakpoint(debugSessionDto.getId(), breakpointDto);
             promise.then(new Operation<Void>() {
@@ -445,6 +444,7 @@ public abstract class AbstractDebugger implements Debugger, DebuggerObservable {
             LocationDto locationDto = dtoFactory.createDto(LocationDto.class);
             locationDto.setLineNumber(b.getLineNumber() + 1);
             locationDto.setResourcePath(b.getPath());
+            locationDto.setResourceProjectPath(b.getFile().getProject().getProjectConfig().getPath());
 
             String target = pathToFqn(b.getFile());
             if (target != null) {
