@@ -10,8 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.ide.api.app;
 
-import org.eclipse.che.api.factory.shared.dto.Factory;
 import org.eclipse.che.ide.api.machine.DevMachine;
+import org.eclipse.che.api.factory.shared.dto.FactoryDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 
 import java.util.List;
@@ -84,14 +84,14 @@ public interface AppContext {
     void setStartUpActions(List<StartUpAction> startUpActions);
 
     /**
-     * Returns {@link Factory} instance which id was set on startup,
+     * Returns {@link FactoryDto} instance which id was set on startup,
      * or {@code null} if no factory was specified.
      *
      * @return loaded factory or {@code null}
      */
-    Factory getFactory();
+    FactoryDto getFactory();
 
-    void setFactory(Factory factory);
+    void setFactory(FactoryDto factory);
 
     /** Returns instance  of the developer machine (where workspace is bound). */
     DevMachine getDevMachine();

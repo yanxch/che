@@ -11,40 +11,24 @@
 package org.eclipse.che.api.factory.shared.dto;
 
 import org.eclipse.che.api.core.factory.FactoryParameter;
+import org.eclipse.che.api.factory.shared.model.OnAppClosed;
 import org.eclipse.che.dto.shared.DTO;
+
+import java.util.List;
 
 import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.OPTIONAL;
 
 /**
- * @author Alexander Garagatyi
+ * Describe IDE look and feel on application closed event.
+ *
+ * @author Sergii Kabashniuk
  */
 @DTO
-public interface ButtonAttributes {
+public interface OnAppClosedDto extends OnAppClosed {
     @FactoryParameter(obligation = OPTIONAL)
-    String getColor();
+    List<ActionDto> getActions();
 
-    void setColor(String color);
+    void setActions(List<ActionDto> actions);
 
-    ButtonAttributes withColor(String color);
-
-    @FactoryParameter(obligation = OPTIONAL)
-    Boolean getCounter();
-
-    void setCounter(Boolean counter);
-
-    ButtonAttributes withCounter(Boolean counter);
-
-    @FactoryParameter(obligation = OPTIONAL)
-    String getLogo();
-
-    void setLogo(String logo);
-
-    ButtonAttributes withLogo(String logo);
-
-    @FactoryParameter(obligation = OPTIONAL)
-    String getStyle();
-
-    void setStyle(String style);
-
-    ButtonAttributes withStyle(String style);
+    OnAppClosedDto withActions(List<ActionDto> actions);
 }

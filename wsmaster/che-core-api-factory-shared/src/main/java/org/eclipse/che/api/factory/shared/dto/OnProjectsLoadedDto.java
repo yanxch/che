@@ -11,34 +11,27 @@
 package org.eclipse.che.api.factory.shared.dto;
 
 import org.eclipse.che.api.core.factory.FactoryParameter;
+import org.eclipse.che.api.factory.shared.model.OnProjectsLoaded;
 import org.eclipse.che.dto.shared.DTO;
+
+import java.util.List;
 
 import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.OPTIONAL;
 
 /**
- * Describes factory button
+ * Describe IDE look and feel on project opened event.
  *
- * @author Alexander Garagatyi
+ * @author Sergii Kabashniuk
  */
 @DTO
-public interface Button {
-    public enum ButtonType {
-        logo, nologo
-    }
-
-    /** Type of the button */
+public interface OnProjectsLoadedDto extends OnProjectsLoaded {
+    /**
+     * @return actions for current event.
+     */
     @FactoryParameter(obligation = OPTIONAL)
-    ButtonType getType();
+    List<ActionDto> getActions();
 
-    void setType(ButtonType type);
+    void setActions(List<ActionDto> actions);
 
-    Button withType(ButtonType type);
-
-    /** Button attributes */
-    @FactoryParameter(obligation = OPTIONAL)
-    ButtonAttributes getAttributes();
-
-    void setAttributes(ButtonAttributes attributes);
-
-    Button withAttributes(ButtonAttributes attributes);
+    OnProjectsLoadedDto withActions(List<ActionDto> actions);
 }

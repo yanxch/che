@@ -11,54 +11,29 @@
 package org.eclipse.che.api.factory.shared.dto;
 
 import org.eclipse.che.api.core.factory.FactoryParameter;
+import org.eclipse.che.api.factory.shared.model.Button;
 import org.eclipse.che.dto.shared.DTO;
 
 import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.OPTIONAL;
 
 /**
- * Describes author of the factory
- *
  * @author Alexander Garagatyi
  */
 @DTO
-public interface Author {
-    /**
-     * Name of the author
-     */
+public interface ButtonDto extends Button {
+    /** Type of the button */
     @FactoryParameter(obligation = OPTIONAL)
-    String getName();
+    ButtonType getType();
 
-    void setName(String name);
+    void setType(ButtonType type);
 
-    Author withName(String name);
+    ButtonDto withType(ButtonType type);
 
-    /**
-     * Email of the author
-     */
+    /** Button attributes */
     @FactoryParameter(obligation = OPTIONAL)
-    String getEmail();
+    ButtonAttributesDto getAttributes();
 
-    void setEmail(String email);
+    void setAttributes(ButtonAttributesDto attributes);
 
-    Author withEmail(String email);
-
-    /**
-     * Id of user that create factory, set by the server
-     */
-    @FactoryParameter(obligation = OPTIONAL, setByServer = true)
-    String getUserId();
-
-    void setUserId(String userId);
-
-    Author withUserId(String userId);
-
-    /**
-     * @return Creation time of factory, set by the server (in milliseconds, from Unix epoch, no timezone)
-     */
-    @FactoryParameter(obligation = OPTIONAL, setByServer = true)
-    Long getCreated();
-
-    void setCreated(Long created);
-
-    Author withCreated(Long created);
+    ButtonDto withAttributes(ButtonAttributesDto attributes);
 }

@@ -11,6 +11,8 @@
 package org.eclipse.che.api.factory.shared.dto;
 
 import org.eclipse.che.api.core.factory.FactoryParameter;
+import org.eclipse.che.api.core.rest.shared.dto.Hyperlinks;
+import org.eclipse.che.api.factory.shared.model.FactoryV4_0;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 
 import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.MANDATORY;
@@ -20,94 +22,71 @@ import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.OPTIO
  * Factory of version 4.0
  *
  * @author Max Shaposhnik
- *
  */
-public interface FactoryV4_0 {
-
-    /**
-     * @return Version for Codenvy Factory API.
-     */
+public interface FactoryDto extends FactoryV4_0, Hyperlinks {
     @FactoryParameter(obligation = MANDATORY)
-    String getV();
+    String getVersion();
 
     void setV(String v);
 
-    FactoryV4_0 withV(String v);
+    FactoryDto withV(String v);
 
 
-    /**
-     * Describes parameters of the workspace that should be used for factory
-     */
     @FactoryParameter(obligation = MANDATORY)
     WorkspaceConfigDto getWorkspace();
 
     void setWorkspace(WorkspaceConfigDto workspace);
 
-    FactoryV4_0 withWorkspace(WorkspaceConfigDto workspace);
+    FactoryDto withWorkspace(WorkspaceConfigDto workspace);
 
 
-    /**
-     * Describe restrictions of the factory
-     */
     @FactoryParameter(obligation = OPTIONAL, trackedOnly = true)
-    Policies getPolicies();
+    PoliciesDto getPolicies();
 
-    void setPolicies(Policies policies);
+    void setPolicies(PoliciesDto policies);
 
-    FactoryV4_0 withPolicies(Policies policies);
+    FactoryDto withPolicies(PoliciesDto policies);
 
 
-    /**
-     * Identifying information of author
-     */
     @FactoryParameter(obligation = OPTIONAL)
-    Author getCreator();
+    AuthorDto getCreator();
 
-    void setCreator(Author creator);
+    void setCreator(AuthorDto creator);
 
-    FactoryV4_0 withCreator(Author creator);
+    FactoryDto withCreator(AuthorDto creator);
 
 
     /**
      * Describes factory button
      */
     @FactoryParameter(obligation = OPTIONAL)
-    Button getButton();
+    ButtonDto getButton();
 
-    void setButton(Button button);
+    void setButton(ButtonDto button);
 
-    FactoryV4_0 withButton(Button button);
+    FactoryDto withButton(ButtonDto button);
 
 
-    /**
-     * Describes ide look and feel.
-     */
     @FactoryParameter(obligation = OPTIONAL)
-    Ide getIde();
+    IdeDto getIde();
 
-    void setIde(Ide ide);
+    void setIde(IdeDto ide);
 
-    FactoryV4_0 withIde(Ide ide);
+    FactoryDto withIde(IdeDto ide);
 
 
-    /**
-     * @return - id of stored factory object
-     */
     @FactoryParameter(obligation = OPTIONAL, setByServer = true)
     String getId();
 
     void setId(String id);
 
-    FactoryV4_0 withId(String id);
-    
-    /**
-     * @return - name of stored factory object
-     */
+    FactoryDto withId(String id);
+
     @FactoryParameter(obligation = OPTIONAL)
     String getName();
 
     void setName(String name);
 
-    FactoryV4_0 withName(String name);
+    FactoryDto withName(String name);
 
 }

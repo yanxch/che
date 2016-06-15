@@ -14,10 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.api.factory.shared.dto.Factory;
-import org.eclipse.che.ide.api.machine.DevMachine;
-import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
-import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
+import org.eclipse.che.api.factory.shared.dto.FactoryDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.ide.api.app.AppContext;
@@ -54,7 +51,7 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
     private WorkspaceDto        workspace;
     private CurrentProject      currentProject;
     private CurrentUser         currentUser;
-    private Factory             factory;
+    private FactoryDto          factory;
     private DevMachine          devMachine;
     private String              projectsRoot;
     /**
@@ -147,12 +144,12 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
     }
 
     @Override
-    public Factory getFactory() {
+    public FactoryDto getFactory() {
         return factory;
     }
 
     @Override
-    public void setFactory(Factory factory) {
+    public void setFactory(FactoryDto factory) {
         this.factory = factory;
     }
 

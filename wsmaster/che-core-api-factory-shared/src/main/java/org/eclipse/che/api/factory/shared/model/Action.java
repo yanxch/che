@@ -8,29 +8,26 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.factory.shared.dto;
+package org.eclipse.che.api.factory.shared.model;
 
-import org.eclipse.che.api.core.factory.FactoryParameter;
-import org.eclipse.che.dto.shared.DTO;
-
-import java.util.List;
-
-import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.OPTIONAL;
+import java.util.Map;
 
 /**
- * Describe IDE look and feel on application loaded event.
+ * Describe ide action.
  *
  * @author Sergii Kabashniuk
  */
-@DTO
-public interface OnAppLoaded {
+public interface Action {
     /**
-     * @return actions for current event.
+     * Action Id
+     *
+     * @return id of action.
      */
-    @FactoryParameter(obligation = OPTIONAL)
-    List<Action> getActions();
+    String getId();
 
-    void setActions(List<Action> actions);
-
-    OnAppLoaded withActions(List<Action> actions);
+    /**
+     *
+     * @return Action properties
+     */
+    Map<String, String> getProperties();
 }

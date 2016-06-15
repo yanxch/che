@@ -10,8 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.api.factory.server.snippet;
 
-import org.eclipse.che.api.factory.shared.dto.Button;
-import org.eclipse.che.api.factory.shared.dto.Factory;
+import org.eclipse.che.api.factory.server.model.impl.FactoryImpl;
+import org.eclipse.che.api.factory.shared.model.Button;
 
 import javax.ws.rs.core.UriBuilder;
 import java.util.Formatter;
@@ -30,7 +30,7 @@ public class SnippetGenerator {
                       UriBuilder.fromUri(baseUrl).replacePath("factory").queryParam("id", factoryId).build().toString());
     }
 
-    public static String generateMarkdownSnippet(String baseUrl, Factory factory, String imageId) {
+    public static String generateMarkdownSnippet(String baseUrl, FactoryImpl factory, String imageId) {
         String imgUrl;
 
         if (factory.getButton() == null) {

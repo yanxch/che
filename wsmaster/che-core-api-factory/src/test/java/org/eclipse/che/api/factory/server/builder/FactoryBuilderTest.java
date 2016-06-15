@@ -19,7 +19,7 @@ import org.eclipse.che.api.factory.shared.dto.Action;
 import org.eclipse.che.api.factory.shared.dto.Author;
 import org.eclipse.che.api.factory.shared.dto.Button;
 import org.eclipse.che.api.factory.shared.dto.ButtonAttributes;
-import org.eclipse.che.api.factory.shared.dto.Factory;
+import org.eclipse.che.api.factory.shared.dto.FactoryDto;
 import org.eclipse.che.api.factory.shared.dto.Ide;
 import org.eclipse.che.api.factory.shared.dto.OnAppClosed;
 import org.eclipse.che.api.factory.shared.dto.OnAppLoaded;
@@ -55,7 +55,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 
 /**
- * Tests for {@link org.eclipse.che.api.factory.shared.dto.Factory}
+ * Tests for {@link FactoryDto}
  *
  * @author Alexander Garagatyi
  * @author Sergii Kabashniuk
@@ -68,9 +68,9 @@ public class FactoryBuilderTest {
 
     private FactoryBuilder factoryBuilder;
 
-    private Factory actual;
+    private FactoryDto actual;
 
-    private Factory expected;
+    private FactoryDto expected;
 
     @Mock
     private SourceStorageParametersValidator sourceProjectParametersValidator;
@@ -80,7 +80,7 @@ public class FactoryBuilderTest {
         factoryBuilder = new FactoryBuilder(sourceProjectParametersValidator);
         actual = prepareFactory();
 
-        expected = dto.createDto(Factory.class);
+        expected = dto.createDto(FactoryDto.class);
     }
 
     @Test
@@ -97,14 +97,14 @@ public class FactoryBuilderTest {
 
     @Test(expectedExceptions = ApiException.class, dataProvider = "setByServerParamsProvider",
           expectedExceptionsMessageRegExp = "You have provided an invalid parameter .* for this version of Factory parameters.*")
-    public void shouldNotAllowUsingParamsThatCanBeSetOnlyByServer(Factory factory)
+    public void shouldNotAllowUsingParamsThatCanBeSetOnlyByServer(FactoryDto factory)
             throws InvocationTargetException, IllegalAccessException, ApiException, NoSuchMethodException {
         factoryBuilder.checkValid(factory);
     }
 
     @DataProvider(name = "setByServerParamsProvider")
     public static Object[][] setByServerParamsProvider() throws URISyntaxException, IOException, NoSuchMethodException {
-        Factory factory = prepareFactory();
+        FactoryDto factory = prepareFactory();
         return new Object[][] {
                 {dto.clone(factory).withId("id")},
                 {dto.clone(factory).withCreator(dto.createDto(Author.class)
@@ -115,7 +115,7 @@ public class FactoryBuilderTest {
     }
 
     @Test(expectedExceptions = ApiException.class, dataProvider = "notValidParamsProvider")
-    public void shouldNotAllowUsingNotValidParams(Factory factory)
+    public void shouldNotAllowUsingNotValidParams(FactoryDto factory)
             throws InvocationTargetException, IllegalAccessException, ApiException, NoSuchMethodException {
         factoryBuilder.checkValid(factory);
     }
@@ -130,7 +130,7 @@ public class FactoryBuilderTest {
     public void shouldBeAbleToValidateV4_0WithTrackedParamsWithoutAccountIdIfOnPremisesIsEnabled() throws Exception {
         factoryBuilder = new FactoryBuilder(sourceProjectParametersValidator);
 
-        Factory factory = prepareFactory()
+        FactoryDto factory = prepareFactory()
                 .withPolicies(dto.createDto(Policies.class)
                                  .withReferer("referrer")
                                  .withSince(123L)
@@ -139,7 +139,7 @@ public class FactoryBuilderTest {
         factoryBuilder.checkValid(factory);
     }
 
-    private static Factory prepareFactory() {
+    private static FactoryDto prepareFactory() {
         ProjectConfigDto project = dto.createDto(ProjectConfigDto.class)
                                       .withSource(dto.createDto(SourceStorageDto.class)
                                                      .withType("git")
@@ -207,7 +207,7 @@ public class FactoryBuilderTest {
                                                                                      "NEW_VALUE_2",
                                                                                      "replaceMode",
                                                                                      "mode")))));
-        return dto.createDto(Factory.class)
+        return dto.createDto(FactoryDto.class)
                   .withV("4.0")
                   .withWorkspace(workspaceConfig)
                   .withCreator(dto.createDto(Author.class)

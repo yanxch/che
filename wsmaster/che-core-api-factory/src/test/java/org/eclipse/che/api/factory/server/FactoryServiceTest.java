@@ -24,7 +24,7 @@ import org.eclipse.che.api.factory.server.impl.SourceStorageParametersValidator;
 import org.eclipse.che.api.factory.shared.dto.Author;
 import org.eclipse.che.api.factory.shared.dto.Button;
 import org.eclipse.che.api.factory.shared.dto.ButtonAttributes;
-import org.eclipse.che.api.factory.shared.dto.Factory;
+import org.eclipse.che.api.factory.shared.dto.FactoryDto;
 import org.eclipse.che.api.machine.shared.dto.CommandDto;
 import org.eclipse.che.api.user.server.dao.User;
 import org.eclipse.che.api.user.server.dao.UserDao;
@@ -187,12 +187,12 @@ public class FactoryServiceTest {
     @Test
     public void shouldReturnSavedFactoryIfUserDidNotUseSpecialMethod() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git").withId(CORRECT_FACTORY_ID);
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git").withId(CORRECT_FACTORY_ID);
         factory.setCreator(dto.createDto(Author.class).withUserId(userId).withName(JettyHttpServer.ADMIN_USER_NAME));
-        Factory expected = dto.clone(factory);
+        FactoryDto expected = dto.clone(factory);
 
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
-        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(Collections.<FactoryImage>emptySet());
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
+        when(factoryDao.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(Collections.<FactoryImage>emptySet());
 
         // when
         Response response = given().when()
@@ -200,8 +200,8 @@ public class FactoryServiceTest {
 
         // then
         assertEquals(response.getStatusCode(), 200);
-        Factory responseFactory = dto.createDtoFromJson(response.getBody()
-                                                                .asInputStream(), Factory.class);
+        FactoryDto responseFactory = dto.createDtoFromJson(response.getBody()
+                                                                .asInputStream(), FactoryDto.class);
         responseFactory.setLinks(Collections.<Link>emptyList());
         assertEquals(responseFactory, expected);
     }
@@ -210,15 +210,15 @@ public class FactoryServiceTest {
     @Test
     public void shouldBeAbleToSaveFactory() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
         URL resource = Thread.currentThread().getContextClassLoader()
                              .getResource("100x100_image.jpeg");
         assertNotNull(resource);
         Path path = Paths.get(resource.toURI());
 
         FactorySaveAnswer factorySaveAnswer = new FactorySaveAnswer();
-        when(factoryStore.saveFactory(any(Factory.class), anySetOf(FactoryImage.class))).then(factorySaveAnswer);
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).then(factorySaveAnswer);
+        when(factoryDao.saveFactory(any(FactoryDto.class), anySetOf(FactoryImage.class))).then(factorySaveAnswer);
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).then(factorySaveAnswer);
 
         // when, then
         Response response = given().auth()
@@ -229,7 +229,7 @@ public class FactoryServiceTest {
                                    .post("/private" + SERVICE_PATH);
 
         assertEquals(response.getStatusCode(), 200);
-        Factory responseFactory = dto.createDtoFromJson(response.getBody().asInputStream(), Factory.class);
+        FactoryDto responseFactory = dto.createDtoFromJson(response.getBody().asInputStream(), FactoryDto.class);
         boolean found = false;
         for (Link link : responseFactory.getLinks()) {
             if (link.getRel().equals("image") && link.getProduces().equals("image/jpeg") && !link.getHref().isEmpty())
@@ -257,15 +257,15 @@ public class FactoryServiceTest {
     @Test
     public void shouldBeAbleToSaveFactoryWithOutImage(ITestContext context) throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
 
         Link expectedCreateProject =
                 dto.createDto(Link.class).withMethod(HttpMethod.GET).withProduces("text/html").withRel("accept")
                    .withHref(getServerUrl(context) + "/f?id=" + CORRECT_FACTORY_ID);
 
         FactorySaveAnswer factorySaveAnswer = new FactorySaveAnswer();
-        when(factoryStore.saveFactory(any(Factory.class), anySetOf(FactoryImage.class))).then(factorySaveAnswer);
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).then(factorySaveAnswer);
+        when(factoryDao.saveFactory(any(FactoryDto.class), anySetOf(FactoryImage.class))).then(factorySaveAnswer);
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).then(factorySaveAnswer);
 
         // when, then
         Response response =
@@ -275,7 +275,7 @@ public class FactoryServiceTest {
 
         // then
         assertEquals(response.getStatusCode(), 200);
-        Factory responseFactory = dto.createDtoFromJson(response.getBody().asString(), Factory.class);
+        FactoryDto responseFactory = dto.createDtoFromJson(response.getBody().asString(), FactoryDto.class);
         assertTrue(responseFactory.getLinks().contains(
                 dto.createDto(Link.class).withMethod(HttpMethod.GET).withProduces(MediaType.APPLICATION_JSON)
                    .withHref(getServerUrl(context) + "/rest/private/factory/" +
@@ -364,17 +364,17 @@ public class FactoryServiceTest {
             assertTrue(expectedLinks.contains(testLink));
         }
 
-        verify(factoryStore).saveFactory(Matchers.<Factory>any(), eq(Collections.<FactoryImage>emptySet()));
+        verify(factoryDao).saveFactory(Matchers.<FactoryDto>any(), eq(Collections.<FactoryImage>emptySet()));
     }
 
     @Test
     public void shouldBeAbleToSaveFactoryWithOutImageWithOrgId() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
 
         FactorySaveAnswer factorySaveAnswer = new FactorySaveAnswer();
-        when(factoryStore.saveFactory(any(Factory.class), anySetOf(FactoryImage.class))).then(factorySaveAnswer);
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).then(factorySaveAnswer);
+        when(factoryDao.saveFactory(any(FactoryDto.class), anySetOf(FactoryImage.class))).then(factorySaveAnswer);
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).then(factorySaveAnswer);
 
         // when, then
         Response response =
@@ -389,11 +389,11 @@ public class FactoryServiceTest {
     @Test
     public void shouldBeAbleToSaveFactoryWithSetImageFieldButWithOutImageContent() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
 
         FactorySaveAnswer factorySaveAnswer = new FactorySaveAnswer();
-        when(factoryStore.saveFactory(any(Factory.class), anySetOf(FactoryImage.class))).then(factorySaveAnswer);
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).then(factorySaveAnswer);
+        when(factoryDao.saveFactory(any(FactoryDto.class), anySetOf(FactoryImage.class))).then(factorySaveAnswer);
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).then(factorySaveAnswer);
 
         // when, then
         given().auth().basic(JettyHttpServer.ADMIN_USER_NAME, JettyHttpServer.ADMIN_USER_PASSWORD)//
@@ -402,19 +402,19 @@ public class FactoryServiceTest {
                .expect().statusCode(200)
                .when().post("/private" + SERVICE_PATH);
 
-        verify(factoryStore).saveFactory(Matchers.<Factory>any(), eq(Collections.<FactoryImage>emptySet()));
+        verify(factoryDao).saveFactory(Matchers.<FactoryDto>any(), eq(Collections.<FactoryImage>emptySet()));
     }
 
     @Test
     public void shouldReturnStatus409OnSaveFactoryIfImageHasUnsupportedMediaType() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
         URL resource = Thread.currentThread().getContextClassLoader().getResource("100x100_image.jpeg");
         assertNotNull(resource);
         Path path = Paths.get(resource.toURI());
 
-        when(factoryStore.saveFactory(any(Factory.class), anySetOf(FactoryImage.class))).thenReturn(CORRECT_FACTORY_ID);
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
+        when(factoryDao.saveFactory(any(FactoryDto.class), anySetOf(FactoryImage.class))).thenReturn(CORRECT_FACTORY_ID);
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
 
         // when, then
         Response response = given().auth()
@@ -433,7 +433,7 @@ public class FactoryServiceTest {
     public void shouldBeAbleToGetFactory(ITestContext context) throws Exception {
         // given
         String factoryName = "factoryName";
-        Factory factory = dto.createDto(Factory.class);
+        FactoryDto factory = dto.createDto(FactoryDto.class);
         factory.setId(CORRECT_FACTORY_ID);
         factory.setName(factoryName);
         factory.setCreator(dto.createDto(Author.class).withUserId(userId));
@@ -451,16 +451,16 @@ public class FactoryServiceTest {
         expectedCreateProject.setHref(getServerUrl(context) + "/f?id=" + CORRECT_FACTORY_ID);
         expectedCreateProject.setRel("accept");
 
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
-        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(images);
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
+        when(factoryDao.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(images);
 
         // when
         Response response = given().when().get(SERVICE_PATH + "/" + CORRECT_FACTORY_ID);
 
         // then
         assertEquals(response.getStatusCode(), 200);
-        Factory responseFactory = JsonHelper.fromJson(response.getBody().asString(),
-                                                      Factory.class, null);
+        FactoryDto responseFactory = JsonHelper.fromJson(response.getBody().asString(),
+                                                      FactoryDto.class, null);
 
         List<Link> expectedLinks = new ArrayList<>(10);
         expectedLinks.add(expectedCreateProject);
@@ -536,7 +536,7 @@ public class FactoryServiceTest {
     @Test
     public void shouldReturnStatus404OnGetFactoryWithIllegalId() throws Exception {
         // given
-        doThrow(new NotFoundException(format("Factory with id %s is not found.", ILLEGAL_FACTORY_ID))).when(factoryStore)
+        doThrow(new NotFoundException(format("Factory with id %s is not found.", ILLEGAL_FACTORY_ID))).when(factoryDao)
                                                                                                       .getFactory(anyString());
 
         // when, then
@@ -558,7 +558,7 @@ public class FactoryServiceTest {
         byte[] imageContent = Files.readAllBytes(path);
         FactoryImage image = new FactoryImage(imageContent, "image/jpeg", "imageName");
 
-        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(Collections.singletonList(image)));
+        when(factoryDao.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(Collections.singletonList(image)));
 
         // when
         Response response = given().when().get(SERVICE_PATH + "/" + CORRECT_FACTORY_ID + "/image?imgId=imageName");
@@ -579,7 +579,7 @@ public class FactoryServiceTest {
         byte[] imageContent = Files.readAllBytes(path);
         FactoryImage image = new FactoryImage(imageContent, "image/jpeg", "imageName");
 
-        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(Collections.singletonList(image)));
+        when(factoryDao.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(Collections.singletonList(image)));
 
         // when
         Response response = given().when().get(SERVICE_PATH + "/" + CORRECT_FACTORY_ID + "/image");
@@ -594,7 +594,7 @@ public class FactoryServiceTest {
     @Test
     public void shouldReturnStatus404OnGetFactoryImageWithIllegalId() throws Exception {
         // given
-        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>());
+        when(factoryDao.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>());
 
         // when, then
         Response response = given().expect()
@@ -609,7 +609,7 @@ public class FactoryServiceTest {
     @Test
     public void shouldResponse404OnGetImageIfFactoryDoesNotExist() throws Exception {
         // given
-        doThrow(new NotFoundException(format("Factory with id %s is not found.", ILLEGAL_FACTORY_ID))).when(factoryStore)
+        doThrow(new NotFoundException(format("Factory with id %s is not found.", ILLEGAL_FACTORY_ID))).when(factoryDao)
                                                                                                       .getFactoryImages(anyString(),
                                                                                                                         anyString());
 
@@ -626,8 +626,8 @@ public class FactoryServiceTest {
     @Test
     public void shouldBeAbleToReturnUrlSnippet(ITestContext context) throws Exception {
         // given
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(dto.createDto
-                (Factory.class));
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(dto.createDto
+                (FactoryDto.class));
 
         // when, then
         given().expect()
@@ -641,8 +641,8 @@ public class FactoryServiceTest {
     @Test
     public void shouldBeAbleToReturnUrlSnippetIfTypeIsNotSet(ITestContext context) throws Exception {
         // given
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(dto.createDto
-                (Factory.class));
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(dto.createDto
+                (FactoryDto.class));
 
         // when, then
         given().expect()
@@ -656,7 +656,7 @@ public class FactoryServiceTest {
     @Test
     public void shouldBeAbleToReturnHtmlSnippet(ITestContext context) throws Exception {
         // given
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(dto.createDto(Factory.class));
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(dto.createDto(FactoryDto.class));
 
         // when, then
         Response response = given().expect()
@@ -675,7 +675,7 @@ public class FactoryServiceTest {
         SourceStorageDto storageDto = dto.createDto(SourceStorageDto.class)
                                   .withType("git")
                                   .withLocation("http://github.com/codenvy/platform-api.git");
-        Factory factory = dto.createDto(Factory.class)
+        FactoryDto factory = dto.createDto(FactoryDto.class)
                              .withV("4.0")
                              .withWorkspace(dto.createDto(WorkspaceConfigDto.class)
                                                .withProjects(Collections.singletonList(dto.createDto(ProjectConfigDto.class)
@@ -687,8 +687,8 @@ public class FactoryServiceTest {
         FactoryImage image = new FactoryImage();
         image.setName(imageName);
 
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
-        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(Collections.singletonList(image)));
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
+        when(factoryDao.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(Collections.singletonList(image)));
         // when, then
         given().expect()
                .statusCode(200)
@@ -708,7 +708,7 @@ public class FactoryServiceTest {
     public void shouldBeAbleToReturnMarkdownSnippetForFactory2WithImage(ITestContext context) throws Exception {
         // given
         String imageName = "1241234";
-        Factory factory = dto.createDto(Factory.class);
+        FactoryDto factory = dto.createDto(FactoryDto.class);
         factory.setId(CORRECT_FACTORY_ID);
         factory.setV("2.0");
         factory.setButton(dto.createDto(Button.class).withType(Button.ButtonType.logo));
@@ -716,8 +716,8 @@ public class FactoryServiceTest {
         FactoryImage image = new FactoryImage();
         image.setName(imageName);
 
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
-        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(Collections.singletonList(image)));
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
+        when(factoryDao.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(Collections.singletonList(image)));
         // when, then
         given().expect()
                .statusCode(200)
@@ -735,14 +735,14 @@ public class FactoryServiceTest {
     @Test
     public void shouldBeAbleToReturnMarkdownSnippetForFactory1WithoutImage(ITestContext context) throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git")
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git")
                 .withId(CORRECT_FACTORY_ID)
                 .withButton(dto.createDto(Button.class)
                                .withType(Button.ButtonType.nologo)
                                .withAttributes(dto.createDto(ButtonAttributes.class)
                                                   .withColor("white")));
 
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
         // when, then
         given().expect()
                .statusCode(200)
@@ -760,8 +760,8 @@ public class FactoryServiceTest {
     @Test
     public void shouldNotBeAbleToGetMarkdownSnippetForFactory1WithoutStyle() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git").withId(CORRECT_FACTORY_ID);
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git").withId(CORRECT_FACTORY_ID);
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
         // when, then
         Response response = given().expect()
                                    .statusCode(400)
@@ -775,14 +775,14 @@ public class FactoryServiceTest {
     @Test
     public void shouldNotBeAbleToGetMarkdownSnippetForFactory2WithoutColor() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git")
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git")
                 .withId(CORRECT_FACTORY_ID)
                 .withButton(dto.createDto(Button.class)
                                .withType(Button.ButtonType.nologo)
                                .withAttributes(dto.createDto(ButtonAttributes.class)
                                                   .withColor(null)));
 
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
         // when, then
         Response response = given().expect()
                                    .statusCode(400)
@@ -796,7 +796,7 @@ public class FactoryServiceTest {
     @Test
     public void shouldResponse404OnGetSnippetIfFactoryDoesNotExist() throws Exception {
         // given
-        doThrow(new NotFoundException("Factory URL with id " + ILLEGAL_FACTORY_ID + " is not found.")).when(factoryStore)
+        doThrow(new NotFoundException("Factory URL with id " + ILLEGAL_FACTORY_ID + " is not found.")).when(factoryDao)
                                                                                                       .getFactory(anyString());
 
         // when, then
@@ -816,8 +816,8 @@ public class FactoryServiceTest {
     @Test
     public void shouldBeAbleToRemoveAFactory() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
 
         // when, then
         Response response = given().auth()
@@ -829,7 +829,7 @@ public class FactoryServiceTest {
         assertEquals(response.getStatusCode(), 204);
 
         // check there was a call on the remove operation with expected ID
-        verify(factoryStore).removeFactory(CORRECT_FACTORY_ID);
+        verify(factoryDao).removeFactory(CORRECT_FACTORY_ID);
     }
 
     /**
@@ -837,7 +837,7 @@ public class FactoryServiceTest {
      */
     @Test
     public void shouldNotBeAbleToRemoveNotExistingFactory() throws Exception {
-        doThrow(new NotFoundException("Not found")).when(factoryStore).removeFactory(anyString());
+        doThrow(new NotFoundException("Not found")).when(factoryDao).removeFactory(anyString());
 
         // when, then
         Response response = given().auth()
@@ -856,12 +856,12 @@ public class FactoryServiceTest {
     public void shouldBeAbleToUpdateFactory() throws Exception {
 
         // given
-        Factory beforeFactory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git")
+        FactoryDto beforeFactory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git")
                 .withCreator(dto.createDto(Author.class).withCreated(System.currentTimeMillis()));
         beforeFactory.setId(CORRECT_FACTORY_ID);
-        Factory afterFactory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api2.git");
+        FactoryDto afterFactory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api2.git");
 
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(beforeFactory);
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(beforeFactory);
 
         // when, then
         Response response = given().auth()
@@ -873,12 +873,12 @@ public class FactoryServiceTest {
 
         assertEquals(response.getStatusCode(), 200);
 
-        Factory responseFactory = dto.createDtoFromJson(response.getBody().asInputStream(), Factory.class);
+        FactoryDto responseFactory = dto.createDtoFromJson(response.getBody().asInputStream(), FactoryDto.class);
         assertEquals(responseFactory.getWorkspace(), afterFactory.getWorkspace());
 
 
         // check there was a call on the update operation with expected ID
-        verify(factoryStore).updateFactory(eq(CORRECT_FACTORY_ID), any(Factory.class));
+        verify(factoryDao).updateFactory(eq(CORRECT_FACTORY_ID), any(FactoryDto.class));
     }
 
     /**
@@ -887,8 +887,8 @@ public class FactoryServiceTest {
     @Test
     public void shouldNotBeAbleToUpdateAnUnknownFactory() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
-        doThrow(new NotFoundException(format("Factory with id %s is not found.", ILLEGAL_FACTORY_ID))).when(factoryStore)
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git");
+        doThrow(new NotFoundException(format("Factory with id %s is not found.", ILLEGAL_FACTORY_ID))).when(factoryDao)
                                                                                                       .getFactory(anyString());
 
         // when, then
@@ -925,7 +925,7 @@ public class FactoryServiceTest {
     @Test(dataProvider = "badSnippetTypeProvider")
     public void shouldResponse409OnGetSnippetIfTypeIsIllegal(String type) throws Exception {
         // given
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(dto.createDto(Factory.class));
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(dto.createDto(FactoryDto.class));
 
         // when, then
         Response response = given().expect()
@@ -964,23 +964,23 @@ public class FactoryServiceTest {
     @Test
     public void shouldFindByAttribute() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git")
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/platform-api.git")
                 .withId(CORRECT_FACTORY_ID)
-                .withCreator(dto.createDto(Author.class).withUserId("uid-123"));
+                .withCreator(dto.createDto(Author.class).withAccountId("testorg"));
 
-        List<Pair<String, String>> expected = Collections.singletonList(Pair.of("creator.userid", "uid-123"));
-        when(factoryStore.findByAttribute(anyInt(), anyInt(), eq(expected))).thenReturn(
+        List<Pair<String, String>> expected = Collections.singletonList(Pair.of("creator.accountid", "testorg"));
+        when(factoryDao.findByAttribute(anyInt(), anyInt(), eq(expected))).thenReturn(
                 Arrays.asList(factory, factory));
 
         // when
         Response response = given().auth()
                                    .basic(JettyHttpServer.ADMIN_USER_NAME, JettyHttpServer.ADMIN_USER_PASSWORD)
                                    .when()
-                                   .get("/private" + SERVICE_PATH + "/find?creator.userid=uid-123");
+                                   .get("/private" + SERVICE_PATH + "/find?creator.accountid=testorg");
 
         // then
         assertEquals(response.getStatusCode(), 200);
-        List<Factory> responseFactories = dto.createListDtoFromJson(response.getBody().asString(), Factory.class);
+        List<FactoryDto> responseFactories = dto.createListDtoFromJson(response.getBody().asString(), FactoryDto.class);
         assertEquals(responseFactories.size(), 2);
     }
 
@@ -1025,7 +1025,7 @@ public class FactoryServiceTest {
 
         // then
         assertEquals(response.getStatusCode(), 200);
-        Factory result = dto.createDtoFromJson(response.getBody().asString(), Factory.class);
+        FactoryDto result = dto.createDtoFromJson(response.getBody().asString(), FactoryDto.class);
         assertEquals(result.getWorkspace().getProjects().size(), 2);
         assertEquals(result.getWorkspace().getName(), usersWorkspace.getConfig().getName());
         assertEquals(result.getWorkspace().getEnvironments().get(0).toString(),
@@ -1071,18 +1071,18 @@ public class FactoryServiceTest {
 
         // then
         assertEquals(response.getStatusCode(), 200);
-        Factory result = dto.createDtoFromJson(response.getBody().asString(), Factory.class);
+        FactoryDto result = dto.createDtoFromJson(response.getBody().asString(), FactoryDto.class);
         assertEquals(result.getWorkspace().getProjects().size(), 2);
     }
 
     @Test
     public void shouldThrowServerExceptionDuringSaveFactory() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/che-core.git");
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/che-core.git");
         URL resource = Thread.currentThread().getContextClassLoader().getResource("100x100_image.jpeg");
         assertNotNull(resource);
         Path path = Paths.get(resource.toURI());
-        doThrow(IOException.class).when(factoryStore).saveFactory(any(Factory.class), anySetOf(FactoryImage.class));
+        doThrow(IOException.class).when(factoryDao).saveFactory(any(FactoryDto.class), anySetOf(FactoryImage.class));
 
         // when, then
         Response response = given().auth()
@@ -1114,12 +1114,12 @@ public class FactoryServiceTest {
     @Test
     public void shouldSaveFactoryWithoutImages() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/che-core.git");
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/che-core.git");
         factory.withCreator(dto.createDto(Author.class).withName("username"));
         FactorySaveAnswer factorySaveAnswer = new FactorySaveAnswer();
 
-        when(factoryStore.saveFactory(any(Factory.class), anySetOf(FactoryImage.class))).then(factorySaveAnswer);
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).then(factorySaveAnswer);
+        when(factoryDao.saveFactory(any(FactoryDto.class), anySetOf(FactoryImage.class))).then(factorySaveAnswer);
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).then(factorySaveAnswer);
 
         // when, then
         Response response = given().auth()
@@ -1133,7 +1133,7 @@ public class FactoryServiceTest {
     @Test
     public void shouldThrowBadRequestExceptionWhenTriedToStoreInvalidFactory() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/che-core.git");
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/che-core.git");
         factory.withCreator(dto.createDto(Author.class).withName("username"));
 
         // when, then
@@ -1148,9 +1148,9 @@ public class FactoryServiceTest {
     @Test
     public void shouldThrowServerExceptionWhenImpossibleCreateLinksForSavedFactory() throws Exception {
         // given
-        Factory factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/che-core.git");
+        FactoryDto factory = prepareFactoryWithGivenStorage("git", "http://github.com/codenvy/che-core.git");
         factory.withCreator(dto.createDto(Author.class).withName("username"));
-        doThrow(UnsupportedEncodingException.class).when(factoryStore).getFactory(anyString());
+        doThrow(UnsupportedEncodingException.class).when(factoryDao).getFactory(anyString());
 
         // when, then
         Response response = given().auth()
@@ -1164,7 +1164,7 @@ public class FactoryServiceTest {
     @Test
     public void shouldThrowExceptionDuringGetFactory() throws Exception {
         // given
-        doThrow(UnsupportedEncodingException.class).when(factoryStore).getFactoryImages(anyString(), anyString());
+        doThrow(UnsupportedEncodingException.class).when(factoryDao).getFactoryImages(anyString(), anyString());
 
         // when, then
         Response response = given().auth()
@@ -1176,12 +1176,12 @@ public class FactoryServiceTest {
     @Test
     public void shouldGetFactoryAndValidateItOnAccept() throws Exception {
         // given
-        Factory factory = dto.createDto(Factory.class)
+        FactoryDto factory = dto.createDto(FactoryDto.class)
                              .withCreator(dto.createDto(Author.class)
                                              .withName(JettyHttpServer.ADMIN_USER_NAME)
                                              .withUserId(userId))
                              .withId(CORRECT_FACTORY_ID);
-        when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
+        when(factoryDao.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
         doNothing().when(acceptValidator).validateOnAccept(factory);
 
         // when, then
@@ -1194,18 +1194,18 @@ public class FactoryServiceTest {
     @Test
     public void should() throws Exception {
         // given
-        Factory factory = dto.createDto(Factory.class)
+        FactoryDto factory = dto.createDto(FactoryDto.class)
                              .withCreator(dto.createDto(Author.class)
                                              .withName(JettyHttpServer.ADMIN_USER_NAME)
                                              .withUserId(userId))
                              .withId(CORRECT_FACTORY_ID);
         factory.setId(CORRECT_FACTORY_ID);
 
-        Factory storedFactory = dto.createDto(Factory.class)
+        FactoryDto storedFactory = dto.createDto(FactoryDto.class)
                                    .withId(CORRECT_FACTORY_ID)
                                    .withCreator(dto.createDto(Author.class).withCreated(10L));
-        when(factoryStore.getFactory(anyString())).thenReturn(storedFactory);
-        doThrow(UnsupportedEncodingException.class).when(factoryStore).getFactoryImages(anyString(), anyString());
+        when(factoryDao.getFactory(anyString())).thenReturn(storedFactory);
+        doThrow(UnsupportedEncodingException.class).when(factoryDao).getFactoryImages(anyString(), anyString());
 
         // when, then
         Response response = given().auth()
@@ -1429,15 +1429,15 @@ public class FactoryServiceTest {
 
     private class FactorySaveAnswer implements Answer<Object> {
 
-        private Factory savedFactory;
+        private FactoryDto savedFactory;
 
         @Override
         public Object answer(InvocationOnMock invocation) throws Throwable {
             if (savedFactory == null) {
-                savedFactory = (Factory)invocation.getArguments()[0];
+                savedFactory = (FactoryDto)invocation.getArguments()[0];
                 return CORRECT_FACTORY_ID;
             }
-            Factory clone = dto.clone(savedFactory);
+            FactoryDto clone = dto.clone(savedFactory);
             assertNotNull(clone);
             return clone.withId(CORRECT_FACTORY_ID);
         }

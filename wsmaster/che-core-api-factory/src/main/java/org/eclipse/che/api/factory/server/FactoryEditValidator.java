@@ -12,7 +12,7 @@ package org.eclipse.che.api.factory.server;
 
 import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.ServerException;
-import org.eclipse.che.api.factory.shared.dto.Factory;
+import org.eclipse.che.api.factory.shared.dto.FactoryDto;
 
 /**
  * This validator ensures that a factory can be edited by a user that has the associated rights (author or account owner)
@@ -31,5 +31,5 @@ public interface FactoryEditValidator {
      * @throws ServerException
      *         when any other error occurs
      */
-    void validate(Factory factory) throws ForbiddenException, ServerException;
+    void validate(FactoryDto factory) throws ForbiddenException, ServerException;
 }

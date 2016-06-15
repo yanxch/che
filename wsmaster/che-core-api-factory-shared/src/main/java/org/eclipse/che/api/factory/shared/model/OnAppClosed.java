@@ -8,16 +8,18 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.factory.server;
+package org.eclipse.che.api.factory.shared.model;
 
-import org.eclipse.che.api.core.ApiException;
-import org.eclipse.che.api.factory.shared.dto.FactoryDto;
+import java.util.List;
 
 /**
- * Convert legacy factory parameter to new the latest format
+ * Describe IDE look and feel on application closed event.
  *
- * @author Alexander Garagatyi
+ * @author Sergii Kabashniuk
  */
-public interface LegacyConverter {
-    void convert(FactoryDto factory) throws ApiException;
+public interface OnAppClosed {
+    /**
+     * @return actions for current event.
+     */
+    List<? extends Action> getActions();
 }

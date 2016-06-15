@@ -26,11 +26,11 @@ import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.rest.Service;
-import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.factory.server.builder.FactoryBuilder;
+import org.eclipse.che.api.factory.server.model.impl.FactoryImpl;
 import org.eclipse.che.api.factory.server.snippet.SnippetGenerator;
-import org.eclipse.che.api.factory.shared.dto.Author;
-import org.eclipse.che.api.factory.shared.dto.Factory;
+import org.eclipse.che.api.factory.shared.dto.AuthorDto;
+import org.eclipse.che.api.factory.shared.dto.FactoryDto;
 import org.eclipse.che.api.user.server.dao.UserDao;
 import org.eclipse.che.api.workspace.server.WorkspaceManager;
 import org.eclipse.che.api.workspace.server.model.impl.ProjectConfigImpl;
@@ -40,6 +40,7 @@ import org.eclipse.che.commons.lang.NameGenerator;
 import org.eclipse.che.commons.lang.Pair;
 import org.eclipse.che.commons.lang.URLEncodedUtils;
 import org.eclipse.che.commons.subject.Subject;
+import org.eclipse.che.dto.server.DtoFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +62,7 @@ import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -77,8 +79,7 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_DISPOSITION;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
-import static org.eclipse.che.api.workspace.server.DtoConverter.asDto;
-import static org.eclipse.che.dto.server.DtoFactory.newDto;
+import static org.eclipse.che.api.factory.server.FactoryLinksHelper.createLinks;
 
 /**
  * Defines Factory REST API.
@@ -112,7 +113,7 @@ public class FactoryService extends Service {
      */
     private final Set<FactoryParametersResolver> factoryParametersResolvers;
 
-    private final FactoryStore           factoryStore;
+    private final FactoryManager         factoryManager;
     private final FactoryEditValidator   factoryEditValidator;
     private final FactoryCreateValidator createValidator;
     private final FactoryAcceptValidator acceptValidator;
@@ -122,7 +123,7 @@ public class FactoryService extends Service {
     private final UserDao                userDao;
 
     @Inject
-    public FactoryService(FactoryStore factoryStore,
+    public FactoryService(FactoryManager factoryManager,
                           FactoryCreateValidator createValidator,
                           FactoryAcceptValidator acceptValidator,
                           FactoryEditValidator factoryEditValidator,
@@ -131,7 +132,7 @@ public class FactoryService extends Service {
                           WorkspaceManager workspaceManager,
                           FactoryParametersResolverHolder factoryParametersResolverHolder,
                           UserDao userDao) {
-        this.factoryStore = factoryStore;
+        this.factoryManager = factoryManager;
         this.createValidator = createValidator;
         this.acceptValidator = acceptValidator;
         this.factoryEditValidator = factoryEditValidator;
@@ -148,8 +149,6 @@ public class FactoryService extends Service {
      *
      * @param formData
      *         http request form data
-     * @param uriInfo
-     *         url context
      * @return stored data
      * @throws ForbiddenException
      *         when the user have no access rights for saving the factory
@@ -170,17 +169,20 @@ public class FactoryService extends Service {
                    @ApiResponse(code = 403, message = "The user does not have appropriate rights for perform factory save"),
                    @ApiResponse(code = 409, message = "Conflict error. Some parameter is missing"),
                    @ApiResponse(code = 500, message = "Unable to identify user from context")})
-    public Factory saveFactory(Iterator<FileItem> formData, @Context UriInfo uriInfo)
-            throws ForbiddenException, ConflictException, BadRequestException, ServerException, NotFoundException {
+    public FactoryDto saveFactory(Iterator<FileItem> formData) throws ForbiddenException,
+                                                                      ConflictException,
+                                                                      BadRequestException,
+                                                                      ServerException,
+                                                                      NotFoundException {
         try {
             final Set<FactoryImage> images = new HashSet<>();
-            Factory factory = null;
+            FactoryDto factoryDto = null;
             while (formData.hasNext()) {
                 final FileItem item = formData.next();
                 switch (item.getFieldName()) {
                     case ("factory"): {
                         try (InputStream factoryData = item.getInputStream()) {
-                            factory = factoryBuilder.build(factoryData);
+                            factoryDto = factoryBuilder.build(factoryData);
                         } catch (JsonSyntaxException e) {
                             throw new BadRequestException("You have provided an invalid JSON.  For more information, please visit: " +
                                                           "http://docs.codenvy.com/user/creating-factories/factory-parameter-reference/");
@@ -202,14 +204,15 @@ public class FactoryService extends Service {
                         //DO NOTHING
                 }
             }
-            if (factory == null) {
+            if (factoryDto == null) {
                 LOG.warn("No factory information found in 'factory' section of multipart form-data.");
                 throw new BadRequestException("No factory information found in 'factory' section of multipart/form-data.");
             }
-            processDefaults(factory);
-            createValidator.validateOnCreate(factory);
-            final Factory storedFactory = factoryStore.getFactory(factoryStore.saveFactory(factory, images));
-            return storedFactory.withLinks(createLinks(storedFactory, images, uriInfo));
+            processDefaults(factoryDto);
+            final FactoryImpl factory = new FactoryImpl(factoryDto, images);
+            createValidator.validateOnCreate(factoryDto);
+            final FactoryImpl storedFactory = factoryManager.createFactory(factory);
+            return injectLinks(DtoConverter.asDto(storedFactory), images, uriInfo);
         } catch (IOException e) {
             LOG.error(e.getLocalizedMessage(), e);
             throw new ServerException(e.getLocalizedMessage(), e);
@@ -241,15 +244,24 @@ public class FactoryService extends Service {
                    @ApiResponse(code = 403, message = "The user does not have appropriate rights for perform factory save"),
                    @ApiResponse(code = 409, message = "Conflict error. Some parameter is missing"),
                    @ApiResponse(code = 500, message = "Internal Server Error")})
-    public Factory saveFactory(Factory factory)
-            throws BadRequestException, ServerException, ForbiddenException, ConflictException, NotFoundException {
+    public FactoryDto saveFactory(FactoryDto factory) throws BadRequestException,
+                                                             ServerException,
+                                                             ForbiddenException,
+                                                             ConflictException,
+                                                             NotFoundException {
         if (factory == null) {
             throw new BadRequestException("Not null factory required");
         }
+        FactoryImpl factoryImp = new FactoryImpl(factory, null);
         processDefaults(factory);
         createValidator.validateOnCreate(factory);
-        final Factory storedFactory = factoryStore.getFactory(factoryStore.saveFactory(factory, null));
-        return storedFactory.withLinks(createLinks(storedFactory, null, uriInfo));
+        FactoryDto factoryDto = DtoConverter.asDto(factoryManager.createFactory(factoryImp));
+        try {
+            factoryDto.withLinks(createLinks(factoryDto, uriInfo, null));
+            return factoryDto;
+        } catch (UnsupportedEncodingException e) {
+            throw new ServerException(e);
+        }
     }
 
     /**
@@ -276,23 +288,25 @@ public class FactoryService extends Service {
                    @ApiResponse(code = 404, message = "Factory not found"),
                    @ApiResponse(code = 400, message = "Failed to validate factory e.g. if it expired"),
                    @ApiResponse(code = 500, message = "Internal server error")})
-    public Factory getFactory(@ApiParam(value = "Factory ID")
-                              @PathParam("id")
-                              String id,
-                              @ApiParam(value = "Whether or not to validate values like it is done when accepting a Factory",
-                                        allowableValues = "true,false",
-                                        defaultValue = "false")
-                              @DefaultValue("false")
-                              @QueryParam("validate")
-                              Boolean validate,
-                              @Context
-                              UriInfo uriInfo) throws NotFoundException, ServerException, BadRequestException {
-        final Factory factory = factoryStore.getFactory(id);
-        factory.setLinks(createLinks(factory, factoryStore.getFactoryImages(id, null), uriInfo));
+    public FactoryDto getFactory(@ApiParam(value = "Factory ID")
+                                 @PathParam("id")
+                                 String id,
+                                 @ApiParam(value = "Whether or not to validate values like it is done when accepting a Factory",
+                                           allowableValues = "true,false",
+                                           defaultValue = "false")
+                                 @DefaultValue("false")
+                                 @QueryParam("validate")
+                                 Boolean validate,
+                                 @Context
+                                 UriInfo uriInfo) throws NotFoundException,
+                                                         ServerException,
+                                                         BadRequestException {
+        final FactoryImpl factory = factoryManager.getById(id);
+        final FactoryDto factoryDto = DtoConverter.asDto(factory);
         if (validate) {
-            acceptValidator.validateOnAccept(factory);
+            acceptValidator.validateOnAccept(factoryDto);
         }
-        return factory;
+        return injectLinks(factoryDto, factoryManager.getFactoryImages(id, null), uriInfo);
     }
 
     /**
@@ -327,31 +341,30 @@ public class FactoryService extends Service {
                    @ApiResponse(code = 409, message = "Not rewritable factory information is present in the new factory"),
                    @ApiResponse(code = 404, message = "Factory to update not found"),
                    @ApiResponse(code = 500, message = "Internal server error")})
-    public Factory updateFactory(@ApiParam(value = "Factory id")
-                                 @PathParam("id")
-                                 String id,
-                                 Factory newFactory)
-            throws BadRequestException, NotFoundException, ServerException, ForbiddenException, ConflictException {
+    public FactoryDto updateFactory(@ApiParam(value = "Factory id")
+                                    @PathParam("id")
+                                    String id,
+                                    FactoryDto newFactory) throws BadRequestException,
+                                                                  NotFoundException,
+                                                                  ServerException,
+                                                                  ForbiddenException,
+                                                                  ConflictException {
         // forbid null update
         if (newFactory == null) {
             throw new BadRequestException("The updating factory shouldn't be null");
         }
-        final Factory existingFactory = factoryStore.getFactory(id);
-
-        // check if the current user has enough access to edit the factory
-        factoryEditValidator.validate(existingFactory);
+        final FactoryImpl existingFactory = factoryManager.getById(id);
 
         processDefaults(newFactory);
         newFactory.getCreator().withCreated(existingFactory.getCreator().getCreated());
         newFactory.setId(existingFactory.getId());
 
+        final FactoryImpl factory = new FactoryImpl(newFactory, null);
         // validate the new content
         createValidator.validateOnCreate(newFactory);
 
-        // access granted, user can update the factory
-        factoryStore.updateFactory(id, newFactory);
-        newFactory.setLinks(createLinks(newFactory, factoryStore.getFactoryImages(id, null), uriInfo));
-        return newFactory;
+        factoryManager.updateFactory(factory);
+        return injectLinks(DtoConverter.asDto(factory), factoryManager.getFactoryImages(id, null), uriInfo);
     }
 
     /**
@@ -381,14 +394,10 @@ public class FactoryService extends Service {
                               @PathParam("id")
                               String id,
                               @Context
-                              UriInfo uriInfo) throws NotFoundException, ServerException, ForbiddenException {
-        final Factory factory = factoryStore.getFactory(id);
-
-        // check if the current user has enough access to edit the factory
-        factoryEditValidator.validate(factory);
-
-        // if validator didn't fail it means that the access is granted
-        factoryStore.removeFactory(id);
+                              UriInfo uriInfo) throws NotFoundException,
+                                                      ServerException,
+                                                      ForbiddenException {
+        factoryManager.removeFactory(id);
     }
 
     /**
@@ -412,14 +421,16 @@ public class FactoryService extends Service {
     @ApiResponses({@ApiResponse(code = 200, message = "OK"),
                    @ApiResponse(code = 400, message = "Failed to validate factory e.g. if it expired"),
                    @ApiResponse(code = 500, message = "Internal server error")})
-    public List<Factory> getFactoryByAttribute(@DefaultValue("0")
-                                               @QueryParam("skipCount")
-                                               Integer skipCount,
-                                               @DefaultValue("30")
-                                               @QueryParam("maxItems")
-                                               Integer maxItems,
-                                               @Context
-                                               UriInfo uriInfo) throws BadRequestException {
+    public List<FactoryDto> getFactoryByAttribute(@DefaultValue("0")
+                                                  @QueryParam("skipCount")
+                                                  Integer skipCount,
+                                                  @DefaultValue("30")
+                                                  @QueryParam("maxItems")
+                                                  Integer maxItems,
+                                                  @Context
+                                                  UriInfo uriInfo) throws BadRequestException,
+                                                                          NotFoundException,
+                                                                          ServerException {
         final List<String> skipParams = Arrays.asList("token", "skipCount", "maxItems");
         final List<Pair<String, String>> queryParams = URLEncodedUtils.parse(uriInfo.getRequestUri()).entrySet().stream()
                                                                       .filter(entry -> !skipParams.contains(entry.getKey()) &&
@@ -431,7 +442,12 @@ public class FactoryService extends Service {
             throw new BadRequestException("Query must contain at least one attribute.");
         }
 
-        return factoryStore.findByAttribute(maxItems, skipCount, queryParams);
+        final List<FactoryDto> result = new ArrayList<>();
+        for (FactoryImpl factory : factoryManager.getByAttribute(maxItems, skipCount, queryParams)) {
+            result.add(injectLinks(DtoConverter.asDto(factory), null, uriInfo));
+        }
+
+        return result;
     }
 
     /**
@@ -463,7 +479,7 @@ public class FactoryService extends Service {
                              @ApiParam(value = "Image id", required = true)
                              @QueryParam("imgId")
                              String imageId) throws NotFoundException {
-        final Set<FactoryImage> factoryImages = factoryStore.getFactoryImages(id, null);
+        final Set<FactoryImage> factoryImages = factoryManager.getFactoryImages(id, null);
         if (isNullOrEmpty(imageId)) {
             if (factoryImages.isEmpty()) {
                 LOG.warn("Default image for factory {} is not found.", id);
@@ -519,8 +535,10 @@ public class FactoryService extends Service {
                                     @QueryParam("type")
                                     String type,
                                     @Context
-                                    UriInfo uriInfo) throws NotFoundException, ServerException, BadRequestException {
-        final Factory factory = factoryStore.getFactory(id);
+                                    UriInfo uriInfo) throws NotFoundException,
+                                                            ServerException,
+                                                            BadRequestException {
+        final FactoryImpl factory = factoryManager.getById(id);
         final String baseUrl = UriBuilder.fromUri(uriInfo.getBaseUri()).replacePath("").build().toString();
         switch (type) {
             case "url":
@@ -530,7 +548,7 @@ public class FactoryService extends Service {
             case "iframe":
                 return SnippetGenerator.generateiFrameSnippet(baseUrl, id);
             case "markdown":
-                final Set<FactoryImage> factoryImages = factoryStore.getFactoryImages(id, null);
+                final Set<FactoryImage> factoryImages = factoryManager.getFactoryImages(id, null);
                 final String imageId = (factoryImages.size() > 0) ? factoryImages.iterator().next().getName() : null;
                 try {
                     return SnippetGenerator.generateMarkdownSnippet(baseUrl, factory, imageId);
@@ -575,11 +593,15 @@ public class FactoryService extends Service {
                                    String workspace,
                                    @ApiParam(value = "Project path")
                                    @QueryParam("path")
-                                   String path)
-            throws ServerException, BadRequestException, NotFoundException, ForbiddenException {
+                                   String path) throws ServerException,
+                                                       BadRequestException,
+                                                       NotFoundException,
+                                                       ForbiddenException {
         final WorkspaceImpl usersWorkspace = workspaceManager.getWorkspace(workspace);
         excludeProjectsWithoutLocation(usersWorkspace, path);
-        final Factory factory = newDto(Factory.class).withWorkspace(asDto(usersWorkspace.getConfig())).withV("4.0");
+        final FactoryDto factory = DtoFactory.newDto(FactoryDto.class).withWorkspace(
+                org.eclipse.che.api.workspace.server.DtoConverter.asDto(usersWorkspace.getConfig()))
+                                                           .withV("4.0");
         return Response.ok(factory, APPLICATION_JSON)
                        .header(CONTENT_DISPOSITION, "attachment; filename=factory.json")
                        .build();
@@ -610,17 +632,18 @@ public class FactoryService extends Service {
     @ApiResponses({@ApiResponse(code = 200, message = "OK"),
                    @ApiResponse(code = 400, message = "Failed to validate factory"),
                    @ApiResponse(code = 500, message = "Internal server error")})
-    public Factory resolveFactory(
-            @ApiParam(value = "Parameters provided to create factories")
-            final Map<String, String> parameters,
-            @ApiParam(value = "Whether or not to validate values like it is done when accepting a Factory",
-                      allowableValues = "true,false",
-                      defaultValue = "false")
-            @DefaultValue("false")
-            @QueryParam(VALIDATE_QUERY_PARAMETER)
-            final Boolean validate,
-            @Context
-            final UriInfo uriInfo) throws NotFoundException, ServerException, BadRequestException {
+    public FactoryDto resolveFactory(@ApiParam(value = "Parameters provided to create factories")
+                                     Map<String, String> parameters,
+                                     @ApiParam(value = "Whether or not to validate values like it is done when accepting a Factory",
+                                               allowableValues = "true,false",
+                                               defaultValue = "false")
+                                     @DefaultValue("false")
+                                     @QueryParam(VALIDATE_QUERY_PARAMETER)
+                                     Boolean validate,
+                                     @Context
+                                     UriInfo uriInfo) throws NotFoundException,
+                                                             ServerException,
+                                                             BadRequestException {
 
         // Check parameter
         if (parameters == null) {
@@ -628,7 +651,10 @@ public class FactoryService extends Service {
         }
 
         // search matching resolver
-        Optional<FactoryParametersResolver> factoryParametersResolverOptional = this.factoryParametersResolvers.stream().filter((resolver -> resolver.accept(parameters))).findFirst();
+        Optional<FactoryParametersResolver> factoryParametersResolverOptional = this.factoryParametersResolvers.stream()
+                                                                                                               .filter((resolver -> resolver
+                                                                                                                       .accept(parameters)))
+                                                                                                               .findFirst();
 
         // no match
         if (!factoryParametersResolverOptional.isPresent()) {
@@ -636,7 +662,7 @@ public class FactoryService extends Service {
         }
 
         // create factory from matching resolver
-        final Factory factory = factoryParametersResolverOptional.get().createFactory(parameters);
+        final FactoryDto factory = factoryParametersResolverOptional.get().createFactory(parameters);
 
         // Apply links
         try {
@@ -659,16 +685,17 @@ public class FactoryService extends Service {
      * If factory is named it will be generated accept named link,
      * if images set is not null and not empty it will be generate links for them
      */
-    private List<Link> createLinks(Factory factory, Set<FactoryImage> images, UriInfo uriInfo) throws NotFoundException, ServerException {
+    private FactoryDto injectLinks(FactoryDto factory, Set<FactoryImage> images, UriInfo uriInfo) throws NotFoundException,
+                                                                                                         ServerException {
         try {
             String username = null;
             if (!isNullOrEmpty(factory.getName())) {
                 username = userDao.getById(factory.getCreator().getUserId()).getName();
             }
-            return images != null && !images.isEmpty()
-                   ? linksHelper.createLinks(factory, images, uriInfo, username)
-                   : linksHelper.createLinks(factory, uriInfo, username);
-
+            factory.withLinks(images != null && !images.isEmpty()
+                              ? createLinks(factory, images, uriInfo, username)
+                              : createLinks(factory, uriInfo, username));
+            return factory;
         } catch (UnsupportedEncodingException e) {
             throw new ServerException(e.getLocalizedMessage(), e);
         }
@@ -685,11 +712,11 @@ public class FactoryService extends Service {
             // if project is a subproject (it's path contains another project) , then location can be null
             final boolean isSubProject = projectConfig.getPath().indexOf('/', 1) != -1;
             final boolean hasNotEmptySource = projectConfig.getSource() != null
-                                           && projectConfig.getSource().getType() != null
-                                           && projectConfig.getSource().getLocation() != null;
+                                              && projectConfig.getSource().getType() != null
+                                              && projectConfig.getSource().getLocation() != null;
 
             return !(notEmptyPath && !projectPath.equals(projectConfig.getPath()))
-                   && (isSubProject ? true : hasNotEmptySource);
+                   && (isSubProject || hasNotEmptySource);
         };
 
         //Filtered out projects by path and source storage presence.
@@ -708,11 +735,11 @@ public class FactoryService extends Service {
     /**
      * Adds to the factory information about creator and time of creation
      */
-    private void processDefaults(Factory factory) {
+    private void processDefaults(FactoryDto factory) {
         final Subject currentSubject = EnvironmentContext.getCurrent().getSubject();
-        final Author creator = factory.getCreator();
+        final AuthorDto creator = factory.getCreator();
         if (creator == null) {
-            factory.setCreator(newDto(Author.class).withUserId(currentSubject.getUserId())
+            factory.setCreator(DtoFactory.newDto(AuthorDto.class).withUserId(currentSubject.getUserId())
                                                    .withCreated(System.currentTimeMillis()));
             return;
         }
@@ -747,6 +774,5 @@ public class FactoryService extends Service {
                 return Collections.emptySet();
             }
         }
-
     }
 }

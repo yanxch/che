@@ -13,7 +13,7 @@ package org.eclipse.che.api.factory.server;
 import com.google.common.base.Strings;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.core.rest.shared.dto.LinkParameter;
-import org.eclipse.che.api.factory.shared.dto.Factory;
+import org.eclipse.che.api.factory.shared.dto.FactoryDto;
 import org.eclipse.che.dto.server.DtoFactory;
 
 import javax.inject.Singleton;
@@ -56,7 +56,7 @@ public class LinksHelper {
      * @throws UnsupportedEncodingException
      *         occurs when impossible to encode URL
      */
-    public List<Link> createLinks(Factory factory, Set<FactoryImage> images, UriInfo uriInfo, String userName) throws UnsupportedEncodingException {
+    public List<Link> createLinks(FactoryDto factory, Set<FactoryImage> images, UriInfo uriInfo, String userName) throws UnsupportedEncodingException {
         final List<Link> links = new LinkedList<>(createLinks(factory, uriInfo, userName));
         final UriBuilder baseUriBuilder = uriInfo != null ? UriBuilder.fromUri(uriInfo.getBaseUri()) : UriBuilder.fromUri("/");
 
@@ -88,7 +88,7 @@ public class LinksHelper {
      * @throws UnsupportedEncodingException
      *         occurs when impossible to encode URL
      */
-    public List<Link> createLinks(Factory factory, UriInfo uriInfo, String userName) throws UnsupportedEncodingException {
+    public List<Link> createLinks(FactoryDto factory, UriInfo uriInfo, String userName) throws UnsupportedEncodingException {
         final List<Link> links = new LinkedList<>();
         final UriBuilder baseUriBuilder = uriInfo != null ? UriBuilder.fromUri(uriInfo.getBaseUri()) : UriBuilder.fromUri("/");
 
