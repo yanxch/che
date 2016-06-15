@@ -14,13 +14,9 @@ import elemental.events.KeyboardEvent;
 import elemental.events.MouseEvent;
 
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.dom.client.DivElement;
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DeckLayoutPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.IsWidget;
@@ -28,12 +24,8 @@ import com.google.gwt.user.client.ui.RequiresResize;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import org.eclipse.che.commons.annotation.Nullable;
-import org.eclipse.che.ide.api.parts.PartStackUIResources;
-import org.eclipse.che.ide.api.parts.base.BaseView;
-import org.eclipse.che.ide.api.theme.Style;
 import org.eclipse.che.ide.extension.machine.client.MachineResources;
 import org.eclipse.che.ide.ui.tree.SelectionModel;
 import org.eclipse.che.ide.ui.tree.Tree;
@@ -51,8 +43,8 @@ import java.util.Map;
  * @author Anna Shumilova
  * @author Roman Nikitenko
  */
-@Singleton
-public class ConsolesPanelViewImpl extends BaseView<ConsolesPanelView.ActionDelegate> implements ConsolesPanelView, RequiresResize {
+
+public class ConsolesPanelViewImpl extends Composite implements ConsolesPanelView, RequiresResize {
 
     interface ProcessesViewImplUiBinder extends UiBinder<Widget, ConsolesPanelViewImpl> {
     }
@@ -72,6 +64,8 @@ public class ConsolesPanelViewImpl extends BaseView<ConsolesPanelView.ActionDele
     @UiField
     FlowPanel navigationPanel;
 
+    ActionDelegate delegate;
+
     private Map<String, IsWidget> processWidgets;
 
     private LinkedHashMap<String, ProcessTreeNode> processTreeNodes;
@@ -81,12 +75,9 @@ public class ConsolesPanelViewImpl extends BaseView<ConsolesPanelView.ActionDele
     @Inject
     public ConsolesPanelViewImpl(org.eclipse.che.ide.Resources resources,
                                  MachineResources machineResources,
-                                 PartStackUIResources partStackUIResources,
                                  ProcessesViewImplUiBinder uiBinder,
                                  ProcessTreeRenderer renderer,
                                  ProcessDataAdapter adapter) {
-        super(partStackUIResources);
-
         this.machineResources = machineResources;
         this.processWidgets = new HashMap<>();
         processTreeNodes = new LinkedHashMap<>();
@@ -180,73 +171,17 @@ public class ConsolesPanelViewImpl extends BaseView<ConsolesPanelView.ActionDele
             }
         });
 
-        setContentWidget(uiBinder.createAndBindUi(this));
+        initWidget(uiBinder.createAndBindUi(this));
         navigationPanel.getElement().setTabIndex(0);
-        minimizeButton.ensureDebugId("consoles-minimizeButton");
-
-        tuneSplitter();
     }
 
-    /**
-     * Improves splitter visibility.
-     */
-    private void tuneSplitter() {
-        NodeList<Node> nodes = splitLayoutPanel.getElement().getChildNodes();
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Node node = nodes.getItem(i);
-            if (node.hasChildNodes()) {
-                com.google.gwt.dom.client.Element el = node.getFirstChild().cast();
-                if ("gwt-SplitLayoutPanel-HDragger".equals(el.getClassName())) {
-                    tuneSplitter(el);
-                    return;
-                }
-            }
-        }
-    }
-
-    /**
-     * Tunes splitter. Makes it wider and adds double border to seem rich.
-     *
-     * @param el
-     *         element to tune
-     */
-    private void tuneSplitter(Element el) {
-        /** Add Z-Index to move the splitter on the top and make content visible */
-        el.getParentElement().getStyle().setProperty("zIndex", "1000");
-        el.getParentElement().getStyle().setProperty("overflow", "visible");
-
-        /** Tune splitter catch panel */
-        el.getStyle().setProperty("boxSizing", "border-box");
-        el.getStyle().setProperty("width", "5px");
-        el.getStyle().setProperty("overflow", "hidden");
-        el.getStyle().setProperty("marginLeft", "-3px");
-        el.getStyle().setProperty("backgroundColor", "transparent");
-
-        /** Add small border */
-        DivElement smallBorder = Document.get().createDivElement();
-        smallBorder.getStyle().setProperty("position", "absolute");
-        smallBorder.getStyle().setProperty("width", "1px");
-        smallBorder.getStyle().setProperty("height", "100%");
-        smallBorder.getStyle().setProperty("left", "3px");
-        smallBorder.getStyle().setProperty("top", "0px");
-        smallBorder.getStyle().setProperty("backgroundColor", Style.getSplitterSmallBorderColor());
-        el.appendChild(smallBorder);
-
-        /** Add large border */
-        DivElement largeBorder = Document.get().createDivElement();
-        largeBorder.getStyle().setProperty("position", "absolute");
-        largeBorder.getStyle().setProperty("width", "2px");
-        largeBorder.getStyle().setProperty("height", "100%");
-        largeBorder.getStyle().setProperty("left", "1px");
-        largeBorder.getStyle().setProperty("top", "0px");
-        largeBorder.getStyle().setProperty("opacity", "0.4");
-        largeBorder.getStyle().setProperty("backgroundColor", Style.getSplitterLargeBorderColor());
-        el.appendChild(largeBorder);
+    protected void focusView() {
+        getElement().focus();
     }
 
     @Override
-    protected void focusView() {
-        getElement().focus();
+    public void setDelegate(ActionDelegate delegate) {
+        this.delegate = delegate;
     }
 
     @Override
@@ -397,5 +332,4 @@ public class ConsolesPanelViewImpl extends BaseView<ConsolesPanelView.ActionDele
             }
         }
     }
-
 }

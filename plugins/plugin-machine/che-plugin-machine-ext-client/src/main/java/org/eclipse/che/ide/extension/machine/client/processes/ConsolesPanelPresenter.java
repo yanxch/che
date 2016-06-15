@@ -24,16 +24,15 @@ import org.eclipse.che.api.machine.shared.dto.MachineProcessDto;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
+import org.eclipse.che.ide.api.parts.PartPresenter;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedEvent;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedHandler;
-import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.mvp.View;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.outputconsole.OutputConsole;
 import org.eclipse.che.ide.api.parts.HasView;
 import org.eclipse.che.ide.api.parts.WorkspaceAgent;
-import org.eclipse.che.ide.api.parts.base.BasePresenter;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.extension.machine.client.MachineLocalizationConstant;
 import org.eclipse.che.ide.extension.machine.client.MachineResources;
@@ -53,7 +52,6 @@ import org.eclipse.che.ide.api.dialogs.DialogFactory;
 import org.eclipse.che.ide.extension.machine.client.processes.actions.ConsoleTreeContextMenu;
 import org.eclipse.che.ide.extension.machine.client.processes.actions.ConsoleTreeContextMenuFactory;
 import org.eclipse.che.ide.util.loging.Log;
-import org.vectomatic.dom.svg.ui.SVGResource;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
@@ -77,7 +75,7 @@ import static org.eclipse.che.ide.extension.machine.client.processes.ProcessTree
  * @author Vlad Zhukovskyi
  */
 @Singleton
-public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPanelView.ActionDelegate,
+public class ConsolesPanelPresenter implements ConsolesPanelView.ActionDelegate,
                                                                      HasView,
                                                                      ProcessFinishedEvent.Handler,
                                                                      OutputConsole.ConsoleOutputListener,
@@ -103,16 +101,17 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
     private final CommandTypeRegistry          commandTypeRegistry;
     private final Map<String, ProcessTreeNode> machineNodes;
 
-    final List<ProcessTreeNode>                rootChildren;
-    final Map<String, TerminalPresenter>       terminals;
-    final Map<String, OutputConsole>           consoles;
-    final Map<OutputConsole, String>           consoleCommands;
+    final List<ProcessTreeNode>          rootChildren;
+    final Map<String, TerminalPresenter> terminals;
+    final Map<String, OutputConsole>     consoles;
+    final Map<OutputConsole, String>     consoleCommands;
 
-    ProcessTreeNode                            rootNode;
-    ProcessTreeNode                            selectedTreeNode;
-    ProcessTreeNode                            contextTreeNode;
+    ProcessTreeNode rootNode;
+    ProcessTreeNode selectedTreeNode;
+    ProcessTreeNode contextTreeNode;
+    PartPresenter   parent;
 
-    private ConsoleTreeContextMenuFactory      consoleTreeContextMenuFactory;
+    private ConsoleTreeContextMenuFactory consoleTreeContextMenuFactory;
 
     @Inject
     public ConsolesPanelPresenter(ConsolesPanelView view,
@@ -152,7 +151,6 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         this.machineNodes = new HashMap<>();
 
         this.view.setDelegate(this);
-        this.view.setTitle(localizationConstant.viewConsolesTitle());
 
         eventBus.addHandler(DevMachineStateEvent.TYPE, new DevMachineStateEvent.Handler() {
             @Override
@@ -172,6 +170,10 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         fetchMachines();
     }
 
+    public void setParent(PartPresenter parent) {
+        this.parent = parent;
+    }
+
     @Override
     public void onProcessFinished(ProcessFinishedEvent event) {
         for (Map.Entry<String, OutputConsole> entry : consoles.entrySet()) {
@@ -186,29 +188,6 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         return view;
     }
 
-    @NotNull
-    @Override
-    public String getTitle() {
-        return localizationConstant.viewConsolesTitle();
-    }
-
-    @Override
-    public void setVisible(boolean visible) {
-        view.setVisible(visible);
-    }
-
-    @Nullable
-    @Override
-    public SVGResource getTitleImage() {
-        return resources.terminal();
-    }
-
-    @Override
-    public String getTitleToolTip() {
-        return localizationConstant.viewProcessesTooltip();
-    }
-
-    @Override
     public void go(AcceptsOneWidget container) {
         container.setWidget(view);
     }
@@ -219,7 +198,7 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
 
     @Override
     public void onMachineRunning(MachineStateEvent event) {
-        workspaceAgent.setActivePart(this);
+        workspaceAgent.setActivePart(parent);
 
         machineService.getMachine(event.getMachineId()).then(new Operation<MachineDto>() {
             @Override
@@ -358,7 +337,7 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         updateCommandOutput(commandId, outputConsole);
 
         resfreshStopButtonState(commandId);
-        workspaceAgent.setActivePart(this);
+        workspaceAgent.setActivePart(parent);
     }
 
     private void updateCommandOutput(@NotNull final String command, @NotNull OutputConsole outputConsole) {
@@ -380,7 +359,7 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
      * Opens new terminal for the selected machine.
      */
     public void newTerminal() {
-        workspaceAgent.setActivePart(this);
+        workspaceAgent.setActivePart(parent);
 
         if (selectedTreeNode == null) {
             if (appContext.getDevMachine() != null) {
