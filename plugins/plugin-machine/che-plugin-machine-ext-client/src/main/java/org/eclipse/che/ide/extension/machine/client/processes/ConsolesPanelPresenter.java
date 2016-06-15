@@ -52,6 +52,8 @@ import org.eclipse.che.ide.extension.machine.client.outputspanel.console.Default
 import org.eclipse.che.ide.extension.machine.client.perspective.terminal.TerminalPresenter;
 import org.eclipse.che.ide.api.dialogs.ConfirmCallback;
 import org.eclipse.che.ide.api.dialogs.DialogFactory;
+import org.eclipse.che.ide.extension.machine.client.processes.actions.ConsoleTreeContextMenu;
+import org.eclipse.che.ide.extension.machine.client.processes.actions.ConsoleTreeContextMenuFactory;
 import org.eclipse.che.ide.util.loging.Log;
 import org.vectomatic.dom.svg.ui.SVGResource;
 
@@ -109,8 +111,11 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
     final Map<String, OutputConsole>           consoles;
     final Map<OutputConsole, String>           consoleCommands;
 
-    ProcessTreeNode rootNode;
-    ProcessTreeNode selectedTreeNode;
+    ProcessTreeNode                            rootNode;
+    ProcessTreeNode                            selectedTreeNode;
+    ProcessTreeNode                            contextTreeNode;
+
+    private ConsoleTreeContextMenuFactory      consoleTreeContextMenuFactory;
 
     @Inject
     public ConsolesPanelPresenter(ConsolesPanelView view,
@@ -126,7 +131,8 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
                                   MachineLocalizationConstant localizationConstant,
                                   MachineServiceClient machineService,
                                   MachineResources resources,
-                                  AppContext appContext) {
+                                  AppContext appContext,
+                                  ConsoleTreeContextMenuFactory consoleTreeContextMenuFactory) {
         this.view = view;
         this.terminalFactory = terminalFactory;
         this.workspaceAgent = workspaceAgent;
@@ -140,6 +146,7 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         this.entityFactory = entityFactory;
         this.appContext = appContext;
         this.machineService = machineService;
+        this.consoleTreeContextMenuFactory = consoleTreeContextMenuFactory;
 
         this.rootNodes = new ArrayList<>();
         this.terminals = new HashMap<>();
@@ -521,6 +528,16 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         resfreshStopButtonState(node.getId());
     }
 
+    /**
+     * Returns currently selected process tree node.
+     *
+     * @return
+     *         selected tree node
+     */
+    public ProcessTreeNode getSelectedTreeNode() {
+        return selectedTreeNode;
+    }
+
     @Override
     public void onStopCommandProcess(@NotNull ProcessTreeNode node) {
         String commandId = node.getId();
@@ -549,6 +566,38 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         dialogFactory.createConfirmDialog("", localizationConstant.outputsConsoleViewStopProcessConfirmation(console.getTitle()),
                                           getConfirmCloseConsoleCallback(console, node), null)
                      .show();
+    }
+
+    /**
+     * Returns context selected tree node.
+     *
+     * @return
+     *      tree node
+     */
+    public ProcessTreeNode getContextTreeNode() {
+        return contextTreeNode;
+    }
+
+    /**
+     * Returns context selected output console.
+     *
+     * @return
+     *          output console
+     */
+    public OutputConsole getContextOutputConsole() {
+        if (contextTreeNode == null) {
+            return null;
+        }
+
+        return consoles.get(contextTreeNode.getId());
+    }
+
+    @Override
+    public void onContextMenu(int mouseX, int mouseY, ProcessTreeNode node) {
+        contextTreeNode = node;
+
+        ConsoleTreeContextMenu contextMenu = consoleTreeContextMenuFactory.newContextMenu(node);
+        contextMenu.show(mouseX, mouseY);
     }
 
     private ConfirmCallback getConfirmCloseConsoleCallback(final OutputConsole console, final ProcessTreeNode node) {

@@ -43,10 +43,12 @@ import org.eclipse.che.ide.extension.machine.client.actions.SelectCommandComboBo
 import org.eclipse.che.ide.extension.machine.client.actions.SwitchPerspectiveAction;
 import org.eclipse.che.ide.extension.machine.client.command.custom.CustomCommandType;
 import org.eclipse.che.ide.extension.machine.client.command.valueproviders.ServerPortProvider;
-import org.eclipse.che.ide.extension.machine.client.outputspanel.OutputsContainerPresenter;
 import org.eclipse.che.ide.extension.machine.client.perspective.OperationsPerspective;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter;
-import org.eclipse.che.ide.extension.machine.client.processes.NewTerminalAction;
+import org.eclipse.che.ide.extension.machine.client.actions.NewTerminalAction;
+import org.eclipse.che.ide.extension.machine.client.processes.actions.CloseConsoleAction;
+import org.eclipse.che.ide.extension.machine.client.processes.actions.ReRunProcessAction;
+import org.eclipse.che.ide.extension.machine.client.processes.actions.StopProcessAction;
 import org.eclipse.che.ide.extension.machine.client.targets.EditTargetsAction;
 import org.eclipse.che.ide.util.input.KeyCodeMap;
 
@@ -83,7 +85,6 @@ public class MachineExtension {
                             final AppContext   appContext,
                             final ConsolesPanelPresenter consolesPanelPresenter,
                             final Provider<ServerPortProvider> machinePortProvider,
-                            final OutputsContainerPresenter outputsContainerPresenter,
                             final PerspectiveManager perspectiveManager,
                             IconRegistry iconRegistry,
                             CustomCommandType arbitraryCommandType) {
@@ -101,18 +102,15 @@ public class MachineExtension {
 
                 /* Add Outputs and Consoles to Operation perspective */
                 perspectiveManager.setPerspectiveId(OperationsPerspective.OPERATIONS_PERSPECTIVE_ID);
-                workspaceAgent.openPart(outputsContainerPresenter, PartStackType.INFORMATION);
                 workspaceAgent.openPart(consolesPanelPresenter, PartStackType.INFORMATION);
 
                 /* Add Outputs and Consoles to Project perspective */
                 perspectiveManager.setPerspectiveId(PROJECT_PERSPECTIVE_ID);
-                workspaceAgent.openPart(outputsContainerPresenter, PartStackType.INFORMATION);
                 workspaceAgent.openPart(consolesPanelPresenter, PartStackType.INFORMATION);
 
-//                if (appContext.getFactory() == null) {
-//                    consolesPanelPresenter.newTerminal();
-//                }
-
+                if (appContext.getFactory() == null) {
+                    consolesPanelPresenter.newTerminal();
+                }
             }
 
             @Override
@@ -141,7 +139,10 @@ public class MachineExtension {
                                 NewTerminalAction newTerminalAction,
                                 EditTargetsAction editTargetsAction,
                                 IconRegistry iconRegistry,
-                                MachineResources machineResources) {
+                                MachineResources machineResources,
+                                ReRunProcessAction reRunProcessAction,
+                                StopProcessAction stopProcessAction,
+                                CloseConsoleAction closeConsoleAction) {
         final DefaultActionGroup mainMenu = (DefaultActionGroup)actionManager.getAction(GROUP_MAIN_MENU);
 
         final DefaultActionGroup workspaceMenu = (DefaultActionGroup)actionManager.getAction(GROUP_WORKSPACE);
@@ -205,6 +206,14 @@ public class MachineExtension {
         final DefaultActionGroup commandList = new DefaultActionGroup(GROUP_COMMANDS_DROPDOWN, true, actionManager);
         actionManager.registerAction(GROUP_COMMANDS_LIST, commandList);
         commandList.add(editCommandsAction, FIRST);
+
+        // Consoles tree context menu group
+        DefaultActionGroup consolesTreeContextMenu =
+                (DefaultActionGroup)actionManager.getAction(IdeActions.GROUP_CONSOLES_TREE_CONTEXT_MENU);
+
+        consolesTreeContextMenu.add(reRunProcessAction);
+        consolesTreeContextMenu.add(stopProcessAction);
+        consolesTreeContextMenu.add(closeConsoleAction);
 
         // Define hot-keys
         keyBinding.getGlobal().addKey(new KeyBuilder().alt().charCode(KeyCodeMap.F12).build(), "newTerminal");
