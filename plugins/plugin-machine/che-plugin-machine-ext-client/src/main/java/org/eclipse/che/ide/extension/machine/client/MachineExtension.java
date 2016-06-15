@@ -43,14 +43,11 @@ import org.eclipse.che.ide.extension.machine.client.actions.SelectCommandComboBo
 import org.eclipse.che.ide.extension.machine.client.actions.SwitchPerspectiveAction;
 import org.eclipse.che.ide.extension.machine.client.command.custom.CustomCommandType;
 import org.eclipse.che.ide.extension.machine.client.command.valueproviders.ServerPortProvider;
-import org.eclipse.che.ide.extension.machine.client.machine.console.ClearConsoleAction;
-import org.eclipse.che.ide.extension.machine.client.machine.console.MachineConsoleToolbar;
 import org.eclipse.che.ide.extension.machine.client.outputspanel.OutputsContainerPresenter;
 import org.eclipse.che.ide.extension.machine.client.perspective.OperationsPerspective;
 import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter;
 import org.eclipse.che.ide.extension.machine.client.processes.NewTerminalAction;
 import org.eclipse.che.ide.extension.machine.client.targets.EditTargetsAction;
-import org.eclipse.che.ide.ui.toolbar.ToolbarPresenter;
 import org.eclipse.che.ide.util.input.KeyCodeMap;
 
 import static org.eclipse.che.ide.api.action.IdeActions.GROUP_CENTER_TOOLBAR;
@@ -112,9 +109,10 @@ public class MachineExtension {
                 workspaceAgent.openPart(outputsContainerPresenter, PartStackType.INFORMATION);
                 workspaceAgent.openPart(consolesPanelPresenter, PartStackType.INFORMATION);
 
-                if (appContext.getFactory() == null) {
-                    consolesPanelPresenter.newTerminal();
-                }
+//                if (appContext.getFactory() == null) {
+//                    consolesPanelPresenter.newTerminal();
+//                }
+
             }
 
             @Override
@@ -212,18 +210,6 @@ public class MachineExtension {
         keyBinding.getGlobal().addKey(new KeyBuilder().alt().charCode(KeyCodeMap.F12).build(), "newTerminal");
 
         iconRegistry.registerIcon(new Icon("che.machine.icon", machineResources.devMachine()));
-    }
-
-    @Inject
-    private void setUpMachineConsole(ActionManager actionManager,
-                                     ClearConsoleAction clearConsoleAction,
-                                     @MachineConsoleToolbar ToolbarPresenter machineConsoleToolbar) {
-
-        // add toolbar to Machine console
-        final DefaultActionGroup consoleToolbarActionGroup = new DefaultActionGroup(GROUP_MACHINE_CONSOLE_TOOLBAR, false, actionManager);
-        consoleToolbarActionGroup.add(clearConsoleAction);
-        consoleToolbarActionGroup.addSeparator();
-        machineConsoleToolbar.bindMainGroup(consoleToolbarActionGroup);
     }
 
 }

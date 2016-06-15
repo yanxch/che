@@ -36,7 +36,7 @@ import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedEvent;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedHandler;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.extension.machine.client.machine.MachineStatusNotifier.RunningListener;
-import org.eclipse.che.ide.extension.machine.client.machine.console.MachineConsolePresenter;
+import org.eclipse.che.ide.extension.machine.client.processes.ConsolesPanelPresenter;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.ui.loaders.initialization.InitialLoadingInfo;
 import org.eclipse.che.ide.util.loging.Log;
@@ -68,7 +68,7 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
     private final DtoUnmarshallerFactory  dtoUnmarshallerFactory;
     private final MachineServiceClient    machineServiceClient;
     private final WorkspaceServiceClient  workspaceServiceClient;
-    private final MachineConsolePresenter machineConsolePresenter;
+    private final ConsolesPanelPresenter  consolesPanelPresenter;
     private final MachineStatusNotifier   machineStatusNotifier;
     private final InitialLoadingInfo      initialLoadingInfo;
     private final PerspectiveManager      perspectiveManager;
@@ -89,7 +89,7 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
     public MachineManagerImpl(DtoUnmarshallerFactory dtoUnmarshallerFactory,
                               MachineServiceClient machineServiceClient,
                               WorkspaceServiceClient workspaceServiceClient,
-                              MachineConsolePresenter machineConsolePresenter,
+                              ConsolesPanelPresenter consolesPanelPresenter,
                               MachineStatusNotifier machineStatusNotifier,
                               final MessageBusProvider messageBusProvider,
                               final InitialLoadingInfo initialLoadingInfo,
@@ -100,7 +100,7 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
         this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
         this.machineServiceClient = machineServiceClient;
         this.workspaceServiceClient = workspaceServiceClient;
-        this.machineConsolePresenter = machineConsolePresenter;
+        this.consolesPanelPresenter = consolesPanelPresenter;
         this.machineStatusNotifier = machineStatusNotifier;
         this.initialLoadingInfo = initialLoadingInfo;
         this.perspectiveManager = perspectiveManager;
@@ -145,8 +145,8 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
 
         outputHandler = new SubscriptionHandler<String>(new OutputMessageUnmarshaller()) {
             @Override
-            protected void onMessageReceived(String result) {
-                machineConsolePresenter.print(result);
+            protected void onMessageReceived(String text) {
+                consolesPanelPresenter.printWorkspaceOutput(text);
             }
 
             @Override
@@ -219,7 +219,6 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
                               .withContent(source.getContent());
     }
 
-
     /** Start new machine. */
     @Override
     public void startMachine(String recipeURL, String displayName) {
@@ -231,8 +230,6 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
     public void startDevMachine(String recipeURL, String displayName) {
         startMachine(recipeURL, displayName, true, START, "dockerfile", "docker");
     }
-
-
 
     /**
      * @param recipeURL
@@ -253,6 +250,7 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
         MachineSourceDto sourceDto = dtoFactory.createDto(MachineSourceDto.class).withType(sourceType).withLocation(recipeURL);
         startMachine(sourceDto, displayName, isDev, operationType, machineType);
     }
+
     /**
      * @param machineSourceDto
      * @param displayName

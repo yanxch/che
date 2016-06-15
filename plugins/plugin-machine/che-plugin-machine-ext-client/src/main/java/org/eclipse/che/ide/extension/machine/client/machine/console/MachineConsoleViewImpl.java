@@ -40,9 +40,6 @@ public class MachineConsoleViewImpl extends BaseView<MachineConsoleView.ActionDe
     private static final String PRE_STYLE = "style='margin:0px;'";
 
     @UiField
-    SimplePanel toolbarPanel;
-
-    @UiField
     ScrollPanel scrollPanel;
 
     @UiField
@@ -56,17 +53,7 @@ public class MachineConsoleViewImpl extends BaseView<MachineConsoleView.ActionDe
 
         minimizeButton.ensureDebugId("machine-console-minimizeButton");
 
-        // this hack used for adding box shadow effect to toolbar
-        toolbarPanel.getElement().getParentElement().getStyle().setOverflow(Overflow.VISIBLE);
-        toolbarPanel.getElement().getParentElement().getStyle().setZIndex(1);
-
         scrollPanel.getElement().setTabIndex(0);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public AcceptsOneWidget getToolbarPanel() {
-        return toolbarPanel;
     }
 
     /** {@inheritDoc} */
@@ -105,4 +92,5 @@ public class MachineConsoleViewImpl extends BaseView<MachineConsoleView.ActionDe
 
     interface MachineConsoleViewImplUiBinder extends UiBinder<Widget, MachineConsoleViewImpl> {
     }
+
 }

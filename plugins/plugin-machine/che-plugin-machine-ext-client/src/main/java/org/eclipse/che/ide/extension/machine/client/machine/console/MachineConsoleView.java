@@ -23,13 +23,6 @@ import org.eclipse.che.ide.api.parts.base.BaseActionDelegate;
 public interface MachineConsoleView extends View<MachineConsoleView.ActionDelegate> {
 
     /**
-     * Returns toolbar panel.
-     *
-     * @return toolbar panel
-     */
-    AcceptsOneWidget getToolbarPanel();
-
-    /**
      * Print message to console area.
      *
      * @param message
@@ -55,4 +48,5 @@ public interface MachineConsoleView extends View<MachineConsoleView.ActionDelega
 
     interface ActionDelegate extends BaseActionDelegate {
     }
+
 }

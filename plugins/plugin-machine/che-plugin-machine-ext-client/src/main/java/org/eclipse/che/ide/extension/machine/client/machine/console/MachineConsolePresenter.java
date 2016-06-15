@@ -22,7 +22,6 @@ import org.eclipse.che.ide.api.parts.HasView;
 import org.eclipse.che.ide.api.parts.PartPresenter;
 import org.eclipse.che.ide.api.parts.base.BasePresenter;
 import org.eclipse.che.ide.extension.machine.client.MachineLocalizationConstant;
-import org.eclipse.che.ide.ui.toolbar.ToolbarPresenter;
 
 import javax.validation.constraints.NotNull;
 
@@ -36,16 +35,13 @@ public class MachineConsolePresenter extends BasePresenter implements MachineCon
 
     private final MachineLocalizationConstant machineLocalizationConstant;
     private final MachineConsoleView          view;
-    private final ToolbarPresenter            consoleToolbar;
     private boolean hasUnreadMessages = false;
 
     @Inject
     public MachineConsolePresenter(MachineConsoleView view,
-                                   @MachineConsoleToolbar ToolbarPresenter consoleToolbar,
                                    EventBus eventBus,
                                    MachineLocalizationConstant machineLocalizationConstant) {
         this.view = view;
-        this.consoleToolbar = consoleToolbar;
         this.machineLocalizationConstant = machineLocalizationConstant;
         this.view.setTitle(machineLocalizationConstant.machineConsoleViewTitle());
         this.view.setDelegate(this);
@@ -94,7 +90,6 @@ public class MachineConsolePresenter extends BasePresenter implements MachineCon
     /** {@inheritDoc} */
     @Override
     public void go(AcceptsOneWidget container) {
-        consoleToolbar.go(view.getToolbarPanel());
         container.setWidget(view);
     }
 
@@ -125,4 +120,5 @@ public class MachineConsolePresenter extends BasePresenter implements MachineCon
     public void clear() {
         view.clear();
     }
+
 }
