@@ -44,6 +44,7 @@ public final class Constants {
     public static final String LINK_REL_DELETE_ICON = "delete icon link";
 
     public static final String LINK_REL_GET_WORKSPACE_EVENTS_CHANNEL = "get workspace events channel";
+    public static final String GET_WORKSPACE_OUTPUT_CHANNEL = "output_channel";
 
     private Constants() {}
 }

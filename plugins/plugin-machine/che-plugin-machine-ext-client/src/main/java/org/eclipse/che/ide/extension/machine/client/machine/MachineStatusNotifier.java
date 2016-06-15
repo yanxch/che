@@ -48,6 +48,7 @@ import static org.eclipse.che.ide.api.notification.StatusNotification.Status.SUC
 @Singleton
 class MachineStatusNotifier {
 
+    // todo
     /** WebSocket channel to receive messages about changing machine state. */
     public static final String MACHINE_STATUS_WS_CHANNEL = "machine:status:";
 

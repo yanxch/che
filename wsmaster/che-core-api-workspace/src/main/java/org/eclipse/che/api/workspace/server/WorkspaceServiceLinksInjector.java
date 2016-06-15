@@ -40,6 +40,7 @@ import static org.eclipse.che.api.machine.shared.Constants.TERMINAL_REFERENCE;
 import static org.eclipse.che.api.machine.shared.Constants.WSAGENT_REFERENCE;
 import static org.eclipse.che.api.machine.shared.Constants.WSAGENT_WEBSOCKET_REFERENCE;
 import static org.eclipse.che.api.workspace.shared.Constants.GET_ALL_USER_WORKSPACES;
+import static org.eclipse.che.api.workspace.shared.Constants.GET_WORKSPACE_OUTPUT_CHANNEL;
 import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_GET_SNAPSHOT;
 import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_GET_WORKSPACE_EVENTS_CHANNEL;
 import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_IDE_URL;
@@ -133,6 +134,12 @@ public class WorkspaceServiceLinksInjector {
         links.add(cloneDto(workspaceChannelLink).withRel(LINK_REL_GET_WORKSPACE_EVENTS_CHANNEL)
                                                 .withParameters(singletonList(
                                                         cloneDto(channelParameter).withDefaultValue("workspace:" + workspace.getId()))));
+
+        links.add(cloneDto(workspaceChannelLink).withRel(GET_WORKSPACE_OUTPUT_CHANNEL)
+                                                .withParameters(singletonList(
+                                                        cloneDto(channelParameter).withDefaultValue("workspace:" +
+                                                                                                    workspace.getId() +
+                                                                                                    ":environment_output"))));
 
         // add machine channels links to machines configs
 //        workspace.getConfig()

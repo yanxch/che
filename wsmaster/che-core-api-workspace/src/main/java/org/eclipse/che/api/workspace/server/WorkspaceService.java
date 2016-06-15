@@ -29,7 +29,6 @@ import org.eclipse.che.api.core.rest.Service;
 import org.eclipse.che.api.core.rest.annotations.GenerateLink;
 import org.eclipse.che.api.machine.server.MachineManager;
 import org.eclipse.che.api.machine.server.model.impl.CommandImpl;
-import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
 import org.eclipse.che.api.machine.shared.dto.CommandDto;
 import org.eclipse.che.api.machine.shared.dto.MachineConfigDto;
 import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
@@ -684,7 +683,8 @@ public class WorkspaceService extends Service {
                                                                          ServerException,
                                                                          ConflictException,
                                                                          BadRequestException {
-        requiredNotNull(machineConfig, "Machine configuration");
+        throw new ServerException("Machine creation API is not supported");
+        /*requiredNotNull(machineConfig, "Machine configuration");
         requiredNotNull(machineConfig.getType(), "Machine type");
         requiredNotNull(machineConfig.getSource(), "Machine source");
         requiredNotNull(machineConfig.getSource().getType(), "Machine source type");
@@ -704,7 +704,7 @@ public class WorkspaceService extends Service {
         return Response.status(201)
                        .entity(linksInjector.injectMachineLinks(org.eclipse.che.api.machine.server.DtoConverter.asDto(machine),
                                                                 getServiceContext()))
-                       .build();
+                       .build();*/
     }
 
     private static Map<String, String> parseAttrs(List<String> attributes) throws BadRequestException {

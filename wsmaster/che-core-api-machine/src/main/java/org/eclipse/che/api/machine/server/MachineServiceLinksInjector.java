@@ -16,7 +16,6 @@ import org.eclipse.che.api.core.rest.ServiceContext;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.core.rest.shared.dto.LinkParameter;
 import org.eclipse.che.api.machine.shared.Constants;
-import org.eclipse.che.api.machine.shared.dto.MachineConfigDto;
 import org.eclipse.che.api.machine.shared.dto.MachineDto;
 import org.eclipse.che.api.machine.shared.dto.MachineProcessDto;
 import org.eclipse.che.api.machine.shared.dto.ServerDto;
@@ -30,13 +29,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.eclipse.che.api.core.util.LinksHelper.createLink;
 import static org.eclipse.che.api.machine.shared.Constants.TERMINAL_REFERENCE;
-import static org.eclipse.che.dto.server.DtoFactory.cloneDto;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
 
 /**
@@ -118,24 +115,6 @@ public class MachineServiceLinksInjector {
 
         injectTerminalLink(machine, serviceContext, links);
 
-        // add links to websocket channels
-        final Link machineChannelLink = createLink("GET",
-                                                   serviceContext.getBaseUriBuilder()
-                                                                 .path("ws")
-                                                                 .path(machine.getWorkspaceId())
-                                                                 .scheme("https".equals(getLogsUri.getScheme()) ? "wss" : "ws")
-                                                                 .build()
-                                                                 .toString(),
-                                                   null);
-        final LinkParameter channelParameter = newDto(LinkParameter.class).withName("channel")
-                                                                          .withRequired(true);
-
-        injectMachineChannelsLinks(machine.getConfig(),
-                                   machine.getWorkspaceId(),
-                                   machine.getEnvName(),
-                                   machineChannelLink,
-                                   channelParameter);
-
         return machine.withLinks(links);
     }
 
@@ -155,25 +134,6 @@ public class MachineServiceLinksInjector {
                                                                          .toString(),
                                                            TERMINAL_REFERENCE)));
         }
-    }
-
-    public void injectMachineChannelsLinks(MachineConfigDto machineConfig,
-                                           String workspaceId,
-                                           String envName,
-                                           Link machineChannelLink,
-                                           LinkParameter channelParameter) {
-        final ChannelsImpl channels = MachineManager.getMachineChannels(machineConfig.getName(),
-                                                                        workspaceId,
-                                                                        envName);
-        final Link getLogsLink = cloneDto(machineChannelLink)
-                .withRel(org.eclipse.che.api.machine.shared.Constants.LINK_REL_GET_MACHINE_LOGS_CHANNEL)
-                .withParameters(singletonList(cloneDto(channelParameter).withDefaultValue(channels.getOutput())));
-
-        final Link getStatusLink = cloneDto(machineChannelLink)
-                .withRel(org.eclipse.che.api.machine.shared.Constants.LINK_REL_GET_MACHINE_STATUS_CHANNEL)
-                .withParameters(singletonList(cloneDto(channelParameter).withDefaultValue(channels.getStatus())));
-
-        machineConfig.withLinks(asList(getLogsLink, getStatusLink));
     }
 
     public MachineProcessDto injectLinks(MachineProcessDto process, String machineId, ServiceContext serviceContext) {

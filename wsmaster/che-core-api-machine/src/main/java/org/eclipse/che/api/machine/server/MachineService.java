@@ -126,7 +126,8 @@ public class MachineService extends Service {
                    ServerException,
                    ForbiddenException {
 
-        machineManager.destroy(machineId, true);
+        throw new ServerException("Machine destroying is not supported");
+//        machineManager.destroy(machineId, true);
     }
 
     @GET
