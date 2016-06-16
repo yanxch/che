@@ -105,7 +105,7 @@ export class ExportWorkspaceDialogController {
 
           // update copy of workspace with new recipe link
           let recipeLink = findLink.href;
-          defaultEnvironment.machineConfigs[0].source.location = recipeLink;
+          defaultEnvironment.machines[0].source.location = recipeLink;
 
           let remoteWorkspaceAPI = this.cheRemote.newWorkspace(authData);
           this.exportInCloudSteps += 'Creating remote workspace...';

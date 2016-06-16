@@ -153,7 +153,7 @@ class IdeSvc {
         return environment.name === defaultEnvName;
       });
 
-      let machineConfigsLinks = defaultEnvironment.machineConfigs[0].links;
+      let machineConfigsLinks = defaultEnvironment.machines[0].links;
       let findStatusLink = this.lodash.find(machineConfigsLinks, (machineConfigsLink) => {
         return machineConfigsLink.rel === 'get machine status channel';
       });

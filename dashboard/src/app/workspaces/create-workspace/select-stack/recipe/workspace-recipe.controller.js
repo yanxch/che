@@ -32,7 +32,7 @@ export class WorkspaceRecipeCtrl {
       lineWrapping: true,
       lineNumbers: true,
       matchBrackets: true,
-      mode: 'text/x-dockerfile'
+      mode: 'application/json'
     };
 
     this.setDefaultData();

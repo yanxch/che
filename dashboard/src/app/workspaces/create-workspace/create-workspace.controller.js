@@ -119,6 +119,7 @@ export class CreateWorkspaceCtrl {
     //User provides recipe URL or recipe's content:
     if (this.isCustomStack) {
       this.stack = null;
+      source.type = 'environment';
       if (this.recipeUrl && this.recipeUrl.length > 0) {
         source.location = this.recipeUrl;
         this.submitWorkspace(source);

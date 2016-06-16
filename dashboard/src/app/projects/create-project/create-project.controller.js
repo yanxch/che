@@ -335,11 +335,9 @@ export class CreateProjectCtrl {
     // get channels
     let environments = workspace.config.environments;
     let envName = workspace.config.defaultEnv;
-    let defaultEnvironment = this.lodash.find(environments, (environment) => {
-      return environment.name === envName;
-    });
+    let defaultEnvironment = environments[envName];
 
-    let machineConfigsLinks = defaultEnvironment.machineConfigs[0].links;
+    let machineConfigsLinks = defaultEnvironment.machines[0].links;
 
     let findStatusLink = this.lodash.find(machineConfigsLinks, (machineConfigsLink) => {
       return machineConfigsLink.rel === 'get machine status channel';
@@ -581,7 +579,7 @@ export class CreateProjectCtrl {
                 attributesByMatchingType.set(type, resultEstimate.attributes);
               }
             });
-            
+
             attributesByMatchingType.forEach((attributes, type) => {
               if (!firstMatchingType) {
                 let projectType = projectTypesByCategory.get(type);
@@ -836,6 +834,7 @@ export class CreateProjectCtrl {
       if (this.stack) {
         this.createWorkspace(this.computerSourceFromStack(this.stack));
       } else {
+        source.type = 'environment';
         if (this.recipeUrl && this.recipeUrl.length > 0) {
           source.location = this.recipeUrl;
           this.createWorkspace(source);
@@ -1092,7 +1091,7 @@ export class CreateProjectCtrl {
       return environment.name === this.workspaceSelected.config.defaultEnv;
     });
     if (findEnvironment) {
-      this.workspaceRam = findEnvironment.machineConfigs[0].limits.ram;
+      this.workspaceRam = findEnvironment.machines[0].limits.ram;
     }
     this.updateWorkspaceStatus(true);
   }
