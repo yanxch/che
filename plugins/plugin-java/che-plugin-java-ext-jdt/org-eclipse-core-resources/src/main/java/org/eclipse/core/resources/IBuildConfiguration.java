@@ -30,7 +30,7 @@ import org.eclipse.core.runtime.IAdaptable;
  *</p>
  *<p>
  * When a project is built, a specific configuration is built. This configuration
- * is passed to the builders so they can adapt their behavior
+ * is passed to the builders so they can map their behavior
  * appropriately. Builders which don't care about configurations may ignore this,
  * and work as before.
  *</p>

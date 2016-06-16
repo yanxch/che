@@ -19,13 +19,17 @@ import org.eclipse.che.api.user.server.spi.UserDao;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 import javax.persistence.NoResultException;
+import javax.persistence.RollbackException;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static org.eclipse.che.api.user.server.dao.jpa.Constants.USER_ALIAS_INDEX_NAME;
+import static org.eclipse.che.api.user.server.dao.jpa.Constants.USER_EMAIL_INDEX_NAME;
+import static org.eclipse.che.api.user.server.dao.jpa.Constants.USER_NAME_INDEX_NAME;
 
 /**
  * @author Yevhenii Voevodin
@@ -52,7 +56,7 @@ public class JpaUserDao implements UserDao {
             manager.getTransaction().begin();
             manager.persist(user);
             manager.getTransaction().commit();
-        } catch (EntityExistsException x) {
+        } catch (RollbackException x) {
             // TODO make it more concrete
             throw new ConflictException("User with such id/name/email/alias already exists");
         } catch (RuntimeException x) {
@@ -66,18 +70,22 @@ public class JpaUserDao implements UserDao {
     public void update(UserImpl update) throws NotFoundException, ServerException, ConflictException {
         requireNonNull(update, "Required non-null update");
         final EntityManager manager = factory.createEntityManager();
+        final EntityTransaction tx = manager.getTransaction();
         try {
-            manager.getTransaction().begin();
+            tx.begin();
             final UserImpl user = manager.find(UserImpl.class, update.getId());
             if (user == null) {
                 throw new NotFoundException(format("Couldn't update user with id '%s' because it doesn't exist", update.getId()));
             }
-            manager.remove(update.getId());
-            manager.persist(user);
-            manager.getTransaction().commit();
+            manager.remove(user);
+            manager.persist(update);
+            tx.commit();
         } catch (RuntimeException x) {
             throw new ServerException(x.getLocalizedMessage(), x);
         } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
             manager.close();
         }
     }

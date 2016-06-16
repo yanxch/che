@@ -376,7 +376,7 @@ public class JavaElementLabels {
 	}
 
 	/**
-	 * Returns the label of the given object. The object must be of type {@link IJavaElement} or adapt to {@link IWorkbenchAdapter}.
+	 * Returns the label of the given object. The object must be of type {@link IJavaElement} or map to {@link IWorkbenchAdapter}.
 	 * If the element type is not known, the empty string is returned.
 	 * The returned label is BiDi-processed with {@link TextProcessor#process(String, String)}.
 	 *
@@ -413,7 +413,7 @@ public class JavaElementLabels {
 	}
 
 	/**
-	 * Returns the styled label of the given object. The object must be of type {@link IJavaElement} or adapt to {@link IWorkbenchAdapter}.
+	 * Returns the styled label of the given object. The object must be of type {@link IJavaElement} or map to {@link IWorkbenchAdapter}.
 	 * If the element type is not known, the empty string is returned.
 	 * The returned label is BiDi-processed with {@link TextProcessor#process(String, String)}.
 	 *

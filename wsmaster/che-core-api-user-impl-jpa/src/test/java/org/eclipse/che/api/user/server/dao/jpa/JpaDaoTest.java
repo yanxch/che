@@ -18,9 +18,7 @@ import org.testng.annotations.Test;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import javax.persistence.RollbackException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,15 +51,17 @@ public class JpaDaoTest {
     @Test
     public void test() throws Exception {
         final EntityManager manager = factory.createEntityManager();
-        manager.getTransaction().begin();
-        manager.persist(new UserImpl("id", "email", "name", "password", asList("alias1", "alias2")));
-        manager.getTransaction().commit();
-
-        final CriteriaBuilder cb = manager.getCriteriaBuilder();
-        final CriteriaQuery<UserImpl> query = cb.createQuery(UserImpl.class);
-        final Root<UserImpl> root = query.from(UserImpl.class);
-        query.select(root).where(cb.isMember("alias", root.get("aliases")));
-
-        System.out.println();
+        final UserImpl user = new UserImpl("id", "email", "name", "password", asList("alias1", "alias2"));
+        final UserImpl user2 = new UserImpl("id2", "email2", "name2", "password", asList("alias1", "alias4"));
+        try {
+            manager.getTransaction().begin();
+            manager.persist(user);
+            manager.persist(user2);
+            manager.getTransaction().commit();
+        } catch (RollbackException x) {
+            x.printStackTrace();
+        } catch (RuntimeException x) {
+            System.out.printf("");
+        }
     }
 }

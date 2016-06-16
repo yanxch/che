@@ -33,5 +33,7 @@
         <module>../wsmaster</module>
         <module>../wsagent</module>
         <module>ide</module>
+        <module>che-core-api-jdbc</module>
+        <module>che-core-api-jdbc-vendor-h2</module>
     </modules>
 </project>

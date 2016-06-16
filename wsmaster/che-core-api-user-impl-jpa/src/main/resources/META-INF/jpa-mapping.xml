@@ -19,22 +19,32 @@
     <description>XML Mapping file</description>
 
     <entity class="org.eclipse.che.api.user.server.model.impl.UserImpl" name="User">
-        <table name="USER"/>
+        <table name="USER">
+            <unique-constraint name="EMAIL_INDEX">
+                <column-name>email</column-name>
+            </unique-constraint>
+            <unique-constraint name="NAME_INDEX">
+                <column-name>name</column-name>
+            </unique-constraint>
+        </table>
         <attributes>
             <id name="id"/>
             <basic name="email">
-                <column name="EMAIL" unique="true"/>
+                <column name="EMAIL" nullable="false"/>
             </basic>
             <basic name="name">
-                <column name="NAME" nullable="false" unique="true"/>
+                <column name="NAME" nullable="false"/>
             </basic>
             <basic name="password">
                 <column name="PASSWORD" nullable="false"/>
             </basic>
             <element-collection name="aliases" target-class="java.lang.String">
-                <column name="ALIAS" nullable="false" unique="true"/>
+                <column name="ALIAS" nullable="false"/>
                 <collection-table name="USER_ALIASES">
                     <join-column name="USER_ID"/>
+                    <unique-constraint name="ALIAS_INDEX">
+                        <column-name>alias</column-name>
+                    </unique-constraint>
                 </collection-table>
             </element-collection>
         </attributes>

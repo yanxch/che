@@ -11,6 +11,7 @@
 package org.eclipse.che.api.user.server.dao.jpa;
 
 import org.eclipse.che.commons.test.tck.AbstractTestListener;
+import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.eclipse.persistence.config.TargetServer;
 import org.testng.ITestContext;
 

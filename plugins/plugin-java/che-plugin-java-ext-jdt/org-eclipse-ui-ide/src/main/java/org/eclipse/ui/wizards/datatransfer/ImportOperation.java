@@ -439,9 +439,9 @@ public class ImportOperation extends WorkspaceModifyOperation {
     /**
      * Returns the resource either casted to or adapted to an IFile. 
      *
-     * @param resource resource to cast/adapt
+     * @param resource resource to cast/map
      * @return the resource either casted to or adapted to an IFile.
-     * 	<code>null</code> if the resource does not adapt to IFile 
+     * 	<code>null</code> if the resource does not map to IFile
      */
     IFile getFile(IResource resource) {
         if (resource instanceof IFile) {
@@ -458,9 +458,9 @@ public class ImportOperation extends WorkspaceModifyOperation {
     /**
      * Returns the resource either casted to or adapted to an IFolder. 
      *
-     * @param resource resource to cast/adapt
+     * @param resource resource to cast/map
      * @return the resource either casted to or adapted to an IFolder.
-     * 	<code>null</code> if the resource does not adapt to IFolder 
+     * 	<code>null</code> if the resource does not map to IFolder
      */
     IFolder getFolder(IResource resource) {
         if (resource instanceof IFolder) {

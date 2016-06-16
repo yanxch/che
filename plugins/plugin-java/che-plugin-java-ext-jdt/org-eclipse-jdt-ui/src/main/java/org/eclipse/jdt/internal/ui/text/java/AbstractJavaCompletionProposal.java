@@ -727,7 +727,7 @@ public abstract class AbstractJavaCompletionProposal implements IJavaCompletionP
 		fIsValidated= isValidPrefix(getPrefix(document, offset));
 
 		if (fIsValidated && event != null) {
-			// adapt replacement range to document change
+			// map replacement range to document change
 			int delta= (event.fText == null ? 0 : event.fText.length()) - event.fLength;
 			final int newLength= Math.max(getReplacementLength() + delta, 0);
 			setReplacementLength(newLength);

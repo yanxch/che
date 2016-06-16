@@ -12,6 +12,8 @@ package org.eclipse.che.api.user.server.model.impl;
 
 import org.eclipse.che.api.core.model.user.User;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Null;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -25,6 +27,7 @@ import java.util.Objects;
 public class UserImpl implements User {
 
     private String       id;
+    @Null
     private String       email;
     private String       name;
     private String       password;

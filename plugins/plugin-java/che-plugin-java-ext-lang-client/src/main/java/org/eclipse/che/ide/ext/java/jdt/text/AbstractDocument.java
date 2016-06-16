@@ -984,7 +984,7 @@ public abstract class AbstractDocument implements Document {
      * called in the sequence they have been arranged.
      *
      * @param event
-     *         the document event describing the change to which to adapt the positions
+     *         the document event describing the change to which to map the positions
      */
     protected void updatePositions(DocumentEvent event) {
         for (PositionUpdater u : fPositionUpdaters) {

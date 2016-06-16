@@ -1500,7 +1500,7 @@ public final class JavaIndenter {
 		while (true) {
 			nextToken();
 
-			// if any line item comes with its own indentation, adapt to it
+			// if any line item comes with its own indentation, map to it
 			if (fLine < startLine) {
 				try {
 					int lineOffset= fDocument.getLineOffset(startLine);
