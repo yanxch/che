@@ -43,6 +43,7 @@ import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.ui.loaders.initialization.InitialLoadingInfo;
 import org.eclipse.che.ide.ui.loaders.initialization.LoaderPresenter;
+import org.eclipse.che.ide.ui.loaders.request.LoaderFactory;
 import org.eclipse.che.ide.util.loging.Log;
 import org.eclipse.che.ide.websocket.MessageBusProvider;
 import org.eclipse.che.ide.workspace.create.CreateWorkspacePresenter;
@@ -62,7 +63,7 @@ import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAI
  * @author Florent Benoit
  */
 @Singleton
-public class FactoryWorkspaceComponent extends WorkspaceComponent implements Component {
+public class FactoryWorkspaceComponent extends WorkspaceComponent {
     private final FactoryServiceClient           factoryServiceClient;
     private       String                         workspaceId;
 
@@ -84,7 +85,8 @@ public class FactoryWorkspaceComponent extends WorkspaceComponent implements Com
                                      PreferencesManager preferencesManager,
                                      DtoFactory dtoFactory,
                                      InitialLoadingInfo initialLoadingInfo,
-                                     WorkspaceSnapshotCreator snapshotCreator) {
+                                     WorkspaceSnapshotCreator snapshotCreator,
+                                     LoaderFactory loaderFactory) {
         super(workspaceServiceClient,
               createWorkspacePresenter,
               startWorkspacePresenter,
@@ -101,7 +103,8 @@ public class FactoryWorkspaceComponent extends WorkspaceComponent implements Com
               preferencesManager,
               dtoFactory,
               initialLoadingInfo,
-              snapshotCreator);
+              snapshotCreator,
+              loaderFactory);
         this.factoryServiceClient = factoryServiceClient;
     }
 
