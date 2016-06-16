@@ -25,47 +25,38 @@ import org.eclipse.che.api.git.GitException;
 import org.eclipse.che.api.git.GitUserResolver;
 import org.eclipse.che.api.git.LogPage;
 import org.eclipse.che.api.git.UserCredential;
+import org.eclipse.che.api.git.params.AddParams;
+import org.eclipse.che.api.git.params.CheckoutParams;
+import org.eclipse.che.api.git.params.CloneParams;
+import org.eclipse.che.api.git.params.CloneWithSparseCheckoutParams;
+import org.eclipse.che.api.git.params.CommitParams;
+import org.eclipse.che.api.git.params.DiffParams;
+import org.eclipse.che.api.git.params.FetchParams;
+import org.eclipse.che.api.git.params.LogParams;
+import org.eclipse.che.api.git.params.LsFilesParams;
+import org.eclipse.che.api.git.params.PullParams;
+import org.eclipse.che.api.git.params.PushParams;
+import org.eclipse.che.api.git.params.RemoteAddParams;
+import org.eclipse.che.api.git.params.RemoteUpdateParams;
+import org.eclipse.che.api.git.params.ResetParams;
+import org.eclipse.che.api.git.params.RmParams;
+import org.eclipse.che.api.git.params.TagCreateParams;
 import org.eclipse.che.api.git.shared.AddRequest;
 import org.eclipse.che.api.git.shared.Branch;
-import org.eclipse.che.api.git.shared.BranchCreateRequest;
-import org.eclipse.che.api.git.shared.BranchDeleteRequest;
-import org.eclipse.che.api.git.shared.BranchListRequest;
-import org.eclipse.che.api.git.shared.CheckoutRequest;
-import org.eclipse.che.api.git.shared.CloneRequest;
-import org.eclipse.che.api.git.shared.CommitRequest;
-import org.eclipse.che.api.git.shared.DiffRequest;
-import org.eclipse.che.api.git.shared.FetchRequest;
+import org.eclipse.che.api.git.shared.BranchListMode;
 import org.eclipse.che.api.git.shared.GitUser;
-import org.eclipse.che.api.git.shared.InitRequest;
-import org.eclipse.che.api.git.shared.LogRequest;
-import org.eclipse.che.api.git.shared.LsFilesRequest;
-import org.eclipse.che.api.git.shared.LsRemoteRequest;
-import org.eclipse.che.api.git.shared.MergeRequest;
 import org.eclipse.che.api.git.shared.MergeResult;
-import org.eclipse.che.api.git.shared.MoveRequest;
 import org.eclipse.che.api.git.shared.ProviderInfo;
-import org.eclipse.che.api.git.shared.PullRequest;
 import org.eclipse.che.api.git.shared.PullResponse;
-import org.eclipse.che.api.git.shared.PushRequest;
 import org.eclipse.che.api.git.shared.PushResponse;
-import org.eclipse.che.api.git.shared.RebaseRequest;
 import org.eclipse.che.api.git.shared.RebaseResponse;
 import org.eclipse.che.api.git.shared.Remote;
-import org.eclipse.che.api.git.shared.RemoteAddRequest;
-import org.eclipse.che.api.git.shared.RemoteListRequest;
 import org.eclipse.che.api.git.shared.RemoteReference;
-import org.eclipse.che.api.git.shared.RemoteUpdateRequest;
-import org.eclipse.che.api.git.shared.ResetRequest;
 import org.eclipse.che.api.git.shared.Revision;
-import org.eclipse.che.api.git.shared.RmRequest;
-import org.eclipse.che.api.git.shared.ShowFileContentRequest;
 import org.eclipse.che.api.git.shared.ShowFileContentResponse;
 import org.eclipse.che.api.git.shared.Status;
 import org.eclipse.che.api.git.shared.StatusFormat;
 import org.eclipse.che.api.git.shared.Tag;
-import org.eclipse.che.api.git.shared.TagCreateRequest;
-import org.eclipse.che.api.git.shared.TagDeleteRequest;
-import org.eclipse.che.api.git.shared.TagListRequest;
 import org.eclipse.che.dto.server.DtoFactory;
 import org.eclipse.che.git.impl.nativegit.commands.AddCommand;
 import org.eclipse.che.git.impl.nativegit.commands.BranchCreateCommand;
@@ -88,16 +79,16 @@ import org.eclipse.che.plugin.ssh.key.script.SshScriptProvider;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static org.eclipse.che.api.git.shared.BranchListMode.LIST_ALL;
+import static org.eclipse.che.api.git.shared.BranchListMode.LIST_LOCAL;
 import static org.eclipse.che.api.git.shared.ProviderInfo.AUTHENTICATE_URL;
 import static org.eclipse.che.api.git.shared.ProviderInfo.PROVIDER_NAME;
-import static org.eclipse.che.dto.server.DtoFactory.newDto;
 
 /**
  * Native implementation of GitConnection
@@ -159,29 +150,29 @@ public class NativeGitConnection implements GitConnection {
     }
 
     @Override
-    public void add(AddRequest request) throws GitException {
+    public void add(AddParams params) throws GitException {
         AddCommand command = nativeGit.createAddCommand();
-        command.setFilePattern(request.getFilepattern() == null ?
+        command.setFilePattern(params.getFilePattern() == null ?
                                AddRequest.DEFAULT_PATTERN :
-                               request.getFilepattern());
-        command.setUpdate(request.isUpdate());
+                               params.getFilePattern());
+        command.setUpdate(params.isUpdate());
         command.execute();
     }
 
     @Override
-    public void checkout(CheckoutRequest request) throws GitException {
+    public void checkout(CheckoutParams params) throws GitException {
         nativeGit.createCheckoutCommand()
-                 .setBranchName(request.getName())
-                 .setStartPoint(request.getStartPoint())
-                 .setCreateNew(request.isCreateNew())
-                 .setTrackBranch(request.getTrackBranch())
-                 .setFilePaths(request.getFiles())
-                 .setNoTrack(request.isNoTrack())
+                 .setBranchName(params.getName())
+                 .setStartPoint(params.getStartPoint())
+                 .setCreateNew(params.isCreateNew())
+                 .setTrackBranch(params.getTrackBranch())
+                 .setFilePaths(params.getFiles())
+                 .setNoTrack(params.isNoTrack())
                  .execute();
     }
 
     @Override
-    public void cloneWithSparseCheckout(String directory, String remoteUrl, String branch) throws GitException, UnauthorizedException {
+    public void cloneWithSparseCheckout(CloneWithSparseCheckoutParams params) throws GitException, UnauthorizedException {
         /*
         Does following sequence of Git commands:
         $ git init
@@ -190,9 +181,11 @@ public class NativeGitConnection implements GitConnection {
         $ echo keepDirectory >> .git/info/sparse-checkout
         $ git pull origin master
         */
-        init(newDto(InitRequest.class).withBare(false));
-        remoteAdd(newDto(RemoteAddRequest.class).withName("origin").withUrl(remoteUrl));
+        init(false);
+        remoteAdd(RemoteAddParams.create("origin", params.getRemoteUrl()));
         getConfig().add("core.sparsecheckout", "true");
+        String directory = params.getDirectory();
+        String branch = params.getBranch();
         try {
             Files.write(Paths.get(getWorkingDir() + "/.git/info/sparse-checkout"),
                         (directory.startsWith("/") ? directory : "/" + directory).getBytes());
@@ -200,13 +193,13 @@ public class NativeGitConnection implements GitConnection {
             throw new GitException(exception.getMessage(), exception);
         }
         try {
-            fetch(newDto(FetchRequest.class).withRemote("origin"));
+            fetch(FetchParams.create("origin"));
         } catch (GitException exception) {
             throw new GitException(
                     String.format("Unable to fetch remote branch %s. Make sure it exists and can be accessed.", branch), exception);
         }
         try {
-            checkout(newDto(CheckoutRequest.class).withName(branch));
+            checkout(CheckoutParams.create(branch));
         } catch (GitException exception) {
             throw new GitException(
                     String.format("Unable to checkout branch %s. Make sure it exists and can be accessed.", branch), exception);
@@ -214,10 +207,10 @@ public class NativeGitConnection implements GitConnection {
     }
 
     @Override
-    public Branch branchCreate(BranchCreateRequest request) throws GitException {
+    public Branch branchCreate(String name, String startPoint) throws GitException {
         BranchCreateCommand branchCreateCommand = nativeGit.createBranchCreateCommand();
-        branchCreateCommand.setBranchName(request.getName())
-                           .setStartPoint(request.getStartPoint());
+        branchCreateCommand.setBranchName(name)
+                           .setStartPoint(startPoint);
         try {
             branchCreateCommand.execute();
         } catch (ServerException exception) {
@@ -225,13 +218,13 @@ public class NativeGitConnection implements GitConnection {
                 throw new GitException(exception.getMessage(), ErrorCodes.INIT_COMMIT_WAS_NOT_PERFORMED);
             }
         }
-        return DtoFactory.getInstance().createDto(Branch.class).withName(getBranchRef(request.getName())).withActive(false)
-                         .withDisplayName(request.getName()).withRemote(false);
+        return DtoFactory.getInstance().createDto(Branch.class).withName(getBranchRef(name)).withActive(false)
+                         .withDisplayName(name).withRemote(false);
     }
 
     @Override
-    public void branchDelete(BranchDeleteRequest request) throws GitException, UnauthorizedException {
-        String branchName = getBranchRef(request.getName());
+    public void branchDelete(String name, boolean force) throws GitException, UnauthorizedException {
+        String branchName = getBranchRef(name);
         String remoteName = null;
         String remoteUri = null;
 
@@ -245,7 +238,7 @@ public class NativeGitConnection implements GitConnection {
 
         branchDeleteCommand.setBranchName(branchName)
                            .setRemote(remoteName)
-                           .setDeleteFullyMerged(request.isForce())
+                           .setDeleteFullyMerged(force)
                            .setRemoteUri(remoteUri);
 
         executeRemoteCommand(branchDeleteCommand);
@@ -274,17 +267,12 @@ public class NativeGitConnection implements GitConnection {
     }
 
     @Override
-    public List<Branch> branchList(BranchListRequest request) throws GitException {
-        String listMode = request.getListMode();
-        if (listMode != null
-            && !(listMode.equals(BranchListRequest.LIST_ALL) || listMode.equals(BranchListRequest.LIST_REMOTE))) {
-            throw new IllegalArgumentException("Unsupported list mode '" + listMode + "'. Must be either 'a' or 'r'. ");
-        }
+    public List<Branch> branchList(BranchListMode listMode) throws GitException {
         List<Branch> branches;
         BranchListCommand branchListCommand = nativeGit.createBranchListCommand();
-        if (request.getListMode() == null) {
+        if (listMode == null || listMode == LIST_LOCAL) {
             branches = branchListCommand.execute();
-        } else if (request.getListMode().equals(BranchListRequest.LIST_ALL)) {
+        } else if (listMode == LIST_ALL) {
             branches = branchListCommand.execute();
             branches.addAll(branchListCommand.setShowRemotes(true).execute());
         } else {
@@ -294,26 +282,26 @@ public class NativeGitConnection implements GitConnection {
     }
 
     @Override
-    public List<String> listFiles(LsFilesRequest request) throws GitException {
+    public List<String> listFiles(LsFilesParams params) throws GitException {
         return nativeGit.createListFilesCommand()
-                        .setOthers(request.isOthers())
-                        .setModified(request.isModified())
-                        .setStaged(request.isStaged())
-                        .setCached(request.isCached())
-                        .setDeleted(request.isDeleted())
-                        .setIgnored(request.isIgnored())
-                        .setExcludeStandard(request.isExcludeStandard())
+                        .setOthers(params.isOthers())
+                        .setModified(params.isModified())
+                        .setStaged(params.isStaged())
+                        .setCached(params.isCached())
+                        .setDeleted(params.isDeleted())
+                        .setIgnored(params.isIgnored())
+                        .setExcludeStandard(params.isExcludeStandard())
                         .execute();
     }
 
     @Override
-    public void clone(CloneRequest request) throws URISyntaxException, UnauthorizedException, GitException {
-        final String remoteUri = request.getRemoteUri();
+    public void clone(CloneParams params) throws UnauthorizedException, GitException {
+        final String remoteUri = params.getRemoteUrl();
         CloneCommand clone = nativeGit.createCloneCommand();
         clone.setRemoteUri(remoteUri);
-        clone.setRemoteName(request.getRemoteName());
+        clone.setRemoteName(params.getRemoteName());
         if (clone.getTimeout() > 0) {
-            clone.setTimeout(request.getTimeout());
+            clone.setTimeout(params.getTimeout());
         }
 
         executeRemoteCommand(clone);
@@ -323,13 +311,13 @@ public class NativeGitConnection implements GitConnection {
             getConfig().set("codenvy.credentialsProvider", credentials.getProviderId());
         }
         nativeGit.createRemoteUpdateCommand()
-                 .setRemoteName(request.getRemoteName() == null ? "origin" : request.getRemoteName())
+                 .setRemoteName(params.getRemoteName() == null ? "origin" : params.getRemoteName())
                  .setNewUrl(remoteUri)
                  .execute();
     }
 
     @Override
-    public Revision commit(CommitRequest request) throws GitException {
+    public Revision commit(CommitParams params) throws GitException {
         CommitCommand command = nativeGit.createCommitCommand();
         GitUser committer = getLocalCommitter();
         command.setCommitter(committer);
@@ -343,10 +331,10 @@ public class NativeGitConnection implements GitConnection {
             //ignore property not found.
         }
 
-        command.setAll(request.isAll());
-        command.setAmend(request.isAmend());
-        command.setMessage(request.getMessage());
-        command.setFiles(request.getFiles());
+        command.setAll(params.isAll());
+        command.setAmend(params.isAmend());
+        command.setMessage(params.getMessage());
+        command.setFiles(params.getFiles());
 
         command.execute();
         LogCommand log = nativeGit.createLogCommand();
@@ -356,26 +344,26 @@ public class NativeGitConnection implements GitConnection {
     }
 
     @Override
-    public DiffPage diff(DiffRequest request) throws GitException {
-        return new NativeGitDiffPage(request, nativeGit);
+    public DiffPage diff(DiffParams params) throws GitException {
+        return new NativeGitDiffPage(params, nativeGit);
     }
 
     @Override
-    public ShowFileContentResponse showFileContent(ShowFileContentRequest request) throws GitException {
-        ShowFileContentCommand showCommand = nativeGit.createShowFileContentCommand().withFile(request.getFile())
-                                                      .withVersion(request.getVersion());
+    public ShowFileContentResponse showFileContent(String file, String version) throws GitException {
+        ShowFileContentCommand showCommand = nativeGit.createShowFileContentCommand().withFile(file)
+                                                      .withVersion(version);
         return showCommand.execute();
     }
 
     @Override
-    public void fetch(FetchRequest request) throws GitException, UnauthorizedException {
-        String remoteUri = getRemoteUri(request.getRemote());
+    public void fetch(FetchParams params) throws GitException, UnauthorizedException {
+        String remoteUri = getRemoteUri(params.getRemote());
         FetchCommand fetchCommand = nativeGit.createFetchCommand();
-        fetchCommand.setRemote(request.getRemote())
-                    .setPrune(request.isRemoveDeletedRefs())
-                    .setRefSpec(request.getRefSpec())
+        fetchCommand.setRemote(params.getRemote())
+                    .setPrune(params.isRemoveDeletedRefs())
+                    .setRefSpec(params.getRefSpec())
                     .setRemoteUri(remoteUri)
-                    .setTimeout(request.getTimeout());
+                    .setTimeout(params.getTimeout());
         executeRemoteCommand(fetchCommand);
     }
 
@@ -402,16 +390,16 @@ public class NativeGitConnection implements GitConnection {
     }
 
     @Override
-    public void init(InitRequest request) throws GitException {
+    public void init(boolean bare) throws GitException {
         InitCommand initCommand = nativeGit.createInitCommand();
-        initCommand.setBare(request.isBare());
+        initCommand.setBare(bare);
         initCommand.execute();
     }
 
     @Override
-    public LogPage log(LogRequest request) throws GitException {
+    public LogPage log(LogParams params) throws GitException {
         try {
-            return new LogPage(nativeGit.createLogCommand().setFileFilter(request.getFileFilter()).execute());
+            return new LogPage(nativeGit.createLogCommand().setFileFilter(params.getFileFilter()).execute());
         } catch (ServerException exception) {
             if (noInitCommitWhenLogErrorPattern.matcher(exception.getMessage()).find()) {
                 throw new GitException(exception.getMessage(), ErrorCodes.INIT_COMMIT_WAS_NOT_PERFORMED);
@@ -422,44 +410,44 @@ public class NativeGitConnection implements GitConnection {
     }
 
     @Override
-    public List<RemoteReference> lsRemote(LsRemoteRequest request) throws GitException, UnauthorizedException {
-        LsRemoteCommand command = nativeGit.createLsRemoteCommand().setRemoteUrl(request.getRemoteUrl());
+    public List<RemoteReference> lsRemote(String remoteUrl) throws GitException, UnauthorizedException {
+        LsRemoteCommand command = nativeGit.createLsRemoteCommand().setRemoteUrl(remoteUrl);
         executeRemoteCommand(command);
         return command.getRemoteReferences();
     }
 
     @Override
-    public MergeResult merge(MergeRequest request) throws GitException {
-        final String gitObjectType = getRevisionType(request.getCommit());
+    public MergeResult merge(String commit) throws GitException {
+        final String gitObjectType = getRevisionType(commit);
         if (!("commit".equalsIgnoreCase(gitObjectType) || "tag".equalsIgnoreCase(gitObjectType))) {
-            throw new GitException("Invalid object for merge " + request.getCommit() + ".");
+            throw new GitException("Invalid object for merge " + commit + ".");
         }
-        return nativeGit.createMergeCommand().setCommit(request.getCommit()).setCommitter(getLocalCommitter()).execute();
+        return nativeGit.createMergeCommand().setCommit(commit).setCommitter(getLocalCommitter()).execute();
     }
 
     @Override
-    public RebaseResponse rebase(RebaseRequest request) throws GitException {
+    public RebaseResponse rebase(String operation, String branch) throws GitException {
     	throw new GitException("Unsupported method");
     }
 
     @Override
-    public void mv(MoveRequest request) throws GitException {
+    public void mv(String source, String target) throws GitException {
         nativeGit.createMoveCommand()
-                 .setSource(request.getSource())
-                 .setTarget(request.getTarget())
+                 .setSource(source)
+                 .setTarget(target)
                  .execute();
     }
 
     @Override
-    public PullResponse pull(PullRequest request) throws GitException, UnauthorizedException {
-        String remoteUri = getRemoteUri(request.getRemote());
+    public PullResponse pull(PullParams params) throws GitException, UnauthorizedException {
+        String remoteUri = getRemoteUri(params.getRemote());
 
         PullCommand pullCommand = nativeGit.createPullCommand();
-        pullCommand.setRemote(request.getRemote())
-                   .setRefSpec(request.getRefSpec())
+        pullCommand.setRemote(params.getRemote())
+                   .setRefSpec(params.getRefSpec())
                    .setAuthor(getLocalCommitter())
                    .setRemoteUri(remoteUri)
-                   .setTimeout(request.getTimeout());
+                   .setTimeout(params.getTimeout());
 
         try {
             executeRemoteCommand(pullCommand);
@@ -480,16 +468,16 @@ public class NativeGitConnection implements GitConnection {
     }
 
     @Override
-    public PushResponse push(PushRequest request) throws GitException, UnauthorizedException {
-        String remoteUri = getRemoteUri(request.getRemote());
+    public PushResponse push(PushParams params) throws GitException, UnauthorizedException {
+        String remoteUri = getRemoteUri(params.getRemote());
 
         PushCommand pushCommand = nativeGit.createPushCommand();
 
-        pushCommand.setRemote(request.getRemote())
-                   .setForce(request.isForce())
-                   .setRefSpec(request.getRefSpec())
+        pushCommand.setRemote(params.getRemote())
+                   .setForce(params.isForce())
+                   .setRefSpec(params.getRefSpec())
                    .setRemoteUri(remoteUri)
-                   .setTimeout(request.getTimeout());
+                   .setTimeout(params.getTimeout());
 
         executeRemoteCommand(pushCommand);
 
@@ -497,11 +485,11 @@ public class NativeGitConnection implements GitConnection {
     }
 
     @Override
-    public void remoteAdd(RemoteAddRequest request) throws GitException {
+    public void remoteAdd(RemoteAddParams params) throws GitException {
         nativeGit.createRemoteAddCommand()
-                 .setName(request.getName())
-                 .setUrl(request.getUrl())
-                 .setBranches(request.getBranches())
+                 .setName(params.getName())
+                 .setUrl(params.getUrl())
+                 .setBranches(params.getBranches())
                  .execute();
     }
 
@@ -511,39 +499,39 @@ public class NativeGitConnection implements GitConnection {
     }
 
     @Override
-    public List<Remote> remoteList(RemoteListRequest request) throws GitException {
+    public List<Remote> remoteList(String remoteName, boolean verbose) throws GitException {
         RemoteListCommand remoteListCommand = nativeGit.createRemoteListCommand();
-        return remoteListCommand.setRemoteName(request.getRemote()).execute();
+        return remoteListCommand.setRemoteName(remoteName).execute();
     }
 
     @Override
-    public void remoteUpdate(RemoteUpdateRequest request) throws GitException {
+    public void remoteUpdate(RemoteUpdateParams params) throws GitException {
         nativeGit.createRemoteUpdateCommand()
-                 .setRemoteName(request.getName())
-                 .setAddUrl(request.getAddUrl())
-                 .setBranchesToAdd(request.getBranches())
-                 .setAddBranches(request.isAddBranches())
-                 .setAddPushUrl(request.getAddPushUrl())
-                 .setRemovePushUrl(request.getRemovePushUrl())
-                 .setRemoveUrl(request.getRemoveUrl())
+                 .setRemoteName(params.getName())
+                 .setAddUrl(params.getAddUrl())
+                 .setBranchesToAdd(params.getBranches())
+                 .setAddBranches(params.isAddBranches())
+                 .setAddPushUrl(params.getAddPushUrl())
+                 .setRemovePushUrl(params.getRemovePushUrl())
+                 .setRemoveUrl(params.getRemoveUrl())
                  .execute();
     }
 
     @Override
-    public void reset(ResetRequest request) throws GitException {
+    public void reset(ResetParams params) throws GitException {
         nativeGit.createResetCommand()
-                 .setMode(request.getType().getValue())
-                 .setCommit(request.getCommit())
-                 .setFilePattern(request.getFilePattern())
+                 .setMode(params.getType().getValue())
+                 .setCommit(params.getCommit())
+                 .setFilePattern(params.getFilePattern())
                  .execute();
     }
 
     @Override
-    public void rm(RmRequest request) throws GitException {
+    public void rm(RmParams params) throws GitException {
         nativeGit.createRemoveCommand()
-                 .setCached(request.isCached())
-                 .setListOfItems(request.getItems())
-                 .setRecursively(request.isRecursively())
+                 .setCached(params.isCached())
+                 .setListOfItems(params.getItems())
+                 .setRecursively(params.isRecursively())
                  .execute();
     }
 
@@ -553,23 +541,23 @@ public class NativeGitConnection implements GitConnection {
     }
 
     @Override
-    public Tag tagCreate(TagCreateRequest request) throws GitException {
-        return nativeGit.createTagCreateCommand().setName(request.getName())
+    public Tag tagCreate(TagCreateParams params) throws GitException {
+        return nativeGit.createTagCreateCommand().setName(params.getName())
                         .setCommitter(getLocalCommitter())
-                        .setCommit(request.getCommit())
-                        .setMessage(request.getMessage())
-                        .setForce(request.isForce())
+                        .setCommit(params.getCommit())
+                        .setMessage(params.getMessage())
+                        .setForce(params.isForce())
                         .execute();
     }
 
     @Override
-    public void tagDelete(TagDeleteRequest request) throws GitException {
-        nativeGit.createTagDeleteCommand().setName(request.getName()).execute();
+    public void tagDelete(String name) throws GitException {
+        nativeGit.createTagDeleteCommand().setName(name).execute();
     }
 
     @Override
-    public List<Tag> tagList(TagListRequest request) throws GitException {
-        return nativeGit.createTagListCommand().setPattern(request.getPattern()).execute();
+    public List<Tag> tagList(String pattern) throws GitException {
+        return nativeGit.createTagListCommand().setPattern(pattern).execute();
     }
 
     @Override

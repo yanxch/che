@@ -15,6 +15,7 @@ import com.google.web.bindery.event.shared.Event;
 import com.googlecode.gwt.test.utils.GwtReflectionUtils;
 
 import org.eclipse.che.api.git.shared.Branch;
+import org.eclipse.che.api.git.shared.BranchListMode;
 import org.eclipse.che.api.git.shared.PullResponse;
 import org.eclipse.che.api.git.shared.Remote;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
@@ -35,6 +36,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -125,7 +127,7 @@ public class PullPresenterTest extends BaseTest {
                 onSuccess.invoke(callback, remotes);
                 return callback;
             }
-        }).when(service).remoteList(anyObject(),anyObject(), anyString(), anyBoolean(),
+        }).when(service).remoteList(anyObject(), anyString(), anyBoolean(),
                                     (AsyncRequestCallback<List<Remote>>)anyObject());
         doAnswer(new Answer() {
             @Override
@@ -147,12 +149,12 @@ public class PullPresenterTest extends BaseTest {
                 onSuccess.invoke(callback, branches);
                 return callback;
             }
-        }).when(service).branchList(anyObject(), anyObject(), anyString(), (AsyncRequestCallback<List<Branch>>)anyObject());
+        }).when(service).branchList(anyObject(), any(BranchListMode.class), (AsyncRequestCallback<List<Branch>>)anyObject());
 
         presenter.showDialog();
 
         verify(appContext).getCurrentProject();
-        verify(service).remoteList(anyObject(), eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
+        verify(service).remoteList(eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
                                    (AsyncRequestCallback<List<Remote>>)anyObject());
         verify(view, times(2)).setEnablePullButton(eq(ENABLE_BUTTON));
         verify(view).setRepositories((List<Remote>)anyObject());
@@ -179,7 +181,7 @@ public class PullPresenterTest extends BaseTest {
                 onSuccess.invoke(callback, remotes);
                 return callback;
             }
-        }).when(service).remoteList(anyObject(), anyObject(), anyString(), anyBoolean(),
+        }).when(service).remoteList(anyObject(), anyString(), anyBoolean(),
                                     (AsyncRequestCallback<List<Remote>>)anyObject());
         doAnswer(new Answer() {
             @Override
@@ -201,15 +203,15 @@ public class PullPresenterTest extends BaseTest {
                 onSuccess.invoke(callback, branches);
                 return callback;
             }
-        }).when(service).branchList(anyObject(), anyObject(), anyString(), (AsyncRequestCallback<List<Branch>>)anyObject());
+        }).when(service).branchList(anyObject(), any(BranchListMode.class), (AsyncRequestCallback<List<Branch>>)anyObject());
 
         presenter.showDialog();
 
         verify(appContext).getCurrentProject();
-        verify(service).remoteList(anyObject(), eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
+        verify(service).remoteList(eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
                                    (AsyncRequestCallback<List<Remote>>)anyObject());
         verify(service, times(2))
-                .branchList(anyObject(), eq(rootProjectConfig), anyString(), (AsyncRequestCallback<List<Branch>>)anyObject());
+                .branchList(eq(rootProjectConfig), any(BranchListMode.class), (AsyncRequestCallback<List<Branch>>)anyObject());
         verify(view, times(2)).setEnablePullButton(eq(ENABLE_BUTTON));
         verify(view).setRepositories((List<Remote>)anyObject());
         verify(view).showDialog();
@@ -237,7 +239,7 @@ public class PullPresenterTest extends BaseTest {
                 return callback;
             }
         }).when(service)
-          .remoteList(anyObject(), anyObject(), anyString(), anyBoolean(), (AsyncRequestCallback<List<Remote>>)anyObject());
+          .remoteList(anyObject(), anyString(), anyBoolean(), (AsyncRequestCallback<List<Remote>>)anyObject());
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
@@ -258,12 +260,12 @@ public class PullPresenterTest extends BaseTest {
                 onFailure.invoke(callback, mock(Throwable.class));
                 return callback;
             }
-        }).when(service).branchList(anyObject(), anyObject(), anyString(), (AsyncRequestCallback<List<Branch>>)anyObject());
+        }).when(service).branchList(anyObject(), any(BranchListMode.class), (AsyncRequestCallback<List<Branch>>)anyObject());
 
         presenter.showDialog();
 
         verify(appContext).getCurrentProject();
-        verify(service).remoteList(anyObject(), eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
+        verify(service).remoteList(eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
                                    (AsyncRequestCallback<List<Remote>>)anyObject());
         verify(constant).branchesListFailed();
         verify(gitOutputConsoleFactory).create(anyString());
@@ -285,13 +287,13 @@ public class PullPresenterTest extends BaseTest {
                 onFailure.invoke(callback, mock(Throwable.class));
                 return callback;
             }
-        }).when(service).remoteList(anyObject(), anyObject(), anyString(), anyBoolean(),
+        }).when(service).remoteList(anyObject(), anyString(), anyBoolean(),
                                     (AsyncRequestCallback<List<Remote>>)anyObject());
 
         presenter.showDialog();
 
         verify(appContext).getCurrentProject();
-        verify(service).remoteList(anyObject(), eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
+        verify(service).remoteList(eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
                                    (AsyncRequestCallback<List<Remote>>)anyObject());
         verify(constant).remoteListFailed();
         verify(view).setEnablePullButton(eq(DISABLE_BUTTON));
@@ -311,7 +313,7 @@ public class PullPresenterTest extends BaseTest {
                 onSuccess.invoke(callback, pullResponse);
                 return callback;
             }
-        }).when(service).pull(anyObject(), anyObject(), anyString(), anyString(), (AsyncRequestCallback<PullResponse>)anyObject());
+        }).when(service).pull(anyObject(), anyString(), anyString(), (AsyncRequestCallback<PullResponse>)anyObject());
 
         presenter.showDialog();
         presenter.onPullClicked();
@@ -320,7 +322,7 @@ public class PullPresenterTest extends BaseTest {
         verify(view).getRepositoryUrl();
         verify(view).close();
         verify(editorAgent).getOpenedEditors();
-        verify(service).pull(anyObject(), eq(rootProjectConfig), anyString(), eq(REPOSITORY_NAME), (AsyncRequestCallback)anyObject());
+        verify(service).pull(eq(rootProjectConfig), anyString(), eq(REPOSITORY_NAME), (AsyncRequestCallback)anyObject());
         verify(gitOutputConsoleFactory).create(PULL_COMMAND_NAME);
         verify(console).print(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
@@ -346,7 +348,7 @@ public class PullPresenterTest extends BaseTest {
                 onSuccess.invoke(callback, pullResponse);
                 return callback;
             }
-        }).when(service).pull(anyObject(), anyObject(), anyString(), anyString(), (AsyncRequestCallback<PullResponse>)anyObject());
+        }).when(service).pull(anyObject(), anyString(), anyString(), (AsyncRequestCallback<PullResponse>)anyObject());
 
         presenter.showDialog();
         presenter.onPullClicked();
@@ -355,7 +357,7 @@ public class PullPresenterTest extends BaseTest {
         verify(view).getRepositoryUrl();
         verify(view).close();
         verify(editorAgent).getOpenedEditors();
-        verify(service).pull(anyObject(), eq(rootProjectConfig), anyString(), eq(REPOSITORY_NAME), (AsyncRequestCallback)anyObject());
+        verify(service).pull(eq(rootProjectConfig), anyString(), eq(REPOSITORY_NAME), (AsyncRequestCallback)anyObject());
         verify(gitOutputConsoleFactory).create(PULL_COMMAND_NAME);
         verify(console).print(anyString());
         verify(consolesPanelPresenter).addCommandOutput(anyString(), eq(console));
@@ -380,13 +382,13 @@ public class PullPresenterTest extends BaseTest {
                 onFailure.invoke(callback, exception);
                 return callback;
             }
-        }).when(service).pull(anyObject(), anyObject(), anyString(), anyString(), (AsyncRequestCallback<PullResponse>)anyObject());
+        }).when(service).pull(anyObject(), anyString(), anyString(), (AsyncRequestCallback<PullResponse>)anyObject());
         when(exception.getMessage()).thenReturn("error Message");
 
         presenter.showDialog();
         presenter.onPullClicked();
 
-        verify(service).pull(anyObject(), eq(rootProjectConfig), anyString(), eq(REPOSITORY_NAME),
+        verify(service).pull(eq(rootProjectConfig), anyString(), eq(REPOSITORY_NAME),
                              (AsyncRequestCallback<PullResponse>)anyObject());
         verify(view).close();
         verify(gitOutputConsoleFactory).create(PULL_COMMAND_NAME);
@@ -410,13 +412,13 @@ public class PullPresenterTest extends BaseTest {
                 onFailure.invoke(callback, exception);
                 return callback;
             }
-        }).when(service).pull(anyObject(), anyObject(), anyString(), anyString(), (AsyncRequestCallback<PullResponse>)anyObject());
+        }).when(service).pull(anyObject(), anyString(), anyString(), (AsyncRequestCallback<PullResponse>)anyObject());
 
         presenter.showDialog();
         presenter.onPullClicked();
 
         verify(view).close();
-        verify(service).pull(anyObject(), eq(rootProjectConfig), anyString(), eq(REPOSITORY_NAME), (AsyncRequestCallback)anyObject());
+        verify(service).pull(eq(rootProjectConfig), anyString(), eq(REPOSITORY_NAME), (AsyncRequestCallback)anyObject());
         verify(notificationManager).notify(anyString(), rootProjectConfig);
         verify(gitOutputConsoleFactory).create(PULL_COMMAND_NAME);
         verify(console).printError(anyString());
@@ -441,7 +443,7 @@ public class PullPresenterTest extends BaseTest {
                 onSuccess.invoke(callback, pullResponse);
                 return callback;
             }
-        }).when(service).pull(anyObject(), anyObject(), anyString(), anyString(), (AsyncRequestCallback<PullResponse>)anyObject());
+        }).when(service).pull(anyObject(), anyString(), anyString(), (AsyncRequestCallback<PullResponse>)anyObject());
 
         presenter.showDialog();
         presenter.onPullClicked();
@@ -480,12 +482,12 @@ public class PullPresenterTest extends BaseTest {
                 onSuccess.invoke(callback, branches);
                 return callback;
             }
-        }).when(service).branchList(anyObject(), anyObject(), anyString(), (AsyncRequestCallback<List<Branch>>)anyObject());
+        }).when(service).branchList(anyObject(), any(BranchListMode.class), (AsyncRequestCallback<List<Branch>>)anyObject());
 
         presenter.onRemoteRepositoryChanged();
 
         verify(service, times(2))
-                .branchList(anyObject(), eq(rootProjectConfig), anyString(), (AsyncRequestCallback<List<Branch>>)anyObject());
+                .branchList(eq(rootProjectConfig), any(BranchListMode.class), (AsyncRequestCallback<List<Branch>>)anyObject());
         verify(view).setRemoteBranches((List<String>)anyObject());
         verify(view).setLocalBranches((List<String>)anyObject());
         verify(view).selectRemoteBranch(anyString());

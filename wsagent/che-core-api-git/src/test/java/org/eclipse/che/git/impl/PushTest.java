@@ -17,12 +17,11 @@ import org.eclipse.che.api.core.UnauthorizedException;
 import org.eclipse.che.api.git.GitConnection;
 import org.eclipse.che.api.git.GitConnectionFactory;
 import org.eclipse.che.api.git.GitException;
-import org.eclipse.che.api.git.shared.AddRequest;
-import org.eclipse.che.api.git.shared.CheckoutRequest;
-import org.eclipse.che.api.git.shared.BranchListRequest;
-import org.eclipse.che.api.git.shared.CloneRequest;
-import org.eclipse.che.api.git.shared.CommitRequest;
-import org.eclipse.che.api.git.shared.PushRequest;
+import org.eclipse.che.api.git.params.AddParams;
+import org.eclipse.che.api.git.params.CheckoutParams;
+import org.eclipse.che.api.git.params.CloneParams;
+import org.eclipse.che.api.git.params.CommitParams;
+import org.eclipse.che.api.git.params.PushParams;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -32,7 +31,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 
-import static org.eclipse.che.dto.server.DtoFactory.newDto;
 import static org.eclipse.che.git.impl.GitTestUtil.addFile;
 import static org.eclipse.che.git.impl.GitTestUtil.cleanupTestRepo;
 import static org.eclipse.che.git.impl.GitTestUtil.connectToInitializedGitRepository;
@@ -65,21 +63,20 @@ public class PushTest {
         //given
         GitConnection connection = connectToInitializedGitRepository(connectionFactory, repository);
         GitConnection remoteConnection = connectionFactory.getConnection(remoteRepo.getAbsolutePath());
-        remoteConnection.clone(newDto(CloneRequest.class).withRemoteUri(connection.getWorkingDir().getAbsolutePath())
-                                                         .withWorkingDir(remoteConnection.getWorkingDir().getAbsolutePath()));
+        remoteConnection.clone(CloneParams.create(connection.getWorkingDir().getAbsolutePath())
+                                          .withWorkingDir(remoteConnection.getWorkingDir().getAbsolutePath()));
         addFile(remoteConnection, "newfile", "content");
-        remoteConnection.add(newDto(AddRequest.class).withFilepattern(Arrays.asList(".")));
-        remoteConnection.commit(newDto(CommitRequest.class).withMessage("Fake commit"));
+        remoteConnection.add(AddParams.create(Arrays.asList(".")));
+        remoteConnection.commit(CommitParams.create("Fake commit"));
         //when
-        remoteConnection.push(newDto(PushRequest.class)
-                                      .withRefSpec(Arrays.asList("refs/heads/master:refs/heads/test"))
-                                      .withRemote("origin")
-                                      .withTimeout(-1));
+        remoteConnection.push(PushParams.create("origin")
+                                        .withRefSpec(Arrays.asList("refs/heads/master:refs/heads/test"))
+                                        .withTimeout(-1));
         //then
         //check branches in origin repository
-        assertEquals(connection.branchList(newDto(BranchListRequest.class)).size(), 1);
+        assertEquals(connection.branchList(null).size(), 1);
         //checkout test branch
-        connection.checkout(newDto(CheckoutRequest.class).withName("test"));
+        connection.checkout(CheckoutParams.create("test"));
         assertTrue(new File(connection.getWorkingDir(), "newfile").exists());
     }
 
@@ -90,16 +87,15 @@ public class PushTest {
         GitConnection connection = connectToInitializedGitRepository(connectionFactory, repository);
         GitConnection remoteConnection = connectToInitializedGitRepository(connectionFactory, remoteRepo);
         addFile(connection, "README", "README");
-        connection.add(newDto(AddRequest.class).withFilepattern(Arrays.asList(".")));
-        connection.commit(newDto(CommitRequest.class).withMessage("Init commit."));
+        connection.add(AddParams.create(Arrays.asList(".")));
+        connection.commit(CommitParams.create("Init commit."));
         //make push
-        int branchesBefore = remoteConnection.branchList(newDto(BranchListRequest.class)).size();
+        int branchesBefore = remoteConnection.branchList(null).size();
         //when
-        connection.push(newDto(PushRequest.class).withRefSpec(Arrays.asList("refs/heads/master:refs/heads/test"))
-                                                 .withRemote(remoteRepo.getAbsolutePath())
-                                                 .withTimeout(-1));
+        connection.push(PushParams.create(remoteRepo.getAbsolutePath()).withRefSpec(Arrays.asList("refs/heads/master:refs/heads/test"))
+                                  .withTimeout(-1));
         //then
-        int branchesAfter = remoteConnection.branchList(newDto(BranchListRequest.class)).size();
+        int branchesAfter = remoteConnection.branchList(null).size();
         assertEquals(branchesAfter - 1, branchesBefore);
     }
 
@@ -111,7 +107,6 @@ public class PushTest {
         GitConnection connection = connectToInitializedGitRepository(connectionFactory, repository);
 
         //when
-        PushRequest request = newDto(PushRequest.class);
-        connection.push(request);
+        connection.push(PushParams.create(null));
     }
 }

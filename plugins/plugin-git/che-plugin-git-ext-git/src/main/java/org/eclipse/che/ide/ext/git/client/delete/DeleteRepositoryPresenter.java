@@ -83,7 +83,7 @@ public class DeleteRepositoryPresenter {
     public void deleteRepository() {
         final CurrentProject project = appContext.getCurrentProject();
         final GitOutputConsole console = gitOutputConsoleFactory.create(DELETE_REPO_COMMAND_NAME);
-        service.deleteRepository(appContext.getDevMachine(), project.getRootProject(), new AsyncRequestCallback<Void>() {
+        service.deleteRepository(project.getRootProject(), new AsyncRequestCallback<Void>() {
             @Override
             protected void onSuccess(Void result) {
                 console.print(constant.deleteGitRepositorySuccess());

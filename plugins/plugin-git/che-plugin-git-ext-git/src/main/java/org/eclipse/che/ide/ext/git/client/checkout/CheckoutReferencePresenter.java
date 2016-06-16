@@ -107,8 +107,7 @@ public class CheckoutReferencePresenter implements CheckoutReferenceView.ActionD
     public void onCheckoutClicked(final String reference) {
         view.close();
         final ProjectConfigDto project = appContext.getCurrentProject().getRootProject();
-        service.checkout(appContext.getDevMachine(),
-                         project,
+        service.checkout(project,
                          dtoFactory.createDto(CheckoutRequest.class)
                                    .withName(reference)
                                    .withCreateNew(false),

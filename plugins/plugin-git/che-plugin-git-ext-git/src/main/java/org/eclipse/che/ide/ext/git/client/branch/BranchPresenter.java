@@ -49,7 +49,7 @@ import org.eclipse.che.ide.api.dialogs.InputCallback;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
-import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_ALL;
+import static org.eclipse.che.api.git.shared.BranchListMode.LIST_ALL;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.util.ExceptionUtils.getErrorCode;
@@ -163,7 +163,7 @@ public class BranchPresenter implements BranchView.ActionDelegate {
     }
 
     private void renameBranch(String newName) {
-        service.branchRename(appContext.getDevMachine(), project.getRootProject(), selectedBranch.getDisplayName(), newName,
+        service.branchRename(project.getRootProject(), selectedBranch.getDisplayName(), newName,
                              new AsyncRequestCallback<String>() {
                                  @Override
                                  protected void onSuccess(String result) {
@@ -190,7 +190,7 @@ public class BranchPresenter implements BranchView.ActionDelegate {
     public void onDeleteClicked() {
         final String name = selectedBranch.getName();
 
-        service.branchDelete(appContext.getDevMachine(), project.getRootProject(), name, true, new AsyncRequestCallback<String>() {
+        service.branchDelete(project.getRootProject(), name, true, new AsyncRequestCallback<String>() {
             @Override
             protected void onSuccess(String result) {
                 getBranches();
@@ -223,7 +223,7 @@ public class BranchPresenter implements BranchView.ActionDelegate {
         final String path = root.getPath();
         final String projectType = root.getType();
 
-        service.checkout(appContext.getDevMachine(), root, checkoutRequest, new AsyncRequestCallback<String>() {
+        service.checkout(root, checkoutRequest, new AsyncRequestCallback<String>() {
             @Override
             protected void onSuccess(String result) {
                 getBranches();
@@ -293,7 +293,7 @@ public class BranchPresenter implements BranchView.ActionDelegate {
 
     /** Get the list of branches. */
     private void getBranches() {
-        service.branchList(appContext.getDevMachine(), project.getRootProject(), LIST_ALL,
+        service.branchList(project.getRootProject(), LIST_ALL,
                            new AsyncRequestCallback<List<Branch>>(dtoUnmarshallerFactory.newListUnmarshaller(Branch.class)) {
                                @Override
                                protected void onSuccess(List<Branch> result) {
@@ -322,7 +322,7 @@ public class BranchPresenter implements BranchView.ActionDelegate {
             @Override
             public void accepted(String value) {
                 if (!value.isEmpty()) {
-                    service.branchCreate(appContext.getDevMachine(), project.getRootProject(), value, null,
+                    service.branchCreate(project.getRootProject(), value, null,
                                          new AsyncRequestCallback<Branch>(dtoUnmarshallerFactory.newUnmarshaller(Branch.class)) {
                                              @Override
                                              protected void onSuccess(Branch result) {

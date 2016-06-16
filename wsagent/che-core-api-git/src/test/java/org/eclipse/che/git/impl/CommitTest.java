@@ -16,9 +16,10 @@ import com.google.common.io.Files;
 import org.eclipse.che.api.git.GitConnection;
 import org.eclipse.che.api.git.GitConnectionFactory;
 import org.eclipse.che.api.git.GitException;
+import org.eclipse.che.api.git.params.AddParams;
+import org.eclipse.che.api.git.params.CommitParams;
+import org.eclipse.che.api.git.params.LogParams;
 import org.eclipse.che.api.git.shared.AddRequest;
-import org.eclipse.che.api.git.shared.CommitRequest;
-import org.eclipse.che.api.git.shared.LogRequest;
 import org.eclipse.che.api.git.shared.Revision;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -27,7 +28,6 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 
-import static org.eclipse.che.dto.server.DtoFactory.newDto;
 import static org.eclipse.che.git.impl.GitTestUtil.addFile;
 import static org.eclipse.che.git.impl.GitTestUtil.cleanupTestRepo;
 import static org.eclipse.che.git.impl.GitTestUtil.connectToInitializedGitRepository;
@@ -36,7 +36,8 @@ import static org.testng.Assert.assertEquals;
 /**
  * @author Eugene Voevodin
  */
-public class CommitTest {
+public class
+CommitTest {
     private File repository;
     private String CONTENT = "git repository content\n";
 
@@ -57,15 +58,14 @@ public class CommitTest {
         //add new File
         addFile(connection, "DONTREADME", "secret");
         //add changes
-        connection.add(newDto(AddRequest.class).withFilepattern(AddRequest.DEFAULT_PATTERN));
+        connection.add(AddParams.create(AddRequest.DEFAULT_PATTERN));
 
         //when
-        CommitRequest commitRequest = newDto(CommitRequest.class)
-                .withMessage("Commit message").withAmend(false).withAll(false);
-        Revision revision = connection.commit(commitRequest);
+        CommitParams params = CommitParams.create("Commit message").withAmend(false).withAll(false);
+        Revision revision = connection.commit(params);
 
         //then
-        assertEquals(revision.getMessage(), commitRequest.getMessage());
+        assertEquals(revision.getMessage(), params.getMessage());
     }
 
     @Test(dataProvider = "GitConnectionFactory", dataProviderClass = org.eclipse.che.git.impl.GitConnectionFactoryProvider.class)
@@ -73,18 +73,17 @@ public class CommitTest {
         //given
         GitConnection connection = connectToInitializedGitRepository(connectionFactory, repository);
         addFile(connection, "README.txt", CONTENT);
-        connection.add(newDto(AddRequest.class).withFilepattern(ImmutableList.of("README.txt")));
-        connection.commit(newDto(CommitRequest.class).withMessage("Initial addd"));
+        connection.add(AddParams.create(ImmutableList.of("README.txt")));
+        connection.commit(CommitParams.create("Initial addd"));
 
         //when
         //change existing README
         addFile(connection, "README.txt", "not secret");
 
         //then
-        CommitRequest commitRequest = newDto(CommitRequest.class)
-                .withMessage("Other commit message").withAmend(false).withAll(true);
-        Revision revision = connection.commit(commitRequest);
-        assertEquals(revision.getMessage(), commitRequest.getMessage());
+        CommitParams params = CommitParams.create("Other commit message").withAmend(false).withAll(true);
+        Revision revision = connection.commit(params);
+        assertEquals(revision.getMessage(), params.getMessage());
     }
 
     @Test(dataProvider = "GitConnectionFactory", dataProviderClass = org.eclipse.che.git.impl.GitConnectionFactoryProvider.class)
@@ -92,20 +91,19 @@ public class CommitTest {
         //given
         GitConnection connection = connectToInitializedGitRepository(connectionFactory, repository);
         addFile(connection, "README.txt", CONTENT);
-        connection.add(newDto(AddRequest.class).withFilepattern(ImmutableList.of("README.txt")));
-        connection.commit(newDto(CommitRequest.class).withMessage("Initial addd"));
-        int beforeCount = connection.log(newDto(LogRequest.class)).getCommits().size();
+        connection.add(AddParams.create(ImmutableList.of("README.txt")));
+        connection.commit(CommitParams.create("Initial addd"));
+        int beforeCount = connection.log(LogParams.create()).getCommits().size();
 
         //when
         //change existing README
         addFile(connection, "README.txt", "some new content");
-        CommitRequest commitRequest = newDto(CommitRequest.class)
-                .withMessage("Amend commit").withAmend(true).withAll(true);
+        CommitParams params = CommitParams.create("Amend commit").withAmend(true).withAll(true);
 
         //then
-        Revision revision = connection.commit(commitRequest);
-        int afterCount = connection.log(newDto(LogRequest.class)).getCommits().size();
-        assertEquals(revision.getMessage(), commitRequest.getMessage());
+        Revision revision = connection.commit(params);
+        int afterCount = connection.log(LogParams.create()).getCommits().size();
+        assertEquals(revision.getMessage(), params.getMessage());
         assertEquals(beforeCount, afterCount);
     }
 }

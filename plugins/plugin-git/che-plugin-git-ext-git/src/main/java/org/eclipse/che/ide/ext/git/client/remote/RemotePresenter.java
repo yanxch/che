@@ -100,7 +100,7 @@ public class RemotePresenter implements RemoteView.ActionDelegate {
      * then get the list of branches (remote and local).
      */
     private void getRemotes() {
-        service.remoteList(appContext.getDevMachine(), project, null, true,
+        service.remoteList(project, null, true,
                            new AsyncRequestCallback<List<Remote>>(dtoUnmarshallerFactory.newListUnmarshaller(Remote.class)) {
                                @Override
                                protected void onSuccess(List<Remote> result) {
@@ -162,7 +162,7 @@ public class RemotePresenter implements RemoteView.ActionDelegate {
         }
 
         final String name = selectedRemote.getName();
-        service.remoteDelete(appContext.getDevMachine(), project, name, new AsyncRequestCallback<String>() {
+        service.remoteDelete(project, name, new AsyncRequestCallback<String>() {
             @Override
             protected void onSuccess(String result) {
                 getRemotes();

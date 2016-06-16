@@ -121,7 +121,7 @@ public class CheckoutReferenceTest extends BaseTest {
         presenter.onEnterClicked();
 
         verify(view, never()).close();
-        verify(service, never()).checkout(eq(devMachine), anyObject(), anyObject(), anyObject());
+        verify(service, never()).checkout(anyObject(), anyObject(), anyObject());
     }
 
     @Test
@@ -135,7 +135,7 @@ public class CheckoutReferenceTest extends BaseTest {
         presenter.onEnterClicked();
 
         verify(view).close();
-        verify(service).checkout(eq(devMachine), anyObject(), anyObject(), anyObject());
+        verify(service).checkout(anyObject(), anyObject(), anyObject());
         verify(checkoutRequest).withName(CORRECT_REFERENCE);
         verify(checkoutRequest).withCreateNew(false);
         verifyNoMoreInteractions(checkoutRequest);
@@ -163,7 +163,7 @@ public class CheckoutReferenceTest extends BaseTest {
 
         presenter.onEnterClicked();
 
-        verify(service).checkout(eq(devMachine), anyObject(), anyObject(), asyncCallbackCaptor.capture());
+        verify(service).checkout(anyObject(), anyObject(), asyncCallbackCaptor.capture());
         AsyncRequestCallback<String> callback = asyncCallbackCaptor.getValue();
         GwtReflectionUtils.callOnSuccess(callback, "");
 
@@ -196,7 +196,7 @@ public class CheckoutReferenceTest extends BaseTest {
 
         presenter.onEnterClicked();
 
-        verify(service).checkout(eq(devMachine), anyObject(), anyObject(), asyncCallbackCaptor.capture());
+        verify(service).checkout(anyObject(), anyObject(), asyncCallbackCaptor.capture());
         AsyncRequestCallback<String> callback = asyncCallbackCaptor.getValue();
         GwtReflectionUtils.callOnSuccess(callback, "");
 
@@ -223,7 +223,7 @@ public class CheckoutReferenceTest extends BaseTest {
 
         presenter.onEnterClicked();
 
-        verify(service).checkout(eq(devMachine), anyObject(), anyObject(), asyncCallbackCaptor.capture());
+        verify(service).checkout(anyObject(), anyObject(), asyncCallbackCaptor.capture());
         AsyncRequestCallback<String> callback = asyncCallbackCaptor.getValue();
         GwtReflectionUtils.callOnFailure(callback, mock(Throwable.class));
 

@@ -14,6 +14,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.googlecode.gwt.test.utils.GwtReflectionUtils;
 
 import org.eclipse.che.api.git.shared.Branch;
+import org.eclipse.che.api.git.shared.BranchListMode;
 import org.eclipse.che.api.git.shared.PushResponse;
 import org.eclipse.che.api.git.shared.Remote;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
@@ -34,6 +35,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.eclipse.che.api.git.shared.BranchListMode.LIST_REMOTE;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyObject;
@@ -122,7 +125,7 @@ public class PushToRemotePresenterTest extends BaseTest {
 
         presenter.updateLocalBranches();
 
-        verify(service).branchList(eq(devMachine), anyObject(), (String)eq(null), asyncRequestCallbackArrayBranchCaptor.capture());
+        verify(service).branchList(anyObject(), eq(null), asyncRequestCallbackArrayBranchCaptor.capture());
         AsyncRequestCallback<List<Branch>> value = asyncRequestCallbackArrayBranchCaptor.getValue();
         Method onSuccessRemotes = GwtReflectionUtils.getMethod(value.getClass(), "onSuccess");
         onSuccessRemotes.invoke(value, localBranches);
@@ -159,13 +162,12 @@ public class PushToRemotePresenterTest extends BaseTest {
 
         presenter.updateRemoteBranches();
 
-        verify(service).branchList(eq(devMachine), anyObject(), eq("r"), asyncRequestCallbackArrayBranchCaptor.capture());
+        verify(service).branchList(anyObject(), eq(LIST_REMOTE), asyncRequestCallbackArrayBranchCaptor.capture());
         AsyncRequestCallback<List<Branch>> value = asyncRequestCallbackArrayBranchCaptor.getValue();
         Method onSuccessRemotes = GwtReflectionUtils.getMethod(value.getClass(), "onSuccess");
         onSuccessRemotes.invoke(value, remoteBranches);
 
-        verify(service).config(eq(devMachine), anyObject(), anyListOf(String.class), anyBoolean(),
-                               asyncRequestCallbackMapCaptor.capture());
+        verify(service).config(anyObject(), anyListOf(String.class), asyncRequestCallbackMapCaptor.capture());
         AsyncRequestCallback<Map<String, String>> mapCallback = asyncRequestCallbackMapCaptor.getValue();
         Method onSuccessConfig = GwtReflectionUtils.getMethod(mapCallback.getClass(), "onSuccess");
         onSuccessConfig.invoke(mapCallback, configs);
@@ -186,13 +188,12 @@ public class PushToRemotePresenterTest extends BaseTest {
 
         presenter.updateRemoteBranches();
 
-        verify(service).branchList(eq(devMachine), anyObject(), eq("r"), asyncRequestCallbackArrayBranchCaptor.capture());
+        verify(service).branchList(anyObject(), eq(LIST_REMOTE), asyncRequestCallbackArrayBranchCaptor.capture());
         AsyncRequestCallback<List<Branch>> value = asyncRequestCallbackArrayBranchCaptor.getValue();
         Method onSuccessRemotes = GwtReflectionUtils.getMethod(value.getClass(), "onSuccess");
         onSuccessRemotes.invoke(value, remoteBranches);
 
-        verify(service).config(eq(devMachine), anyObject(), anyListOf(String.class), anyBoolean(),
-                               asyncRequestCallbackMapCaptor.capture());
+        verify(service).config(anyObject(), anyListOf(String.class), asyncRequestCallbackMapCaptor.capture());
         AsyncRequestCallback<Map<String, String>> mapCallback = asyncRequestCallbackMapCaptor.getValue();
         Method onSuccessConfig = GwtReflectionUtils.getMethod(mapCallback.getClass(), "onSuccess");
         onSuccessConfig.invoke(mapCallback, new HashMap());
@@ -206,7 +207,7 @@ public class PushToRemotePresenterTest extends BaseTest {
     public void testShowErrorNotificationWhenListOfRemoteBranchesFailedToLoad() throws Exception {
         presenter.updateRemoteBranches();
 
-        verify(service).branchList(eq(devMachine), anyObject(), anyString(), asyncRequestCallbackArrayBranchCaptor.capture());
+        verify(service).branchList(anyObject(), any(BranchListMode.class), asyncRequestCallbackArrayBranchCaptor.capture());
         AsyncRequestCallback<List<Branch>> value = asyncRequestCallbackArrayBranchCaptor.getValue();
         Method onFailureRemotes = GwtReflectionUtils.getMethod(value.getClass(), "onFailure");
         onFailureRemotes.invoke(value, mock(Throwable.class));
@@ -223,13 +224,12 @@ public class PushToRemotePresenterTest extends BaseTest {
     public void testShowErrorNotificationWhenUpstreanBranchFailedToLoad() throws Exception {
         presenter.updateRemoteBranches();
 
-        verify(service).branchList(eq(devMachine), anyObject(), eq("r"), asyncRequestCallbackArrayBranchCaptor.capture());
+        verify(service).branchList(anyObject(), LIST_REMOTE, asyncRequestCallbackArrayBranchCaptor.capture());
         AsyncRequestCallback<List<Branch>> remoteBranches = asyncRequestCallbackArrayBranchCaptor.getValue();
         Method onSuccess = GwtReflectionUtils.getMethod(remoteBranches.getClass(), "onSuccess");
         onSuccess.invoke(remoteBranches, new ArrayList<>());
 
-        verify(service).config(eq(devMachine), anyObject(), anyListOf(String.class), anyBoolean(),
-                               asyncRequestCallbackMapCaptor.capture());
+        verify(service).config(anyObject(), anyListOf(String.class), asyncRequestCallbackMapCaptor.capture());
         AsyncRequestCallback<Map<String, String>> mapCallback = asyncRequestCallbackMapCaptor.getValue();
         Method onFailureConfig = GwtReflectionUtils.getMethod(mapCallback.getClass(), "onFailure");
         onFailureConfig.invoke(mapCallback, mock(Throwable.class));
@@ -257,19 +257,19 @@ public class PushToRemotePresenterTest extends BaseTest {
 
         presenter.showDialog();
 
-        verify(service).remoteList(eq(devMachine), anyObject(), anyString(), anyBoolean(),
+        verify(service).remoteList(anyObject(), anyString(), anyBoolean(),
                                    asyncRequestCallbackArrayRemoteCaptor.capture());
         AsyncRequestCallback<List<Remote>> remoteCallback = asyncRequestCallbackArrayRemoteCaptor.getValue();
         Method onSuccessRemotes = GwtReflectionUtils.getMethod(remoteCallback.getClass(), "OnSuccess");
         onSuccessRemotes.invoke(remoteCallback, remotes);
 
-        verify(service).branchList(eq(devMachine), anyObject(), anyString(), asyncRequestCallbackArrayBranchCaptor.capture());
+        verify(service).branchList(anyObject(), any(BranchListMode.class), asyncRequestCallbackArrayBranchCaptor.capture());
         AsyncRequestCallback<List<Branch>> branchesCallback = asyncRequestCallbackArrayBranchCaptor.getValue();
         Method onFailureBranches = GwtReflectionUtils.getMethod(branchesCallback.getClass(), "onFailure");
         onFailureBranches.invoke(branchesCallback, mock(Throwable.class));
 
         verify(appContext).getCurrentProject();
-        verify(service).remoteList(eq(devMachine), eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
+        verify(service).remoteList(eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
                                    (AsyncRequestCallback<List<Remote>>)anyObject());
 
         verify(constant, times(2)).localBranchesListFailed();
@@ -284,14 +284,14 @@ public class PushToRemotePresenterTest extends BaseTest {
     public void testShowDialogWhenRemoteListRequestIsFailed() throws Exception {
         presenter.showDialog();
 
-        verify(service).remoteList(eq(devMachine), anyObject(), anyString(), anyBoolean(),
+        verify(service).remoteList(anyObject(), anyString(), anyBoolean(),
                                    asyncRequestCallbackArrayRemoteCaptor.capture());
         AsyncRequestCallback<List<Remote>> branchesCallback = asyncRequestCallbackArrayRemoteCaptor.getValue();
         Method onFailureBranches = GwtReflectionUtils.getMethod(branchesCallback.getClass(), "onFailure");
         onFailureBranches.invoke(branchesCallback, mock(Throwable.class));
 
         verify(appContext).getCurrentProject();
-        verify(service).remoteList(eq(devMachine), eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
+        verify(service).remoteList(eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
                                    (AsyncRequestCallback<List<Remote>>)anyObject());
         verify(constant, times(2)).remoteListFailed();
         verify(gitOutputConsoleFactory).create(anyString());
@@ -308,13 +308,13 @@ public class PushToRemotePresenterTest extends BaseTest {
         presenter.showDialog();
         presenter.onPushClicked();
 
-        verify(service).push(eq(devMachine), anyObject(), anyListOf(String.class), anyString(), anyBoolean(),
+        verify(service).push(anyObject(), anyListOf(String.class), anyString(), anyBoolean(),
                              asyncCallbackVoidCaptor.capture());
         AsyncRequestCallback<PushResponse> voidCallback = asyncCallbackVoidCaptor.getValue();
         Method onSuccess = GwtReflectionUtils.getMethod(voidCallback.getClass(), "onSuccess");
         onSuccess.invoke(voidCallback, pushResponse);
 
-        verify(service).push(eq(devMachine), eq(rootProjectConfig), anyListOf(String.class), eq(REPOSITORY_NAME), eq(DISABLE_CHECK),
+        verify(service).push(eq(rootProjectConfig), anyListOf(String.class), eq(REPOSITORY_NAME), eq(DISABLE_CHECK),
                              (AsyncRequestCallback<PushResponse>)anyObject());
         verify(view).close();
         verify(gitOutputConsoleFactory).create(PUSH_COMMAND_NAME);
@@ -331,13 +331,13 @@ public class PushToRemotePresenterTest extends BaseTest {
         presenter.showDialog();
         presenter.onPushClicked();
 
-        verify(service).push(eq(devMachine), anyObject(), anyListOf(String.class), anyString(), anyBoolean(),
+        verify(service).push(anyObject(), anyListOf(String.class), anyString(), anyBoolean(),
                              asyncCallbackVoidCaptor.capture());
         AsyncRequestCallback<PushResponse> voidCallback = asyncCallbackVoidCaptor.getValue();
         Method onSuccess = GwtReflectionUtils.getMethod(voidCallback.getClass(), "onSuccess");
         onSuccess.invoke(voidCallback, pushResponse);
 
-        verify(service).push(eq(devMachine), eq(rootProjectConfig), anyListOf(String.class), eq(REPOSITORY_NAME), eq(DISABLE_CHECK),
+        verify(service).push(eq(rootProjectConfig), anyListOf(String.class), eq(REPOSITORY_NAME), eq(DISABLE_CHECK),
                              (AsyncRequestCallback<PushResponse>)anyObject());
         verify(view).close();
         verify(gitOutputConsoleFactory).create(PUSH_COMMAND_NAME);
@@ -352,13 +352,13 @@ public class PushToRemotePresenterTest extends BaseTest {
         presenter.showDialog();
         presenter.onPushClicked();
 
-        verify(service).push(eq(devMachine), anyObject(), anyListOf(String.class), anyString(), anyBoolean(),
+        verify(service).push(anyObject(), anyListOf(String.class), anyString(), anyBoolean(),
                              asyncCallbackVoidCaptor.capture());
         AsyncRequestCallback<PushResponse> voidCallback = asyncCallbackVoidCaptor.getValue();
         Method onFailure = GwtReflectionUtils.getMethod(voidCallback.getClass(), "onFailure");
         onFailure.invoke(voidCallback, mock(Throwable.class));
 
-        verify(service).push(eq(devMachine), eq(rootProjectConfig), anyListOf(String.class), eq(REPOSITORY_NAME), eq(DISABLE_CHECK),
+        verify(service).push(eq(rootProjectConfig), anyListOf(String.class), eq(REPOSITORY_NAME), eq(DISABLE_CHECK),
                              (AsyncRequestCallback<PushResponse>)anyObject());
         verify(view).close();
         verify(constant, times(2)).pushFail();
@@ -422,7 +422,7 @@ public class PushToRemotePresenterTest extends BaseTest {
 
         presenter.showDialog();
 
-        verify(service).remoteList(eq(devMachine), anyObject(), anyString(), anyBoolean(),
+        verify(service).remoteList(anyObject(), anyString(), anyBoolean(),
                                    asyncRequestCallbackArrayRemoteCaptor.capture());
 
         AsyncRequestCallback<List<Remote>> remotesCallback = asyncRequestCallbackArrayRemoteCaptor.getValue();
@@ -430,26 +430,25 @@ public class PushToRemotePresenterTest extends BaseTest {
         Method onSuccessRemotes = GwtReflectionUtils.getMethod(remotesCallback.getClass(), "onSuccess");
         onSuccessRemotes.invoke(remotesCallback, remotes);
 
-        verify(service).branchList(eq(devMachine), anyObject(), anyString(), asyncRequestCallbackArrayBranchCaptor.capture());
+        verify(service).branchList(anyObject(), any(BranchListMode.class), asyncRequestCallbackArrayBranchCaptor.capture());
         AsyncRequestCallback<List<Branch>> branchesCallback = asyncRequestCallbackArrayBranchCaptor.getValue();
         //noinspection NonJREEmulationClassesInClientCode
         Method onSuccessBranches = GwtReflectionUtils.getMethod(branchesCallback.getClass(), "onSuccess");
         onSuccessBranches.invoke(branchesCallback, branches);
 
-        verify(service, times(2)).branchList(eq(devMachine), anyObject(), anyString(), asyncRequestCallbackArrayBranchCaptor.capture());
+        verify(service, times(2)).branchList(anyObject(), any(BranchListMode.class), asyncRequestCallbackArrayBranchCaptor.capture());
         branchesCallback = asyncRequestCallbackArrayBranchCaptor.getValue();
         //noinspection NonJREEmulationClassesInClientCode
         onSuccessBranches = GwtReflectionUtils.getMethod(branchesCallback.getClass(), "onSuccess");
         onSuccessBranches.invoke(branchesCallback, branches);
 
-        verify(service).config(eq(devMachine), anyObject(), anyListOf(String.class), anyBoolean(),
-                               asyncRequestCallbackMapCaptor.capture());
+        verify(service).config(anyObject(), anyListOf(String.class), asyncRequestCallbackMapCaptor.capture());
         AsyncRequestCallback<Map<String, String>> value = asyncRequestCallbackMapCaptor.getValue();
         Method config = GwtReflectionUtils.getMethod(value.getClass(), "onSuccess");
         config.invoke(value, new HashMap<String, String>());
 
         verify(appContext).getCurrentProject();
-        verify(service).remoteList(eq(devMachine), eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
+        verify(service).remoteList(eq(rootProjectConfig), anyString(), eq(SHOW_ALL_INFORMATION),
                                    (AsyncRequestCallback<List<Remote>>)anyObject());
         verify(view).setEnablePushButton(eq(ENABLE_BUTTON));
         verify(view).setRepositories((List<Remote>)anyObject());

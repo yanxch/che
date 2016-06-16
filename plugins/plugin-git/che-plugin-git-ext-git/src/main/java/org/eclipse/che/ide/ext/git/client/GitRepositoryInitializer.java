@@ -59,7 +59,7 @@ public class GitRepositoryInitializer {
      */
     public void initGitRepository(final ProjectConfigDto project, final AsyncCallback<Void> callback) {
         try {
-            gitService.init(appContext.getDevMachine(), project, false, new RequestCallback<Void>() {
+            gitService.init(project, false, new RequestCallback<Void>() {
                                 @Override
                                 protected void onSuccess(Void result) {
                                     callback.onSuccess(null);

@@ -13,7 +13,6 @@ package org.eclipse.che.ide.ext.git.client;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.ide.api.git.GitServiceClient;
-import org.eclipse.che.ide.api.machine.DevMachine;
 import org.eclipse.che.ide.api.project.ProjectServiceClient;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.ide.api.app.AppContext;
@@ -66,8 +65,6 @@ public abstract class BaseTest {
     protected ProjectConfigDto         rootProjectConfig;
     @Mock
     protected AppContext               appContext;
-    @Mock
-    protected DevMachine               devMachine;
     @Mock
     protected GitServiceClient         service;
     @Mock

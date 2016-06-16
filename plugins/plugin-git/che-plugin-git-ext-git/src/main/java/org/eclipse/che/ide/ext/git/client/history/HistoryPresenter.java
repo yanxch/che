@@ -50,7 +50,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.eclipse.che.api.git.shared.DiffRequest.DiffType.RAW;
+import static org.eclipse.che.api.git.shared.DiffType.RAW;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.util.ExceptionUtils.getErrorCode;
@@ -159,7 +159,7 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
 
     /** Get the log of the commits. If successfully received, then display in revision grid, otherwise - show error in output panel. */
     private void getCommitsLog(final ProjectConfigDto project) {
-        service.log(appContext.getDevMachine(), project, null, false,
+        service.log(project, null, false,
                     new AsyncRequestCallback<LogResponse>(dtoUnmarshallerFactory.newUnmarshaller(LogResponse.class)) {
                         @Override
                         protected void onSuccess(LogResponse result) {
@@ -363,7 +363,7 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
         }
 
         final ProjectConfigDto project = appContext.getCurrentProject().getRootProject();
-        service.diff(appContext.getDevMachine(), project, filePatterns, RAW, false, 0, revision.getId(), isCached,
+        service.diff(project, filePatterns, RAW, false, 0, revision.getId(), isCached,
                      new AsyncRequestCallback<String>(new StringUnmarshaller()) {
                          @Override
                          protected void onSuccess(String result) {
@@ -402,7 +402,7 @@ public class HistoryPresenter extends BasePresenter implements HistoryView.Actio
         if (index + 1 < revisions.size()) {
             final Revision revisionA = revisions.get(index + 1);
             final ProjectConfigDto project = appContext.getCurrentProject().getRootProject();
-            service.diff(appContext.getDevMachine(), project, filePatterns, RAW, false, 0, revisionA.getId(),
+            service.diff(project, filePatterns, RAW, false, 0, revisionA.getId(),
                          revisionB.getId(),
                          new AsyncRequestCallback<String>(new StringUnmarshaller()) {
                              @Override

@@ -107,7 +107,7 @@ public class AddToIndexPresenter implements AddToIndexView.ActionDelegate {
 
         final GitOutputConsole console = gitOutputConsoleFactory.create(ADD_TO_INDEX_COMMAND_NAME);
         final Unmarshallable<Status> unmarshall = this.dtoUnmarshallerFactory.newUnmarshaller(Status.class);
-        service.status(appContext.getDevMachine(), project.getRootProject(),
+        service.status(project.getRootProject(),
                        new AsyncRequestCallback<Status>(unmarshall) {
                            @Override
                            protected void onSuccess(final Status result) {
@@ -176,7 +176,7 @@ public class AddToIndexPresenter implements AddToIndexView.ActionDelegate {
         final GitOutputConsole console = gitOutputConsoleFactory.create(ADD_TO_INDEX_COMMAND_NAME);
 
         try {
-            service.add(appContext.getDevMachine(), project.getRootProject(), update, getMultipleFilePatterns(), new RequestCallback<Void>() {
+            service.add(project.getRootProject(), update, getMultipleFilePatterns(), new RequestCallback<Void>() {
                 @Override
                 protected void onSuccess(final Void result) {
 

@@ -163,7 +163,7 @@ public abstract class AbstractNewResourceAction extends AbstractPerspectiveActio
                 String filePath = path.substring(project.getName().length() + 2);
                 try {
                     gitServiceClient
-                            .add(appContext.getDevMachine(), project, false, Collections.singletonList(filePath),
+                            .add(project, false, Collections.singletonList(filePath),
                                  new RequestCallback<Void>() {
                                      @Override
                                      protected void onSuccess(Void result) {

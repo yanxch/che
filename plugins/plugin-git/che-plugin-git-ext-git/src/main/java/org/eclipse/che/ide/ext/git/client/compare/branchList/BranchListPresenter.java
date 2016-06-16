@@ -42,8 +42,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_ALL;
-import static org.eclipse.che.api.git.shared.DiffRequest.DiffType.NAME_STATUS;
+import static org.eclipse.che.api.git.shared.BranchListMode.LIST_ALL;
+import static org.eclipse.che.api.git.shared.DiffType.NAME_STATUS;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.NOT_EMERGE_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.ext.git.client.compare.FileStatus.defineStatus;
@@ -131,7 +131,7 @@ public class BranchListPresenter implements BranchListView.ActionDelegate {
         pattern = path.replaceFirst(project.getPath(), "");
         pattern = (pattern.startsWith("/")) ? pattern.replaceFirst("/", "") : pattern;
 
-        gitService.diff(appContext.getDevMachine(), project, pattern.isEmpty() ? null : Collections.singletonList(pattern),
+        gitService.diff(project, pattern.isEmpty() ? null : Collections.singletonList(pattern),
                         NAME_STATUS, false, 0, selectedBranch.getName(), false,
                         new AsyncRequestCallback<String>(new StringUnmarshaller()) {
                             @Override
@@ -184,7 +184,7 @@ public class BranchListPresenter implements BranchListView.ActionDelegate {
 
     /** Get list of branches from selected project. */
     private void getBranches() {
-        gitService.branchList(appContext.getDevMachine(), project.getRootProject(), LIST_ALL,
+        gitService.branchList(project.getRootProject(), LIST_ALL,
                               new AsyncRequestCallback<List<Branch>>(dtoUnmarshallerFactory.newListUnmarshaller(Branch.class)) {
                                   @Override
                                   protected void onSuccess(List<Branch> result) {

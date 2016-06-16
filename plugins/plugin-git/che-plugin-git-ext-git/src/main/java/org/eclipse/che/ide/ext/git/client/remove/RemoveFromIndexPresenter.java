@@ -151,7 +151,7 @@ public class RemoveFromIndexPresenter extends BasicUploadPresenter implements Re
     @Override
     public void onRemoveClicked() {
         final GitOutputConsole console = gitOutputConsoleFactory.create(REMOVE_FROM_INDEX_COMMAND_NAME);
-        service.remove(appContext.getDevMachine(), project.getRootProject(), getFilePatterns(), view.isRemoved(),
+        service.remove(project.getRootProject(), getFilePatterns(), view.isRemoved(),
                        new AsyncRequestCallback<String>() {
                            @Override
                            protected void onSuccess(String result) {

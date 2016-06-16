@@ -71,11 +71,11 @@ public class GitRepositoryInitializerTest extends BaseTest {
                 onSuccess.invoke(callback, (Void)null);
                 return callback;
             }
-        }).when(service).init(devMachine, anyObject(), anyBoolean(), (RequestCallback<Void>)anyObject());
+        }).when(service).init(anyObject(), anyBoolean(), (RequestCallback<Void>)anyObject());
 
         gitRepositoryInitializer.initGitRepository(rootProjectConfig, callback);
 
-        verify(service).init(eq(devMachine), eq(rootProjectConfig), eq(BARE), (RequestCallback<Void>)anyObject());
+        verify(service).init(eq(rootProjectConfig), eq(BARE), (RequestCallback<Void>)anyObject());
     }
 
     @Test
@@ -93,12 +93,12 @@ public class GitRepositoryInitializerTest extends BaseTest {
                 onSuccess.invoke(callback, (Void)null);
                 return callback;
             }
-        }).when(service).init(devMachine, anyObject(), anyBoolean(), (RequestCallback<Void>)anyObject());
+        }).when(service).init(anyObject(), anyBoolean(), (RequestCallback<Void>)anyObject());
 
 
         gitRepositoryInitializer.getGitUrlWithAutoInit(rootProjectConfig, stringCallback);
 
-        verify(service).init(eq(devMachine), eq(rootProjectConfig), eq(BARE), (RequestCallback<Void>)anyObject());
+        verify(service).init(eq(rootProjectConfig), eq(BARE), (RequestCallback<Void>)anyObject());
         verify(stringCallback).onSuccess(eq(REMOTE_URI));
     }
 
@@ -110,7 +110,7 @@ public class GitRepositoryInitializerTest extends BaseTest {
 
         gitRepositoryInitializer.getGitUrlWithAutoInit(rootProjectConfig, stringCallback);
 
-        verify(service, never()).init(eq(devMachine), anyObject(), anyBoolean(), (RequestCallback<Void>)anyObject());
+        verify(service, never()).init(anyObject(), anyBoolean(), (RequestCallback<Void>)anyObject());
         verify(stringCallback).onSuccess(eq(REMOTE_URI));
     }
 }

@@ -118,7 +118,7 @@ public class CommitPresenterTest extends BaseTest {
                 onSuccess.invoke(callback, revision);
                 return callback;
             }
-        }).when(service).commit(devMachine, anyObject(), anyString(), anyBoolean(), anyBoolean(),
+        }).when(service).commit(anyObject(), anyString(), anyBoolean(), anyBoolean(),
                                 (AsyncRequestCallback<Revision>)anyObject());
 
         presenter.showDialog();
@@ -130,7 +130,7 @@ public class CommitPresenterTest extends BaseTest {
         verify(view).close();
         verify(view).setMessage(eq(EMPTY_TEXT));
 
-        verify(service).commit(eq(devMachine), eq(rootProjectConfig), eq(COMMIT_TEXT), eq(ALL_FILE_INCLUDES), eq(IS_OVERWRITTEN),
+        verify(service).commit(eq(rootProjectConfig), eq(COMMIT_TEXT), eq(ALL_FILE_INCLUDES), eq(IS_OVERWRITTEN),
                                (AsyncRequestCallback<Revision>)anyObject());
         verify(gitOutputConsoleFactory).create(COMMIT_COMMAND_NAME);
         verify(console).print(anyString());
@@ -153,7 +153,7 @@ public class CommitPresenterTest extends BaseTest {
                 onFailure.invoke(callback, mock(Throwable.class));
                 return callback;
             }
-        }).when(service).commit(devMachine, anyObject(), anyString(), anyBoolean(), anyBoolean(),
+        }).when(service).commit(anyObject(), anyString(), anyBoolean(), anyBoolean(),
                                 (AsyncRequestCallback<Revision>)anyObject());
 
         presenter.showDialog();
@@ -165,7 +165,7 @@ public class CommitPresenterTest extends BaseTest {
         verify(view).close();
         verify(view, times(0)).setMessage(anyString());
 
-        verify(service).commit(eq(devMachine), eq(rootProjectConfig), eq(COMMIT_TEXT), eq(ALL_FILE_INCLUDES), eq(IS_OVERWRITTEN),
+        verify(service).commit(eq(rootProjectConfig), eq(COMMIT_TEXT), eq(ALL_FILE_INCLUDES), eq(IS_OVERWRITTEN),
                                (AsyncRequestCallback<Revision>)anyObject());
         verify(constant).commitFailed();
         verify(gitOutputConsoleFactory).create(COMMIT_COMMAND_NAME);

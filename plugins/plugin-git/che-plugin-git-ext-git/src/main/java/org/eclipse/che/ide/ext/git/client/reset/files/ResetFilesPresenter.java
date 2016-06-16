@@ -91,7 +91,7 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
     public void showDialog() {
         project = appContext.getCurrentProject();
 
-        service.status(appContext.getDevMachine(), project.getRootProject(),
+        service.status(project.getRootProject(),
                        new AsyncRequestCallback<Status>(dtoUnmarshallerFactory.newUnmarshaller(Status.class)) {
                            @Override
                            protected void onSuccess(Status result) {
@@ -154,7 +154,7 @@ public class ResetFilesPresenter implements ResetFilesView.ActionDelegate {
         }
         view.close();
 
-        service.reset(appContext.getDevMachine(), project.getRootProject(), "HEAD", ResetType.MIXED, files, new AsyncRequestCallback<Void>() {
+        service.reset(project.getRootProject(), "HEAD", ResetType.MIXED, files, new AsyncRequestCallback<Void>() {
             @Override
             protected void onSuccess(Void result) {
                 console.print(constant.resetFilesSuccessfully());

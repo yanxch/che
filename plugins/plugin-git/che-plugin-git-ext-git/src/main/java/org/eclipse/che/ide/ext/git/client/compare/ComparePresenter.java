@@ -93,7 +93,7 @@ public class ComparePresenter implements CompareView.ActionDelegate {
         if (status.equals(ADDED)) {
             showCompare(file, "", revision);
         } else if (status.equals(DELETED)) {
-            gitService.showFileContent(appContext.getDevMachine(), appContext.getCurrentProject().getRootProject(), file, revision,
+            gitService.showFileContent(appContext.getCurrentProject().getRootProject(), file, revision,
                                        new AsyncRequestCallback<ShowFileContentResponse>(
                                                dtoUnmarshallerFactory.newUnmarshaller(ShowFileContentResponse.class)) {
                                            @Override
@@ -108,7 +108,7 @@ public class ComparePresenter implements CompareView.ActionDelegate {
                                            }
                                        });
         } else {
-            gitService.showFileContent(appContext.getDevMachine(), appContext.getCurrentProject().getRootProject(), file, revision,
+            gitService.showFileContent(appContext.getCurrentProject().getRootProject(), file, revision,
                                        new AsyncRequestCallback<ShowFileContentResponse>(
                                                dtoUnmarshallerFactory.newUnmarshaller(ShowFileContentResponse.class)) {
                                            @Override

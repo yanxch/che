@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.eclipse.che.api.core.rest.shared.dto.ServiceError;
+import org.eclipse.che.api.git.shared.BranchListMode;
 import org.eclipse.che.ide.api.git.GitServiceClient;
 import org.eclipse.che.api.git.shared.Branch;
 import org.eclipse.che.api.git.shared.Remote;
@@ -37,8 +38,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_LOCAL;
-import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_REMOTE;
+import static org.eclipse.che.api.git.shared.BranchListMode.LIST_LOCAL;
+import static org.eclipse.che.api.git.shared.BranchListMode.LIST_REMOTE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.PROGRESS;
@@ -103,7 +104,7 @@ public class FetchPresenter implements FetchView.ActionDelegate {
      * local).
      */
     private void updateRemotes() {
-        service.remoteList(appContext.getDevMachine(), project.getRootProject(), null, true,
+        service.remoteList(project.getRootProject(), null, true,
                            new AsyncRequestCallback<List<Remote>>(dtoUnmarshallerFactory.newListUnmarshaller(Remote.class)) {
                                @Override
                                protected void onSuccess(List<Remote> result) {
@@ -127,15 +128,15 @@ public class FetchPresenter implements FetchView.ActionDelegate {
     /**
      * Update the list of branches.
      *
-     * @param remoteMode
-     *         is a remote mode
+     * @param listMode
+     *         specifies what branches to list
      */
-    private void updateBranches(@NotNull final String remoteMode) {
-        service.branchList(appContext.getDevMachine(), project.getRootProject(), remoteMode,
+    private void updateBranches(@NotNull final BranchListMode listMode) {
+        service.branchList(project.getRootProject(), listMode,
                            new AsyncRequestCallback<List<Branch>>(dtoUnmarshallerFactory.newListUnmarshaller(Branch.class)) {
                                @Override
                                protected void onSuccess(List<Branch> result) {
-                                   if (LIST_REMOTE.equals(remoteMode)) {
+                                   if (LIST_REMOTE.equals(listMode)) {
                                        view.setRemoteBranches(branchSearcher.getRemoteBranchesToDisplay(view.getRepositoryName(), result));
                                        updateBranches(LIST_LOCAL);
                                    } else {
@@ -173,7 +174,7 @@ public class FetchPresenter implements FetchView.ActionDelegate {
                 notificationManager.notify(constant.fetchProcess(), PROGRESS, FLOAT_MODE, project.getRootProject());
         final GitOutputConsole console = gitOutputConsoleFactory.create(FETCH_COMMAND_NAME);
         try {
-            service.fetch(appContext.getDevMachine(), project.getRootProject(), remoteName, getRefs(), removeDeletedRefs,
+            service.fetch(project.getRootProject(), remoteName, getRefs(), removeDeletedRefs,
                           new RequestCallback<String>() {
                               @Override
                               protected void onSuccess(String result) {

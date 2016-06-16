@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.core.ErrorCodes;
+import org.eclipse.che.api.git.shared.BranchListMode;
 import org.eclipse.che.ide.api.git.GitServiceClient;
 import org.eclipse.che.api.git.shared.Branch;
 import org.eclipse.che.api.git.shared.PullResponse;
@@ -40,8 +41,8 @@ import org.eclipse.che.ide.api.dialogs.DialogFactory;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
-import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_LOCAL;
-import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_REMOTE;
+import static org.eclipse.che.api.git.shared.BranchListMode.LIST_LOCAL;
+import static org.eclipse.che.api.git.shared.BranchListMode.LIST_REMOTE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.PROGRESS;
@@ -120,7 +121,7 @@ public class PullPresenter implements PullView.ActionDelegate {
     private void updateRemotes() {
         view.setEnablePullButton(true);
 
-        gitServiceClient.remoteList(appContext.getDevMachine(), project.getRootProject(), null, true,
+        gitServiceClient.remoteList(project.getRootProject(), null, true,
                                     new AsyncRequestCallback<List<Remote>>(dtoUnmarshallerFactory.newListUnmarshaller(Remote.class)) {
                                         @Override
                                         protected void onSuccess(List<Remote> result) {
@@ -145,8 +146,8 @@ public class PullPresenter implements PullView.ActionDelegate {
      * @param remoteMode
      *         is a remote mode
      */
-    private void updateBranches(@NotNull final String remoteMode) {
-        gitServiceClient.branchList(appContext.getDevMachine(), project.getRootProject(), remoteMode,
+    private void updateBranches(@NotNull final BranchListMode remoteMode) {
+        gitServiceClient.branchList(project.getRootProject(), remoteMode,
                                     new AsyncRequestCallback<List<Branch>>(dtoUnmarshallerFactory.newListUnmarshaller(Branch.class)) {
                                         @Override
                                         protected void onSuccess(List<Branch> result) {
@@ -186,7 +187,7 @@ public class PullPresenter implements PullView.ActionDelegate {
         final StatusNotification notification =
                 notificationManager.notify(constant.pullProcess(), PROGRESS, FLOAT_MODE, project.getRootProject());
 
-        gitServiceClient.pull(appContext.getDevMachine(), project.getRootProject(), getRefs(), remoteName,
+        gitServiceClient.pull(project.getRootProject(), getRefs(), remoteName,
                               new AsyncRequestCallback<PullResponse>(dtoUnmarshallerFactory.newUnmarshaller(PullResponse.class)) {
                                   @Override
                                   protected void onSuccess(PullResponse result) {

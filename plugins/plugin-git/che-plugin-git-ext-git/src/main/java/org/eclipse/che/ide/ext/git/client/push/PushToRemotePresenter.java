@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.eclipse.che.api.core.rest.shared.dto.ServiceError;
+import org.eclipse.che.api.git.shared.BranchListMode;
 import org.eclipse.che.ide.api.git.GitServiceClient;
 import org.eclipse.che.api.git.shared.Branch;
 import org.eclipse.che.api.git.shared.PushResponse;
@@ -41,8 +42,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_LOCAL;
-import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_REMOTE;
+import static org.eclipse.che.api.git.shared.BranchListMode.LIST_LOCAL;
+import static org.eclipse.che.api.git.shared.BranchListMode.LIST_REMOTE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.PROGRESS;
@@ -110,7 +111,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
      * If remote repositories are found, then get the list of branches (remote and local).
      */
     void updateRemotes() {
-        service.remoteList(appContext.getDevMachine(), project.getRootProject(), null, true,
+        service.remoteList(project.getRootProject(), null, true,
                            new AsyncRequestCallback<List<Remote>>(dtoUnmarshallerFactory.newListUnmarshaller(Remote.class)) {
                                @Override
                                protected void onSuccess(List<Remote> result) {
@@ -238,7 +239,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
 
         final String configBranchRemote = "branch." + view.getLocalBranch() + ".remote";
         final String configUpstreamBranch = "branch." + view.getLocalBranch() + ".merge";
-        service.config(appContext.getDevMachine(), project.getRootProject(), Arrays.asList(configUpstreamBranch, configBranchRemote), false,
+        service.config(project.getRootProject(), Arrays.asList(configUpstreamBranch, configBranchRemote),
                        new AsyncRequestCallback<Map<String, String>>(new StringMapUnmarshaller()) {
                            @Override
                            protected void onSuccess(Map<String, String> configs) {
@@ -269,9 +270,9 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
      * @param remoteMode
      *         is a remote mode
      */
-    void getBranchesForCurrentProject(@NotNull final String remoteMode,
+    void getBranchesForCurrentProject(@NotNull final BranchListMode remoteMode,
                                       final AsyncCallback<List<Branch>> asyncResult) {
-        service.branchList(appContext.getDevMachine(), project.getRootProject(),
+        service.branchList(project.getRootProject(),
                            remoteMode,
                            new AsyncRequestCallback<List<Branch>>(dtoUnmarshallerFactory.newListUnmarshaller(Branch.class)) {
                                @Override
@@ -295,7 +296,7 @@ public class PushToRemotePresenter implements PushToRemoteView.ActionDelegate {
 
         final String repository = view.getRepository();
         final GitOutputConsole console = gitOutputConsoleFactory.create(PUSH_COMMAND_NAME);
-        service.push(appContext.getDevMachine(), project.getRootProject(), getRefs(), repository, false,
+        service.push(project.getRootProject(), getRefs(), repository, false,
                      new AsyncRequestCallback<PushResponse>(dtoUnmarshallerFactory.newUnmarshaller(PushResponse.class)) {
                          @Override
                          protected void onSuccess(PushResponse result) {

@@ -40,8 +40,8 @@ import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_LOCAL;
-import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_REMOTE;
+import static org.eclipse.che.api.git.shared.BranchListMode.LIST_LOCAL;
+import static org.eclipse.che.api.git.shared.BranchListMode.LIST_REMOTE;
 import static org.eclipse.che.api.git.shared.MergeResult.MergeStatus.ALREADY_UP_TO_DATE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
@@ -109,7 +109,7 @@ public class MergePresenter implements MergeView.ActionDelegate {
         selectedReference = null;
         view.setEnableMergeButton(false);
 
-        service.branchList(appContext.getDevMachine(), project, LIST_LOCAL,
+        service.branchList(project, LIST_LOCAL,
                            new AsyncRequestCallback<List<Branch>>(dtoUnmarshallerFactory.newListUnmarshaller(Branch.class)) {
                                @Override
                                protected void onSuccess(List<Branch> result) {
@@ -131,7 +131,7 @@ public class MergePresenter implements MergeView.ActionDelegate {
                                }
                            });
 
-        service.branchList(appContext.getDevMachine(), project, LIST_REMOTE,
+        service.branchList(project, LIST_REMOTE,
                            new AsyncRequestCallback<List<Branch>>(dtoUnmarshallerFactory.newListUnmarshaller(Branch.class)) {
                                @Override
                                protected void onSuccess(List<Branch> result) {
@@ -169,7 +169,7 @@ public class MergePresenter implements MergeView.ActionDelegate {
         view.close();
 
         final GitOutputConsole console = gitOutputConsoleFactory.create(MERGE_COMMAND_NAME);
-        service.merge(appContext.getDevMachine(), appContext.getCurrentProject().getRootProject(), selectedReference.getDisplayName(),
+        service.merge(appContext.getCurrentProject().getRootProject(), selectedReference.getDisplayName(),
                       new AsyncRequestCallback<MergeResult>(dtoUnmarshallerFactory.newUnmarshaller(MergeResult.class)) {
                           @Override
                           protected void onSuccess(final MergeResult result) {

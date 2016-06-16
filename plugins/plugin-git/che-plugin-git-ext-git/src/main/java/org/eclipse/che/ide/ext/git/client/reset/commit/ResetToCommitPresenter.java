@@ -88,7 +88,7 @@ public class ResetToCommitPresenter implements ResetToCommitView.ActionDelegate 
      * Show dialog.
      */
     public void showDialog() {
-        service.log(appContext.getDevMachine(), appContext.getCurrentProject().getRootProject(), null, false,
+        service.log(appContext.getCurrentProject().getRootProject(), null, false,
                     new AsyncRequestCallback<LogResponse>(dtoUnmarshallerFactory.newUnmarshaller(LogResponse.class)) {
                         @Override
                         protected void onSuccess(LogResponse result) {
@@ -153,7 +153,7 @@ public class ResetToCommitPresenter implements ResetToCommitView.ActionDelegate 
         final ResetRequest.ResetType finalType = type;
         final ProjectConfigDto project = appContext.getCurrentProject().getRootProject();
         final GitOutputConsole console = gitOutputConsoleFactory.create(RESET_COMMAND_NAME);
-        service.reset(appContext.getDevMachine(), project, selectedRevision.getId(), finalType, null,
+        service.reset(project, selectedRevision.getId(), finalType, null,
                       new AsyncRequestCallback<Void>() {
                           @Override
                           protected void onSuccess(Void result) {

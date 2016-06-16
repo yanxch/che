@@ -157,7 +157,7 @@ public class DeleteItemAction extends AbstractPerspectiveAction implements Promi
                 }
 
                 final Unmarshallable<Status> unmarshall = dtoUnmarshallerFactory.newUnmarshaller(Status.class);
-                gitService.status(appContext.getDevMachine(), project, new AsyncRequestCallback<Status>(unmarshall) {
+                gitService.status(project, new AsyncRequestCallback<Status>(unmarshall) {
                     @Override
                     protected void onSuccess(final Status result) {
                         if (!result.getMissing().isEmpty()) {
@@ -193,7 +193,7 @@ public class DeleteItemAction extends AbstractPerspectiveAction implements Promi
             @Override
             public void accepted() {
                 try {
-                    gitService.add(appContext.getDevMachine(), project, false, itemsToAddToIndex, new RequestCallback<Void>() {
+                    gitService.add(project, false, itemsToAddToIndex, new RequestCallback<Void>() {
                         @Override
                         protected void onSuccess(Void result) {
                             notificationManager.notify(locale.deleteAddToIndexIndexUpdated(), locale.deleteAddToIndexDialogNotification());

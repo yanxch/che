@@ -34,7 +34,7 @@ import org.eclipse.che.ide.api.dialogs.DialogFactory;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 
-import static org.eclipse.che.api.git.shared.DiffRequest.DiffType.NAME_STATUS;
+import static org.eclipse.che.api.git.shared.DiffType.NAME_STATUS;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.NOT_EMERGE_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.ext.git.client.compare.FileStatus.defineStatus;
@@ -138,7 +138,7 @@ public class RevisionListPresenter implements RevisionListView.ActionDelegate {
 
     /** Get list of revisions. */
     private void getRevisions() {
-        gitService.log(appContext.getDevMachine(), project, Collections.singletonList(selectedFile), false,
+        gitService.log(project, Collections.singletonList(selectedFile), false,
                        new AsyncRequestCallback<LogResponse>(dtoUnmarshallerFactory.newUnmarshaller(LogResponse.class)) {
 
                            @Override
@@ -171,7 +171,7 @@ public class RevisionListPresenter implements RevisionListView.ActionDelegate {
     }
 
     private void compare() {
-        gitService.diff(appContext.getDevMachine(), project, Collections.singletonList(selectedFile), NAME_STATUS, false, 0,
+        gitService.diff(project, Collections.singletonList(selectedFile), NAME_STATUS, false, 0,
                         selectedRevision.getId(), false, new AsyncRequestCallback<String>(new StringUnmarshaller()) {
                             @Override
                             protected void onSuccess(String result) {
