@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.part.explorer.project;
 
+import com.google.common.base.Optional;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -65,14 +66,12 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
                                                                                                      GoIntoStateHandler {
     private final Tree tree;
     private final SkipHiddenNodesInterceptor skipHiddenNodesInterceptor;
-    private StoreSortInfo foldersOnTopSort = new StoreSortInfo(new NodeTypeComparator(), SortDir.ASC);
 
     private ToolButton goBackButton;
-    private ToolButton collapseAllButton;
 
-    public static final String GO_BACK_BUTTON_ID      = "goBackButton";
-    public static final String COLLAPSE_ALL_BUTTON_ID = "collapseAllButton";
-    public static final String PROJECT_TREE_WIDGET_ID = "projectTree";
+    private static final String GO_BACK_BUTTON_ID      = "goBackButton";
+    private static final String COLLAPSE_ALL_BUTTON_ID = "collapseAllButton";
+    private static final String PROJECT_TREE_WIDGET_ID = "projectTree";
 
     @Inject
     public ProjectExplorerViewImpl(final Resources resources,
@@ -98,7 +97,7 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
             }
         });
 
-        tree.getNodeStorage().addSortInfo(foldersOnTopSort);
+        tree.getNodeStorage().addSortInfo(new StoreSortInfo(new NodeTypeComparator(), SortDir.ASC));
         tree.getNodeStorage().addSortInfo(new StoreSortInfo(new Comparator<Node>() {
             @Override
             public int compare(Node o1, Node o2) {
@@ -121,7 +120,7 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
 
         setContentWidget(tree);
 
-        collapseAllButton = new ToolButton(FontAwesome.COMPRESS);
+        ToolButton collapseAllButton = new ToolButton(FontAwesome.COMPRESS);
         collapseAllButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
@@ -268,7 +267,7 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
 
     private class ProjectExplorerRenderer extends DefaultPresentationRenderer<Node> {
 
-        public ProjectExplorerRenderer(TreeStyles treeStyles) {
+        ProjectExplorerRenderer(TreeStyles treeStyles) {
             super(treeStyles);
         }
 
@@ -280,9 +279,12 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
 
             if (node instanceof ResourceNode) {
                 final Resource resource = ((ResourceNode)node).getData();
-                final Project project = resource.getRelatedProject().get();
                 element.setAttribute("path", resource.getLocation().toString());
-                element.setAttribute("project", project.getLocation().toString());
+
+                final Optional<Project> project = resource.getRelatedProject();
+                if (project.isPresent()) {
+                    element.setAttribute("project", project.get().getLocation().toString());
+                }
             }
 
             if (node instanceof HasAction) {
@@ -291,6 +293,7 @@ public class ProjectExplorerViewImpl extends BaseView<ProjectExplorerView.Action
 
             if (node instanceof SyntheticNode<?>) {
                 element.setAttribute("synthetic", "true");
+                element.setAttribute("project", ((SyntheticNode)node).getProject().toString());
             }
 
             if (node instanceof HasAttributes && ((HasAttributes)node).getAttributes().containsKey(CUSTOM_BACKGROUND_FILL)) {

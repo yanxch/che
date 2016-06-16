@@ -107,4 +107,9 @@ public class LibrariesNode extends SyntheticNode<Path> implements ResourceChange
             eventBus.fireEvent(new SyntheticNodeUpdateEvent(LibrariesNode.this));
         }
     }
+
+    @Override
+    public Path getProject() {
+        return getData();
+    }
 }

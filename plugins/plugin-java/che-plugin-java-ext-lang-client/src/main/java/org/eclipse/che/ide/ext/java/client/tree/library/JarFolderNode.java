@@ -45,7 +45,7 @@ import static org.eclipse.che.ide.ext.java.shared.JarEntry.JarEntryType.PACKAGE;
 @Beta
 public class JarFolderNode extends SyntheticNode<JarEntry> {
     private final int                   libId;
-    private final Path               project;
+    private final Path                  project;
     private final JavaNavigationService service;
     private final JavaResources         javaResources;
     private final NodesResources        nodesResources;
@@ -108,5 +108,10 @@ public class JarFolderNode extends SyntheticNode<JarEntry> {
     @Override
     public boolean isLeaf() {
         return false;
+    }
+
+    @Override
+    public Path getProject() {
+        return project;
     }
 }

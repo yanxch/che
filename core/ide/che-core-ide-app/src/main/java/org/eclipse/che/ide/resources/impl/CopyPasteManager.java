@@ -98,7 +98,12 @@ class CopyPasteManager implements ResourceChangedHandler {
     protected void paste(Path destination) {
         final Promise<Void> promise = promises.resolve(null);
 
-        pasteSuccessively(promise, resources, 0, destination);
+        pasteSuccessively(promise, resources, 0, destination).then(new Operation<Void>() {
+            @Override
+            public void apply(Void ignored) throws OperationException {
+                resources = new Resource[0];
+            }
+        });
     }
 
     private Promise<Void> pasteSuccessively(Promise<Void> promise, Resource[] resources, int position, final Path destination) {

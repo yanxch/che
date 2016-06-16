@@ -99,4 +99,9 @@ public class JarNode extends SyntheticNode<Jar> {
     public boolean isLeaf() {
         return false;
     }
+
+    @Override
+    public Path getProject() {
+        return project;
+    }
 }

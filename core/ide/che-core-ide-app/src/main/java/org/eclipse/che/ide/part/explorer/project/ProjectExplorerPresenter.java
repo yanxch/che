@@ -128,9 +128,15 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
     private void onResourceSynchronized(Resource resource) {
         final Tree tree = view.getTree();
 
-        final Node node = getNode(resource.getLocation());
+        Node node = getNode(resource.getLocation());
 
-        if (node == null || !tree.isExpanded(node)) {
+        if (node == null) {
+            node = getParentNode(resource.getLocation());
+
+            if (node != null) {
+                tree.getNodeLoader().loadChildren(node, true);
+            }
+
             return;
         }
 
@@ -139,7 +145,9 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         tree.getNodeStorage().reIndexNode(oldId, node);
         tree.refresh(node);
 
-        tree.getNodeLoader().loadChildren(node, true);
+        if (tree.isExpanded(node)) {
+            tree.getNodeLoader().loadChildren(node, true);
+        }
     }
 
     private Node getNode(Path path) {
@@ -158,6 +166,10 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
         Node node = null;
 
         while (node == null) {
+            if (path.segmentCount() == 0) {
+                return null;
+            }
+
             path = path.parent();
             node = getNode(path);
         }
@@ -207,6 +219,17 @@ public class ProjectExplorerPresenter extends BasePresenter implements ActionDel
     @SuppressWarnings("unchecked")
     private void onResourceRemoved(final ResourceDelta delta) {
         final Tree tree = view.getTree();
+        final Resource resource = delta.getResource();
+
+        if (resource.getLocation().segmentCount() == 1) {
+            final Node projectNode = getNode(resource.getLocation());
+
+            if (projectNode != null) {
+                tree.getNodeStorage().remove(projectNode);
+            }
+
+            return;
+        }
 
         final Node node = getParentNode(delta.getResource().getLocation());
 

@@ -284,14 +284,13 @@ public class TextEditorPresenter<T extends EditorWidget> extends AbstractEditorP
             @Override
             public void onResourceChanged(ResourceChangedEvent event) {
                 final ResourceDelta delta = event.getDelta();
-                final Resource resource = delta.getResource();
 
                 switch (delta.getKind()) {
                     case ADDED:
                         onResourceCreated(delta);
                         break;
                     case REMOVED:
-                        onResourceRemoved(resource);
+                        onResourceRemoved(delta);
                         break;
                     case UPDATED:
                         onResourceUpdated(delta);
@@ -325,7 +324,13 @@ public class TextEditorPresenter<T extends EditorWidget> extends AbstractEditorP
         updateContent();
     }
 
-    private void onResourceRemoved(Resource resource) {
+    private void onResourceRemoved(ResourceDelta delta) {
+        if ((delta.getFlags() & DERIVED) == 0) {
+            return;
+        }
+
+        final Resource resource = delta.getResource();
+
         if (resource.isFile() && document.getFile().getLocation().equals(resource.getLocation())) {
             if (resourceChangeHandler != null) {
                 resourceChangeHandler.removeHandler();

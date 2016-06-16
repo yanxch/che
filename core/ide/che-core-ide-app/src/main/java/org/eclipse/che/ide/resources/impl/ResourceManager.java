@@ -310,35 +310,24 @@ public final class ResourceManager {
                     @Override
                     public Promise<Folder> apply(final ItemReference reference) throws FunctionException {
 
-                        if (path.segmentCount() == 1) {
-                            final Folder newResource =
-                                    resourceFactory.newFolderImpl(Path.valueOf(reference.getPath()), ResourceManager.this);
+                        return getRemoteResources(parent, path.segmentCount(), true)
+                                .then(new Function<Resource[], Folder>() {
+                                    @Override
+                                    public Folder apply(Resource[] resources) throws FunctionException {
 
-                            store.register(newResource);
+                                        final Path referencePath = Path.valueOf(reference.getPath());
 
-                            eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED | DERIVED)));
+                                        for (Resource descendant : resources) {
+                                            if (descendant.getLocation().equals(referencePath)) {
+                                            eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(descendant, ADDED | DERIVED)));
 
-                            return promises.resolve(newResource);
-                        } else {
-                            return getRemoteResources(parent, path.segmentCount(), true).then(new Function<Resource[], Folder>() {
-                                @Override
-                                public Folder apply(Resource[] descendants) throws FunctionException {
-
-                                    final Path referencePath = Path.valueOf(reference.getPath());
-
-                                    for (Resource descendant : descendants) {
-                                        if (descendant.getLocation().equals(referencePath)) {
-                                            eventBus.fireEvent(
-                                                    new ResourceChangedEvent(new ResourceDeltaImpl(descendant, ADDED | DERIVED)));
-
-                                            return (Folder)descendant;
+                                                return (Folder)descendant;
+                                            }
                                         }
-                                    }
 
-                                    throw new IllegalArgumentException("Failed to locate created folder");
-                                }
-                            });
-                        }
+                                        throw new IllegalArgumentException("Failed to locate created folder");
+                                    }
+                                });
                     }
                 });
             }
@@ -354,19 +343,28 @@ public final class ResourceManager {
                 checkState(!resource.isPresent(), "Resource already exists");
                 checkArgument(!parent.getLocation().isRoot(), "Failed to create file in workspace root");
 
-                return ps.createFile(parent.getLocation().append(name), content).then(new Function<ItemReference, File>() {
+                return ps.createFile(parent.getLocation().append(name), content).thenPromise(new Function<ItemReference, Promise<File>>() {
                     @Override
-                    public File apply(ItemReference reference) throws FunctionException {
-                        final Link contentUrl = reference.getLink(GET_CONTENT_REL);
-                        Resource newResource = resourceFactory.newFileImpl(Path.valueOf(reference.getPath()),
-                                                                           contentUrl.getHref(),
-                                                                           ResourceManager.this);
+                    public Promise<File> apply(final ItemReference reference) throws FunctionException {
 
-                        store.register(newResource);
+                        return getRemoteResources(parent, DEPTH_ONE, true)
+                                .then(new Function<Resource[], File>() {
+                                    @Override
+                                    public File apply(Resource[] resources) throws FunctionException {
 
-                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(newResource, ADDED | DERIVED)));
+                                        final Path referencePath = Path.valueOf(reference.getPath());
 
-                        return (File)newResource;
+                                        for (Resource descendant : resources) {
+                                            if (descendant.getLocation().equals(referencePath)) {
+                                                eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(descendant, ADDED | DERIVED)));
+
+                                                return (File)descendant;
+                                            }
+                                        }
+
+                                        throw new IllegalArgumentException("Failed to locate created file");
+                                    }
+                                });
                     }
                 });
             }
@@ -467,46 +465,17 @@ public final class ResourceManager {
                          .thenPromise(new Function<Void, Promise<Resource>>() {
                              @Override
                              public Promise<Resource> apply(Void ignored) throws FunctionException {
-                                 return ps.getItem(destination).thenPromise(new Function<ItemReference, Promise<Resource>>() {
+
+                                return findResource(destination, false).then(new Function<Optional<Resource>, Resource>() {
                                      @Override
-                                     public Promise<Resource> apply(ItemReference reference) throws FunctionException {
-
-                                         final Resource movedResource = newResourceFrom(reference);
-
-                                         store.register(movedResource);
-
-                                         if (source instanceof Container) {
-                                             int maxDepth = 0;
-
-                                             final Optional<Resource[]> descendants = store.getAll(source.getLocation());
-
-                                             if (descendants.isPresent()) {
-                                                 final Resource[] resources = descendants.get();
-                                                 maxDepth = resources[resources.length - 1].getLocation().segmentCount();
-                                             }
-
-                                             store.dispose(source.getLocation(), true);
-
-                                             return getRemoteResources((Container)movedResource, maxDepth, true)
-                                                     .then(new Function<Resource[], Resource>() {
-                                                         @Override
-                                                         public Resource apply(Resource[] ignored) throws FunctionException {
-                                                             eventBus.fireEvent(new ResourceChangedEvent(
-                                                                     new ResourceDeltaImpl(movedResource, source,
+                                     public Resource apply(Optional<Resource> movedResource) throws FunctionException {
+                                         if (movedResource.isPresent()) {
+                                             eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(movedResource.get(), source,
                                                                                            ADDED | MOVED_FROM | MOVED_TO | DERIVED)));
-
-                                                             return movedResource;
-                                                         }
-                                                     });
-                                         } else {
-                                             store.dispose(source.getLocation(), false);
-
-                                             eventBus.fireEvent(new ResourceChangedEvent(
-                                                     new ResourceDeltaImpl(movedResource, source,
-                                                                           ADDED | MOVED_FROM | MOVED_TO | DERIVED)));
+                                             return movedResource.get();
                                          }
 
-                                         return promises.resolve(movedResource);
+                                         throw new IllegalStateException("Resource not found");
                                      }
                                  });
                              }
@@ -528,16 +497,16 @@ public final class ResourceManager {
                              @Override
                              public Promise<Resource> apply(Void ignored) throws FunctionException {
 
-                                 return ps.getItem(destination).then(new Function<ItemReference, Resource>() {
+                                 return findResource(destination, false).then(new Function<Optional<Resource>, Resource>() {
                                      @Override
-                                     public Resource apply(ItemReference reference) throws FunctionException {
-                                         final Resource copiedResource = newResourceFrom(reference);
+                                     public Resource apply(Optional<Resource> copiedResource) throws FunctionException {
+                                         if (copiedResource.isPresent()) {
+                                             eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(copiedResource.get(), source,
+                                                                                                               ADDED | COPIED_FROM | DERIVED)));
+                                             return copiedResource.get();
+                                         }
 
-                                         store.register(copiedResource);
-                                         eventBus.fireEvent(new ResourceChangedEvent(
-                                                 new ResourceDeltaImpl(copiedResource, source, ADDED | COPIED_FROM | DERIVED)));
-
-                                         return copiedResource;
+                                         throw new IllegalStateException("Resource not found");
                                      }
                                  });
                              }
@@ -657,7 +626,10 @@ public final class ResourceManager {
                     }
                 }
 
-                return reloaded;
+                final Optional<Resource[]> all = store.getAll(container.getLocation());
+                checkState(all.isPresent(), "Failed to locate updated children");
+
+                return all.get();
             }
         });
     }

@@ -57,6 +57,7 @@ import static org.eclipse.che.ide.api.resources.Resource.PROJECT;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.ADDED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
+import static org.eclipse.che.ide.api.resources.ResourceDelta.SYNCHRONIZED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
 
 /**
@@ -252,6 +253,12 @@ public class AppContextImpl implements AppContext,
             }
 
             sort(projects, ResourcePathComparator.getInstance());
+        } else if (delta.getKind() == SYNCHRONIZED && resource.isProject() && resource.getLocation().segmentCount() == 1) {
+            for (int i = 0; i < projects.length; i++) {
+                if (projects[i].getLocation().equals(resource.getLocation())) {
+                    projects[i] = (Project)resource;
+                }
+            }
         }
     }
 
