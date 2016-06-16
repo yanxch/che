@@ -28,6 +28,7 @@ import org.eclipse.che.ide.api.parts.base.BaseView;
 import org.eclipse.che.ide.api.parts.base.ToolButton;
 import org.eclipse.che.ide.api.theme.Style;
 import org.eclipse.che.ide.extension.machine.client.MachineLocalizationConstant;
+import org.eclipse.che.ide.extension.machine.client.MachineResources;
 import org.eclipse.che.ide.ui.FontAwesome;
 import org.eclipse.che.ide.ui.Tooltip;
 import org.eclipse.che.ide.ui.menu.PositionController;
@@ -39,19 +40,26 @@ import org.eclipse.che.ide.ui.menu.PositionController;
  */
 @Singleton
 public class ConsolesContainerViewImpl extends BaseView<ConsolesContainerView.ActionDelegate> implements ConsolesContainerView {
-    private final static String VERTICAL_DRAGGER_CLASS   = "gwt-SplitLayoutPanel-VDragger";
-    private final static String HORIZONTAL_DRAGGER_CLASS = "gwt-SplitLayoutPanel-HDragger";
+    private final static String VERTICAL_DRAGGER_CLASS            = "gwt-SplitLayoutPanel-VDragger";
+    private final static String HORIZONTAL_DRAGGER_CLASS          = "gwt-SplitLayoutPanel-HDragger";
+    private final static String ACTIVE_STATE_TOOLBUTTON_ATTRIBUTE = "turnOn";
 
+    private final MachineResources            machineResources;
     private final MachineLocalizationConstant localizationConstant;
 
     SplitLayoutPanel  splitLayoutPanel;
     ResizeLayoutPanel processesPanel;
     ResizeLayoutPanel terminalsPanel;
+    ToolButton        splitVerticallyButton;
+    ToolButton        splitHorizontallyButton;
+    ToolButton        defaultModeButton;
 
     @Inject
     public ConsolesContainerViewImpl(PartStackUIResources partStackUIResources,
+                                     MachineResources machineResources,
                                      MachineLocalizationConstant localizationConstant) {
         super(partStackUIResources);
+        this.machineResources = machineResources;
         this.localizationConstant = localizationConstant;
 
         splitLayoutPanel = new SplitLayoutPanel(1);
@@ -63,10 +71,12 @@ public class ConsolesContainerViewImpl extends BaseView<ConsolesContainerView.Ac
 
         addToolButtons();
         tuneSplitter();
+        defaultModeButton.getElement().getFirstChildElement().setAttribute(ACTIVE_STATE_TOOLBUTTON_ATTRIBUTE, "");
     }
 
     private void addToolButtons() {
-        ToolButton splitVerticallyButton = new ToolButton(FontAwesome.COLUMNS);
+        String toolButtonStyle = machineResources.getCss().consolesActiveToolButton();
+        splitVerticallyButton = new ToolButton(FontAwesome.COLUMNS);
         splitVerticallyButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
@@ -75,8 +85,10 @@ public class ConsolesContainerViewImpl extends BaseView<ConsolesContainerView.Ac
         });
         addToolButton(splitVerticallyButton);
         addToolTip(splitVerticallyButton, localizationConstant.consolesSplitVerticallyTooltip());
+        splitVerticallyButton.getElement().getFirstChildElement().addClassName(toolButtonStyle);
 
-        ToolButton splitHorizontallyButton = new ToolButton(FontAwesome.MINUS_SQUARE_O);
+        splitHorizontallyButton = new ToolButton(FontAwesome.MINUS_SQUARE_O);
+        splitHorizontallyButton.getElement().getFirstChildElement().addClassName(toolButtonStyle);
         splitHorizontallyButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
@@ -86,7 +98,8 @@ public class ConsolesContainerViewImpl extends BaseView<ConsolesContainerView.Ac
         addToolButton(splitHorizontallyButton);
         addToolTip(splitHorizontallyButton, localizationConstant.consolesSplitHorizontallyTooltip());
 
-        ToolButton defaultModeButton = new ToolButton(FontAwesome.SQUARE_O);
+        defaultModeButton = new ToolButton(FontAwesome.SQUARE_O);
+        defaultModeButton.getElement().getFirstChildElement().addClassName(toolButtonStyle);
         defaultModeButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
@@ -118,6 +131,7 @@ public class ConsolesContainerViewImpl extends BaseView<ConsolesContainerView.Ac
     public void applyDefaultMode() {
         clear();
         splitLayoutPanel.add(processesPanel);
+        defaultModeButton.getElement().getFirstChildElement().setAttribute(ACTIVE_STATE_TOOLBUTTON_ATTRIBUTE, "");
     }
 
     @Override
@@ -128,6 +142,7 @@ public class ConsolesContainerViewImpl extends BaseView<ConsolesContainerView.Ac
         splitLayoutPanel.addWest(processesPanel, width);
         splitLayoutPanel.add(terminalsPanel);
         tuneSplitter();
+        splitVerticallyButton.getElement().getFirstChildElement().setAttribute(ACTIVE_STATE_TOOLBUTTON_ATTRIBUTE, "");
     }
 
     @Override
@@ -138,6 +153,7 @@ public class ConsolesContainerViewImpl extends BaseView<ConsolesContainerView.Ac
         splitLayoutPanel.addNorth(processesPanel, height);
         splitLayoutPanel.add(terminalsPanel);
         tuneSplitter();
+        splitHorizontallyButton.getElement().getFirstChildElement().setAttribute(ACTIVE_STATE_TOOLBUTTON_ATTRIBUTE, "");
     }
 
     private void clear() {
@@ -145,6 +161,9 @@ public class ConsolesContainerViewImpl extends BaseView<ConsolesContainerView.Ac
         terminalsPanel.clear();
         splitLayoutPanel.remove(processesPanel);
         splitLayoutPanel.remove(terminalsPanel);
+        defaultModeButton.getElement().getFirstChildElement().removeAttribute(ACTIVE_STATE_TOOLBUTTON_ATTRIBUTE);
+        splitHorizontallyButton.getElement().getFirstChildElement().removeAttribute(ACTIVE_STATE_TOOLBUTTON_ATTRIBUTE);
+        splitVerticallyButton.getElement().getFirstChildElement().removeAttribute(ACTIVE_STATE_TOOLBUTTON_ATTRIBUTE);
     }
 
     /**
