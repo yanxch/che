@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toMap;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
 
 /**
@@ -59,7 +60,7 @@ public class InitialAuthConfig {
     @VisibleForTesting
     protected static final String VALID_DOCKER_PROPERTY_NAME_EXAMPLE = CONFIG_PREFIX + "registry_name.parameter_name";
 
-    private final Map<String, AuthConfig> configMap = new HashMap<>();
+    private Map<String, AuthConfig> configMap;
 
     /** For testing purposes */
     public InitialAuthConfig() {
@@ -74,14 +75,12 @@ public class InitialAuthConfig {
                                                   .map(property -> getRegistryName(property.getKey()))
                                                   .collect(Collectors.toSet());
 
-        for (String registryName : registryNames) {
-            String serverAddress = authProperties.get(CONFIG_PREFIX + registryName + "." + URL);
-            String userName = authProperties.get(CONFIG_PREFIX + registryName + "." + USER_NAME);
-            String password = authProperties.get(CONFIG_PREFIX + registryName + "." + PASSWORD);
-
-            AuthConfig authConfig = createConfig(serverAddress, userName, password, registryName);
-            configMap.put(serverAddress, authConfig);
-        }
+        configMap = registryNames.stream()
+                     .map(registry -> createConfig(authProperties.get(CONFIG_PREFIX + registry + "." + URL),
+                                                   authProperties.get(CONFIG_PREFIX + registry + "." + USER_NAME),
+                                                   authProperties.get(CONFIG_PREFIX + registry + "." + PASSWORD),
+                                                   registry))
+                     .collect(toMap(AuthConfig::getServeraddress, elem -> elem));
     }
 
     private String getRegistryName(String propertyName) throws IllegalArgumentException {
