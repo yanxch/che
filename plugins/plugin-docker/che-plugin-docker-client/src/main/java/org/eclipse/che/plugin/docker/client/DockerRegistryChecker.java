@@ -10,20 +10,21 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.docker.client;
 
-import org.eclipse.che.plugin.docker.client.dto.AuthConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Map;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 /**
- * Checks that docker registry(ies) is available.
+ * Checks that docker registry is available.
  *
  * @author Yevhenii Voevodin
  */
@@ -32,39 +33,38 @@ public class DockerRegistryChecker {
 
     private static final Logger LOG = LoggerFactory.getLogger(DockerRegistryChecker.class);
 
-    private final InitialAuthConfig initialAuthConfig;
+    @Inject
+    @Named("machine.docker.registry")
+    private String registryUrl;
 
     @Inject
-    public DockerRegistryChecker(InitialAuthConfig initialAuthConfig) {
-        this.initialAuthConfig = initialAuthConfig;
-    }
+    @Named("machine.docker.snapshot_use_registry")
+    private Boolean snapshotUseRegistry;
 
     /**
-     * Checks that registry(ies) is available and if it is not - logs warning message.
+     * Checks that registry is available and if it is not - logs warning message.
      */
     @PostConstruct
     private void checkRegistryIsAvailable() throws IOException {
-        for(Map.Entry<String, AuthConfig> authConfigEntry: initialAuthConfig.getAuthConfigs().getConfigs().entrySet()) {//todo maybe do that in few threads?
-            checkAvailabilityRegistry(authConfigEntry.getValue());
-        }
-    }
+        if (snapshotUseRegistry != null && snapshotUseRegistry && !isNullOrEmpty(registryUrl)) {
+            String registryLink = "http://" + registryUrl;
 
-    private void checkAvailabilityRegistry(AuthConfig authConfig) throws IOException {
-        String registryUrl = authConfig.getServeraddress();
-        LOG.info("Probing registry '{}'", registryUrl);
-        final HttpURLConnection conn = (HttpURLConnection) new URL(registryUrl).openConnection();
-        conn.setConnectTimeout(30 * 1000);
-        try {
-            final int responseCode = conn.getResponseCode();
-            LOG.info("Probe of registry '{}' succeed with HTTP response code '{}'", registryUrl, responseCode);
-        } catch (IOException ioEx) {
-            LOG.warn("Docker registry " + registryUrl + " is not available, " +
-                     "which means that you won't be able to save snapshots of your workspaces." +
-                     "\nHow to configure registry?" +
-                     "\n\tLocal registry  -> https://docs.docker.com/registry/" +
-                     "\n\tRemote registry -> set up 'docker.registry.auth.*' properties");
-        } finally {
-            conn.disconnect();
+            LOG.info("Probing registry '{}'", registryLink);
+
+            final HttpURLConnection conn = (HttpURLConnection) new URL(registryLink).openConnection();
+            conn.setConnectTimeout(30 * 1000);
+            try {
+                final int responseCode = conn.getResponseCode();
+                LOG.info("Probe of registry '{}' succeed with HTTP response code '{}'", registryLink, responseCode);
+            } catch (IOException ioEx) {
+                LOG.warn("Docker registry " + registryLink + " is not available, " +
+                         "which means that you won't be able to save snapshots of your workspaces." +
+                         "\nHow to configure registry?" +
+                         "\n\tLocal registry  -> https://docs.docker.com/registry/" +
+                         "\n\tRemote registry -> set up 'docker.registry.auth.*' properties");
+            } finally {
+                conn.disconnect();
+            }
         }
     }
 }

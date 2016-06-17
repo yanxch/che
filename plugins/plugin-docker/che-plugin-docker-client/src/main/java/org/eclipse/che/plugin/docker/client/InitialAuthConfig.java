@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- * Codenvy, S.A. - initial API and implementation
+ *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
 package org.eclipse.che.plugin.docker.client;
 
@@ -75,11 +75,18 @@ public class InitialAuthConfig {
                                                   .collect(Collectors.toSet());
 
         configMap = registryNames.stream()
-                                 .collect(toMap(registry -> authProperties.get(CONFIG_PREFIX + registry + "." + URL),
-                                                registry -> createConfig(authProperties.get(CONFIG_PREFIX + registry + "." + URL),
-                                                                         authProperties.get(CONFIG_PREFIX + registry + "." + USER_NAME),
-                                                                         authProperties.get(CONFIG_PREFIX + registry + "." + PASSWORD),
+                                 .map(registryName -> registryName + ".")
+                                 .collect(toMap(registry -> authProperties.get(CONFIG_PREFIX + registry + URL),
+                                                registry -> createConfig(authProperties.get(CONFIG_PREFIX + registry + URL),
+                                                                         authProperties.get(CONFIG_PREFIX + registry + USER_NAME),
+                                                                         authProperties.get(CONFIG_PREFIX + registry + PASSWORD),
                                                                          registry)));
+    }
+
+    public AuthConfigs getAuthConfigs() {
+        AuthConfigs authConfigs = newDto(AuthConfigs.class);
+        authConfigs.getConfigs().putAll(configMap);
+        return authConfigs;
     }
 
     private String getRegistryName(String propertyName) throws IllegalArgumentException {
@@ -96,8 +103,9 @@ public class InitialAuthConfig {
 
         String propertyIdentifier = parts[1];
         if (!URL.equals(propertyIdentifier) && !USER_NAME.equals(propertyIdentifier) && !PASSWORD.equals(propertyIdentifier)) {
-            LOG.info("Set unused property: " + propertyName);
+            LOG.warn("Set unused property: " + propertyName);
         }
+
         return parts[0];
     }
 
@@ -105,21 +113,15 @@ public class InitialAuthConfig {
     private static AuthConfig createConfig(String serverAddress, String username, String password, String registry)
             throws IllegalArgumentException {
         if (isNullOrEmpty(serverAddress)) {
-            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + URL);
+            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + URL);
         }
         if (isNullOrEmpty(username)) {
-            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + USER_NAME);
+            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + USER_NAME);
         }
         if (isNullOrEmpty(password)) {
-            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + PASSWORD);
+            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + PASSWORD);
         }
         return newDto(AuthConfig.class).withServeraddress(serverAddress).withUsername(username).withPassword(password);
-    }
-
-    public AuthConfigs getAuthConfigs() {
-        AuthConfigs authConfigs = newDto(AuthConfigs.class);
-        authConfigs.getConfigs().putAll(configMap);
-        return authConfigs;
     }
 
 }
