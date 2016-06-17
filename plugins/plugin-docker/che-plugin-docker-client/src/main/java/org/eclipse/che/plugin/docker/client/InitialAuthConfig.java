@@ -12,7 +12,6 @@ package org.eclipse.che.plugin.docker.client;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.inject.ConfigurationProperties;
 import org.eclipse.che.plugin.docker.client.dto.AuthConfig;
@@ -62,7 +61,7 @@ public class InitialAuthConfig {
     }
 
     @Inject
-    public InitialAuthConfig(ConfigurationProperties properties) throws ServerException {
+    public InitialAuthConfig(ConfigurationProperties properties) throws IllegalArgumentException {
         Map<String, String> classifierMap = properties.getProperties(CONFIGURATION_PREFIX_PATTERN)
                                                       .entrySet()
                                                       .stream()
@@ -85,29 +84,29 @@ public class InitialAuthConfig {
         }
     }
 
-    private String getRegistryName(String classifier) throws ServerException {
+    private String getRegistryName(String classifier) throws IllegalArgumentException {
         String[] parts = classifier.split("\\.");
         if (parts.length < 2) {
-            throw new ServerException(format("You missed '.' for property '%s'. Valid format for docker registry property is '%s'",
+            throw new IllegalArgumentException(format("You missed '.' in property '%s'. Valid format for credential docker registry is '%s'",
                                              CONFIG_PREFIX + classifier, VALID_DOCKER_PROPERTY_NAME_EXAMPLE));
         }
         if (parts.length > 2) {
-            throw new ServerException(format("You set redundant '.' for property '%s'. Valid format for docker registry property is '%s'",
+            throw new IllegalArgumentException(format("You set redundant '.' in property '%s'. Valid format for credential docker registry is '%s'",
                                              CONFIG_PREFIX + classifier, VALID_DOCKER_PROPERTY_NAME_EXAMPLE));
         }
         return parts[0];
     }
 
     @Nullable
-    private static AuthConfig createConfig(String serverAddress, String username, String password, String registry) throws ServerException {
+    private static AuthConfig createConfig(String serverAddress, String username, String password, String registry) throws IllegalArgumentException {
         if (serverAddress == null) {
-            throw new ServerException("You missed property " + CONFIG_PREFIX + registry + "." + URL);
+            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + URL);
         }
         if (username == null) {
-            throw new ServerException("You missed property " + CONFIG_PREFIX + registry + "." + USER_NAME);
+            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + USER_NAME);
         }
         if (password == null) {
-            throw new ServerException("You missed property " + CONFIG_PREFIX + registry + "." + PASSWORD);
+            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + PASSWORD);
         }
         return newDto(AuthConfig.class).withServeraddress(serverAddress).withUsername(username).withPassword(password);
     }
