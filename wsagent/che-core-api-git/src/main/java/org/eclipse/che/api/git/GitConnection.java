@@ -14,7 +14,6 @@ import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.UnauthorizedException;
 import org.eclipse.che.api.core.util.LineConsumerFactory;
 import org.eclipse.che.api.git.params.AddParams;
-import org.eclipse.che.api.git.params.CloneWithSparseCheckoutParams;
 import org.eclipse.che.api.git.params.LsFilesParams;
 import org.eclipse.che.api.git.shared.BranchListMode;
 import org.eclipse.che.api.git.params.CheckoutParams;
@@ -159,14 +158,16 @@ public interface GitConnection extends Closeable {
     /**
      * Perform clone with sparse-checkout to specified directory.
      *
-     * @param params
-     *         params for clone with sparse checkout
+     * @param directory
+     *         path to keep in working tree
+     * @param remoteUrl
+     *         url to clone
      * @throws UnauthorizedException
      *         if it is not possible to clone with existing credentials
      * @throws GitException
      *         if any other error occurs
      */
-    void cloneWithSparseCheckout(CloneWithSparseCheckoutParams params) throws GitException, UnauthorizedException;
+    void cloneWithSparseCheckout(String directory, String remoteUrl) throws GitException, UnauthorizedException;
 
     /**
      * Commit current state of index in new commit.

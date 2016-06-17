@@ -12,7 +12,7 @@ package org.eclipse.che.api.git.params;
 
 import org.eclipse.che.api.git.shared.CloneRequest;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,7 +54,7 @@ public class CloneParams {
 
     /** @see CloneRequest#getBranchesToFetch() */
     public List<String> getBranchesToFetch() {
-        return branchesToFetch == null ? Collections.emptyList() : branchesToFetch;
+        return branchesToFetch == null ? new ArrayList<>() : branchesToFetch;
     }
 
     /** @see CloneRequest#withBranchesToFetch(List) */

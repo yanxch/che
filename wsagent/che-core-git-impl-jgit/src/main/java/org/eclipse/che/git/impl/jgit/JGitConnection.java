@@ -33,7 +33,6 @@ import org.eclipse.che.api.git.GitUserResolver;
 import org.eclipse.che.api.git.LogPage;
 import org.eclipse.che.api.git.UserCredential;
 import org.eclipse.che.api.git.params.AddParams;
-import org.eclipse.che.api.git.params.CloneWithSparseCheckoutParams;
 import org.eclipse.che.api.git.params.LsFilesParams;
 import org.eclipse.che.api.git.shared.BranchListMode;
 import org.eclipse.che.api.git.params.CheckoutParams;
@@ -1452,15 +1451,14 @@ class JGitConnection implements GitConnection {
     }
 
     @Override
-    public void cloneWithSparseCheckout(CloneWithSparseCheckoutParams params) throws GitException, UnauthorizedException {
+    public void cloneWithSparseCheckout(String directory, String remoteUrl) throws GitException, UnauthorizedException {
         //TODO rework this code when jgit will support sparse-checkout. Tracked issue: https://bugs.eclipse.org/bugs/show_bug.cgi?id=383772
-        clone(CloneParams.create(params.getRemoteUrl()));
-        String branch = params.getBranch();
-        if (!"master".equals(params.getBranch())) {
-            checkout(CheckoutParams.create(branch));
+        if (directory == null) {
+            throw new GitException("Subdirectory for sparse-checkout is not specified");
         }
+        clone(CloneParams.create(remoteUrl));
         final String sourcePath = getWorkingDir().getPath();
-        final String keepDirectoryPath = sourcePath + "/" + params.getDirectory();
+        final String keepDirectoryPath = sourcePath + "/" + directory;
         IOFileFilter folderFilter = new DirectoryFileFilter() {
             public boolean accept(File dir) {
                 String directoryPath = dir.getPath();

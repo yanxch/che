@@ -12,8 +12,8 @@ package org.eclipse.che.api.git.params;
 
 import org.eclipse.che.api.git.shared.AddRequest;
 
-import javax.validation.constraints.NotNull;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +43,7 @@ public class AddParams {
 
     /** @see AddRequest#getFilePattern() */
     public List<String> getFilePattern() {
-        return filePattern == null ? Collections.emptyList() : filePattern;
+        return filePattern == null ? new ArrayList<>() : filePattern;
     }
 
     /** @see AddRequest#withFilePattern(List) */
@@ -54,7 +54,7 @@ public class AddParams {
 
     /** @see AddRequest#getAttributes() */
     public Map<String, String> getAttributes() {
-        return attributes == null ? Collections.emptyMap() : attributes;
+        return attributes == null ? new HashMap<>() : attributes;
     }
 
     public AddParams withAttributes(Map<String, String> attributes) {

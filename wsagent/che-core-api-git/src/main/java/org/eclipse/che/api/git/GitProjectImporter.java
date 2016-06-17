@@ -22,7 +22,6 @@ import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.core.util.LineConsumerFactory;
 import org.eclipse.che.api.git.params.CheckoutParams;
 import org.eclipse.che.api.git.params.CloneParams;
-import org.eclipse.che.api.git.params.CloneWithSparseCheckoutParams;
 import org.eclipse.che.api.git.params.FetchParams;
 import org.eclipse.che.api.git.params.RemoteAddParams;
 import org.eclipse.che.api.git.shared.Branch;
@@ -138,9 +137,10 @@ public class GitProjectImporter implements ProjectImporter {
             final String projectName = baseFolder.getName();
             git = gitConnectionFactory.getConnection(localPath, consumerFactory);
             if (keepDir != null) {
-                CloneWithSparseCheckoutParams params =
-                        CloneWithSparseCheckoutParams.create(keepDir, location, branch == null ? "master" : branch);
-                git.cloneWithSparseCheckout(params);
+                git.cloneWithSparseCheckout(keepDir, location);
+                if (branch != null) {
+                    git.checkout(CheckoutParams.create(branch));
+                }
             } else {
                 if (baseFolder.getChildren().size() == 0) {
                     cloneRepository(git, "origin", location);

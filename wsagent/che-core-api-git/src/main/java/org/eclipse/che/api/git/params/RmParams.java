@@ -12,7 +12,7 @@ package org.eclipse.che.api.git.params;
 
 import org.eclipse.che.api.git.shared.RmRequest;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,7 +41,7 @@ public class RmParams {
 
     /** @see RmRequest#getItems() */
     public List<String> getItems() {
-        return items == null ? Collections.emptyList() : items;
+        return items == null ? new ArrayList<>() : items;
     }
 
     /** @see RmRequest#withItems(List) */

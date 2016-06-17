@@ -12,7 +12,7 @@ package org.eclipse.che.api.git.params;
 
 import org.eclipse.che.api.git.shared.CommitRequest;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -53,7 +53,7 @@ public class CommitParams {
 
     /** @see CommitRequest#getFiles() */
     public List<String> getFiles() {
-        return files == null ? Collections.emptyList() : files;
+        return files == null ? new ArrayList<>() : files;
     }
 
     /** @see CommitRequest#withFiles(List) */

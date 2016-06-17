@@ -12,7 +12,7 @@ package org.eclipse.che.api.git.params;
 
 import org.eclipse.che.api.git.shared.PushRequest;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -42,7 +42,7 @@ public class PushParams {
 
     /** @see PushRequest#getRefSpec() */
     public List<String> getRefSpec() {
-        return refSpec == null ? Collections.emptyList() : refSpec;
+        return refSpec == null ? new ArrayList<>() : refSpec;
     }
 
     /** @see PushRequest#withRefSpec(List) */

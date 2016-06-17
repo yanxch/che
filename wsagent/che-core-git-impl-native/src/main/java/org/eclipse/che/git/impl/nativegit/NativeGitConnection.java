@@ -28,7 +28,6 @@ import org.eclipse.che.api.git.UserCredential;
 import org.eclipse.che.api.git.params.AddParams;
 import org.eclipse.che.api.git.params.CheckoutParams;
 import org.eclipse.che.api.git.params.CloneParams;
-import org.eclipse.che.api.git.params.CloneWithSparseCheckoutParams;
 import org.eclipse.che.api.git.params.CommitParams;
 import org.eclipse.che.api.git.params.DiffParams;
 import org.eclipse.che.api.git.params.FetchParams;
@@ -172,7 +171,7 @@ public class NativeGitConnection implements GitConnection {
     }
 
     @Override
-    public void cloneWithSparseCheckout(CloneWithSparseCheckoutParams params) throws GitException, UnauthorizedException {
+    public void cloneWithSparseCheckout(String directory, String remoteUrl) throws GitException, UnauthorizedException {
         /*
         Does following sequence of Git commands:
         $ git init
@@ -181,29 +180,19 @@ public class NativeGitConnection implements GitConnection {
         $ echo keepDirectory >> .git/info/sparse-checkout
         $ git pull origin master
         */
+        if (directory == null) {
+            throw new GitException("Subdirectory for sparse-checkout is not specified");
+        }
         init(false);
-        remoteAdd(RemoteAddParams.create("origin", params.getRemoteUrl()));
+        remoteAdd(RemoteAddParams.create("origin", remoteUrl));
         getConfig().add("core.sparsecheckout", "true");
-        String directory = params.getDirectory();
-        String branch = params.getBranch();
         try {
             Files.write(Paths.get(getWorkingDir() + "/.git/info/sparse-checkout"),
                         (directory.startsWith("/") ? directory : "/" + directory).getBytes());
         } catch (IOException exception) {
             throw new GitException(exception.getMessage(), exception);
         }
-        try {
-            fetch(FetchParams.create("origin"));
-        } catch (GitException exception) {
-            throw new GitException(
-                    String.format("Unable to fetch remote branch %s. Make sure it exists and can be accessed.", branch), exception);
-        }
-        try {
-            checkout(CheckoutParams.create(branch));
-        } catch (GitException exception) {
-            throw new GitException(
-                    String.format("Unable to checkout branch %s. Make sure it exists and can be accessed.", branch), exception);
-        }
+        pull(PullParams.create("origin").withRefSpec("refs/heads/master"));
     }
 
     @Override

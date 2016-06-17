@@ -12,8 +12,7 @@ package org.eclipse.che.api.git.params;
 
 import org.eclipse.che.api.git.shared.CheckoutRequest;
 
-import javax.validation.constraints.NotNull;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -89,7 +88,7 @@ public class CheckoutParams {
 
     /** @see CheckoutRequest#getFiles() */
     public List<String> getFiles() {
-        return filesToCheckout == null ? Collections.emptyList() : filesToCheckout;
+        return filesToCheckout == null ? new ArrayList<>() : filesToCheckout;
     }
 
     /** @see CheckoutRequest#withFiles(List) */

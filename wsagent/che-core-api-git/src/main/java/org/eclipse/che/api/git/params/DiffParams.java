@@ -12,7 +12,7 @@ package org.eclipse.che.api.git.params;
 
 import org.eclipse.che.api.git.shared.DiffType;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -42,7 +42,7 @@ public class DiffParams {
 
     /** @return filter of file to show diff. It may be either list of file names or name of directory to show all files under them */
     public List<String> getFileFilter() {
-        return fileFilter == null ? Collections.emptyList() : fileFilter;
+        return fileFilter == null ? new ArrayList<>() : fileFilter;
     }
 
     public DiffParams withFileFilter(List<String> fileFilter) {

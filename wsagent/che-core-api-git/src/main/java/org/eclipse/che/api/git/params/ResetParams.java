@@ -13,7 +13,7 @@ package org.eclipse.che.api.git.params;
 import org.eclipse.che.api.git.shared.ResetRequest;
 import org.eclipse.che.api.git.shared.ResetRequest.ResetType;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -65,7 +65,7 @@ public class ResetParams {
 
     /** @see ResetRequest#getFilePattern() */
     public List<String> getFilePattern() {
-        return filePattern == null ? Collections.emptyList() : filePattern;
+        return filePattern == null ? new ArrayList<>() : filePattern;
     }
 
     /** @see ResetRequest#withFilePattern(List) */

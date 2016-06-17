@@ -12,7 +12,7 @@ package org.eclipse.che.api.git.params;
 
 import org.eclipse.che.api.git.shared.RemoteUpdateRequest;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -55,7 +55,7 @@ public class RemoteUpdateParams {
 
     /** @see RemoteUpdateRequest#getBranches() */
     public List<String> getBranches() {
-        return branches == null ? Collections.emptyList() : branches;
+        return branches == null ? new ArrayList<>() : branches;
     }
 
     public RemoteUpdateParams withBranches(List<String> branches) {
@@ -75,7 +75,7 @@ public class RemoteUpdateParams {
 
     /** @see RemoteUpdateRequest#getAddUrl() */
     public List<String> getAddUrl() {
-        return addUrl == null ? Collections.emptyList() : addUrl;
+        return addUrl == null ? new ArrayList<>() : addUrl;
     }
 
     public RemoteUpdateParams withAddUrl(List<String> addUrl) {
@@ -85,7 +85,7 @@ public class RemoteUpdateParams {
 
     /** @see RemoteUpdateRequest#getRemoveUrl() */
     public List<String> getRemoveUrl() {
-        return removeUrl == null ? Collections.emptyList() : removeUrl;
+        return removeUrl == null ? new ArrayList<>() : removeUrl;
     }
 
     public RemoteUpdateParams withRemoveUrl(List<String> removeUrl) {
@@ -95,7 +95,7 @@ public class RemoteUpdateParams {
 
     /** @see RemoteUpdateRequest#getAddPushUrl() */
     public List<String> getAddPushUrl() {
-        return addPushUrl == null ? Collections.emptyList() : addPushUrl;
+        return addPushUrl == null ? new ArrayList<>() : addPushUrl;
     }
 
     public RemoteUpdateParams withAddPushUrl(List<String> addPushUrl) {
@@ -105,7 +105,7 @@ public class RemoteUpdateParams {
 
     /** @see RemoteUpdateRequest#getRemovePushUrl() */
     public List<String> getRemovePushUrl() {
-        return removePushUrl == null ? Collections.emptyList() : removePushUrl;
+        return removePushUrl == null ? new ArrayList<>() : removePushUrl;
     }
 
     public RemoteUpdateParams withRemovePushUrl(List<String> removePushUrl) {

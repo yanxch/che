@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.api.git.params;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,7 +36,7 @@ public class LogParams {
 
     /** Filter revisions list by range of files. */
     public List<String> getFileFilter() {
-        return fileFilter == null ? Collections.emptyList() : fileFilter;
+        return fileFilter == null ? new ArrayList<>() : fileFilter;
     }
 
     public LogParams withFileFilter(List<String> fileFilter) {

@@ -12,7 +12,7 @@ package org.eclipse.che.api.git.params;
 
 import org.eclipse.che.api.git.shared.FetchRequest;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -42,7 +42,7 @@ public class FetchParams {
 
     /** @see FetchRequest#getRefSpec() */
     public List<String> getRefSpec() {
-        return refSpec == null ? Collections.emptyList() : refSpec;
+        return refSpec == null ? new ArrayList<>() : refSpec;
     }
 
     /** @see FetchRequest#withRefSpec(List) */

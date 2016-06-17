@@ -12,7 +12,7 @@ package org.eclipse.che.api.git.params;
 
 import org.eclipse.che.api.git.shared.RemoteAddRequest;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,7 +43,7 @@ public class RemoteAddParams {
 
     /** @see RemoteAddRequest#getBranches() */
     public List<String> getBranches() {
-        return branches == null ? Collections.emptyList() : branches;
+        return branches == null ? new ArrayList<>() : branches;
     }
 
     public RemoteAddParams withBranches(List<String> branches) {
