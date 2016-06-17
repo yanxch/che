@@ -334,26 +334,28 @@ export class CreateProjectCtrl {
   startWorkspace(bus, workspace) {
     // then we've to start workspace
     this.createProjectSvc.setCurrentProgressStep(1);
-    // get channels
-    let environments = workspace.config.environments;
-    let envName = workspace.config.defaultEnv;
-    let defaultEnvironment = environments[envName];
 
-    let machineConfigsLinks = defaultEnvironment.machines[0].links;
-
-    let findStatusLink = this.lodash.find(machineConfigsLinks, (machineConfigsLink) => {
-      return machineConfigsLink.rel === 'get machine status channel';
-    });
-
-    let findOutputLink = this.lodash.find(machineConfigsLinks, (machineConfigsLink) => {
-      return machineConfigsLink.rel === 'get machine logs channel';
+    let findOutputLink = this.lodash.find(workspace.links, (machineConfigsLink) => {
+      return machineConfigsLink.rel === 'output_channel';
     });
 
     let workspaceId = workspace.id;
 
     let agentChannel = 'workspace:' + workspace.id + ':ext-server:output';
-    let statusChannel = findStatusLink ? findStatusLink.parameters[0].defaultValue : null;
     let outputChannel = findOutputLink ? findOutputLink.parameters[0].defaultValue : null;
+
+    if (outputChannel) {
+      this.listeningChannels.push(outputChannel);
+      bus.subscribe(outputChannel, (message) => {
+        message = this.getDisplayMachineLog(message);
+
+        if (this.getCreationSteps()[this.getCurrentProgressStep()].logs.length > 0) {
+          this.getCreationSteps()[this.getCurrentProgressStep()].logs = this.getCreationSteps()[this.getCurrentProgressStep()].logs + '\n' + message;
+        } else {
+          this.getCreationSteps()[this.getCurrentProgressStep()].logs = message;
+        }
+      });
+    }
 
     this.listeningChannels.push(agentChannel);
     bus.subscribe(agentChannel, (message) => {
@@ -367,48 +369,6 @@ export class CreateProjectCtrl {
         this.getCreationSteps()[agentStep].logs = message;
       }
     });
-
-    if (statusChannel) {
-      // for now, display log of status channel in case of errors
-      this.listeningChannels.push(statusChannel);
-      bus.subscribe(statusChannel, (message) => {
-        if (message.eventType === 'DESTROYED' && message.workspaceId === workspace.id) {
-          this.getCreationSteps()[this.getCurrentProgressStep()].hasError = true;
-
-          // need to show the error
-          this.$mdDialog.show(
-              this.$mdDialog.alert()
-                  .title('Unable to start workspace')
-                  .content('Unable to start workspace. It may be linked to OutOfMemory or the container has been destroyed')
-                  .ariaLabel('Workspace start')
-                  .ok('OK')
-          );
-        }
-        if (message.eventType === 'ERROR' && message.workspaceId === workspace.id) {
-          this.getCreationSteps()[this.getCurrentProgressStep()].hasError = true;
-          // need to show the error
-          this.$mdDialog.show(
-              this.$mdDialog.alert()
-                  .title('Error when starting workspace')
-                  .content('Unable to start workspace. Error when trying to start the workspace: ' + message.error)
-                  .ariaLabel('Workspace start')
-                  .ok('OK')
-          );
-        }
-        this.$log.log('Status channel of workspaceID', workspaceId, message);
-      });
-    }
-
-    if (outputChannel) {
-      this.listeningChannels.push(outputChannel);
-      bus.subscribe(outputChannel, (message) => {
-        if (this.getCreationSteps()[this.getCurrentProgressStep()].logs.length > 0) {
-          this.getCreationSteps()[this.getCurrentProgressStep()].logs = this.getCreationSteps()[this.getCurrentProgressStep()].logs + '\n' + message;
-        } else {
-          this.getCreationSteps()[this.getCurrentProgressStep()].logs = message;
-        }
-      });
-    }
 
     let startWorkspacePromise = this.cheAPI.getWorkspace().startWorkspace(workspace.id, workspace.config.defaultEnv);
     startWorkspacePromise.then(() => {
@@ -439,6 +399,15 @@ export class CreateProjectCtrl {
       this.getCreationSteps()[this.getCurrentProgressStep()].hasError = true;
     });
     return  startWorkspacePromise;
+  }
+
+  getDisplayMachineLog(log) {
+    log = angular.fromJson(log);
+    if (angular.isObject(log)) {
+      return '[' + log.machine + '] ' + log.content;
+    } else {
+      return log;
+    }
   }
 
   createProjectInWorkspace(workspaceId, projectName, projectData, bus, websocketStream, workspaceBus) {
