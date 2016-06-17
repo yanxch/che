@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.docker.client;
 
-import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.inject.ConfigurationProperties;
 import org.eclipse.che.plugin.docker.client.dto.AuthConfig;
 import org.mockito.Mock;
@@ -61,7 +60,7 @@ public class InitialAuthConfigTest {
     private AuthConfig authConfig2;
 
     @BeforeMethod
-    public void cleanUp() throws ServerException {
+    public void cleanUp() throws IllegalArgumentException {
         properties.clear();
 
         properties.put(CONFIG_PREFIX + URL1_KEY, URL1_VALUE);
@@ -84,7 +83,7 @@ public class InitialAuthConfigTest {
     }
 
     @Test
-    public void configurationShouldBeCreatedValidByConfigurationProperties() throws ServerException {
+    public void configurationShouldBeCreatedValidByConfigurationProperties() throws IllegalArgumentException {
         initialAuthConfig = new InitialAuthConfig(configurationProperties);
 
         Map<String, AuthConfig> configs = initialAuthConfig.getAuthConfigs().getConfigs();
@@ -93,49 +92,49 @@ public class InitialAuthConfigTest {
         assertEquals(configs.get(URL2_VALUE), authConfig2);
     }
 
-    @Test(expectedExceptions = ServerException.class,
-          expectedExceptionsMessageRegExp = "You missed '.' for property '" + CONFIG_PREFIX + "url'. " +
-                                            "Valid format for docker registry property is '" + VALID_DOCKER_PROPERTY_NAME_EXAMPLE + "'")
-    public void shouldThrowExceptionWhenUserMissedPointInProperty() throws ServerException {
+    @Test(expectedExceptions = IllegalArgumentException.class,
+          expectedExceptionsMessageRegExp = "You missed '.' in property '" + CONFIG_PREFIX + "url'. " +
+                                            "Valid format for credential docker registry is '" + VALID_DOCKER_PROPERTY_NAME_EXAMPLE + "'")
+    public void shouldThrowExceptionWhenUserMissedPointInProperty() throws IllegalArgumentException {
         properties.put(CONFIG_PREFIX + "url", URL1_VALUE);
 
         new InitialAuthConfig(configurationProperties);
     }
 
-    @Test(expectedExceptions = ServerException.class,
-          expectedExceptionsMessageRegExp = "You set redundant '.' for property '" + CONFIG_PREFIX + "my.registry.docker.url'. " +
-                                            "Valid format for docker registry property is '" + VALID_DOCKER_PROPERTY_NAME_EXAMPLE + "'")
-    public void shouldThrowExceptionWhenUserSetRedundantPointInProperty() throws ServerException {
+    @Test(expectedExceptions = IllegalArgumentException.class,
+          expectedExceptionsMessageRegExp = "You set redundant '.' in property '" + CONFIG_PREFIX + "my.registry.docker.url'. " +
+                                            "Valid format for credential docker registry is '" + VALID_DOCKER_PROPERTY_NAME_EXAMPLE + "'")
+    public void shouldThrowExceptionWhenUserSetRedundantPointInProperty() throws IllegalArgumentException {
         properties.put(CONFIG_PREFIX + "my.registry.docker.url", URL1_VALUE);
 
         new InitialAuthConfig(configurationProperties);
     }
 
-    @Test(expectedExceptions = ServerException.class, expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + URL1_KEY)
-    public void shouldThrowExceptionIfUserMissedUrlProperty() throws ServerException {
+    @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + URL1_KEY)
+    public void shouldThrowExceptionIfUserMissedUrlProperty() throws IllegalArgumentException {
         properties.remove(CONFIG_PREFIX + URL1_KEY);
 
         new InitialAuthConfig(configurationProperties);
     }
 
-    @Test(expectedExceptions = ServerException.class,
+    @Test(expectedExceptions = IllegalArgumentException.class,
           expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + USER_NAME1_KEY)
-    public void shouldThrowExceptionIfUserMissedUserProperty() throws ServerException {
+    public void shouldThrowExceptionIfUserMissedUserProperty() throws IllegalArgumentException {
         properties.remove(CONFIG_PREFIX + USER_NAME1_KEY);
 
         new InitialAuthConfig(configurationProperties);
     }
 
-    @Test(expectedExceptions = ServerException.class,
+    @Test(expectedExceptions = IllegalArgumentException.class,
           expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + PASSWORD1_KEY)
-    public void shouldThrowExceptionIfUserMissedPasswordProperty() throws ServerException {
+    public void shouldThrowExceptionIfUserMissedPasswordProperty() throws IllegalArgumentException {
         properties.remove(CONFIG_PREFIX + PASSWORD1_KEY);
 
         new InitialAuthConfig(configurationProperties);
     }
 
     @Test
-    public void shouldBeReturnedAuthConfigsWithEmptyMapConfigs() throws ServerException {
+    public void shouldBeReturnedAuthConfigsWithEmptyMapConfigs() throws IllegalArgumentException {
         properties.clear();
 
         InitialAuthConfig initialAuthConfig = new InitialAuthConfig(configurationProperties);
@@ -143,47 +142,47 @@ public class InitialAuthConfigTest {
         assertTrue(initialAuthConfig.getAuthConfigs().getConfigs().isEmpty());
     }
 
-    @Test(expectedExceptions = ServerException.class, expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + URL1_KEY)
-    public void shouldThrowExceptionIfUserSetEmptyUrlValue() throws ServerException {
+    @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + URL1_KEY)
+    public void shouldThrowExceptionIfUserSetEmptyUrlValue() throws IllegalArgumentException {
         properties.put(CONFIG_PREFIX + URL1_KEY, "");
 
         new InitialAuthConfig(configurationProperties);
     }
 
-    @Test(expectedExceptions = ServerException.class, expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + URL1_KEY)
-    public void shouldThrowExceptionIfUserSetNullUrlValue() throws ServerException {
+    @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + URL1_KEY)
+    public void shouldThrowExceptionIfUserSetNullUrlValue() throws IllegalArgumentException {
         properties.put(CONFIG_PREFIX + URL1_KEY, null);
 
         new InitialAuthConfig(configurationProperties);
     }
 
-    @Test(expectedExceptions = ServerException.class,
+    @Test(expectedExceptions = IllegalArgumentException.class,
           expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + USER_NAME1_KEY)
-    public void shouldThrowExceptionIfUserSetEmptyUserNameValue() throws ServerException {
+    public void shouldThrowExceptionIfUserSetEmptyUserNameValue() throws IllegalArgumentException {
         properties.put(CONFIG_PREFIX + USER_NAME1_KEY, "");
 
         new InitialAuthConfig(configurationProperties);
     }
 
-    @Test(expectedExceptions = ServerException.class,
+    @Test(expectedExceptions = IllegalArgumentException.class,
           expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + USER_NAME1_KEY)
-    public void shouldThrowExceptionIfUserSetNullUserNameValue() throws ServerException {
+    public void shouldThrowExceptionIfUserSetNullUserNameValue() throws IllegalArgumentException {
         properties.put(CONFIG_PREFIX + USER_NAME1_KEY, null);
 
         new InitialAuthConfig(configurationProperties);
     }
 
-    @Test(expectedExceptions = ServerException.class,
+    @Test(expectedExceptions = IllegalArgumentException.class,
           expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + PASSWORD1_KEY)
-    public void shouldThrowExceptionIfUserSetEmptyPasswordValue() throws ServerException {
+    public void shouldThrowExceptionIfUserSetEmptyPasswordValue() throws IllegalArgumentException {
         properties.put(CONFIG_PREFIX + PASSWORD1_KEY, "");
 
         new InitialAuthConfig(configurationProperties);
     }
 
-    @Test(expectedExceptions = ServerException.class,
+    @Test(expectedExceptions = IllegalArgumentException.class,
           expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + PASSWORD1_KEY)
-    public void shouldThrowExceptionIfUserSetNullPasswordValue() throws ServerException {
+    public void shouldThrowExceptionIfUserSetNullPasswordValue() throws IllegalArgumentException {
         properties.put(CONFIG_PREFIX + PASSWORD1_KEY, null);
 
         new InitialAuthConfig(configurationProperties);

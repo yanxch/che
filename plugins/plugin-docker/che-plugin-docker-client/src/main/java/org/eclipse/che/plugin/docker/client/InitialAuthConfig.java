@@ -16,6 +16,8 @@ import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.inject.ConfigurationProperties;
 import org.eclipse.che.plugin.docker.client.dto.AuthConfig;
 import org.eclipse.che.plugin.docker.client.dto.AuthConfigs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -24,8 +26,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toMap;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
 
 /**
@@ -42,7 +44,7 @@ import static org.eclipse.che.dto.server.DtoFactory.newDto;
  * @author Alexander Andrienko
  */
 @Singleton
-public class InitialAuthConfig {
+public class InitialAuthConfig {private static final Logger LOG = LoggerFactory.getLogger(InitialAuthConfig.class);
     private static final String URL       = "url";
     private static final String USER_NAME = "username";
     private static final String PASSWORD  = "password";
@@ -62,29 +64,26 @@ public class InitialAuthConfig {
 
     @Inject
     public InitialAuthConfig(ConfigurationProperties properties) throws IllegalArgumentException {
-        Map<String, String> classifierMap = properties.getProperties(CONFIGURATION_PREFIX_PATTERN)
-                                                      .entrySet()
-                                                      .stream()
-                                                      .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
-                                                      .collect(toMap(e -> e.getKey().replaceFirst(CONFIG_PREFIX, ""), Map.Entry::getValue));
+        Map<String, String> authProperties = properties.getProperties(CONFIGURATION_PREFIX_PATTERN);
 
         Set<String> registryNames = new HashSet<>();
-        for (Map.Entry<String, String> property : classifierMap.entrySet()) {
+        for (Map.Entry<String, String> property: authProperties.entrySet()) {
             String registryName = getRegistryName(property.getKey());
             registryNames.add(registryName);
         }
 
         for (String registryName : registryNames) {
-            String serverAddress = classifierMap.get(registryName + "." + URL);
-            String userName = classifierMap.get(registryName + "." + USER_NAME);
-            String password = classifierMap.get(registryName + "." + PASSWORD);
+            String serverAddress = authProperties.get(CONFIG_PREFIX + registryName + "." + URL);
+            String userName = authProperties.get(CONFIG_PREFIX  + registryName + "." + USER_NAME);
+            String password = authProperties.get(CONFIG_PREFIX + registryName + "." + PASSWORD);
 
             AuthConfig authConfig = createConfig(serverAddress, userName, password, registryName);
             configMap.put(serverAddress, authConfig);
         }
     }
 
-    private String getRegistryName(String classifier) throws IllegalArgumentException {
+    private String getRegistryName(String propertyName) throws IllegalArgumentException {
+        String classifier = propertyName.replaceFirst(CONFIG_PREFIX, "");
         String[] parts = classifier.split("\\.");
         if (parts.length < 2) {
             throw new IllegalArgumentException(format("You missed '.' in property '%s'. Valid format for credential docker registry is '%s'",
@@ -99,13 +98,13 @@ public class InitialAuthConfig {
 
     @Nullable
     private static AuthConfig createConfig(String serverAddress, String username, String password, String registry) throws IllegalArgumentException {
-        if (serverAddress == null) {
+        if (isNullOrEmpty(serverAddress)) {
             throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + URL);
         }
-        if (username == null) {
+        if (isNullOrEmpty(username)) {
             throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + USER_NAME);
         }
-        if (password == null) {
+        if (isNullOrEmpty(password)) {
             throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + PASSWORD);
         }
         return newDto(AuthConfig.class).withServeraddress(serverAddress).withUsername(username).withPassword(password);
