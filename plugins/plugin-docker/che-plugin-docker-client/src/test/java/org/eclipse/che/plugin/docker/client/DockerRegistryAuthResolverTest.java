@@ -1,9 +1,5 @@
 package org.eclipse.che.plugin.docker.client;
 
-import com.google.common.reflect.TypeToken;
-
-import org.eclipse.che.commons.json.JsonHelper;
-import org.eclipse.che.commons.json.JsonParseException;
 import org.eclipse.che.dto.server.DtoFactory;
 import org.eclipse.che.plugin.docker.client.dto.AuthConfig;
 import org.eclipse.che.plugin.docker.client.dto.AuthConfigs;
@@ -21,7 +17,6 @@ import java.util.Map;
 
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
 
 /**
  * @author Mykola Morhun
@@ -386,13 +381,7 @@ public class DockerRegistryAuthResolverTest {
     }
 
     private AuthConfig jsonToAuthConfig(String json) {
-        AuthConfig authConfig = null;
-        try {
-            authConfig = JsonHelper.fromJson(json, AuthConfig.class, null);
-        } catch (JsonParseException e) {
-            fail();
-        }
-        return authConfig;
+       return DtoFactory.getInstance().createDtoFromJson(json, AuthConfig.class);
     }
 
     private void assertEqualsXRegistryAuthHeader(AuthConfig actual, AuthConfig expected) {
@@ -405,18 +394,11 @@ public class DockerRegistryAuthResolverTest {
     }
 
     private AuthConfigs jsonToAuthConfigs(String json) {
-        AuthConfigs authConfigs = null;
-        try {
-            authConfigs = DtoFactory.newDto(AuthConfigs.class).withConfigs(
-                    JsonHelper.fromJson(json, Map.class, new TypeToken<Map<String, AuthConfig>>() {}.getType()));
-        } catch (JsonParseException e) {
-            fail();
-        }
-        return authConfigs;
+        return DtoFactory.getInstance().createDtoFromJson(json, AuthConfigs.class);
     }
 
     private void assertEqualsXRegistryConfigHeader(AuthConfigs actual, AuthConfigs expected) {
-        assertEquals(actual.getConfigs().toString(), expected.getConfigs().toString());
+        assertEquals(actual.getConfigs(), expected.getConfigs());
     }
 
 }

@@ -66,8 +66,8 @@ public class DockerRegistryCredentialsReaderTest {
         assertEquals(parsedAuthConfig.getPassword(), authConfig.getPassword());
     }
 
-    @Test
-    public void shouldReturnNullIfDataFormatIsCorruptedInPreferences() throws ServerException {
+    @Test (expectedExceptions = com.google.gson.JsonSyntaxException.class)
+    public void shouldThrowJsonSyntaxExceptionIfDataFormatIsCorruptedInPreferences() throws ServerException {
         String base64encodedCredentials = "sdJfpwJwkek59kafj239lFfkHjhek5l1";
         setCredentialsIntoPreferences(base64encodedCredentials);
 
@@ -76,14 +76,12 @@ public class DockerRegistryCredentialsReaderTest {
         assertNull(parsedAuthConfigs);
     }
 
-    @Test
-    public void shouldReturnNullIfDataFormatIsWrong() throws ServerException {
+    @Test (expectedExceptions = IllegalStateException.class)
+    public void  shouldThrowIllegalStateExceptionIfDataFormatIsWrong() throws ServerException {
         String base64encodedCredentials = "eyJpbnZhbGlkIjoianNvbiJ9";
         setCredentialsIntoPreferences(base64encodedCredentials);
 
-        AuthConfigs parsedAuthConfigs = dockerCredentials.getDockerCredentialsFromUserPreferences();
-
-        assertNull(parsedAuthConfigs);
+        dockerCredentials.getDockerCredentialsFromUserPreferences();
     }
 
     private void setCredentialsIntoPreferences(String base64encodedCredentials) throws ServerException {

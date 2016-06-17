@@ -10,15 +10,12 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.docker.client;
 
-import com.google.common.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.user.server.dao.PreferenceDao;
 import org.eclipse.che.commons.env.EnvironmentContext;
-import org.eclipse.che.commons.json.JsonHelper;
-import org.eclipse.che.commons.json.JsonParseException;
 import org.eclipse.che.dto.server.DtoFactory;
 import org.eclipse.che.plugin.docker.client.dto.AuthConfig;
 import org.eclipse.che.plugin.docker.client.dto.AuthConfigs;
@@ -26,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Type;
 import java.util.Base64;
 import java.util.Map;
 
@@ -38,7 +34,6 @@ import java.util.Map;
 @Singleton
 public class DockerRegistryCredentialsReader {
     private static final String DOCKER_REGISTRY_CREDENTIALS_KEY        = "dockerCredentials";
-    private static final Type   DOCKER_REGISTRY_CREDENTIALS_TYPE_TOKEN = new TypeToken<Map<String, AuthConfig>>() {}.getType();
 
     private static final Logger LOG = LoggerFactory.getLogger(DockerRegistryCredentialsReader.class);
 
@@ -51,6 +46,11 @@ public class DockerRegistryCredentialsReader {
 
     /**
      * Gets and decode credentials for docker registries which was saved in the dashboard.
+     *
+     * @throws IllegalStateException
+     *         when user preferences contains json which do not represent AuthConfigs
+     * @throws com.google.gson.JsonSyntaxException
+     *         when data format from user preferences is corrupted and contains invalid json
      */
     public AuthConfigs getDockerCredentialsFromUserPreferences() {
         String encodedCredentials;
@@ -68,13 +68,9 @@ public class DockerRegistryCredentialsReader {
             credentials = new String(Base64.getDecoder().decode(encodedCredentials), "UTF-8");
         } catch (UnsupportedEncodingException ignore) {
         }
-        try {
-            return DtoFactory.newDto(AuthConfigs.class).withConfigs(
-                    JsonHelper.fromJson(credentials, Map.class, DOCKER_REGISTRY_CREDENTIALS_TYPE_TOKEN));
-        } catch (JsonParseException e) {
-            LOG.error("Wrong format of credentials");
-            return null;
-        }
+
+        return DtoFactory.newDto(AuthConfigs.class).withConfigs(
+                DtoFactory.getInstance().createMapDtoFromJson(credentials, AuthConfig.class));
     }
 
 }
