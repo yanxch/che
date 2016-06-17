@@ -1,5 +1,58 @@
 [
   {
+    "name": "ticketmonster",
+    "displayName": "ticket-monster",
+    "path": "/ticket-monster",
+    "description": "Ticketmonster app using MySQL as persistent storage",
+    "projectType": "maven",
+    "mixins": [],
+    "attributes": {
+      "language": [
+        "java"
+      ]
+    },
+    "modules": [],
+    "problems": [],
+    "source": {
+      "type": "git",
+      "location": "https://github.com/eivantsov/ticketmonster.git",
+      "parameters": {}
+    },
+    "commands": [
+      {
+        "name": "build",
+        "type": "mvn",
+        "commandLine": "mvn -f ${current.project.path} clean install -Pmysql",
+        "attributes": {
+          "previewUrl": ""
+        }
+      },
+      {
+        "name": "deploy",
+        "type": "custom",
+        "commandLine": "cp ${current.project.path}/target/*.war /home/user/wildfly-8.0.0.Final/standalone/deployments/ticket-monster.war && echo 'Build artifact copied'",
+        "attributes": {
+          "previewUrl": ""
+        }
+      },
+      {
+        "name": "run wildfly-8",
+        "type": "custom",
+        "commandLine": "/home/user/wildfly-8.0.0.Final/bin/standalone.sh",
+        "attributes": {
+          "previewUrl": "http://${server.port.8080}/ticket-monster"
+        }
+      }
+    ],
+    "links": [],
+    "category": "Samples",
+    "tags": [
+      "maven",
+      "spring",
+      "java"
+    ]
+  },
+  {
     "name": "blank-project",
     "displayName": "blank-project",
     "path": "/blank-project",
