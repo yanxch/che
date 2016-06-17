@@ -44,7 +44,10 @@ import static org.eclipse.che.dto.server.DtoFactory.newDto;
  * @author Alexander Andrienko
  */
 @Singleton
-public class InitialAuthConfig {private static final Logger LOG = LoggerFactory.getLogger(InitialAuthConfig.class);
+public class InitialAuthConfig {
+
+    private static final Logger LOG = LoggerFactory.getLogger(InitialAuthConfig.class);
+
     private static final String URL       = "url";
     private static final String USER_NAME = "username";
     private static final String PASSWORD  = "password";
@@ -63,18 +66,18 @@ public class InitialAuthConfig {private static final Logger LOG = LoggerFactory.
     }
 
     @Inject
-    public InitialAuthConfig(ConfigurationProperties properties) throws IllegalArgumentException {
+    public InitialAuthConfig(ConfigurationProperties properties) {
         Map<String, String> authProperties = properties.getProperties(CONFIGURATION_PREFIX_PATTERN);
 
         Set<String> registryNames = new HashSet<>();
-        for (Map.Entry<String, String> property: authProperties.entrySet()) {
+        for (Map.Entry<String, String> property : authProperties.entrySet()) {
             String registryName = getRegistryName(property.getKey());
             registryNames.add(registryName);
         }
 
         for (String registryName : registryNames) {
             String serverAddress = authProperties.get(CONFIG_PREFIX + registryName + "." + URL);
-            String userName = authProperties.get(CONFIG_PREFIX  + registryName + "." + USER_NAME);
+            String userName = authProperties.get(CONFIG_PREFIX + registryName + "." + USER_NAME);
             String password = authProperties.get(CONFIG_PREFIX + registryName + "." + PASSWORD);
 
             AuthConfig authConfig = createConfig(serverAddress, userName, password, registryName);
@@ -83,21 +86,22 @@ public class InitialAuthConfig {private static final Logger LOG = LoggerFactory.
     }
 
     private String getRegistryName(String propertyName) throws IllegalArgumentException {
-        String classifier = propertyName.replaceFirst(CONFIG_PREFIX, "");
-        String[] parts = classifier.split("\\.");
+        String[] parts = propertyName.replaceFirst(CONFIG_PREFIX, "").split("\\.");
+
         if (parts.length < 2) {
-            throw new IllegalArgumentException(format("You missed '.' in property '%s'. Valid format for credential docker registry is '%s'",
-                                             CONFIG_PREFIX + classifier, VALID_DOCKER_PROPERTY_NAME_EXAMPLE));
+            throw new IllegalArgumentException(format("You missed '.' in property '%s'. Valid credential registry format is '%s'",
+                                                      propertyName, VALID_DOCKER_PROPERTY_NAME_EXAMPLE));
         }
         if (parts.length > 2) {
-            throw new IllegalArgumentException(format("You set redundant '.' in property '%s'. Valid format for credential docker registry is '%s'",
-                                             CONFIG_PREFIX + classifier, VALID_DOCKER_PROPERTY_NAME_EXAMPLE));
+            throw new IllegalArgumentException(format("You set redundant '.' in property '%s'. Valid credential registry format is '%s'",
+                                                      propertyName, VALID_DOCKER_PROPERTY_NAME_EXAMPLE));
         }
         return parts[0];
     }
 
     @Nullable
-    private static AuthConfig createConfig(String serverAddress, String username, String password, String registry) throws IllegalArgumentException {
+    private static AuthConfig createConfig(String serverAddress, String username, String password, String registry)
+            throws IllegalArgumentException {
         if (isNullOrEmpty(serverAddress)) {
             throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + URL);
         }

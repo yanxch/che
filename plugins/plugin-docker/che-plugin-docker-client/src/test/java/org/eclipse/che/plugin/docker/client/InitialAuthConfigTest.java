@@ -94,7 +94,7 @@ public class InitialAuthConfigTest {
 
     @Test(expectedExceptions = IllegalArgumentException.class,
           expectedExceptionsMessageRegExp = "You missed '.' in property '" + CONFIG_PREFIX + "url'. " +
-                                            "Valid format for credential docker registry is '" + VALID_DOCKER_PROPERTY_NAME_EXAMPLE + "'")
+                                            "Valid credential registry format is '" + VALID_DOCKER_PROPERTY_NAME_EXAMPLE + "'")
     public void shouldThrowExceptionWhenUserMissedPointInProperty() throws IllegalArgumentException {
         properties.put(CONFIG_PREFIX + "url", URL1_VALUE);
 
@@ -103,7 +103,7 @@ public class InitialAuthConfigTest {
 
     @Test(expectedExceptions = IllegalArgumentException.class,
           expectedExceptionsMessageRegExp = "You set redundant '.' in property '" + CONFIG_PREFIX + "my.registry.docker.url'. " +
-                                            "Valid format for credential docker registry is '" + VALID_DOCKER_PROPERTY_NAME_EXAMPLE + "'")
+                                            "Valid credential registry format is '" + VALID_DOCKER_PROPERTY_NAME_EXAMPLE + "'")
     public void shouldThrowExceptionWhenUserSetRedundantPointInProperty() throws IllegalArgumentException {
         properties.put(CONFIG_PREFIX + "my.registry.docker.url", URL1_VALUE);
 
