@@ -33,7 +33,7 @@ import java.util.Map;
  */
 @Singleton
 public class DockerRegistryCredentialsReader {
-    private static final String DOCKER_REGISTRY_CREDENTIALS_KEY        = "dockerCredentials";
+    private static final String DOCKER_REGISTRY_CREDENTIALS_KEY = "dockerCredentials";
 
     private static final Logger LOG = LoggerFactory.getLogger(DockerRegistryCredentialsReader.class);
 

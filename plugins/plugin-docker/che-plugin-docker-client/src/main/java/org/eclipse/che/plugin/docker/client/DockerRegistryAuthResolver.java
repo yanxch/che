@@ -67,9 +67,11 @@ public class DockerRegistryAuthResolver {
 
         AuthConfig authConfig = null;
         if (paramAuthConfigs != null && paramAuthConfigs.getConfigs() != null) {
+            normalizeDockerHubRegistryUrl(paramAuthConfigs.getConfigs());
             authConfig = paramAuthConfigs.getConfigs().get(registry);
         }
         if (authConfig == null) {
+            normalizeDockerHubRegistryUrl(initialAuthConfig.getAuthConfigs().getConfigs());
             authConfig = initialAuthConfig.getAuthConfigs().getConfigs().get(registry);
         }
 
@@ -100,13 +102,16 @@ public class DockerRegistryAuthResolver {
             authConfigs.putAll(paramAuthConfigs.getConfigs());
         }
 
-        // normalize docker hub registry url
+       normalizeDockerHubRegistryUrl(authConfigs);
+
+        return Base64.getEncoder().encodeToString(JsonHelper.toJson(authConfigs).getBytes());
+    }
+
+    private void normalizeDockerHubRegistryUrl(Map<String, AuthConfig> authConfigs) {
         AuthConfig abnormalDefaultRegistryAuthConfig = authConfigs.remove("docker.io");
         if (abnormalDefaultRegistryAuthConfig != null) {
             authConfigs.put(DEFAULT_REGISTRY, abnormalDefaultRegistryAuthConfig);
         }
-
-        return Base64.getEncoder().encodeToString(JsonHelper.toJson(authConfigs).getBytes());
     }
 
 }

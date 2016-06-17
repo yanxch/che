@@ -51,9 +51,9 @@ public class DockerRegistryAuthResolverTest {
     private static final String REGISTRY2_PASSWORD = "localreg";
     private static final String REGISTRY3_PASSWORD = "pass1234";
 
-    private static final String REGISTRY1_X_REGISTRY_AUTH_HEADER_VALUE_BASE64 = "{\"username\":\"user\",\"password\":\"pass\"}";
-    private static final String REGISTRY2_X_REGISTRY_AUTH_HEADER_VALUE_BASE64 = "{\"username\":\"mylocallogin\",\"password\":\"localreg\"}";
-    private static final String REGISTRY3_X_REGISTRY_AUTH_HEADER_VALUE_BASE64 = "{\"username\":\"usrname\",\"password\":\"pass1234\"}";
+    private static final String REGISTRY1_X_REGISTRY_AUTH_HEADER_VALUE = "{\"username\":\"user\",\"password\":\"pass\"}";
+    private static final String REGISTRY2_X_REGISTRY_AUTH_HEADER_VALUE = "{\"username\":\"mylocallogin\",\"password\":\"localreg\"}";
+    private static final String REGISTRY3_X_REGISTRY_AUTH_HEADER_VALUE = "{\"username\":\"usrname\",\"password\":\"pass1234\"}";
 
     private static final String INITIAL_X_AUTH_CONFIG_VALUE =
             "{\"test.registry.com:5050\":{\"password\":\"1234\",\"username\":\"user1\"}," +
@@ -169,7 +169,7 @@ public class DockerRegistryAuthResolverTest {
         String base64HeaderValue = authResolver.getXRegistryAuthHeaderValue(REGISTRY1_URL, customAuthConfigs);
 
         assertEqualsXRegistryAuthHeader(base64ToAuthConfig(base64HeaderValue),
-                                        jsonToAuthConfig(REGISTRY1_X_REGISTRY_AUTH_HEADER_VALUE_BASE64));
+                                        jsonToAuthConfig(REGISTRY1_X_REGISTRY_AUTH_HEADER_VALUE));
     }
 
     @Test
@@ -179,7 +179,7 @@ public class DockerRegistryAuthResolverTest {
         String base64HeaderValue = authResolver.getXRegistryAuthHeaderValue(REGISTRY2_URL, customAuthConfigs);
 
         assertEqualsXRegistryAuthHeader(base64ToAuthConfig(base64HeaderValue),
-                                        jsonToAuthConfig(REGISTRY2_X_REGISTRY_AUTH_HEADER_VALUE_BASE64));
+                                        jsonToAuthConfig(REGISTRY2_X_REGISTRY_AUTH_HEADER_VALUE));
     }
 
     @Test
@@ -189,7 +189,7 @@ public class DockerRegistryAuthResolverTest {
         String base64HeaderValue = authResolver.getXRegistryAuthHeaderValue(REGISTRY3_URL, customAuthConfigs);
 
         assertEqualsXRegistryAuthHeader(base64ToAuthConfig(base64HeaderValue),
-                                        jsonToAuthConfig(REGISTRY3_X_REGISTRY_AUTH_HEADER_VALUE_BASE64));
+                                        jsonToAuthConfig(REGISTRY3_X_REGISTRY_AUTH_HEADER_VALUE));
     }
 
     @Test
@@ -207,7 +207,7 @@ public class DockerRegistryAuthResolverTest {
         String base64HeaderValue = authResolver.getXRegistryAuthHeaderValue(INITIAL_REGISTRY1_URL, customAuthConfigs);
 
         assertEqualsXRegistryAuthHeader(base64ToAuthConfig(base64HeaderValue),
-                                        jsonToAuthConfig(REGISTRY3_X_REGISTRY_AUTH_HEADER_VALUE_BASE64));
+                                        jsonToAuthConfig(REGISTRY3_X_REGISTRY_AUTH_HEADER_VALUE));
     }
 
     @Test
@@ -231,7 +231,7 @@ public class DockerRegistryAuthResolverTest {
         String base64HeaderValue = authResolver.getXRegistryAuthHeaderValue(REGISTRY1_URL, customAuthConfigs);
 
         assertEqualsXRegistryAuthHeader(base64ToAuthConfig(base64HeaderValue),
-                                        jsonToAuthConfig(REGISTRY1_X_REGISTRY_AUTH_HEADER_VALUE_BASE64));
+                                        jsonToAuthConfig(REGISTRY1_X_REGISTRY_AUTH_HEADER_VALUE));
     }
 
     @Test
@@ -239,7 +239,7 @@ public class DockerRegistryAuthResolverTest {
         String base64HeaderValue = authResolver.getXRegistryAuthHeaderValue(REGISTRY2_URL, customAuthConfigs);
 
         assertEqualsXRegistryAuthHeader(base64ToAuthConfig(base64HeaderValue),
-                                        jsonToAuthConfig(REGISTRY2_X_REGISTRY_AUTH_HEADER_VALUE_BASE64));
+                                        jsonToAuthConfig(REGISTRY2_X_REGISTRY_AUTH_HEADER_VALUE));
     }
 
     @Test
@@ -247,7 +247,7 @@ public class DockerRegistryAuthResolverTest {
         String base64HeaderValue = authResolver.getXRegistryAuthHeaderValue(REGISTRY3_URL, customAuthConfigs);
 
         assertEqualsXRegistryAuthHeader(base64ToAuthConfig(base64HeaderValue),
-                                        jsonToAuthConfig(REGISTRY3_X_REGISTRY_AUTH_HEADER_VALUE_BASE64));
+                                        jsonToAuthConfig(REGISTRY3_X_REGISTRY_AUTH_HEADER_VALUE));
     }
 
     @Test
