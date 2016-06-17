@@ -53,6 +53,7 @@ public class InitialAuthConfig {
     private static final String PASSWORD  = "password";
 
     private Map<String, AuthConfig> configMap;
+    private AuthConfigs             authConfigs;
 
     @VisibleForTesting
     protected static final String CONFIG_PREFIX                      = "docker.registry.auth.";
@@ -75,17 +76,21 @@ public class InitialAuthConfig {
                                                   .collect(Collectors.toSet());
 
         configMap = registryNames.stream()
-                                 .map(registryName -> registryName + ".")
-                                 .collect(toMap(registry -> authProperties.get(CONFIG_PREFIX + registry + URL),
-                                                registry -> createConfig(authProperties.get(CONFIG_PREFIX + registry + URL),
-                                                                         authProperties.get(CONFIG_PREFIX + registry + USER_NAME),
-                                                                         authProperties.get(CONFIG_PREFIX + registry + PASSWORD),
+                                 .collect(toMap(registry -> authProperties.get(CONFIG_PREFIX + registry + "." + URL),
+                                                registry -> createConfig(authProperties.get(CONFIG_PREFIX + registry + "." + URL),
+                                                                         authProperties.get(CONFIG_PREFIX + registry + "." + USER_NAME),
+                                                                         authProperties.get(CONFIG_PREFIX + registry + "." + PASSWORD),
                                                                          registry)));
     }
 
+    /**
+     * Returns docker model ConfigFile {@link AuthConfig}
+     */
     public AuthConfigs getAuthConfigs() {
-        AuthConfigs authConfigs = newDto(AuthConfigs.class);
-        authConfigs.getConfigs().putAll(configMap);
+        if (authConfigs == null) {
+            authConfigs = newDto(AuthConfigs.class);
+            authConfigs.getConfigs().putAll(configMap);
+        }
         return authConfigs;
     }
 
@@ -113,13 +118,13 @@ public class InitialAuthConfig {
     private static AuthConfig createConfig(String serverAddress, String username, String password, String registry)
             throws IllegalArgumentException {
         if (isNullOrEmpty(serverAddress)) {
-            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + URL);
+            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + URL);
         }
         if (isNullOrEmpty(username)) {
-            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + USER_NAME);
+            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + USER_NAME);
         }
         if (isNullOrEmpty(password)) {
-            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + PASSWORD);
+            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + PASSWORD);
         }
         return newDto(AuthConfig.class).withServeraddress(serverAddress).withUsername(username).withPassword(password);
     }

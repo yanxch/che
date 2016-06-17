@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.docker.client;
 
+import org.eclipse.che.commons.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,10 +36,12 @@ public class DockerRegistryChecker {
     private static final Logger LOG = LoggerFactory.getLogger(DockerRegistryChecker.class);
 
     @Inject
+    @Nullable
     @Named("machine.docker.registry")
     private String registryUrl;
 
     @Inject
+    @Nullable
     @Named("machine.docker.snapshot_use_registry")
     private Boolean snapshotUseRegistry;
 
