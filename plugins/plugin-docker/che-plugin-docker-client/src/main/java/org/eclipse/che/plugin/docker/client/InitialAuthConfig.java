@@ -115,7 +115,7 @@ public class InitialAuthConfig {
     }
 
     @Nullable
-    private static AuthConfig createConfig(String serverAddress, String username, String password, String registry)
+    private AuthConfig createConfig(String serverAddress, String username, String password, String registry)
             throws IllegalArgumentException {
         if (isNullOrEmpty(serverAddress)) {
             throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + URL);
