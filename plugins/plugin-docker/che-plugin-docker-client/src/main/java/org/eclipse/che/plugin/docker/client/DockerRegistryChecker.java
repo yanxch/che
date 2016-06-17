@@ -10,19 +10,20 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.docker.client;
 
+import org.eclipse.che.plugin.docker.client.dto.AuthConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Map;
 
 /**
- * Checks that docker registry is available.
+ * Checks that docker registry(ies) is available.
  *
  * @author Yevhenii Voevodin
  */
@@ -31,15 +32,25 @@ public class DockerRegistryChecker {
 
     private static final Logger LOG = LoggerFactory.getLogger(DockerRegistryChecker.class);
 
+    private final InitialAuthConfig initialAuthConfig;
+
     @Inject
-    @Named("docker.registry.auth.url")
-    private String registryUrl;
+    public DockerRegistryChecker(InitialAuthConfig initialAuthConfig) {
+        this.initialAuthConfig = initialAuthConfig;
+    }
 
     /**
-     * Checks that registry is available and if it is not - logs warning message.
+     * Checks that registry(ies) is available and if it is not - logs warning message.
      */
     @PostConstruct
     private void checkRegistryIsAvailable() throws IOException {
+        for(Map.Entry<String, AuthConfig> authConfigEntry: initialAuthConfig.getAuthConfigs().getConfigs().entrySet()) {//todo maybe do that in few threads?
+            checkAvailabilityRegistry(authConfigEntry.getValue());
+        }
+    }
+
+    private void checkAvailabilityRegistry(AuthConfig authConfig) throws IOException {
+        String registryUrl = authConfig.getServeraddress();
         LOG.info("Probing registry '{}'", registryUrl);
         final HttpURLConnection conn = (HttpURLConnection) new URL(registryUrl).openConnection();
         conn.setConnectTimeout(30 * 1000);
