@@ -22,9 +22,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
@@ -69,11 +69,10 @@ public class InitialAuthConfig {
     public InitialAuthConfig(ConfigurationProperties properties) {
         Map<String, String> authProperties = properties.getProperties(CONFIGURATION_PREFIX_PATTERN);
 
-        Set<String> registryNames = new HashSet<>();
-        for (Map.Entry<String, String> property : authProperties.entrySet()) {
-            String registryName = getRegistryName(property.getKey());
-            registryNames.add(registryName);
-        }
+        Set<String> registryNames = authProperties.entrySet()
+                                                  .stream()
+                                                  .map(property -> getRegistryName(property.getKey()))
+                                                  .collect(Collectors.toSet());
 
         for (String registryName : registryNames) {
             String serverAddress = authProperties.get(CONFIG_PREFIX + registryName + "." + URL);
