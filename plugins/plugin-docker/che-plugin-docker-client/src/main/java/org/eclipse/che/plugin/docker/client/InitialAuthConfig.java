@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Codenvy, S.A. - initial API and implementation
+ * Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
 package org.eclipse.che.plugin.docker.client;
 
@@ -76,11 +76,11 @@ public class InitialAuthConfig {
                                                   .collect(Collectors.toSet());
 
         configMap = registryNames.stream()
-                     .map(registry -> createConfig(authProperties.get(CONFIG_PREFIX + registry + "." + URL),
-                                                   authProperties.get(CONFIG_PREFIX + registry + "." + USER_NAME),
-                                                   authProperties.get(CONFIG_PREFIX + registry + "." + PASSWORD),
-                                                   registry))
-                     .collect(toMap(AuthConfig::getServeraddress, elem -> elem));
+                                 .collect(toMap(registry -> authProperties.get(CONFIG_PREFIX + registry + "." + URL),
+                                                registry -> createConfig(authProperties.get(CONFIG_PREFIX + registry + "." + URL),
+                                                                         authProperties.get(CONFIG_PREFIX + registry + "." + USER_NAME),
+                                                                         authProperties.get(CONFIG_PREFIX + registry + "." + PASSWORD),
+                                                                         registry)));
     }
 
     private String getRegistryName(String propertyName) throws IllegalArgumentException {
