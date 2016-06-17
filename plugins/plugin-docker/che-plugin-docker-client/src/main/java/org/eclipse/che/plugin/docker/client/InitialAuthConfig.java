@@ -52,14 +52,14 @@ public class InitialAuthConfig {
     private static final String USER_NAME = "username";
     private static final String PASSWORD  = "password";
 
+    private Map<String, AuthConfig> configMap;
+
     @VisibleForTesting
     protected static final String CONFIG_PREFIX                      = "docker.registry.auth.";
     @VisibleForTesting
     protected static final String CONFIGURATION_PREFIX_PATTERN       = "docker\\.registry\\.auth\\..+";
     @VisibleForTesting
     protected static final String VALID_DOCKER_PROPERTY_NAME_EXAMPLE = CONFIG_PREFIX + "registry_name.parameter_name";
-
-    private Map<String, AuthConfig> configMap;
 
     /** For testing purposes */
     public InitialAuthConfig() {

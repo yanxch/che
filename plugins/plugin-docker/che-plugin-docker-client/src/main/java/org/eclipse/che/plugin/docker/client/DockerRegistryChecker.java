@@ -27,6 +27,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
  * Checks that docker registry is available.
  *
  * @author Yevhenii Voevodin
+ * @author Alexander Andrienko
  */
 @Singleton
 public class DockerRegistryChecker {
