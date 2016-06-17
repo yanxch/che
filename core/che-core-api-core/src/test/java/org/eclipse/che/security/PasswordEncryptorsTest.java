@@ -8,23 +8,27 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.user.server.jpa;
+package org.eclipse.che.security;
 
-import org.eclipse.che.api.user.server.model.impl.ProfileImpl;
-import org.eclipse.che.commons.test.tck.TckRepository;
-import org.eclipse.che.commons.test.tck.TckRepositoryException;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
-import java.util.Collection;
+/**
+ * TODO add tests
+ *
+ * @author Yevhenii Voevodin
+ */
+public class PasswordEncryptorsTest {
 
-public class ProfileJpaTckRepository implements TckRepository<ProfileImpl> {
-
-    @Override
-    public void createAll(Collection<? extends ProfileImpl> entities) throws TckRepositoryException {
+    @Test
+    public void testEncryption(PasswordEncryptor encryptor) throws Exception {
 
     }
 
-    @Override
-    public void removeAll() throws TckRepositoryException {
-
+    @DataProvider(name = "encryptorsProvider")
+    public Object[][] encryptorsProvider() {
+        return new Object[][] {
+                { new SHA512PasswordEncryptor() }
+        };
     }
 }

@@ -35,6 +35,7 @@ import static java.util.Objects.requireNonNull;
 public class JpaUserDao implements UserDao {
 
     private final EntityManagerFactory factory;
+    private final PasswordEncryptor    encryptor;
 
     @Inject
     public JpaUserDao(EntityManagerFactory factory) {
@@ -43,11 +44,13 @@ public class JpaUserDao implements UserDao {
 
     @Override
     public String authenticate(String emailOrAliasOrName, String password) throws UnauthorizedException, ServerException {
+
         return null;
     }
 
     @Override
     public void create(UserImpl user) throws ConflictException, ServerException {
+        requireNonNull(user, "Required non-null user");
         final EntityManager manager = factory.createEntityManager();
         try {
             manager.getTransaction().begin();

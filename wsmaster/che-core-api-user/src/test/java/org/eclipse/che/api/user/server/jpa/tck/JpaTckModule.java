@@ -8,11 +8,15 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.user.server.jpa;
+package org.eclipse.che.api.user.server.jpa.tck;
 
 import com.google.common.reflect.Reflection;
 import com.google.inject.TypeLiteral;
 
+import org.eclipse.che.api.user.server.jpa.JpaProfileDao;
+import org.eclipse.che.api.user.server.jpa.JpaUserDao;
+import org.eclipse.che.api.user.server.jpa.tck.ProfileJpaTckRepository;
+import org.eclipse.che.api.user.server.jpa.tck.UserJpaTckRepository;
 import org.eclipse.che.api.user.server.model.impl.ProfileImpl;
 import org.eclipse.che.api.user.server.model.impl.UserImpl;
 import org.eclipse.che.api.user.server.spi.ProfileDao;
