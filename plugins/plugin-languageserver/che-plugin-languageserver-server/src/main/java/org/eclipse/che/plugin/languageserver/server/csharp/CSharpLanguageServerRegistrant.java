@@ -45,7 +45,7 @@ public class CSharpLanguageServerRegistrant {
             }
 
             ProcessBuilder languageServerStarter =
-                    new ProcessBuilder("node", "--debug=5858", "/home/user/languageserver/lscsharp/node_modules/omnisharp-client/languageserver/server.js");
+                    new ProcessBuilder("node", "/home/user/languageserver/lscsharp/node_modules/omnisharp-client/languageserver/server.js");
             languageServerStarter.redirectInput(ProcessBuilder.Redirect.PIPE);
             languageServerStarter.redirectOutput(ProcessBuilder.Redirect.PIPE);
             Process process = languageServerStarter.start();
