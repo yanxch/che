@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -93,6 +92,11 @@ public class InitialAuthConfig {
         if (parts.length > 2) {
             throw new IllegalArgumentException(format("You set redundant '.' in property '%s'. Valid credential registry format is '%s'",
                                                       propertyName, VALID_DOCKER_PROPERTY_NAME_EXAMPLE));
+        }
+
+        String propertyIdentifier = parts[1];
+        if (!URL.equals(propertyIdentifier) && !USER_NAME.equals(propertyIdentifier) && !PASSWORD.equals(propertyIdentifier)) {
+            LOG.info("Set unused property: " + propertyName);
         }
         return parts[0];
     }

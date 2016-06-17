@@ -110,7 +110,8 @@ public class InitialAuthConfigTest {
         new InitialAuthConfig(configurationProperties);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + URL1_KEY)
+    @Test(expectedExceptions = IllegalArgumentException.class,
+          expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + URL1_KEY)
     public void shouldThrowExceptionIfUserMissedUrlProperty() throws IllegalArgumentException {
         properties.remove(CONFIG_PREFIX + URL1_KEY);
 
@@ -142,14 +143,16 @@ public class InitialAuthConfigTest {
         assertTrue(initialAuthConfig.getAuthConfigs().getConfigs().isEmpty());
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + URL1_KEY)
+    @Test(expectedExceptions = IllegalArgumentException.class,
+          expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + URL1_KEY)
     public void shouldThrowExceptionIfUserSetEmptyUrlValue() throws IllegalArgumentException {
         properties.put(CONFIG_PREFIX + URL1_KEY, "");
 
         new InitialAuthConfig(configurationProperties);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + URL1_KEY)
+    @Test(expectedExceptions = IllegalArgumentException.class,
+          expectedExceptionsMessageRegExp = "You missed property " + CONFIG_PREFIX + URL1_KEY)
     public void shouldThrowExceptionIfUserSetNullUrlValue() throws IllegalArgumentException {
         properties.put(CONFIG_PREFIX + URL1_KEY, null);
 
