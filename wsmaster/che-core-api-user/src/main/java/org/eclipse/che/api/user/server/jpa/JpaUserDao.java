@@ -8,7 +8,7 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.user.server.dao.jpa;
+package org.eclipse.che.api.user.server.jpa;
 
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.NotFoundException;
@@ -27,9 +27,6 @@ import javax.persistence.RollbackException;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
-import static org.eclipse.che.api.user.server.dao.jpa.Constants.USER_ALIAS_INDEX_NAME;
-import static org.eclipse.che.api.user.server.dao.jpa.Constants.USER_EMAIL_INDEX_NAME;
-import static org.eclipse.che.api.user.server.dao.jpa.Constants.USER_NAME_INDEX_NAME;
 
 /**
  * @author Yevhenii Voevodin
@@ -176,3 +173,4 @@ public class JpaUserDao implements UserDao {
         }
     }
 }
+

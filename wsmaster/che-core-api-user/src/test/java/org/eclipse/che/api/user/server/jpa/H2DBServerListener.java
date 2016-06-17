@@ -8,10 +8,9 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.user.server.dao.jpa;
+package org.eclipse.che.api.user.server.jpa;
 
 import org.eclipse.che.commons.test.tck.AbstractTestListener;
-import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.eclipse.persistence.config.TargetServer;
 import org.testng.ITestContext;
 

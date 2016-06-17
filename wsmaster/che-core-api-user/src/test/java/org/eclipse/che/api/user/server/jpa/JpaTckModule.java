@@ -8,7 +8,7 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.user.server.dao.jpa;
+package org.eclipse.che.api.user.server.jpa;
 
 import com.google.common.reflect.Reflection;
 import com.google.inject.TypeLiteral;
@@ -22,7 +22,7 @@ import org.eclipse.che.commons.test.tck.TckRepository;
 
 import javax.persistence.EntityManagerFactory;
 
-import static org.eclipse.che.api.user.server.dao.jpa.H2DBServerListener.ENTITY_MANAGER_FACTORY_ATTR_NAME;
+import static org.eclipse.che.api.user.server.jpa.H2DBServerListener.ENTITY_MANAGER_FACTORY_ATTR_NAME;
 
 /**
  * @author Yevhenii Voevodin
@@ -47,3 +47,4 @@ public class JpaTckModule extends TckModule {
         bind(ProfileDao.class).to(JpaProfileDao.class);
     }
 }
+

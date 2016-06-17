@@ -30,6 +30,10 @@ public class H2ExceptionHandler implements ExceptionHandler {
     public Object handleException(RuntimeException exception) {
         if (exception instanceof RollbackException) {
             final DBErrorCode code = mapper.map(extractSqlErrorCode(exception));
+            if (code == DBErrorCode.DUPLICATE_KEY) {
+                // TODO
+                throw exception;
+            }
         }
         throw exception;
     }
