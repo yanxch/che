@@ -36,8 +36,6 @@ import org.eclipse.che.ide.extension.machine.client.inject.factories.EntityFacto
 import org.eclipse.che.ide.extension.machine.client.inject.factories.TerminalFactory;
 import org.eclipse.che.ide.extension.machine.client.inject.factories.WidgetsFactory;
 import org.eclipse.che.ide.extension.machine.client.machine.MachineManagerImpl;
-import org.eclipse.che.ide.extension.machine.client.machine.console.MachineConsoleView;
-import org.eclipse.che.ide.extension.machine.client.machine.console.MachineConsoleViewImpl;
 import org.eclipse.che.ide.extension.machine.client.machine.create.CreateMachineView;
 import org.eclipse.che.ide.extension.machine.client.machine.create.CreateMachineViewImpl;
 import org.eclipse.che.ide.extension.machine.client.outputspanel.console.CommandConsoleFactory;
@@ -88,8 +86,6 @@ public class MachineGinModule extends AbstractGinModule {
     protected void configure() {
         GinMapBinder<String, Perspective> perspectiveBinder = GinMapBinder.newMapBinder(binder(), String.class, Perspective.class);
         perspectiveBinder.addBinding(OPERATIONS_PERSPECTIVE_ID).to(OperationsPerspective.class);
-
-        bind(MachineConsoleView.class).to(MachineConsoleViewImpl.class).in(Singleton.class);
 
         bind(CreateMachineView.class).to(CreateMachineViewImpl.class);
         bind(OutputConsoleView.class).to(OutputConsoleViewImpl.class);

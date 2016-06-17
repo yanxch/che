@@ -85,7 +85,8 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
                                                                      OutputConsole.ConsoleOutputListener,
                                                                      WorkspaceStartedHandler,
                                                                      WorkspaceStoppedHandler,
-                                                                     MachineStateEvent.Handler {
+                                                                     MachineStateEvent.Handler,
+                                                                     DevMachineStateEvent.Handler {
 
     private static final String DEFAULT_TERMINAL_NAME = "Terminal";
 
@@ -110,6 +111,8 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
     final Map<String, TerminalPresenter>       terminals;
     final Map<String, OutputConsole>           consoles;
     final Map<OutputConsole, String>           consoleCommands;
+
+    private OutputConsole                      workspaceConsole;
 
     ProcessTreeNode                            rootNode;
     ProcessTreeNode                            selectedTreeNode;
@@ -157,21 +160,16 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         this.view.setDelegate(this);
         this.view.setTitle(localizationConstant.viewConsolesTitle());
 
-        eventBus.addHandler(DevMachineStateEvent.TYPE, new DevMachineStateEvent.Handler() {
-            @Override
-            public void onDevMachineStarted(DevMachineStateEvent event) {
-                fetchMachines();
-            }
-
-            @Override
-            public void onDevMachineDestroyed(DevMachineStateEvent event) {
-            }
-        });
-
         eventBus.addHandler(ProcessFinishedEvent.TYPE, this);
         eventBus.addHandler(WorkspaceStartedEvent.TYPE, this);
         eventBus.addHandler(WorkspaceStoppedEvent.TYPE, this);
         eventBus.addHandler(MachineStateEvent.TYPE, this);
+        eventBus.addHandler(DevMachineStateEvent.TYPE, this);
+
+        rootNode = new ProcessTreeNode(ROOT_NODE, null, null, null, rootNodes);
+
+        workspaceConsole = commandConsoleFactory.create("");
+        updateCommandOutput("", workspaceConsole);
 
         fetchMachines();
     }
@@ -219,6 +217,7 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
 
     @Override
     public void onMachineCreating(MachineStateEvent event) {
+        workspaceAgent.setActivePart(this);
     }
 
     @Override
@@ -249,6 +248,15 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         view.setProcessesData(rootNode);
     }
 
+    @Override
+    public void onDevMachineStarted(DevMachineStateEvent event) {
+//        fetchMachines();
+    }
+
+    @Override
+    public void onDevMachineDestroyed(DevMachineStateEvent event) {
+    }
+
     /** Get the list of all available machines. */
     public void fetchMachines() {
         String workspaceId = appContext.getWorkspaceId();
@@ -256,15 +264,18 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         machineService.getMachines(workspaceId).then(new Operation<List<MachineDto>>() {
             @Override
             public void apply(List<MachineDto> machines) throws OperationException {
-                rootNode = new ProcessTreeNode(ROOT_NODE, null, null, null, rootNodes);
-
                 MachineDto devMachine = getDevMachine(machines);
-                addMachineNode(devMachine);
+                ProcessTreeNode devMachineTreeNode = addMachineNode(devMachine);
+
                 machines.remove(devMachine);
 
                 for (MachineDto machine : machines) {
                     addMachineNode(machine);
                 }
+
+                view.selectNode(devMachineTreeNode);
+
+                workspaceAgent.setActivePart(ConsolesPanelPresenter.this);
             }
         });
     }
@@ -279,18 +290,14 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
         throw new IllegalArgumentException("Dev machine can not be null");
     }
 
-    public void printWorkspaceOutput(String text) {
-//        OutputConsole console = consoles.get(appContext.getDevMachine().getId());
-//        if (console != null && console instanceof DefaultOutputConsole) {
-//            ((DefaultOutputConsole)console).printText(text);
-//        }
+    public void printDevMachineOutput(String text) {
+        OutputConsole console = consoles.get("");
+        if (console != null && console instanceof DefaultOutputConsole) {
+            ((DefaultOutputConsole)console).printText(text);
+        }
     }
 
-//    private native void log(String msg) /*-{
-//        console.log(msg);
-//    }-*/;
-
-    private void addMachineNode(MachineDto machine) {
+    private ProcessTreeNode addMachineNode(MachineDto machine) {
         List<ProcessTreeNode> processTreeNodes = new ArrayList<ProcessTreeNode>();
 
         ProcessTreeNode machineNode = new ProcessTreeNode(MACHINE_NODE, rootNode, machine, null, processTreeNodes);
@@ -305,11 +312,9 @@ public class ConsolesPanelPresenter extends BasePresenter implements ConsolesPan
 
         view.setProcessesData(rootNode);
 
-        OutputConsole console = commandConsoleFactory.create("MACHINE");
-        consoles.put(machine.getId(), console);
-        updateCommandOutput(machine.getId(), console);
-
         restoreState(machine.getId());
+
+        return machineNode;
     }
 
     private void restoreState(final String machineId) {

@@ -30,7 +30,6 @@ import org.eclipse.che.ide.api.machine.MachineManager;
 import org.eclipse.che.ide.api.machine.MachineServiceClient;
 import org.eclipse.che.ide.api.machine.OutputMessageUnmarshaller;
 import org.eclipse.che.ide.api.machine.events.DevMachineStateEvent;
-import org.eclipse.che.ide.api.parts.PerspectiveManager;
 import org.eclipse.che.ide.api.workspace.WorkspaceServiceClient;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedEvent;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedHandler;
@@ -51,7 +50,6 @@ import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_GET_MACHINE_
 import static org.eclipse.che.ide.api.machine.MachineManager.MachineOperationType.DESTROY;
 import static org.eclipse.che.ide.api.machine.MachineManager.MachineOperationType.RESTART;
 import static org.eclipse.che.ide.api.machine.MachineManager.MachineOperationType.START;
-import static org.eclipse.che.ide.extension.machine.client.perspective.OperationsPerspective.OPERATIONS_PERSPECTIVE_ID;
 import static org.eclipse.che.ide.ui.loaders.initialization.InitialLoadingInfo.Operations.MACHINE_BOOTING;
 import static org.eclipse.che.ide.ui.loaders.initialization.OperationInfo.Status.ERROR;
 import static org.eclipse.che.ide.ui.loaders.initialization.OperationInfo.Status.IN_PROGRESS;
@@ -71,7 +69,6 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
     private final ConsolesPanelPresenter  consolesPanelPresenter;
     private final MachineStatusNotifier   machineStatusNotifier;
     private final InitialLoadingInfo      initialLoadingInfo;
-    private final PerspectiveManager      perspectiveManager;
     private final AppContext              appContext;
     private final DtoFactory              dtoFactory;
     private final EventBus                eventBus;
@@ -93,7 +90,6 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
                               MachineStatusNotifier machineStatusNotifier,
                               final MessageBusProvider messageBusProvider,
                               final InitialLoadingInfo initialLoadingInfo,
-                              final PerspectiveManager perspectiveManager,
                               EventBus eventBus,
                               final AppContext appContext,
                               DtoFactory dtoFactory) {
@@ -103,7 +99,6 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
         this.consolesPanelPresenter = consolesPanelPresenter;
         this.machineStatusNotifier = machineStatusNotifier;
         this.initialLoadingInfo = initialLoadingInfo;
-        this.perspectiveManager = perspectiveManager;
         this.appContext = appContext;
         this.dtoFactory = dtoFactory;
         this.eventBus = eventBus;
@@ -146,7 +141,7 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
         outputHandler = new SubscriptionHandler<String>(new OutputMessageUnmarshaller()) {
             @Override
             protected void onMessageReceived(String text) {
-                consolesPanelPresenter.printWorkspaceOutput(text);
+                consolesPanelPresenter.printDevMachineOutput(text);
             }
 
             @Override
@@ -158,19 +153,15 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
 
     @Override
     public void onWorkspaceStopped(WorkspaceStoppedEvent event) {
-        boolean statusChannelNotNull = statusChannel != null;
-        boolean outputChannelNotNull = outputChannel != null;
-        boolean wsLogChannelNotNull = wsAgentLogChannel != null;
-
-        if (statusChannelNotNull && messageBus.isHandlerSubscribed(statusHandler, statusChannel)) {
+        if (statusChannel != null && messageBus.isHandlerSubscribed(statusHandler, statusChannel)) {
             unsubscribeChannel(statusChannel, statusHandler);
         }
 
-        if (outputChannelNotNull && messageBus.isHandlerSubscribed(outputHandler, outputChannel)) {
+        if (outputChannel != null && messageBus.isHandlerSubscribed(outputHandler, outputChannel)) {
             unsubscribeChannel(outputChannel, outputHandler);
         }
 
-        if (wsLogChannelNotNull && messageBus.isHandlerSubscribed(outputHandler, wsAgentLogChannel)) {
+        if (wsAgentLogChannel != null && messageBus.isHandlerSubscribed(outputHandler, wsAgentLogChannel)) {
             unsubscribeChannel(wsAgentLogChannel, outputHandler);
         }
     }
@@ -335,7 +326,6 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedHandl
 
     @Override
     public void onDevMachineCreating(MachineConfigDto machineConfig) {
-        perspectiveManager.setPerspectiveId(OPERATIONS_PERSPECTIVE_ID);
         initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), IN_PROGRESS);
 
         if (machineConfig.getLink(LINK_REL_GET_MACHINE_LOGS_CHANNEL) != null &&

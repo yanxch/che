@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.extension.machine.client;
 
+import com.google.gwt.core.client.Scheduler;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
@@ -100,14 +101,6 @@ public class MachineExtension {
                  * OperationsPerspective and ProjectPerspective directly. Following code resolves the issue.
                  */
 
-                /* Add Outputs and Consoles to Operation perspective */
-                perspectiveManager.setPerspectiveId(OperationsPerspective.OPERATIONS_PERSPECTIVE_ID);
-                workspaceAgent.openPart(consolesPanelPresenter, PartStackType.INFORMATION);
-
-                /* Add Outputs and Consoles to Project perspective */
-                perspectiveManager.setPerspectiveId(PROJECT_PERSPECTIVE_ID);
-                workspaceAgent.openPart(consolesPanelPresenter, PartStackType.INFORMATION);
-
                 if (appContext.getFactory() == null) {
                     consolesPanelPresenter.newTerminal();
                 }
@@ -115,6 +108,21 @@ public class MachineExtension {
 
             @Override
             public void onWsAgentStopped(WsAgentStateEvent event) {
+            }
+        });
+
+        Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+            @Override
+            public void execute() {
+                /* Add Consoles to Operation perspective */
+                perspectiveManager.setPerspectiveId(OperationsPerspective.OPERATIONS_PERSPECTIVE_ID);
+                workspaceAgent.openPart(consolesPanelPresenter, PartStackType.INFORMATION);
+
+                /* Add Consoles to Project perspective */
+                perspectiveManager.setPerspectiveId(PROJECT_PERSPECTIVE_ID);
+                workspaceAgent.openPart(consolesPanelPresenter, PartStackType.INFORMATION);
+
+                workspaceAgent.setActivePart(consolesPanelPresenter);
             }
         });
 

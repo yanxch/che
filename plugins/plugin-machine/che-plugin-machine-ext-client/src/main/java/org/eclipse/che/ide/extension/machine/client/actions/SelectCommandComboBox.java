@@ -90,6 +90,8 @@ public class SelectCommandComboBox extends AbstractPerspectiveAction implements 
     private final DefaultActionGroup          commandActions;
     private final DefaultActionGroup          machinesActions;
 
+    private boolean                           workspaceAgentStarted;
+
     @Inject
     public SelectCommandComboBox(MachineLocalizationConstant locale,
                                  MachineResources resources,
@@ -115,6 +117,7 @@ public class SelectCommandComboBox extends AbstractPerspectiveAction implements 
 
         this.registeredMachineMap = new HashMap<>();
         this.commands = new ArrayList<>();
+        workspaceAgentStarted = false;
 
         this.machinesListWidget = dropDownListFactory.createDropDown(GROUP_MACHINES);
         this.commandsListWidget = dropDownListFactory.createDropDown(GROUP_COMMANDS);
@@ -133,6 +136,7 @@ public class SelectCommandComboBox extends AbstractPerspectiveAction implements 
 
     @Override
     public void updateInPerspective(@NotNull ActionEvent event) {
+        event.getPresentation().setVisible(workspaceAgentStarted);
     }
 
     @Override
@@ -314,6 +318,8 @@ public class SelectCommandComboBox extends AbstractPerspectiveAction implements 
 
     @Override
     public void onWsAgentStarted(WsAgentStateEvent event) {
+        workspaceAgentStarted = true;
+
         loadCommands(null);
         loadMachines();
     }
