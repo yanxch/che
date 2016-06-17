@@ -10,10 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.api.workspace.server.env.impl.che;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.base.Joiner;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
 
 import org.eclipse.che.api.core.BadRequestException;
 import org.eclipse.che.api.core.ServerException;
@@ -59,9 +58,9 @@ import static org.slf4j.LoggerFactory.getLogger;
  * author Alexander Garagatyi
  */
 public class CheEnvironmentValidator implements EnvironmentValidator {
-    private static final Logger LOG  = getLogger(CheEnvironmentValidator.class);
-    private static final Gson   GSON = new GsonBuilder().disableHtmlEscaping()
-                                                        .create();
+    private static final Logger       LOG        = getLogger(CheEnvironmentValidator.class);
+    private static final ObjectMapper jsonParser = new ObjectMapper();
+    private static final ObjectMapper yamlParser = new ObjectMapper(new YAMLFactory());
 
     private static final Pattern SERVER_PORT     = Pattern.compile("[1-9]+[0-9]*/(?:tcp|udp)");
     private static final Pattern SERVER_PROTOCOL = Pattern.compile("[a-z][a-z0-9-+.]*");
@@ -85,12 +84,6 @@ public class CheEnvironmentValidator implements EnvironmentValidator {
     // todo use strategy to check if order is valid
     @Override
     public void validate(Environment env) throws BadRequestException, ServerException {
-        normalize(env);
-    }
-
-
-    @Override
-    public Environment normalize(Environment env) throws BadRequestException, ServerException {
         EnvironmentImpl envImpl = new EnvironmentImpl(env);
 
         List<? extends MachineConfig> machineConfigs = validateAndReturnMachines(envImpl.getRecipe());
@@ -105,34 +98,34 @@ public class CheEnvironmentValidator implements EnvironmentValidator {
         if (envImpl.getMachines().size() > machineConfigs.size()) {
             throw new BadRequestException("Environment contains machine description missing in environment recipe");
         }
-
-        return envImpl;
     }
-
+//todo validate depends on fields to check cyclic dependencies
     // todo should throw another exception in case it is not possible to download recipe
     public List<MachineConfig> parse(EnvironmentRecipe envRecipe) throws IllegalArgumentException, ServerException {
-        if (!"application/json".equals(envRecipe.getContentType())) {
-            throw new IllegalArgumentException("Environment recipe content type is unsupported. Supported values are: application/json");
-        }
         String recipeContent = getContentOfRecipe(envRecipe);
-        EnvironmentRecipeContentImpl environmentRecipeContent;
-        try {
-            environmentRecipeContent = GSON.fromJson(recipeContent, EnvironmentRecipeContentImpl.class);
-        } catch (JsonSyntaxException e) {
-            throw new IllegalArgumentException("Parsing of environment configuration failed. " + e.getLocalizedMessage());
-        }
+        EnvironmentRecipeContentImpl environmentRecipeContent = parseEnvironmentRecipeContent(recipeContent, envRecipe.getContentType());
         List<MachineConfigImpl> machineConfigs =
                 environmentRecipeContent.getServices()
                                         .entrySet()
                                         .stream()
                                         .map(entry -> {
                                             ServiceImpl service = entry.getValue();
+
+                                            MachineSourceImpl machineSource;
+                                            if (service.getImage() != null) {
+                                                machineSource = new MachineSourceImpl("image").setLocation(service.getImage());
+                                            } else {
+                                                machineSource = new MachineSourceImpl("dockerfile").setLocation(service.getDockerfile());
+                                            }
+
                                             return MachineConfigImpl.builder()
+                                                                    .setType("docker")
+                                                                    .setDev("true".equals(firstNonNull(service.getLabels(),
+                                                                                                       emptyMap()).get("dev")))
+                                                                    .setSource(machineSource)
                                                                     .setCommand(service.getCommand())
                                                                     .setContainerName(service.getContainerName())
                                                                     .setDependsOn(service.getDependsOn())
-                                                                    .setDev("true".equals(firstNonNull(service.getLabels(),
-                                                                                                       emptyMap()).get("dev")))
                                                                     .setEntrypoint(service.getEntrypoint())
                                                                     .setEnvVariables(service.getEnvironment())
                                                                     .setExpose(service.getExpose())
@@ -144,18 +137,42 @@ public class CheEnvironmentValidator implements EnvironmentValidator {
                                                                     .setName(entry.getKey())
                                                                     .setPorts(service.getPorts())
 //                                                                       .setServers() todo + agents
-                                                                    .setSource(service.getImage() != null ?
-                                                                               new MachineSourceImpl("image")
-                                                                                       .setLocation(service.getImage()) :
-                                                                               new MachineSourceImpl("dockerfile").setLocation(
-                                                                                       service.getBuild() != null ? service.getBuild()
-                                                                                                                           .getDockerfile()
-                                                                                                                  : null))
-                                                                    .setType("docker")
                                                                     .build();
                                         })
                                         .collect(Collectors.toList());
         return machineConfigs.stream().collect(Collectors.toList());
+    }
+
+    private EnvironmentRecipeContentImpl parseEnvironmentRecipeContent(String recipeContent, String contentType) {
+        if (contentType == null) {
+            throw new IllegalArgumentException(
+                    "Environment recipe content type required. Supported values are: application/json, application/x-yaml, text/yaml");
+        }
+        EnvironmentRecipeContentImpl envRecipeContent;
+        switch (contentType) {
+            case "application/json" :
+                try {
+                    envRecipeContent = jsonParser.readValue(recipeContent, EnvironmentRecipeContentImpl.class);
+                } catch (IOException e) {
+                    throw new IllegalArgumentException("Parsing of environment configuration failed. " + e.getLocalizedMessage());
+                }
+                break;
+            case "application/x-yaml" :
+            case "text/yaml":
+//                Yaml yaml = new Yaml();
+//                envRecipeContent = yaml.loadAs(recipeContent, EnvironmentRecipeContentImpl.class);
+                try {
+                    envRecipeContent = yamlParser.readValue(recipeContent, EnvironmentRecipeContentImpl.class);
+                } catch (IOException e) {
+                    throw new IllegalArgumentException("Parsing of environment configuration failed. " + e.getLocalizedMessage());
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Provided environment recipe content type '" +
+                                                   contentType +
+                                                   "' is unsupported. Supported values are: application/json, application/x-yaml");
+        }
+        return envRecipeContent;
     }
 
     private List<? extends MachineConfig> validateAndReturnMachines(EnvironmentRecipe envRecipe) throws ServerException, IllegalArgumentException {
@@ -237,7 +254,7 @@ public class CheEnvironmentValidator implements EnvironmentValidator {
         }
     }
 
-    private String getContentOfRecipe(EnvironmentRecipe environmentRecipe) throws MachineException {
+    private String getContentOfRecipe(EnvironmentRecipe environmentRecipe) throws ServerException {
         if (environmentRecipe.getContent() != null) {
             return environmentRecipe.getContent();
         } else {
@@ -245,7 +262,7 @@ public class CheEnvironmentValidator implements EnvironmentValidator {
         }
     }
 
-    private String getRecipe(String location) throws MachineException {
+    private String getRecipe(String location) throws ServerException {
         URL recipeUrl;
         File file = null;
         try {

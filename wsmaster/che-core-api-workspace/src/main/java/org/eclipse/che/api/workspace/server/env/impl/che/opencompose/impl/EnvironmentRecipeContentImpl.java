@@ -21,17 +21,27 @@ import java.util.stream.Collectors;
  * @author Alexander Garagatyi
  */
 public class EnvironmentRecipeContentImpl implements EnvironmentRecipeContent {
+    private String                   version;
     private Map<String, ServiceImpl> services;
 
-    public EnvironmentRecipeContentImpl(Map<String, ServiceImpl> services) {
-        this.services = services;
-    }
+    public EnvironmentRecipeContentImpl() {}
 
     public EnvironmentRecipeContentImpl(EnvironmentRecipeContent recipeContent) {
-        this(recipeContent.getServices()
-                          .entrySet()
-                          .stream()
-                          .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ServiceImpl(entry.getValue()))));
+        version = recipeContent.getVersion();
+        services = recipeContent.getServices()
+                                .entrySet()
+                                .stream()
+                                .collect(Collectors.toMap(Map.Entry::getKey,
+                                                          entry -> new ServiceImpl(entry.getValue())));
+    }
+
+    @Override
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     @Override
@@ -51,18 +61,20 @@ public class EnvironmentRecipeContentImpl implements EnvironmentRecipeContent {
         if (this == o) return true;
         if (!(o instanceof EnvironmentRecipeContentImpl)) return false;
         EnvironmentRecipeContentImpl that = (EnvironmentRecipeContentImpl)o;
-        return Objects.equals(services, that.services);
+        return Objects.equals(version, that.version) &&
+               Objects.equals(services, that.services);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(services);
+        return Objects.hash(version, services);
     }
 
     @Override
     public String toString() {
         return "EnvironmentRecipeContentImpl{" +
-               "services=" + services +
+               "version='" + version + '\'' +
+               ", services=" + services +
                '}';
     }
 }
