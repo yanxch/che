@@ -19,7 +19,9 @@ import java.util.Map;
 public interface Service {
     String getImage();
 
-    BuildConfig getBuild();
+    String getContext();
+
+    String getDockerfile();
 
     List<String> getEntrypoint();
 

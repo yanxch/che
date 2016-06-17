@@ -21,6 +21,4 @@ public interface EnvironmentValidator {
     String getType();
 
     void validate(Environment env) throws BadRequestException, ServerException;
-
-    Environment normalize(Environment env) throws BadRequestException, ServerException;
 }

@@ -48,6 +48,7 @@ public class MachineConfigImpl implements MachineConfig {
     private List<String>         command;
     private Map<String, String>  labels;
     private String               containerName;
+    private List<String>         volumesFrom;
 
     public MachineConfigImpl() {}
 
@@ -67,6 +68,7 @@ public class MachineConfigImpl implements MachineConfig {
         setLabels(machineCfg.getLabels());
         setMachineLinks(machineCfg.getMachineLinks());
         setPorts(machineCfg.getPorts());
+        setVolumesFrom(machineCfg.getVolumesFrom());
     }
 
     @Override
@@ -238,6 +240,18 @@ public class MachineConfigImpl implements MachineConfig {
     }
 
     @Override
+    public List<String> getVolumesFrom() {
+        if (volumesFrom == null) {
+            volumesFrom = new ArrayList<>();
+        }
+        return volumesFrom;
+    }
+
+    public void setVolumesFrom(List<String> volumesFrom) {
+        this.volumesFrom = volumesFrom;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof MachineConfigImpl)) return false;
@@ -256,14 +270,29 @@ public class MachineConfigImpl implements MachineConfig {
                Objects.equals(entrypoint, that.entrypoint) &&
                Objects.equals(command, that.command) &&
                Objects.equals(labels, that.labels) &&
-               Objects.equals(containerName, that.containerName);
+               Objects.equals(containerName, that.containerName) &&
+               Objects.equals(volumesFrom, that.volumesFrom);
     }
 
     @Override
     public int hashCode() {
         return Objects
-                .hash(isDev, name, type, source, limits, servers, envVariables, dependsOn, ports, expose, machineLinks, entrypoint, command,
-                      labels, containerName);
+                .hash(isDev,
+                      name,
+                      type,
+                      source,
+                      limits,
+                      servers,
+                      envVariables,
+                      dependsOn,
+                      ports,
+                      expose,
+                      machineLinks,
+                      entrypoint,
+                      command,
+                      labels,
+                      containerName,
+                      volumesFrom);
     }
 
     @Override
@@ -284,6 +313,7 @@ public class MachineConfigImpl implements MachineConfig {
                ", command=" + command +
                ", labels=" + labels +
                ", containerName='" + containerName + '\'' +
+               ", volumesFrom='" + volumesFrom + '\'' +
                '}';
     }
 
@@ -309,6 +339,7 @@ public class MachineConfigImpl implements MachineConfig {
         private List<String>               command;
         private Map<String, String>        labels;
         private String                     containerName;
+        private List<String>               volumesFrom;
 
         public MachineConfigImpl build() {
             MachineConfigImpl config = new MachineConfigImpl();
@@ -327,6 +358,7 @@ public class MachineConfigImpl implements MachineConfig {
             config.setLabels(labels);
             config.setMachineLinks(machineLinks);
             config.setPorts(ports);
+            config.setVolumesFrom(volumesFrom);
             return config;
         }
 
@@ -339,6 +371,14 @@ public class MachineConfigImpl implements MachineConfig {
             servers = machineConfig.getServers();
             envVariables = machineConfig.getEnvVariables();
             dependsOn = machineConfig.getDependsOn();
+            command = machineConfig.getCommand();
+            containerName = machineConfig.getContainerName();
+            entrypoint = machineConfig.getEntrypoint();
+            expose = machineConfig.getExpose();
+            labels = machineConfig.getLabels();
+            machineLinks = machineConfig.getMachineLinks();
+            ports = machineConfig.getPorts();
+            volumesFrom = machineConfig.getVolumesFrom();
             return this;
         }
 
@@ -414,6 +454,11 @@ public class MachineConfigImpl implements MachineConfig {
 
         public MachineConfigImplBuilder setEntrypoint(List<String> entrypoint) {
             this.entrypoint = entrypoint;
+            return this;
+        }
+
+        public MachineConfigImplBuilder setVolumesFrom(List<String> volumesFrom) {
+            this.volumesFrom = volumesFrom;
             return this;
         }
     }

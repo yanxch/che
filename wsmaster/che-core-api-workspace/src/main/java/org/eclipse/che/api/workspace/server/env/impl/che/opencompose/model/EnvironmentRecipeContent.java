@@ -16,5 +16,7 @@ import java.util.Map;
  * @author Alexander Garagatyi
  */
 public interface EnvironmentRecipeContent {
+    String getVersion();
+
     Map<String, ? extends Service> getServices();
 }

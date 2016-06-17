@@ -138,5 +138,12 @@ public interface MachineConfigDto extends MachineConfig, Hyperlinks {
     MachineConfigDto withContainerName(String containerName);
 
     @Override
+    List<String> getVolumesFrom();
+
+    void setVolumesFrom(List<String> volumesFrom);
+
+    MachineConfigDto withVolumesFrom(List<String> volumesFrom);
+
+    @Override
     MachineConfigDto withLinks(List<Link> links);
 }

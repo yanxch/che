@@ -86,6 +86,9 @@ public interface MachineConfig {
 
     List<String> getExpose();
 
-    // todo do not use in hosted version
+    // todo do not allow to set it for user in hosted version
+    // todo use it to provide machine name
     String getContainerName();
+
+    List<String> getVolumesFrom();
 }

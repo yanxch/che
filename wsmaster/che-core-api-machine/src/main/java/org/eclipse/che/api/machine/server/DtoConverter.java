@@ -62,7 +62,8 @@ public final class DtoConverter {
                                              .withEntrypoint(config.getEntrypoint())
                                              .withExpose(config.getExpose())
                                              .withLabels(config.getLabels())
-                                             .withPorts(config.getPorts());
+                                             .withPorts(config.getPorts())
+                                             .withVolumesFrom(config.getVolumesFrom());
     }
 
     /**

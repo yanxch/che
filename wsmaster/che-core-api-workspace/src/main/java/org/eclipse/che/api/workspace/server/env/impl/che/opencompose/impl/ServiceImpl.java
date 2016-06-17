@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.api.workspace.server.env.impl.che.opencompose.impl;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import org.eclipse.che.api.workspace.server.env.impl.che.opencompose.model.Service;
 
 import java.util.ArrayList;
@@ -22,28 +24,35 @@ import java.util.Objects;
  * @author Alexander Garagatyi
  */
 public class ServiceImpl implements Service {
-    private String              image;
-    private BuildConfigImpl     build;
-    private List<String>        entrypoint;
-    private List<String>        command;
-    private Map<String, String> environment;
-    private List<String>        dependsOn;
+    @JsonProperty("container_name")
     private String              containerName;
-    private List<String>        links;
-    private Map<String, String> labels;
+    private String              context;
+    private String              dockerfile;
+    private List<String>        command;
+    private List<String>        entrypoint;
+    private String              image;
+    @JsonProperty("depends_on")
+    private List<String>        dependsOn;
+    private Map<String, String> environment;
     private List<String>        expose;
     private List<String>        ports;
-    private List<String>        volumesFrom;
+    private Map<String, String> labels;
+    private List<String>        links;
     private List<String>        volumes;
+    @JsonProperty("volumes_from")
+    private List<String>        volumesFrom;
+    // todo missing in the model
+    @JsonProperty("mem_limit")
     private Integer             memLimit;
+    //todo env_file list
+    //todo extends
 
     public ServiceImpl() {}
 
     public ServiceImpl(Service service) {
         image = service.getImage();
-        if (service.getBuild() != null) {
-            build = new BuildConfigImpl(service.getBuild());
-        }
+        context = service.getContext();
+        dockerfile = service.getDockerfile();
         entrypoint = service.getEntrypoint();
         command = service.getCommand();
         environment = service.getEnvironment();
@@ -68,12 +77,21 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public BuildConfigImpl getBuild() {
-        return build;
+    public String getContext() {
+        return context;
     }
 
-    public void setBuild(BuildConfigImpl buildConfig) {
-        this.build = buildConfig;
+    public void setContext(String context) {
+        this.context = context;
+    }
+
+    @Override
+    public String getDockerfile() {
+        return dockerfile;
+    }
+
+    public void setDockerfile(String dockerfile) {
+        this.dockerfile = dockerfile;
     }
 
     @Override
@@ -219,46 +237,59 @@ public class ServiceImpl implements Service {
         if (this == o) return true;
         if (!(o instanceof ServiceImpl)) return false;
         ServiceImpl service = (ServiceImpl)o;
-        return Objects.equals(image, service.image) &&
-               Objects.equals(build, service.build) &&
-               Objects.equals(entrypoint, service.entrypoint) &&
+        return Objects.equals(containerName, service.containerName) &&
+               Objects.equals(context, service.context) &&
+               Objects.equals(dockerfile, service.dockerfile) &&
                Objects.equals(command, service.command) &&
-               Objects.equals(environment, service.environment) &&
+               Objects.equals(entrypoint, service.entrypoint) &&
+               Objects.equals(image, service.image) &&
                Objects.equals(dependsOn, service.dependsOn) &&
-               Objects.equals(containerName, service.containerName) &&
-               Objects.equals(links, service.links) &&
-               Objects.equals(labels, service.labels) &&
+               Objects.equals(environment, service.environment) &&
                Objects.equals(expose, service.expose) &&
                Objects.equals(ports, service.ports) &&
-               Objects.equals(volumesFrom, service.volumesFrom) &&
+               Objects.equals(labels, service.labels) &&
+               Objects.equals(links, service.links) &&
                Objects.equals(volumes, service.volumes) &&
+               Objects.equals(volumesFrom, service.volumesFrom) &&
                Objects.equals(memLimit, service.memLimit);
     }
 
     @Override
     public int hashCode() {
-        return Objects
-                .hash(image, build, entrypoint, command, environment, dependsOn, containerName, links, labels, expose, ports,
-                      volumesFrom,
-                      volumes, memLimit);
+        return Objects.hash(containerName,
+                            context,
+                            dockerfile,
+                            command,
+                            entrypoint,
+                            image,
+                            dependsOn,
+                            environment,
+                            expose,
+                            ports,
+                            labels,
+                            links,
+                            volumes,
+                            volumesFrom,
+                            memLimit);
     }
 
     @Override
     public String toString() {
         return "ServiceImpl{" +
-               "image='" + image + '\'' +
-               ", build=" + build +
-               ", entrypoint=" + entrypoint +
+               "containerName='" + containerName + '\'' +
+               ", context='" + context + '\'' +
+               ", dockerfile='" + dockerfile + '\'' +
                ", command=" + command +
-               ", environment=" + environment +
+               ", entrypoint=" + entrypoint +
+               ", image='" + image + '\'' +
                ", dependsOn=" + dependsOn +
-               ", containerName='" + containerName + '\'' +
-               ", links=" + links +
-               ", labels=" + labels +
+               ", environment=" + environment +
                ", expose=" + expose +
                ", ports=" + ports +
-               ", volumesFrom=" + volumesFrom +
+               ", labels=" + labels +
+               ", links=" + links +
                ", volumes=" + volumes +
+               ", volumesFrom=" + volumesFrom +
                ", memLimit=" + memLimit +
                '}';
     }
