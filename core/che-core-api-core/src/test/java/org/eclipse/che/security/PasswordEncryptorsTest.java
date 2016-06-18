@@ -13,22 +13,29 @@ package org.eclipse.che.security;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 /**
- * TODO add tests
- *
  * @author Yevhenii Voevodin
  */
 public class PasswordEncryptorsTest {
 
-    @Test
-    public void testEncryption(PasswordEncryptor encryptor) throws Exception {
+    @Test(dataProvider = "encryptorsProvider")
+    public void testEncrypt(PasswordEncryptor encryptor) throws Exception {
+        final String password = "password";
 
+        final String hash = encryptor.encrypt(password);
+        assertNotNull(hash, "encrypted password's hash");
+
+        assertTrue(encryptor.test(password, hash), "password test");
     }
 
     @DataProvider(name = "encryptorsProvider")
     public Object[][] encryptorsProvider() {
         return new Object[][] {
-                { new SHA512PasswordEncryptor() }
+                {new SHA512PasswordEncryptor()},
+                {new PBKDF2PasswordEncryptor()}
         };
     }
 }
